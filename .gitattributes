@@ -1,0 +1,2 @@
+msu-tpc/** filter=lfs diff=lfs merge=lfs -text
+old-version/** filter=lfs diff=lfs merge=lfs -text
