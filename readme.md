@@ -6,7 +6,7 @@ deutron beam polarimeter
 
 ## 参数
 
-测量
+极化探测器,论文参数:
 
 |particle | $\theta_{lab} $ |
 |---|---|
@@ -14,6 +14,16 @@ deutron beam polarimeter
 |proton | 11.3° |
 |proton | 55.9° |
 
+
+后续solidoworks 参数:
+
+| particle | angle | radius |
+|----------|---|---|
+| deutron | 20.9° | 0.4m |
+| proton | 11.2° | 0.62m |
+| proton | 53.4° | 0.62m |
+
+现在dpolarization_archive/里默认也是按照solidowrks设计的.
 
 
 需要参考BLP 和 RCNP, 而非bigDpol的全角度探测器.
