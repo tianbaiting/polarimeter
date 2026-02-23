@@ -2,6 +2,8 @@
 
 deutron beam polarimeter
 
+制作氘核极化实验中 束流极化测量的探测器.
+
 ## 参数
 
 测量

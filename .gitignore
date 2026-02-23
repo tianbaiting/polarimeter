@@ -1,1 +1,15 @@
 # 3D CAD assets are versioned via Git LFS; keep this file for future ignore rules.
+
+# Jupyter notebooks are submitted as jupytext scripts for clean diffs.
+*.ipynb
+**/.ipynb_checkpoints/
+
+# Generated analysis plots in dpolarization_archive should not be committed.
+dpolarization_archive/energy_deposition/energy_lise/eloss.png
+dpolarization_archive/energy_deposition/root_analysis/Energy_vs_ThetaDc_deg.png
+dpolarization_archive/energy_deposition/root_analysis/Energy_vs_ThetaDc_deg.pdf
+dpolarization_archive/placement_and_geometry/outputs/*.png
+dpolarization_archive/placement_and_geometry/outputs/*.pdf
+dpolarization_archive/post_placement_observables/outputs_cache/*.png
+dpolarization_archive/post_placement_observables/outputs_cache/*.pdf
+dpolarization_archive/post_placement_observables/outputs_data/theta_comparison*.png
