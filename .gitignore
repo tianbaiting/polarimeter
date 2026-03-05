@@ -20,6 +20,7 @@ dpolarization_archive/post_placement_observables/outputs_data/theta_comparison*.
 # Stateful pipeline runtime state (machine-written).
 infrontofSamuraiMag/state.json
 infrontofSamuraiMag/state.lock
+infrontofSamuraiMag/*.validation_report.json
 infrontofSamuraiMag/reports/archive/
 infrontofSamuraiMag/.venv-pytest/
 infrontofSamuraiMag/.pytest_cache/
