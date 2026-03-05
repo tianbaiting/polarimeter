@@ -13,3 +13,10 @@ dpolarization_archive/placement_and_geometry/outputs/*.pdf
 dpolarization_archive/post_placement_observables/outputs_cache/*.png
 dpolarization_archive/post_placement_observables/outputs_cache/*.pdf
 dpolarization_archive/post_placement_observables/outputs_data/theta_comparison*.png
+
+# Python cache files from FreeCAD script execution.
+**/__pycache__/
+
+*.step
+*.FCStd
+*.FCBak
