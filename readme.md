@@ -1,64 +1,87 @@
-# 氘核极化探测器
+# Deuteron Beam Polarimeter CAD Project
 
-deutron beam polarimeter
+This repository contains CAD modeling assets, references, and automation scripts for deuteron beam polarimeter design.
 
-制作氘核极化实验中 束流极化测量的探测器.
+## Design Intent
 
-## 参数
+The project tracks two physical deployment contexts:
 
-极化探测器,论文参数:
+- `infrontofSamuraiMag`: polarimeter in front of the SAMURAI magnetic field region.
+- `upstreamBLP`: upstream polarimeter closer to the beamline interface (high-intensity monitoring).
 
-|particle | $\theta_{lab} $ |
-|---|---|
-|deutron | 20.87° |
-|proton | 11.3° |
-|proton | 55.9° |
+Current engineering automation focus is `infrontofSamuraiMag`.
 
+## Reference Detector Geometry
 
-后续solidoworks 参数:
+Target detector front-face center constraints used by current layout scripts:
 
-| particle | angle | radius |
-|----------|---|---|
-| deutron | 20.9° | 0.4m |
-| proton | 11.2° | 0.62m |
-| proton | 53.4° | 0.62m |
+| Particle channel | Lab angle (deg) | Radius (mm) |
+|---|---:|---:|
+| deuteron | 20.9 | 560 |
+| proton_small | 11.2 | 760 |
+| proton_large | 53.4 | 820 |
 
-![alt text](assets/readme/image.png)
+Detector housing diameter: `phi 50 mm`.
 
-![alt text](assets/readme/image-1.png)
-detector radius 50mm ($\phi 50mm$)
+## Repository Map
 
-现在dpolarization_archive/里默认也是按照solidowrks设计的.
+- `infrontofSamuraiMag/`: parameterized FreeCAD generation pipeline, validation, and exports.
+- `upstreamBLP/`: placeholder for upstream model assets.
+- `docs/`: beamline and RCNP/BLP reference material.
+- `assets/readme/`: visual references and beamline schematic.
+- `skills/infront-freecad-engineering/`: Codex skill for reproducible infront workflow.
 
+## Modeling Modes
 
-问题在于old-version里的solidworks是参考的BigDPpolarization的全角度探测器设计的(圆锥的设计难以加工需要加工费)，而不是RCNP的BLP设计.
+Use one of the two modes depending on the task:
 
+1. Batch generation (`freecadcmd`)
+- Best for reproducible artifact generation (`FCStd/STEP`) and CI-like validation.
+- Main entry:
+  - `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml`
 
-需要参考BLP 的设计,探测器摆放位置的参数按照solidoworks重新设计一套探测器布局图纸. 探测器外壳是直径50mm的圆柱. 保证探测器的前表面中心位于上述表格的角度和半径位置. 
+2. Interactive generation (MCP + FreeCAD GUI)
+- Best for interactive model edits, screenshots, and iterative prompting.
+- Requires FreeCAD GUI to stay open while MCP is used.
 
+## FreeCAD MCP Quick Start
 
-采用freecad来画. 我需要亮光光探测器一个在samurai磁场之前测定实验中的磁场 画图文件放在infrontofSamuraiMag里, 另外一个在束流前面一些地方用于迅速反馈束流状态(前面的intensity 比较强) 画图文件放在upstreamBLP里.
+This environment uses Codex MCP registration name `freecad`.
 
-![beamline](assets/readme/schematic_of_beamline.pdf)
+1. Check MCP registration
+```bash
+codex mcp list
+codex mcp get freecad
+```
 
-## freecad 画图 infrontofSamuraiMag
+2. Ensure FreeCAD addon path is correct
+- Active user data path on this machine:
+  - `~/.local/share/FreeCAD/`
+- Addon directory must contain:
+  - `~/.local/share/FreeCAD/Mod/FreeCADMCP`
 
-<!-- 靶子支架 -->
-target support
+3. Start RPC server in FreeCAD GUI
+- Open FreeCAD.
+- Select workbench: `MCP Addon`.
+- Click toolbar action: `Start RPC Server`.
 
-<!-- 靶室, 前后管道开口为 -->
-target chamber
+4. Keep FreeCAD GUI running
+- If GUI closes, MCP calls will fail until you reopen FreeCAD and start RPC again.
 
-<!--  探测器夹具 -->
-detector support
+## Skill Entry Point
 
-<!-- 探测器放置平台 -->
-detector platform
+For repeatable engineering workflow, use:
 
-<!-- 连接固定装置 防止到地板上  -->
+- `skills/infront-freecad-engineering/SKILL.md`
 
+The skill standardizes:
+- strict validation first,
+- artifact generation after validation,
+- JSON report checks,
+- failure handling when constraints are violated.
 
+## Infront Workflow Entry
 
-## freecad 画图 upstreamBLP
+Detailed operational guide:
 
-前面必须和束流接口对上, 保持真空
+- `infrontofSamuraiMag/README.md`
