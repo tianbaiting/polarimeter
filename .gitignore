@@ -17,6 +17,13 @@ dpolarization_archive/post_placement_observables/outputs_data/theta_comparison*.
 # Python cache files from FreeCAD script execution.
 **/__pycache__/
 
+# Stateful pipeline runtime state (machine-written).
+infrontofSamuraiMag/state.json
+infrontofSamuraiMag/state.lock
+infrontofSamuraiMag/reports/archive/
+infrontofSamuraiMag/.venv-pytest/
+infrontofSamuraiMag/.pytest_cache/
+
 *.step
 *.FCStd
 *.FCBak
