@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.0",
+  "generated_utc": "2026-03-06T06:26:59Z",
+  "source_root": "old-version",
+  "step_root": "docs/reference_cad/old_version_step",
+  "summary": {
+    "solidworks_files": 13,
+    "step_present": 0,
+    "step_missing": 13
+  },
+  "entries": [
+    {
+      "source_path": "old-version/all2.SLDASM",
+      "step_path": "docs/reference_cad/old_version_step/all2.step",
+      "subsystem": "assembly",
+      "units_mm": true,
+      "status": "missing"
+    },
+    {
+      "source_path": "old-version/chamber_base.SLDPRT",
+      "step_path": "docs/reference_cad/old_version_step/chamber_base.step",
+      "subsystem": "chamber",
+      "units_mm": true,
+      "status": "missing"
+    },
+    {
+      "source_path": "old-version/conepipe.SLDPRT",
+      "step_path": "docs/reference_cad/old_version_step/conepipe.step",
+      "subsystem": "chamber",
+      "units_mm": true,
+      "status": "missing"
+    },
+    {
+      "source_path": "old-version/polar_targetchamber.SLDPRT",
+      "step_path": "docs/reference_cad/old_version_step/polar_targetchamber.step",
+      "subsystem": "target",
+      "units_mm": true,
+      "status": "missing"
+    },
+    {
+      "source_path": "old-version/scintilator/base_pmt.SLDPRT",
+      "step_path": "docs/reference_cad/old_version_step/scintilator/base_pmt.step",
+      "subsystem": "detector",
+      "units_mm": true,
+      "status": "missing"
+    },
+    {
+      "source_path": "old-version/scintilator/detector_one.SLDASM",
+      "step_path": "docs/reference_cad/old_version_step/scintilator/detector_one.step",
+      "subsystem": "detector",
+      "units_mm": true,
+      "status": "missing"
+    },
+    {
+      "source_path": "old-version/scintilator/jiazi.SLDPRT",
+      "step_path": "docs/reference_cad/old_version_step/scintilator/jiazi.step",
+      "subsystem": "detector",
+      "units_mm": true,
+      "status": "missing"
+    },
+    {
+      "source_path": "old-version/scintilator/pmt.SLDPRT",
+      "step_path": "docs/reference_cad/old_version_step/scintilator/pmt.step",
+      "subsystem": "detector",
+      "units_mm": true,
+      "status": "missing"
+    },
+    {
+      "source_path": "old-version/target&chamber.SLDASM",
+      "step_path": "docs/reference_cad/old_version_step/target&chamber.step",
+      "subsystem": "target",
+      "units_mm": true,
+      "status": "missing"
+    },
+    {
+      "source_path": "old-version/三块板子.SLDPRT",
+      "step_path": "docs/reference_cad/old_version_step/三块板子.step",
+      "subsystem": "plates",
+      "units_mm": true,
+      "status": "missing"
+    },
+    {
+      "source_path": "old-version/靶子夹子.SLDPRT",
+      "step_path": "docs/reference_cad/old_version_step/靶子夹子.step",
+      "subsystem": "target",
+      "units_mm": true,
+      "status": "missing"
+    },
+    {
+      "source_path": "old-version/靶框.SLDPRT",
+      "step_path": "docs/reference_cad/old_version_step/靶框.step",
+      "subsystem": "target",
+      "units_mm": true,
+      "status": "missing"
+    },
+    {
+      "source_path": "old-version/靶框系统.SLDASM",
+      "step_path": "docs/reference_cad/old_version_step/靶框系统.step",
+      "subsystem": "target",
+      "units_mm": true,
+      "status": "missing"
+    }
+  ]
+}
