@@ -12,6 +12,7 @@ from .layout import (
     front_face_center,
     local_basis_from_direction,
     plate_key_for_sector,
+    ray_point_at_x,
     ray_point_at_y,
     ray_point_at_z,
     scaled,
@@ -44,6 +45,8 @@ def _plate_axes(plate: PlateConfig) -> tuple[App.Vector, App.Vector, App.Vector,
         return center, App.Vector(0.0, 0.0, 1.0), App.Vector(1.0, 0.0, 0.0), App.Vector(0.0, 1.0, 0.0)
     if plate.mount_plane == "xz":
         return center, App.Vector(0.0, 1.0, 0.0), App.Vector(1.0, 0.0, 0.0), App.Vector(0.0, 0.0, 1.0)
+    if plate.mount_plane == "yz":
+        return center, App.Vector(1.0, 0.0, 0.0), App.Vector(0.0, 1.0, 0.0), App.Vector(0.0, 0.0, 1.0)
     raise ValueError(f"Unsupported plate orientation/mount_plane: {plate.orientation}/{plate.mount_plane}")
 
 
@@ -394,6 +397,8 @@ def _build_plate_stiffeners(plate: PlateConfig) -> Part.Shape:
         side_sign = 1.0 if plate.offset_y_mm >= 0.0 else -1.0
     elif plate.mount_plane == "xy":
         side_sign = 1.0 if plate.z_mm >= 0.0 else -1.0
+    elif plate.mount_plane == "yz":
+        side_sign = 1.0 if plate.offset_x_mm >= 0.0 else -1.0
     rib_center_base = center + scaled(axis_t, side_sign * 0.5 * (plate.thickness_mm + plate.stiffener_height_mm))
 
     ribs: list[Part.Shape] = []
@@ -449,6 +454,8 @@ def _plate_hit_point_for_fixture(placement: DetectorPlacement, plate: PlateConfi
         if abs(placement.direction.y) < 1e-9:
             return ray_point_at_z(placement.direction, plate.z_mm)
         return ray_point_at_y(placement.direction, plate.offset_y_mm)
+    if plate.mount_plane == "yz":
+        return ray_point_at_x(placement.direction, plate.offset_x_mm)
     raise ValueError(f"unsupported mount_plane: {plate.mount_plane}")
 
 
@@ -463,6 +470,11 @@ def _support_anchor_on_plate(cfg: GeometryConfig, placement: DetectorPlacement) 
         if abs(plate.offset_y_mm) < 1e-9:
             y_sign = 1.0
         return hit + App.Vector(0.0, y_sign * (0.5 * plate.thickness_mm + plate.stiffener_height_mm), 0.0)
+    if plate.mount_plane == "yz":
+        x_sign = 1.0 if plate.offset_x_mm >= 0.0 else -1.0
+        if abs(plate.offset_x_mm) < 1e-9:
+            x_sign = 1.0
+        return hit + App.Vector(x_sign * (0.5 * plate.thickness_mm + plate.stiffener_height_mm), 0.0, 0.0)
     raise ValueError(f"unsupported mount_plane: {plate.mount_plane}")
 
 
@@ -739,6 +751,10 @@ def build_detector_fixture(
         n = App.Vector(0.0, 1.0 if plate.offset_y_mm >= 0.0 else -1.0, 0.0)
         if abs(plate.offset_y_mm) < 1e-9:
             n = App.Vector(0.0, 1.0, 0.0)
+    elif plate.mount_plane == "yz":
+        n = App.Vector(1.0 if plate.offset_x_mm >= 0.0 else -1.0, 0.0, 0.0)
+        if abs(plate.offset_x_mm) < 1e-9:
+            n = App.Vector(1.0, 0.0, 0.0)
     else:
         raise ValueError(f"unsupported mount_plane: {plate.mount_plane}")
     plate_face = plate_hit + scaled(n, 0.5 * plate.thickness_mm)
