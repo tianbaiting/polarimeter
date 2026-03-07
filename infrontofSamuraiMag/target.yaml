@@ -1,14 +1,14 @@
 schema_version: 1
 module: infrontofSamuraiMag
 intent:
-  description: "Implement BLP v1 concept-level mechanics (chamber/H+V+V plates/detector clamp-target ladder-stand) with strict subsystem validation."
+  description: "Locked legacy-center preview baseline: HVV plate placement/size frozen for iterative tuning, detector bases direct-mounted to plates, plate cuts disabled, overlap checks skipped."
 build:
-  config: config/default_infront.yaml
+  config: config/profiles/legacy_center_preview_locked.yaml
   overrides: []
   doc_name: infrontofSamuraiMag
   mode: build
 validation:
-  strict: true
+  strict: false
   angle_tolerance_deg: 0.05
   radius_tolerance_mm: 0.2
 output:

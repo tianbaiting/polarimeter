@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -18,7 +18,8 @@ _ALLOWED_CONFIDENCE = {"high", "medium", "low"}
 _ALLOWED_OUTPUT_FORMATS = {"fcstd", "step"}
 _ALLOWED_PORT_SIDES = {"right", "left", "top", "bottom"}
 _ALLOWED_PLATE_ORIENTATIONS = {"horizontal", "vertical"}
-_ALLOWED_PLATE_MOUNT_PLANES = {"xy", "xz"}
+_ALLOWED_PLATE_MOUNT_PLANES = {"xy", "xz", "yz"}
+_ALLOWED_PLATE_OFFSET_MODES = {"manual", "auto"}
 _ALLOWED_LOS_SCOPES = {"v1_conceptual", "v2_fullpath"}
 
 
@@ -106,6 +107,7 @@ class PortsConfig:
 class PlateConfig:
     orientation: str
     mount_plane: str
+    offset_mode: str
     z_mm: float
     offset_x_mm: float
     offset_y_mm: float
@@ -153,12 +155,13 @@ class DetectorClampConfig:
     anti_rotation_key_width_mm: float
     anti_rotation_key_depth_mm: float
     anti_rotation_key_length_mm: float
-    support_rod_diameter_mm: float
     support_overlap_mm: float
-    support_mount_block_length_mm: float
-    support_mount_block_width_mm: float
-    support_mount_block_height_mm: float
-    support_mount_hole_diameter_mm: float
+    mount_base_u_mm: float
+    mount_base_v_mm: float
+    mount_base_thickness_mm: float
+    mount_bolt_hole_diameter_mm: float
+    mount_bolt_pitch_u_mm: float
+    mount_bolt_pitch_v_mm: float
 
 
 @dataclass(frozen=True)
@@ -227,6 +230,7 @@ class StandConfig:
     base_thickness_mm: float
     chamber_support_height_mm: float
     support_foot_diameter_mm: float
+    enable_plate_ties: bool
     plate_tie_column_diameter_mm: float
     plate_tie_cap_width_mm: float
     plate_tie_cap_height_mm: float
@@ -242,6 +246,11 @@ class StandConfig:
 class ClearanceConfig:
     los_scope: str
     los_margin_mm: float
+    vv_min_gap_factor: float
+    plate_auto_gap_mm: float
+    plate_chamber_cutout_margin_mm: float
+    disable_plate_cuts: bool
+    skip_overlap_checks: bool
     los_detector_active_face_offset_mm: float
     detector_front_to_chamber_mm: float
     detector_pair_min_gap_mm: float
@@ -606,6 +615,7 @@ def _parse_plate(raw: dict[str, Any], prefix: str) -> PlateConfig:
     cfg = PlateConfig(
         orientation=_to_str(raw.get("orientation"), f"{prefix}.orientation").lower(),
         mount_plane=_to_str(raw.get("mount_plane"), f"{prefix}.mount_plane").lower(),
+        offset_mode=_to_str(raw.get("offset_mode", "manual"), f"{prefix}.offset_mode").lower(),
         z_mm=_to_float(raw.get("z_mm"), f"{prefix}.z_mm"),
         offset_x_mm=_to_float(raw.get("offset_x_mm"), f"{prefix}.offset_x_mm"),
         offset_y_mm=_to_float(raw.get("offset_y_mm"), f"{prefix}.offset_y_mm"),
@@ -635,7 +645,6 @@ def _parse_plate(raw: dict[str, Any], prefix: str) -> PlateConfig:
             f"{prefix}.thickness_mm": cfg.thickness_mm,
             f"{prefix}.inner_radius_mm": cfg.inner_radius_mm,
             f"{prefix}.outer_radius_mm": cfg.outer_radius_mm,
-            f"{prefix}.sector_opening_deg": cfg.sector_opening_deg,
             f"{prefix}.lug_length_mm": cfg.lug_length_mm,
             f"{prefix}.lug_width_mm": cfg.lug_width_mm,
             f"{prefix}.lug_thickness_mm": cfg.lug_thickness_mm,
@@ -649,6 +658,8 @@ def _parse_plate(raw: dict[str, Any], prefix: str) -> PlateConfig:
 
     if cfg.outer_radius_mm <= cfg.inner_radius_mm:
         raise ValueError(f"{prefix}.outer_radius_mm must be > inner_radius_mm")
+    if cfg.sector_opening_deg < 0.0:
+        raise ValueError(f"{prefix}.sector_opening_deg must be >= 0 deg")
     if cfg.sector_opening_deg >= 180.0:
         raise ValueError(f"{prefix}.sector_opening_deg must be < 180 deg")
     if cfg.orientation not in _ALLOWED_PLATE_ORIENTATIONS:
@@ -659,10 +670,10 @@ def _parse_plate(raw: dict[str, Any], prefix: str) -> PlateConfig:
         raise ValueError(
             f"{prefix}.mount_plane must be one of {sorted(_ALLOWED_PLATE_MOUNT_PLANES)}, got {cfg.mount_plane!r}"
         )
-    if cfg.orientation == "horizontal" and cfg.mount_plane != "xz":
-        raise ValueError(f"{prefix}.horizontal plate must use mount_plane=xz")
-    if cfg.orientation == "vertical" and cfg.mount_plane != "xy":
-        raise ValueError(f"{prefix}.vertical plate must use mount_plane=xy")
+    if cfg.offset_mode not in _ALLOWED_PLATE_OFFSET_MODES:
+        raise ValueError(
+            f"{prefix}.offset_mode must be one of {sorted(_ALLOWED_PLATE_OFFSET_MODES)}, got {cfg.offset_mode!r}"
+        )
     if cfg.bolt_hole_count < 2:
         raise ValueError(f"{prefix}.bolt_hole_count must be >= 2 for load-bearing connection")
     if cfg.stiffener_count < 1:
@@ -672,8 +683,8 @@ def _parse_plate(raw: dict[str, Any], prefix: str) -> PlateConfig:
     if cfg.bolt_hole_pitch_mm * (cfg.bolt_hole_count - 1) >= (cfg.lug_width_mm - cfg.bolt_hole_diameter_mm):
         raise ValueError(f"{prefix}.bolt_hole_pitch_mm is too large for lug_width_mm and bolt_hole_count")
 
-    # [EN] Each H/V plate must be physically decentered from beam axis to satisfy the frozen alignment scheme. / [CN] 每块 H/V 板都必须偏离束流中心轴，以满足冻结的安装方案。
-    if abs(cfg.offset_x_mm) < 1e-9 and abs(cfg.offset_y_mm) < 1e-9:
+    # [EN] Manual plate pose must be decentered from beam axis to preserve the frozen HVV layout semantics. / [CN] 手工板位必须偏离束流中心轴，以保持冻结的 HVV 布局语义。
+    if cfg.offset_mode == "manual" and abs(cfg.offset_x_mm) < 1e-9 and abs(cfg.offset_y_mm) < 1e-9:
         raise ValueError(f"{prefix} must be offset from beam axis (offset_x_mm/offset_y_mm cannot both be zero)")
 
     return cfg
@@ -724,26 +735,24 @@ def _parse_detector(raw: dict[str, Any]) -> DetectorConfig:
             clamp_raw.get("anti_rotation_key_length_mm"),
             "geometry.detector.clamp.anti_rotation_key_length_mm",
         ),
-        support_rod_diameter_mm=_to_float(
-            clamp_raw.get("support_rod_diameter_mm"),
-            "geometry.detector.clamp.support_rod_diameter_mm",
-        ),
         support_overlap_mm=_to_float(clamp_raw.get("support_overlap_mm"), "geometry.detector.clamp.support_overlap_mm"),
-        support_mount_block_length_mm=_to_float(
-            clamp_raw.get("support_mount_block_length_mm"),
-            "geometry.detector.clamp.support_mount_block_length_mm",
+        mount_base_u_mm=_to_float(clamp_raw.get("mount_base_u_mm"), "geometry.detector.clamp.mount_base_u_mm"),
+        mount_base_v_mm=_to_float(clamp_raw.get("mount_base_v_mm"), "geometry.detector.clamp.mount_base_v_mm"),
+        mount_base_thickness_mm=_to_float(
+            clamp_raw.get("mount_base_thickness_mm"),
+            "geometry.detector.clamp.mount_base_thickness_mm",
         ),
-        support_mount_block_width_mm=_to_float(
-            clamp_raw.get("support_mount_block_width_mm"),
-            "geometry.detector.clamp.support_mount_block_width_mm",
+        mount_bolt_hole_diameter_mm=_to_float(
+            clamp_raw.get("mount_bolt_hole_diameter_mm"),
+            "geometry.detector.clamp.mount_bolt_hole_diameter_mm",
         ),
-        support_mount_block_height_mm=_to_float(
-            clamp_raw.get("support_mount_block_height_mm"),
-            "geometry.detector.clamp.support_mount_block_height_mm",
+        mount_bolt_pitch_u_mm=_to_float(
+            clamp_raw.get("mount_bolt_pitch_u_mm"),
+            "geometry.detector.clamp.mount_bolt_pitch_u_mm",
         ),
-        support_mount_hole_diameter_mm=_to_float(
-            clamp_raw.get("support_mount_hole_diameter_mm"),
-            "geometry.detector.clamp.support_mount_hole_diameter_mm",
+        mount_bolt_pitch_v_mm=_to_float(
+            clamp_raw.get("mount_bolt_pitch_v_mm"),
+            "geometry.detector.clamp.mount_bolt_pitch_v_mm",
         ),
     )
 
@@ -776,12 +785,13 @@ def _parse_detector(raw: dict[str, Any]) -> DetectorConfig:
             "geometry.detector.clamp.anti_rotation_key_width_mm": clamp.anti_rotation_key_width_mm,
             "geometry.detector.clamp.anti_rotation_key_depth_mm": clamp.anti_rotation_key_depth_mm,
             "geometry.detector.clamp.anti_rotation_key_length_mm": clamp.anti_rotation_key_length_mm,
-            "geometry.detector.clamp.support_rod_diameter_mm": clamp.support_rod_diameter_mm,
             "geometry.detector.clamp.support_overlap_mm": clamp.support_overlap_mm,
-            "geometry.detector.clamp.support_mount_block_length_mm": clamp.support_mount_block_length_mm,
-            "geometry.detector.clamp.support_mount_block_width_mm": clamp.support_mount_block_width_mm,
-            "geometry.detector.clamp.support_mount_block_height_mm": clamp.support_mount_block_height_mm,
-            "geometry.detector.clamp.support_mount_hole_diameter_mm": clamp.support_mount_hole_diameter_mm,
+            "geometry.detector.clamp.mount_base_u_mm": clamp.mount_base_u_mm,
+            "geometry.detector.clamp.mount_base_v_mm": clamp.mount_base_v_mm,
+            "geometry.detector.clamp.mount_base_thickness_mm": clamp.mount_base_thickness_mm,
+            "geometry.detector.clamp.mount_bolt_hole_diameter_mm": clamp.mount_bolt_hole_diameter_mm,
+            "geometry.detector.clamp.mount_bolt_pitch_u_mm": clamp.mount_bolt_pitch_u_mm,
+            "geometry.detector.clamp.mount_bolt_pitch_v_mm": clamp.mount_bolt_pitch_v_mm,
             "geometry.detector.adapter_block.length_mm": adapter.length_mm,
             "geometry.detector.adapter_block.width_mm": adapter.width_mm,
             "geometry.detector.adapter_block.height_mm": adapter.height_mm,
@@ -793,8 +803,6 @@ def _parse_detector(raw: dict[str, Any]) -> DetectorConfig:
         raise ValueError("geometry.detector.clamp.detector_diameter_mm must be < inner_diameter_mm")
     if clamp.inner_diameter_mm >= clamp.outer_diameter_mm:
         raise ValueError("geometry.detector.clamp.inner_diameter_mm must be < outer_diameter_mm")
-    if clamp.support_mount_hole_diameter_mm >= clamp.support_mount_block_width_mm:
-        raise ValueError("geometry.detector.clamp.support_mount_hole_diameter_mm must be < support_mount_block_width_mm")
     if clamp.clamp_bolt_diameter_mm >= min(clamp.clamp_ear_width_mm, clamp.clamp_ear_thickness_mm):
         raise ValueError("geometry.detector.clamp.clamp_bolt_diameter_mm must be < min(clamp_ear_width_mm, clamp_ear_thickness_mm)")
     if clamp.clamp_bolt_pitch_mm > clamp.width_mm:
@@ -806,6 +814,12 @@ def _parse_detector(raw: dict[str, Any]) -> DetectorConfig:
         raise ValueError("geometry.detector.clamp.anti_rotation_key_depth_mm is too large for clamp radial clearance")
     if clamp.anti_rotation_key_length_mm > clamp.width_mm:
         raise ValueError("geometry.detector.clamp.anti_rotation_key_length_mm must be <= width_mm")
+    if clamp.mount_bolt_hole_diameter_mm >= min(clamp.mount_base_u_mm, clamp.mount_base_v_mm):
+        raise ValueError("geometry.detector.clamp.mount_bolt_hole_diameter_mm must be < min(mount_base_u_mm, mount_base_v_mm)")
+    if clamp.mount_bolt_pitch_u_mm >= (clamp.mount_base_u_mm - clamp.mount_bolt_hole_diameter_mm):
+        raise ValueError("geometry.detector.clamp.mount_bolt_pitch_u_mm too large for mount_base_u_mm and hole diameter")
+    if clamp.mount_bolt_pitch_v_mm >= (clamp.mount_base_v_mm - clamp.mount_bolt_hole_diameter_mm):
+        raise ValueError("geometry.detector.clamp.mount_bolt_pitch_v_mm too large for mount_base_v_mm and hole diameter")
     if abs(adapter.tilt_deg) > 45.0:
         raise ValueError("geometry.detector.adapter_block.tilt_deg absolute value must be <= 45 deg")
 
@@ -987,6 +1001,7 @@ def _parse_stand(raw: dict[str, Any]) -> StandConfig:
             raw.get("support_foot_diameter_mm"),
             "geometry.stand.support_foot_diameter_mm",
         ),
+        enable_plate_ties=_to_bool(raw.get("enable_plate_ties", True), "geometry.stand.enable_plate_ties"),
         plate_tie_column_diameter_mm=_to_float(
             raw.get("plate_tie_column_diameter_mm"),
             "geometry.stand.plate_tie_column_diameter_mm",
@@ -1016,29 +1031,34 @@ def _parse_stand(raw: dict[str, Any]) -> StandConfig:
         shim_thickness_mm=_to_float(raw.get("shim_thickness_mm"), "geometry.stand.shim_thickness_mm"),
     )
 
-    _require_positive(
-        {
-            "geometry.stand.base_length_mm": cfg.base_length_mm,
-            "geometry.stand.base_width_mm": cfg.base_width_mm,
-            "geometry.stand.base_thickness_mm": cfg.base_thickness_mm,
-            "geometry.stand.chamber_support_height_mm": cfg.chamber_support_height_mm,
-            "geometry.stand.support_foot_diameter_mm": cfg.support_foot_diameter_mm,
-            "geometry.stand.plate_tie_column_diameter_mm": cfg.plate_tie_column_diameter_mm,
-            "geometry.stand.plate_tie_cap_width_mm": cfg.plate_tie_cap_width_mm,
-            "geometry.stand.plate_tie_cap_height_mm": cfg.plate_tie_cap_height_mm,
-            "geometry.stand.plate_tie_cap_thickness_mm": cfg.plate_tie_cap_thickness_mm,
-            "geometry.stand.plate_tie_bolt_diameter_mm": cfg.plate_tie_bolt_diameter_mm,
-            "geometry.stand.anchor_slot_length_mm": cfg.anchor_slot_length_mm,
-            "geometry.stand.anchor_slot_width_mm": cfg.anchor_slot_width_mm,
-            "geometry.stand.leveling_screw_diameter_mm": cfg.leveling_screw_diameter_mm,
-            "geometry.stand.shim_thickness_mm": cfg.shim_thickness_mm,
-        }
-    )
+    positive_fields = {
+        "geometry.stand.base_length_mm": cfg.base_length_mm,
+        "geometry.stand.base_width_mm": cfg.base_width_mm,
+        "geometry.stand.base_thickness_mm": cfg.base_thickness_mm,
+        "geometry.stand.chamber_support_height_mm": cfg.chamber_support_height_mm,
+        "geometry.stand.support_foot_diameter_mm": cfg.support_foot_diameter_mm,
+        "geometry.stand.anchor_slot_length_mm": cfg.anchor_slot_length_mm,
+        "geometry.stand.anchor_slot_width_mm": cfg.anchor_slot_width_mm,
+        "geometry.stand.leveling_screw_diameter_mm": cfg.leveling_screw_diameter_mm,
+        "geometry.stand.shim_thickness_mm": cfg.shim_thickness_mm,
+    }
+    if cfg.enable_plate_ties:
+        positive_fields.update(
+            {
+                "geometry.stand.plate_tie_column_diameter_mm": cfg.plate_tie_column_diameter_mm,
+                "geometry.stand.plate_tie_cap_width_mm": cfg.plate_tie_cap_width_mm,
+                "geometry.stand.plate_tie_cap_height_mm": cfg.plate_tie_cap_height_mm,
+                "geometry.stand.plate_tie_cap_thickness_mm": cfg.plate_tie_cap_thickness_mm,
+                "geometry.stand.plate_tie_bolt_diameter_mm": cfg.plate_tie_bolt_diameter_mm,
+            }
+        )
+    _require_positive(positive_fields)
 
-    if cfg.plate_tie_bolt_diameter_mm >= cfg.plate_tie_column_diameter_mm:
-        raise ValueError("geometry.stand.plate_tie_bolt_diameter_mm must be < plate_tie_column_diameter_mm")
-    if cfg.plate_tie_bolt_diameter_mm >= min(cfg.plate_tie_cap_width_mm, cfg.plate_tie_cap_height_mm):
-        raise ValueError("geometry.stand.plate_tie_bolt_diameter_mm must be < min(plate_tie_cap_width_mm, plate_tie_cap_height_mm)")
+    if cfg.enable_plate_ties:
+        if cfg.plate_tie_bolt_diameter_mm >= cfg.plate_tie_column_diameter_mm:
+            raise ValueError("geometry.stand.plate_tie_bolt_diameter_mm must be < plate_tie_column_diameter_mm")
+        if cfg.plate_tie_bolt_diameter_mm >= min(cfg.plate_tie_cap_width_mm, cfg.plate_tie_cap_height_mm):
+            raise ValueError("geometry.stand.plate_tie_bolt_diameter_mm must be < min(plate_tie_cap_width_mm, plate_tie_cap_height_mm)")
 
     return cfg
 
@@ -1047,6 +1067,14 @@ def _parse_clearance(raw: dict[str, Any]) -> ClearanceConfig:
     cfg = ClearanceConfig(
         los_scope=_to_str(raw.get("los_scope", "v1_conceptual"), "geometry.clearance.los_scope").lower(),
         los_margin_mm=_to_float(raw.get("los_margin_mm"), "geometry.clearance.los_margin_mm"),
+        vv_min_gap_factor=_to_float(raw.get("vv_min_gap_factor", 2.0), "geometry.clearance.vv_min_gap_factor"),
+        plate_auto_gap_mm=_to_float(raw.get("plate_auto_gap_mm", 5.0), "geometry.clearance.plate_auto_gap_mm"),
+        plate_chamber_cutout_margin_mm=_to_float(
+            raw.get("plate_chamber_cutout_margin_mm", 5.0),
+            "geometry.clearance.plate_chamber_cutout_margin_mm",
+        ),
+        disable_plate_cuts=_to_bool(raw.get("disable_plate_cuts", False), "geometry.clearance.disable_plate_cuts"),
+        skip_overlap_checks=_to_bool(raw.get("skip_overlap_checks", False), "geometry.clearance.skip_overlap_checks"),
         los_detector_active_face_offset_mm=_to_float(
             raw.get("los_detector_active_face_offset_mm", 0.0),
             "geometry.clearance.los_detector_active_face_offset_mm",
@@ -1072,6 +1100,9 @@ def _parse_clearance(raw: dict[str, Any]) -> ClearanceConfig:
     _require_positive(
         {
             "geometry.clearance.los_margin_mm": cfg.los_margin_mm,
+            "geometry.clearance.vv_min_gap_factor": cfg.vv_min_gap_factor,
+            "geometry.clearance.plate_auto_gap_mm": cfg.plate_auto_gap_mm,
+            "geometry.clearance.plate_chamber_cutout_margin_mm": cfg.plate_chamber_cutout_margin_mm,
             "geometry.clearance.detector_front_to_chamber_mm": cfg.detector_front_to_chamber_mm,
             "geometry.clearance.detector_pair_min_gap_mm": cfg.detector_pair_min_gap_mm,
             "geometry.clearance.top_service_clearance_mm": cfg.top_service_clearance_mm,
@@ -1082,8 +1113,57 @@ def _parse_clearance(raw: dict[str, Any]) -> ClearanceConfig:
         raise ValueError(f"geometry.clearance.los_scope must be one of {sorted(_ALLOWED_LOS_SCOPES)}")
     if cfg.los_detector_active_face_offset_mm < 0.0:
         raise ValueError("geometry.clearance.los_detector_active_face_offset_mm must be >= 0")
+    if cfg.vv_min_gap_factor < 1.0:
+        raise ValueError("geometry.clearance.vv_min_gap_factor must be >= 1.0")
 
     return cfg
+
+
+def _resolve_auto_plate_offset(
+    plate: PlateConfig,
+    *,
+    core: ChamberCoreConfig,
+    clearance: ClearanceConfig,
+) -> PlateConfig:
+    if plate.offset_mode != "auto":
+        return plate
+
+    # [EN] Auto mode only solves plate-normal standoff to the minimum outside-chamber position plus configured safety gap; in-plane offsets remain user-owned. / [CN] 自动模式仅解算板法向外置距离（腔体外最小距离+安全间隙），板内平移仍由用户控制。
+    if plate.mount_plane == "xy":
+        sign = 1.0 if plate.z_mm >= 0.0 else -1.0
+        if abs(plate.z_mm) < 1e-9:
+            sign = 1.0
+        z_mm = sign * (0.5 * core.size_z_mm + 0.5 * plate.thickness_mm + clearance.plate_auto_gap_mm)
+        return replace(plate, z_mm=z_mm)
+
+    if plate.mount_plane == "xz":
+        sign = 1.0 if plate.offset_y_mm >= 0.0 else -1.0
+        if abs(plate.offset_y_mm) < 1e-9:
+            sign = 1.0
+        offset_y_mm = sign * (0.5 * core.size_y_mm + 0.5 * plate.thickness_mm + clearance.plate_auto_gap_mm)
+        return replace(plate, offset_y_mm=offset_y_mm)
+
+    if plate.mount_plane == "yz":
+        sign = 1.0 if plate.offset_x_mm >= 0.0 else -1.0
+        if abs(plate.offset_x_mm) < 1e-9:
+            sign = 1.0
+        offset_x_mm = sign * (0.5 * core.size_x_mm + 0.5 * plate.thickness_mm + clearance.plate_auto_gap_mm)
+        return replace(plate, offset_x_mm=offset_x_mm)
+
+    raise ValueError(f"geometry.plate mount_plane unsupported for auto offset: {plate.mount_plane!r}")
+
+
+def _resolve_auto_plate_group(
+    plate: PlateGroupConfig,
+    *,
+    core: ChamberCoreConfig,
+    clearance: ClearanceConfig,
+) -> PlateGroupConfig:
+    return PlateGroupConfig(
+        h=_resolve_auto_plate_offset(plate.h, core=core, clearance=clearance),
+        v1=_resolve_auto_plate_offset(plate.v1, core=core, clearance=clearance),
+        v2=_resolve_auto_plate_offset(plate.v2, core=core, clearance=clearance),
+    )
 
 
 def _parse_geometry(raw: dict[str, Any]) -> GeometryConfig:
@@ -1102,6 +1182,7 @@ def _parse_geometry(raw: dict[str, Any]) -> GeometryConfig:
     target = _parse_target(_to_mapping(raw.get("target"), "geometry.target"))
     stand = _parse_stand(_to_mapping(raw.get("stand"), "geometry.stand"))
     clearance = _parse_clearance(_to_mapping(raw.get("clearance"), "geometry.clearance"))
+    plate = _resolve_auto_plate_group(plate, core=chamber.core, clearance=clearance)
 
     cfg = GeometryConfig(
         beamline=beamline,
@@ -1120,30 +1201,37 @@ def _parse_geometry(raw: dict[str, Any]) -> GeometryConfig:
 
 def _validate_geometry(cfg: GeometryConfig) -> None:
     core = cfg.chamber.core
-    inner_x = core.size_x_mm - 2.0 * core.wall_thickness_mm
-    inner_y = core.size_y_mm - 2.0 * core.wall_thickness_mm
-    inner_z = core.size_z_mm - 2.0 * core.wall_thickness_mm
+    half_x = 0.5 * core.size_x_mm
+    half_y = 0.5 * core.size_y_mm
+    half_z = 0.5 * core.size_z_mm
+    skip_overlap = cfg.clearance.skip_overlap_checks
     for name, plate in (("h", cfg.plate.h), ("v1", cfg.plate.v1), ("v2", cfg.plate.v2)):
         if name == "h":
             if plate.orientation != "horizontal" or plate.mount_plane != "xz":
                 raise ValueError("geometry.plate.h must be horizontal on xz plane")
         else:
-            if plate.orientation != "vertical" or plate.mount_plane != "xy":
-                raise ValueError(f"geometry.plate.{name} must be vertical on xy plane")
+            if plate.orientation != "vertical" or plate.mount_plane != "yz":
+                raise ValueError(f"geometry.plate.{name} must be vertical on yz plane")
 
-        if abs(plate.z_mm) >= 0.5 * core.size_z_mm:
-            raise ValueError(f"geometry.plate.{name}.z_mm must lie inside chamber core z-span")
-        if abs(plate.offset_y_mm) >= 0.5 * core.size_y_mm:
-            raise ValueError(f"geometry.plate.{name}.offset_y_mm must lie inside chamber core y-span")
-        if abs(plate.offset_x_mm) >= 0.5 * core.size_x_mm:
-            raise ValueError(f"geometry.plate.{name}.offset_x_mm must lie inside chamber core x-span")
+        if not skip_overlap:
+            if plate.mount_plane == "xy":
+                min_center_distance = half_z + 0.5 * plate.thickness_mm + cfg.clearance.plate_auto_gap_mm
+                if abs(plate.z_mm) < min_center_distance:
+                    raise ValueError(f"geometry.plate.{name}.z_mm must place full plate outside chamber volume")
+            elif plate.mount_plane == "xz":
+                min_center_distance = half_y + 0.5 * plate.thickness_mm + cfg.clearance.plate_auto_gap_mm
+                if abs(plate.offset_y_mm) < min_center_distance:
+                    raise ValueError(f"geometry.plate.{name}.offset_y_mm must place full plate outside chamber volume")
+            elif plate.mount_plane == "yz":
+                min_center_distance = half_x + 0.5 * plate.thickness_mm + cfg.clearance.plate_auto_gap_mm
+                if abs(plate.offset_x_mm) < min_center_distance:
+                    raise ValueError(f"geometry.plate.{name}.offset_x_mm must place full plate outside chamber volume")
+            else:
+                raise ValueError(f"geometry.plate.{name}.mount_plane unsupported: {plate.mount_plane!r}")
 
-        if plate.width_mm > inner_x:
-            raise ValueError(f"geometry.plate.{name}.width_mm exceeds chamber inner x span ({inner_x})")
-        if plate.mount_plane == "xy" and plate.height_mm > inner_y:
-            raise ValueError(f"geometry.plate.{name}.height_mm exceeds chamber inner y span ({inner_y})")
-        if plate.mount_plane == "xz" and plate.height_mm > inner_z:
-            raise ValueError(f"geometry.plate.{name}.height_mm exceeds chamber inner z span ({inner_z})")
+        if abs(plate.offset_x_mm) < 1e-9 and abs(plate.offset_y_mm) < 1e-9:
+            raise ValueError(f"geometry.plate.{name} must be offset from beam axis after offset resolution")
+
         if plate.stiffener_length_mm > plate.height_mm:
             raise ValueError(f"geometry.plate.{name}.stiffener_length_mm must be <= plate.height_mm")
         if plate.lug_width_mm > plate.height_mm:
@@ -1163,8 +1251,6 @@ def _validate_geometry(cfg: GeometryConfig) -> None:
             raise ValueError(f"geometry.ports.{name}.center_z_mm must lie on chamber side wall span")
 
     clamp = cfg.detector.clamp
-    if clamp.support_mount_hole_diameter_mm >= clamp.support_mount_block_height_mm:
-        raise ValueError("geometry.detector.clamp.support_mount_hole_diameter_mm must be < support_mount_block_height_mm")
     if clamp.anti_rotation_key_width_mm >= clamp.inner_diameter_mm:
         raise ValueError("geometry.detector.clamp.anti_rotation_key_width_mm must be < inner_diameter_mm")
     if clamp.clamp_ear_width_mm <= clamp.clamp_bolt_diameter_mm:
@@ -1177,10 +1263,22 @@ def _validate_geometry(cfg: GeometryConfig) -> None:
         raise ValueError("geometry.chamber.end_modules.interface_nut_outer_diameter_mm must be <= bolt_circle_diameter_mm")
 
     stand = cfg.stand
-    if stand.plate_tie_cap_width_mm >= min(stand.base_length_mm, stand.base_width_mm):
-        raise ValueError("geometry.stand.plate_tie_cap_width_mm must be smaller than stand base span")
-    if stand.plate_tie_cap_height_mm >= min(core.size_x_mm, core.size_z_mm):
-        raise ValueError("geometry.stand.plate_tie_cap_height_mm must be smaller than chamber transverse span")
+    if stand.enable_plate_ties:
+        if stand.plate_tie_cap_width_mm >= min(stand.base_length_mm, stand.base_width_mm):
+            raise ValueError("geometry.stand.plate_tie_cap_width_mm must be smaller than stand base span")
+        if stand.plate_tie_cap_height_mm >= min(core.size_x_mm, core.size_z_mm):
+            raise ValueError("geometry.stand.plate_tie_cap_height_mm must be smaller than chamber transverse span")
+
+    vv_clear_gap = abs(cfg.plate.v2.offset_x_mm - cfg.plate.v1.offset_x_mm) - 0.5 * (
+        cfg.plate.v1.thickness_mm + cfg.plate.v2.thickness_mm
+    )
+    vv_required_gap = cfg.clearance.vv_min_gap_factor * cfg.detector.clamp.outer_diameter_mm
+    if vv_clear_gap < vv_required_gap:
+        raise ValueError(
+            "geometry.plate.v1/v2 clear gap must satisfy "
+            f"gap >= vv_min_gap_factor*detector.clamp.outer_diameter_mm "
+            f"(gap={vv_clear_gap:.3f}, required={vv_required_gap:.3f})"
+        )
 
     if cfg.clearance.los_scope == "v2_fullpath" and not cfg.chamber.los_channels.enabled:
         raise ValueError("geometry.chamber.los_channels.enabled must be true when geometry.clearance.los_scope=v2_fullpath")

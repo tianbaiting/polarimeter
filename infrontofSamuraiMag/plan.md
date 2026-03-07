@@ -8,16 +8,20 @@
 
 ## 1. P0 阶段（必须先全通过）
 ### 1.1 三板拓扑与装配
-- H/V/V 姿态固定：`h=horizontal/xz`，`v1,v2=vertical/xy`
+- H/V/V 姿态固定：`h=horizontal/xz`，`v1,v2=vertical/yz`
+- 扇区映射固定：`left/right->h`，`up->v1`，`down->v2`
 - 三板均偏离束流轴
+- 三板全实体外置于 chamber 外
 - 三板均包含承重语义：主板+连接耳+螺栓孔+加劲肋
-- 探测器支撑锚点绑定到对应承重板
+- 探测器安装采用“沿板法向正交投影落板 + 4孔矩形螺栓固定”
+- 禁止使用杆件支撑
 
 验收：
 - `plate_pose_valid_hvv=pass`
 - `all_plates_offset_from_beam_axis=pass`
 - `load_path_complete=pass`
-- `support_attached_to_loadbearing_plate=pass`
+- `detector_mount_base_projected_orthogonally=pass`
+- `detector_mount_bolt_pattern_4hole_rectangular=pass`
 
 ### 1.2 LOS/干涉硬验证
 - 板件开孔采用规则扇形环带（大扇形减小扇形）
@@ -104,3 +108,15 @@
   - v1 关账：按 stateful 严格流水线完成 validate-only 与导出，`state.json.status=pass`，并归档 `state.json` 与 `validation_report.json`。
   - v2 开始：新增 `geometry.clearance.los_scope` 与 `geometry.chamber.los_channels.*` 参数；v2 下 LOS 路径改为 `source_plane -> chamber_effective_channels -> detector_active_face`，并将 `chamber/end_modules/target/stand` 纳入遮挡判定。
   - 测试分层：新增 `pure_python` / `freecad_runtime` marker，提供 `run_tests_layered.sh` 与 `scripts/precheck_test_env.py` 做依赖预检查与分层执行。
+- 2026-03-06 Iteration-06:
+  - 冻结并实施板姿态语义统一：`h=horizontal/xy`，`v1/v2=vertical/yz`。
+  - 冻结并实施扇区映射：`up/down->h`，`left->v1`，`right->v2`。
+  - 配置解析/建模/验证统一支持 `mount_plane=yz`，并补板件最小包络验收门（配置驱动，不自动扩板）。
+- 2026-03-06 Iteration-07:
+  - 板件与 chamber 干涉改为“全板总成布尔挖孔”，默认余量 `5 mm`。
+  - 新增 `vv_min_gap_factor` 与 `plate_chamber_cutout_margin_mm`，冻结 V1/V2 净间距门为 `>=2*detector.clamp.outer_diameter_mm`。
+  - 验证补充 `vv_clear_gap_vs_detector_outer_diameter` 与 `no_plate_chamber_overlap_after_cutout`，并将“探测器在板上”升级为桥接体与目标板实体交叠检查。
+- 2026-03-06 Iteration-08:
+  - 冻结三板新法向语义：`H⊥Y (xz)`，`V⊥X (yz)`；冻结映射：`left/right->h`，`up->v1`，`down->v2`。
+  - 探测器安装改为“沿板法向正交投影落板 + 4孔矩形螺栓固定”，移除杆件支撑。
+  - 三板统一外置于 chamber 外部，并保持板-腔体零重叠验收门。

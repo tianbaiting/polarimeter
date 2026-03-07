@@ -62,16 +62,16 @@ geometry:
     h:
       orientation: horizontal
       mount_plane: xz
-      offset_mode: auto
-      z_mm: 620.0
-      offset_x_mm: -24.0
-      offset_y_mm: 370.0
-      width_mm: 1500.0
-      height_mm: 640.0
-      thickness_mm: 10.0
+      offset_mode: manual
+      z_mm: 330.0
+      offset_x_mm: 0.0
+      offset_y_mm: -60.0
+      width_mm: 1496.7
+      height_mm: 1100.0
+      thickness_mm: 20.0
       inner_radius_mm: 260.0
       outer_radius_mm: 760.0
-      sector_opening_deg: 150.0
+      sector_opening_deg: 0.0
       azimuth_centers_deg: [90.0, -90.0]
       lug_length_mm: 48.0
       lug_width_mm: 76.0
@@ -86,16 +86,16 @@ geometry:
     v1:
       orientation: vertical
       mount_plane: yz
-      offset_mode: auto
-      z_mm: 620.0
-      offset_x_mm: 390.0
-      offset_y_mm: 430.0
-      width_mm: 760.0
-      height_mm: 920.0
-      thickness_mm: 10.0
+      offset_mode: manual
+      z_mm: 330.0
+      offset_x_mm: 60.0
+      offset_y_mm: 349.15
+      width_mm: 798.3
+      height_mm: 1100.0
+      thickness_mm: 20.0
       inner_radius_mm: 260.0
       outer_radius_mm: 520.0
-      sector_opening_deg: 150.0
+      sector_opening_deg: 0.0
       azimuth_centers_deg: [0.0, 90.0, 180.0, -90.0]
       lug_length_mm: 42.0
       lug_width_mm: 74.0
@@ -110,16 +110,16 @@ geometry:
     v2:
       orientation: vertical
       mount_plane: yz
-      offset_mode: auto
-      z_mm: 620.0
-      offset_x_mm: -390.0
-      offset_y_mm: -430.0
-      width_mm: 700.0
-      height_mm: 820.0
-      thickness_mm: 10.0
+      offset_mode: manual
+      z_mm: 330.0
+      offset_x_mm: -60.0
+      offset_y_mm: -409.15
+      width_mm: 678.3
+      height_mm: 1100.0
+      thickness_mm: 20.0
       inner_radius_mm: 260.0
       outer_radius_mm: 520.0
-      sector_opening_deg: 150.0
+      sector_opening_deg: 0.0
       azimuth_centers_deg: [0.0, 90.0, 180.0, -90.0]
       lug_length_mm: 42.0
       lug_width_mm: 74.0
@@ -218,9 +218,11 @@ geometry:
   clearance:
     los_scope: v1_conceptual
     los_margin_mm: 5.0
-    vv_min_gap_factor: 2.0
+    vv_min_gap_factor: 1.0
     plate_auto_gap_mm: 5.0
     plate_chamber_cutout_margin_mm: 5.0
+    disable_plate_cuts: true
+    skip_overlap_checks: true
     los_detector_active_face_offset_mm: 0.0
     detector_front_to_chamber_mm: 40.0
     detector_pair_min_gap_mm: 65.0

@@ -137,3 +137,11 @@ def ray_point_at_y(direction: App.Vector, y_mm: float) -> App.Vector:
         raise ValueError("ray_point_at_y is undefined for direction with dy ~ 0")
     t = y_mm / d.y
     return scaled(d, t)
+
+
+def ray_point_at_x(direction: App.Vector, x_mm: float) -> App.Vector:
+    d = normalize(direction)
+    if abs(d.x) < 1e-9:
+        raise ValueError("ray_point_at_x is undefined for direction with dx ~ 0")
+    t = x_mm / d.x
+    return scaled(d, t)

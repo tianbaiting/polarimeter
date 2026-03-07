@@ -146,7 +146,7 @@ def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> B
         "VPlate1": cfg.geometry.plate.v1,
         "VPlate2": cfg.geometry.plate.v2,
     }
-    for name, shape in build_all_plates(cfg.geometry).items():
+    for name, shape in build_all_plates(cfg.geometry, placements=placements).items():
         plate_obj = _add_component(
             doc,
             assembly,
@@ -183,7 +183,7 @@ def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> B
 
     for placement in placements:
         tag = placement.tag
-        housing, clamp_a, clamp_b, adapter_block, support_rod, support_mount, support_bridge = build_detector_fixture(
+        housing, clamp_a, clamp_b, adapter_block, mount_base = build_detector_fixture(
             cfg.geometry,
             placement,
         )
@@ -224,35 +224,17 @@ def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> B
             subsystem="detector",
             role="fixed-angle transition block",
         )
-        support_obj = _add_component(
-            doc,
-            assembly,
-            export_objects,
-            f"DetectorSupportRod_{tag}",
-            support_rod,
-            subsystem="detector",
-            role="support transfer from load-bearing plate to clamp",
-        )
         mount_obj = _add_component(
             doc,
             assembly,
             export_objects,
-            f"DetectorSupportMount_{tag}",
-            support_mount,
+            f"DetectorMountBase_{tag}",
+            mount_base,
             subsystem="detector",
-            role="support mount block attached to load-bearing plate",
-        )
-        bridge_obj = _add_component(
-            doc,
-            assembly,
-            export_objects,
-            f"DetectorSupportBridge_{tag}",
-            support_bridge,
-            subsystem="detector",
-            role="direct bridge from support mount to load-bearing plate",
+            role="orthogonally projected detector mount base with rectangular 4-hole bolt pattern",
         )
 
-        for obj in (housing_obj, clamp_a_obj, clamp_b_obj, adapter_obj, support_obj, mount_obj, bridge_obj):
+        for obj in (housing_obj, clamp_a_obj, clamp_b_obj, adapter_obj, mount_obj):
             _attach_layout_properties(obj, placement)
 
     for name, shape in build_target_ladder(cfg.geometry).items():

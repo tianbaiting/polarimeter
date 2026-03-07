@@ -34,17 +34,36 @@ def test_default_runtime_validation_passes_strict_gate() -> None:
     assert _check_by_name(report, "chamber", "end_module_fastener_hardware").passed
     assert _check_by_name(report, "chamber", "vacuum_boundary_complete").passed
     assert _check_by_name(report, "plates", "los_unobstructed_margin_5mm").passed
+    plate_pose = _check_by_name(report, "plates", "plate_pose_valid_hvv")
+    assert plate_pose.passed
+    assert "h=horizontal/xz" in plate_pose.detail
+    assert "v1=vertical/yz" in plate_pose.detail
+    assert "v2=vertical/yz" in plate_pose.detail
+    assert _check_by_name(report, "plates", "plate_min_envelope_margin_5mm").passed
+    assert _check_by_name(report, "plates", "vv_clear_gap_vs_detector_outer_diameter").passed
+    assert _check_by_name(report, "plates", "no_plate_chamber_overlap_after_cutout").passed
+    assert _check_by_name(report, "plates", "all_plate_solids_outside_chamber").passed
     los_scope = _check_by_name(report, "plates", "los_all_occluders_clear")
     assert los_scope.passed
     assert "scope=v1_conceptual" in los_scope.detail
-    assert _check_by_name(report, "plates", "plate_to_stand_tie_hardware").passed
+    plate_tie_check = _check_by_name(report, "plates", "plate_to_stand_tie_hardware")
+    assert plate_tie_check.passed
+    assert "mode=disabled" in plate_tie_check.detail
     assert _check_by_name(report, "detector", "clamp_fastening_and_key_features").passed
+    assert _check_by_name(report, "detector", "detector_mount_base_projected_orthogonally").passed
+    assert _check_by_name(report, "detector", "detector_mount_bolt_pattern_4hole_rectangular").passed
+    assert _check_by_name(report, "detector", "detector_mount_base_and_plate_hole_alignment").passed
+    assert _check_by_name(report, "detector", "detector_mount_fixture_structural_continuity").passed
+    assert _check_by_name(report, "detector", "detector_mount_sector_plate_assignment").passed
+    assert _check_by_name(report, "detector", "detector_mount_bridge_length_within_limit").passed
     assert _check_by_name(report, "detector", "no_detector_package_interference_with_assembly").passed
     assert _check_by_name(report, "target", "removable_holder_dual_screw_clamp").passed
-    assert _check_by_name(report, "stand", "plate_tie_parameterized").passed
+    stand_tie_check = _check_by_name(report, "stand", "plate_tie_parameterized")
+    assert stand_tie_check.passed
+    assert "mode=disabled" in stand_tie_check.detail
 
 
-def test_h_plate_missing_up_sector_opening_is_caught() -> None:
+def test_h_plate_projection_envelope_too_small_is_caught() -> None:
     pytest.importorskip("FreeCAD")
 
     from ifsm.config import load_build_config
@@ -53,14 +72,14 @@ def test_h_plate_missing_up_sector_opening_is_caught() -> None:
 
     cfg = load_build_config(
         ROOT / "config" / "default_infront.yaml",
-        overrides=["geometry.plate.h.azimuth_centers_deg=[0.0, 180.0, -90.0]"],
+        overrides=["geometry.plate.h.width_mm=200.0"],
     )
     placements = build_detector_placements(cfg.layout)
     report = validate_constraints(placements, cfg.geometry, ValidationThresholds())
 
-    los_occluder = _check_by_name(report, "plates", "los_all_occluders_clear")
-    assert not los_occluder.passed
-    assert "up_proton_large" in los_occluder.detail
+    envelope = _check_by_name(report, "plates", "plate_min_envelope_margin_5mm")
+    assert not envelope.passed
+    assert "h[w=" in envelope.detail
 
 
 def test_signal_feedthrough_semantic_is_derived_from_port_fields() -> None:

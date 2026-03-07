@@ -2,6 +2,18 @@
 
 This module builds, validates, and exports the BLP v1 in-front polarimeter concept assembly.
 
+## 0. Worklog Protocol (Mandatory)
+
+Before edits/runs, read:
+- `worklog.md`
+- `infrontofSamuraiMag/worklog.md`
+
+After every stateful run (including `--validate-only`), append one English entry to both files with:
+- timestamp (UTC + local),
+- command and key overrides,
+- validation/state result,
+- next action.
+
 ## 1. Run Commands
 
 Stateful pipeline entry (required for module work):
@@ -96,7 +108,8 @@ PYTHON_BIN=infrontofSamuraiMag/.venv-pytest/bin/python ./infrontofSamuraiMag/run
 
 ### 4.4 geometry.plate.h / v1 / v2
 - `orientation` (`horizontal` or `vertical`)
-- `mount_plane` (`xz` for H, `xy` for V1/V2)
+- `mount_plane` (`xy` for H, `yz` for V1/V2; parser also accepts `xz` for non-default layouts)
+- `offset_mode` (`manual` or `auto`; auto resolves plate-normal offset to minimum outside-chamber position + `plate_auto_gap_mm`)
 - pose: `z_mm / offset_x_mm / offset_y_mm`
 - panel: `width_mm / height_mm / thickness_mm`
 - LOS opening: `inner_radius_mm / outer_radius_mm / sector_opening_deg / azimuth_centers_deg[]`
@@ -121,6 +134,9 @@ PYTHON_BIN=infrontofSamuraiMag/.venv-pytest/bin/python ./infrontofSamuraiMag/run
 ### 4.8 geometry.clearance
 - `los_scope` (`v1_conceptual` or `v2_fullpath`)
 - `los_margin_mm`
+- `vv_min_gap_factor` (V1/V2 clear-gap multiplier against detector clamp outer diameter; default `2.0`)
+- `plate_auto_gap_mm` (minimum plate-normal gap used by auto offset solver)
+- `plate_chamber_cutout_margin_mm` (plate-vs-chamber cutout margin; default `5.0`)
 - `los_detector_active_face_offset_mm`
 - `detector_front_to_chamber_mm`
 - `detector_pair_min_gap_mm`

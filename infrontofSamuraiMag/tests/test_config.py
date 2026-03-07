@@ -25,21 +25,27 @@ def test_load_default_config() -> None:
     assert {channel.confidence for channel in cfg.layout.channels} <= {"high", "medium", "low"}
     assert cfg.geometry.plate.h.stiffener_count >= 1
     assert cfg.geometry.plate.h.bolt_hole_count >= 2
-    assert cfg.geometry.detector.clamp.support_mount_block_length_mm > 0.0
+    assert cfg.geometry.detector.clamp.mount_base_u_mm > 0.0
     assert cfg.geometry.plate.h.orientation == "horizontal"
     assert cfg.geometry.plate.h.mount_plane == "xz"
+    assert cfg.geometry.plate.h.offset_mode == "auto"
     assert cfg.geometry.plate.v1.orientation == "vertical"
-    assert cfg.geometry.plate.v1.mount_plane == "xy"
+    assert cfg.geometry.plate.v1.mount_plane == "yz"
+    assert cfg.geometry.plate.v1.offset_mode == "auto"
     assert cfg.geometry.plate.v2.orientation == "vertical"
-    assert cfg.geometry.plate.v2.mount_plane == "xy"
+    assert cfg.geometry.plate.v2.mount_plane == "yz"
+    assert cfg.geometry.plate.v2.offset_mode == "auto"
     assert cfg.geometry.chamber.end_modules.bolt_count >= 6
     assert cfg.geometry.chamber.end_modules.interface_bolt_diameter_mm > 0.0
     assert cfg.geometry.target.ladder.motor_mount_width_mm > 0.0
     assert cfg.geometry.detector.clamp.clamp_bolt_diameter_mm > 0.0
     assert cfg.geometry.detector.clamp.anti_rotation_key_depth_mm > 0.0
     assert cfg.geometry.target.holder.clamp_screw_diameter_mm > 0.0
-    assert cfg.geometry.stand.plate_tie_column_diameter_mm > 0.0
+    assert cfg.geometry.stand.enable_plate_ties is False
     assert cfg.geometry.clearance.los_scope == "v1_conceptual"
+    assert cfg.geometry.clearance.vv_min_gap_factor == pytest.approx(2.0)
+    assert cfg.geometry.clearance.plate_auto_gap_mm == pytest.approx(5.0)
+    assert cfg.geometry.clearance.plate_chamber_cutout_margin_mm == pytest.approx(5.0)
     assert not cfg.geometry.chamber.los_channels.enabled
 
 
@@ -70,10 +76,34 @@ def test_plate_must_be_offset() -> None:
         load_build_config(
             ROOT / "config" / "default_infront.yaml",
             overrides=[
+                "geometry.plate.h.offset_mode=manual",
                 "geometry.plate.h.offset_x_mm=0",
                 "geometry.plate.h.offset_y_mm=0",
             ],
         )
+
+
+def test_invalid_plate_offset_mode() -> None:
+    with pytest.raises(ValueError, match="offset_mode"):
+        load_build_config(
+            ROOT / "config" / "default_infront.yaml",
+            overrides=[
+                "geometry.plate.v1.offset_mode=semi_auto",
+            ],
+        )
+
+
+def test_auto_plate_offset_resolution_applies_minimum_gap() -> None:
+    cfg = load_build_config(
+        ROOT / "config" / "default_infront.yaml",
+        overrides=[
+            "geometry.plate.h.offset_mode=auto",
+            "geometry.plate.h.offset_y_mm=0",
+            "geometry.clearance.plate_auto_gap_mm=6.5",
+        ],
+    )
+    expected = 0.5 * cfg.geometry.chamber.core.size_y_mm + 0.5 * cfg.geometry.plate.h.thickness_mm + 6.5
+    assert cfg.geometry.plate.h.offset_y_mm == pytest.approx(expected)
 
 
 def test_load_bearing_plate_requires_minimum_bolt_count() -> None:
@@ -87,7 +117,7 @@ def test_load_bearing_plate_requires_minimum_bolt_count() -> None:
 
 
 def test_invalid_vertical_plate_mount_plane() -> None:
-    with pytest.raises(ValueError, match="vertical plate must use mount_plane=xy"):
+    with pytest.raises(ValueError, match="plate.v1 must be vertical on yz plane"):
         load_build_config(
             ROOT / "config" / "default_infront.yaml",
             overrides=[
@@ -102,7 +132,7 @@ def test_invalid_h_plate_orientation() -> None:
             ROOT / "config" / "default_infront.yaml",
             overrides=[
                 "geometry.plate.h.orientation=vertical",
-                "geometry.plate.h.mount_plane=xy",
+                "geometry.plate.h.mount_plane=xz",
             ],
         )
 
@@ -162,9 +192,25 @@ def test_invalid_stand_tie_bolt_diameter() -> None:
         load_build_config(
             ROOT / "config" / "default_infront.yaml",
             overrides=[
+                "geometry.stand.enable_plate_ties=true",
                 "geometry.stand.plate_tie_bolt_diameter_mm=13",
             ],
         )
+
+
+def test_disabled_plate_ties_allow_zero_tie_dimensions() -> None:
+    cfg = load_build_config(
+        ROOT / "config" / "default_infront.yaml",
+        overrides=[
+            "geometry.stand.enable_plate_ties=false",
+            "geometry.stand.plate_tie_column_diameter_mm=0",
+            "geometry.stand.plate_tie_cap_width_mm=0",
+            "geometry.stand.plate_tie_cap_height_mm=0",
+            "geometry.stand.plate_tie_cap_thickness_mm=0",
+            "geometry.stand.plate_tie_bolt_diameter_mm=0",
+        ],
+    )
+    assert cfg.geometry.stand.enable_plate_ties is False
 
 
 def test_invalid_los_scope() -> None:
@@ -183,5 +229,35 @@ def test_v2_scope_requires_los_channels_enabled() -> None:
             ROOT / "config" / "default_infront.yaml",
             overrides=[
                 "geometry.clearance.los_scope=v2_fullpath",
+            ],
+        )
+
+
+def test_invalid_vv_min_gap_factor() -> None:
+    with pytest.raises(ValueError, match="vv_min_gap_factor"):
+        load_build_config(
+            ROOT / "config" / "default_infront.yaml",
+            overrides=[
+                "geometry.clearance.vv_min_gap_factor=0.8",
+            ],
+        )
+
+
+def test_invalid_plate_chamber_cutout_margin() -> None:
+    with pytest.raises(ValueError, match="plate_chamber_cutout_margin_mm"):
+        load_build_config(
+            ROOT / "config" / "default_infront.yaml",
+            overrides=[
+                "geometry.clearance.plate_chamber_cutout_margin_mm=0",
+            ],
+        )
+
+
+def test_vv_gap_must_satisfy_detector_outer_diameter_rule() -> None:
+    with pytest.raises(ValueError, match="v1/v2 clear gap"):
+        load_build_config(
+            ROOT / "config" / "default_infront.yaml",
+            overrides=[
+                "geometry.clearance.vv_min_gap_factor=12.0",
             ],
         )
