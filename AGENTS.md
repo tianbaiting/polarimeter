@@ -23,19 +23,23 @@ All Codex terminals working in this repository MUST follow this protocol.
 ## Stateful Files (Source of Truth)
 - Root index: `codex_targets.yaml`
 - Active module target: `infrontofSamuraiMag/target.yaml`
+- Cross-terminal worklog index: `worklog.md`
+- Module execution worklog: `infrontofSamuraiMag/worklog.md`
 - Active module runtime state: `infrontofSamuraiMag/state.json` (gitignored)
 - Active module lock file: `infrontofSamuraiMag/state.lock` (gitignored)
 
 Ownership rules:
-- Human-owned: `codex_targets.yaml`, `target.yaml`
+- Human-owned: `codex_targets.yaml`, `target.yaml`, `worklog.md`, `infrontofSamuraiMag/worklog.md`
 - Machine-owned: `state.json`, `state.lock`, validation report JSON
 
 ## Progress and Status Reading (Mandatory)
 - Always read progress in this order:
   1) `codex_targets.yaml` (resolve active module/paths)
   2) `target.yaml` (intent + frozen spec/config refs)
-  3) `state.json` (latest run status)
-  4) validation report JSON path from `state.json.validation.report_json`
+  3) `worklog.md` (cross-terminal context and handoff summary)
+  4) `infrontofSamuraiMag/worklog.md` (module-level command/result timeline)
+  5) `state.json` (latest run status)
+  6) validation report JSON path from `state.json.validation.report_json`
 - `state.json.run.status` semantics:
   - `pass`: current run executed and passed strict gate
   - `fail`: current run executed but validation failed
@@ -55,6 +59,10 @@ Ownership rules:
 - Any requirement/parameter change MUST be represented in `target.yaml` and/or config before code edits.
 - Any code behavior change SHOULD include tests under `infrontofSamuraiMag/tests/`.
 - Do not commit generated CAD artifacts (`*.FCStd`, `*.step`) or runtime state files.
+- After every stateful pipeline run (including `--validate-only`), append one entry to:
+  - `worklog.md`
+  - `infrontofSamuraiMag/worklog.md`
+- Each worklog entry must include: timestamp (UTC+local), command, key overrides/parameters, validation result, and next action.
 - Final report from a Codex terminal must include:
   - commands executed,
   - validation result,

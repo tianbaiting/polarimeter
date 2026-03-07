@@ -80,6 +80,12 @@ The skill standardizes:
 - JSON report checks,
 - failure handling when constraints are violated.
 
+## Worklog Files
+
+Mandatory handoff logs for Codex terminals/agents:
+- `worklog.md` (cross-terminal index)
+- `infrontofSamuraiMag/worklog.md` (module execution detail)
+
 ## Infront Workflow Entry
 
 Detailed operational guide:

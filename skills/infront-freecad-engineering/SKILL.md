@@ -30,17 +30,25 @@ Before interactive MCP actions, verify all items below:
 
 ## Workflow
 
-1. Edit physical parameters in `infrontofSamuraiMag/config/default_infront.yaml` or pass one-off overrides with `--set`.
-2. Run strict validation first:
+1. Read context files before any edit/run:
+   - `docs/specs/BLP_v1_requirement_baseline.md`
+   - `worklog.md`
+   - `infrontofSamuraiMag/worklog.md`
+2. Edit physical parameters in `infrontofSamuraiMag/config/default_infront.yaml` or pass one-off overrides with `--set`.
+3. Run strict validation first:
    - `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
-3. If validation passes, generate artifacts:
+4. If validation passes, generate artifacts:
    - `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml`
-4. Inspect report keys:
+5. Inspect report keys:
    - `status`, `thresholds`, `channels`, `subsystems`, `artifacts`
-5. Fail fast rule:
+6. Fail fast rule:
    - If `status=fail`, do not claim geometry is acceptable; adjust config or tolerances.
-6. Confirm runtime state:
+7. Confirm runtime state:
    - `infrontofSamuraiMag/state.json` should have `validation.status=pass`.
+8. After every stateful run (including `--validate-only`), append one entry to both:
+   - `worklog.md`
+   - `infrontofSamuraiMag/worklog.md`
+   Entry fields (English): timestamp, command, key params/overrides, validation result, next action.
 
 ## Stable Commands
 
