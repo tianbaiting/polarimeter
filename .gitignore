@@ -25,6 +25,10 @@ infrontofSamuraiMag/reports/archive/
 infrontofSamuraiMag/.venv-pytest/
 infrontofSamuraiMag/.pytest_cache/
 
+# Generated build trees and numerical study outputs under the polarimeter code module.
+code/build/
+code/output/
+
 *.step
 *.FCStd
 *.FCBak
