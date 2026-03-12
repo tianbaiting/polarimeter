@@ -94,6 +94,18 @@ Ownership rules:
 - Keep scenario/config changes in `code/config/*.ini` instead of hard-coding constants into apps where practical.
 - Treat ROOT plotting outputs as generated results; keep reproducible commands in commit messages or handoff notes instead of committing `code/output/`.
 
+### Count-to-Polarization Skill
+- Repository-local skill for count-based polarization inference:
+  - `skills/dpolar-count-inference/SKILL.md`
+- Use this skill when the request involves:
+  - `pzz` / `pyy` inference from counts,
+  - LR/UD asymmetry inversion,
+  - profile likelihood or likelihood-curve plotting,
+  - `infer-pzz`, `infer-pyy`, `infer-pzz-plot`, or `infer-pyy-plot`.
+- Keep this skill separate from `skills/infront-freecad-engineering/SKILL.md`.
+  Use `dpolar-count-inference` for statistical inference and likelihood plots under `code/`;
+  use `infront-freecad-engineering` for FreeCAD/stateful geometry and mixed CAD-analysis workflows.
+
 ## FreeCAD Interactive Drawing and Review Rules
 - For FreeCAD GUI or MCP-driven work, distinguish three tasks clearly:
   1) parametric model generation,

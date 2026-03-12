@@ -1,0 +1,19 @@
+{
+  "parameter": "pyy",
+  "observable": "lrud_coincidence",
+  "estimator": "pair_binomial",
+  "case_label": "coincidence_3h_midscan",
+  "input_counts_integer": "false",
+  "count_lr": "101626.4230268900",
+  "count_ud": "75425.7794249000",
+  "estimate": "0.4999999832",
+  "sigma_mle": "0.0077395213",
+  "ci68_low": "0.4922555260",
+  "ci68_high": "0.5077345526",
+  "ci95_low": "0.4848118215",
+  "ci95_high": "0.5151500662",
+  "at_lower_bound": "false",
+  "at_upper_bound": "false",
+  "loglikelihood_max": "-120777.4770777563",
+  "likelihood_point_count": "401"
+}

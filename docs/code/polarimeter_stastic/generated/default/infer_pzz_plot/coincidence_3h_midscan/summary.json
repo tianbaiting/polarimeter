@@ -1,0 +1,19 @@
+{
+  "parameter": "pzz",
+  "observable": "coincidence",
+  "estimator": "pair_binomial",
+  "case_label": "coincidence_3h_midscan",
+  "input_counts_integer": "false",
+  "count": "47727.8455355500",
+  "count2": "93414.7099930400",
+  "estimate": "0.5000000000",
+  "sigma_mle": "0.0148076563",
+  "ci68_low": "0.4851674034",
+  "ci68_high": "0.5147827395",
+  "ci95_low": "0.4708816776",
+  "ci95_high": "0.5289267995",
+  "at_lower_bound": "false",
+  "at_upper_bound": "false",
+  "loglikelihood_max": "-90303.4423316178",
+  "likelihood_point_count": "401"
+}

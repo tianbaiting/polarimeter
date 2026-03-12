@@ -32,6 +32,8 @@ code/output/
 skills/
 polar_infrontSamurai.pdf
 
+code/build**/
+.vscode/
 *.step
 *.FCStd
 *.FCBak

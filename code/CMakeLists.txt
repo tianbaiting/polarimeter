@@ -16,6 +16,8 @@ add_library(dpolar_core STATIC
     src/observables.cpp
     src/acceptance.cpp
     src/counts.cpp
+    src/inference.cpp
+    src/inference_plot.cpp
     src/energy_loss.cpp
     src/plotting.cpp
     src/analysis.cpp

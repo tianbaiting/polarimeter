@@ -1,0 +1,34 @@
+key,value
+lrud_window_begin_deg,65.0877
+lrud_window_end_deg,72.2818
+lrud_window_delta_phi_deg,4.6044
+duration_label,10min
+duration_s,600.0
+lrud_observable,coincidence
+beam_particles,5991848711.4823
+lrud_sector_multiplier,2.0
+asymmetry_at_min_pol,0.00000000
+asymmetry_at_max_pol,0.30389454
+asymmetry_stat_sigma_at_max_pol,0.00890934
+asymmetry_total_sigma_at_max_pol,0.00891442
+stat_only_definition_1,NLR = 2 x Np+d(coincidence LR sector, proton arm 1 with deuteron forward branch, #theta_{lab}^{p} = 53.4 deg)
+stat_only_definition_2,NUD = 2 x Np+d(coincidence UD sector, proton arm 1 with deuteron forward branch, #theta_{lab}^{p} = 53.4 deg)
+stat_only_definition_3,R_{LRUD} = (NLR - NUD) / (NLR + NUD); proton and deuteron coincidence gate is used
+stat_only_definition_4,NLR #propto #int_{CM overlap} d#theta d#phi [d#sigma/d#Omega x (1 - #sqrt{3}/2 T22 pyy - #sqrt{2}/4 T20 pyy)]
+stat_only_definition_5,NUD #propto #int_{CM overlap} d#theta d#phi [d#sigma/d#Omega x (1 + #sqrt{3}/2 T22 pyy - #sqrt{2}/4 T20 pyy)]
+stat_only_definition_6,#sigma = #sigma_{stat} only
+stat_only_definition_7,I = 1.600e-12 A; t = 600.0 s; Nbeam = I/e x t = 5.992e+09
+stat_plus_T_definition_1,NLR = 2 x Np+d(coincidence LR sector, proton arm 1 with deuteron forward branch, #theta_{lab}^{p} = 53.4 deg)
+stat_plus_T_definition_2,NUD = 2 x Np+d(coincidence UD sector, proton arm 1 with deuteron forward branch, #theta_{lab}^{p} = 53.4 deg)
+stat_plus_T_definition_3,R_{LRUD} = (NLR - NUD) / (NLR + NUD); proton and deuteron coincidence gate is used
+stat_plus_T_definition_4,NLR #propto #int_{CM overlap} d#theta d#phi [d#sigma/d#Omega x (1 - #sqrt{3}/2 T22 pyy - #sqrt{2}/4 T20 pyy)]
+stat_plus_T_definition_5,NUD #propto #int_{CM overlap} d#theta d#phi [d#sigma/d#Omega x (1 + #sqrt{3}/2 T22 pyy - #sqrt{2}/4 T20 pyy)]
+stat_plus_T_definition_6,#sigma_{tot}^{2} = #sigma_{stat}^{2} + #sigma_{T}^{2}
+stat_plus_T_definition_7,I = 1.600e-12 A; t = 600.0 s; Nbeam = I/e x t = 5.992e+09
+inference_estimator,pair_binomial
+inference_observable,coincidence
+inference_point_count,11
+inference_estimate_at_min_pol,0.00000000
+inference_estimate_at_max_pol,0.99999999
+inference_ci68_width_at_max_pol,0.03051653
+inference_ci95_width_at_max_pol,0.06002614

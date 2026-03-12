@@ -3,6 +3,7 @@
 #include "dpolar/acceptance.hpp"
 #include "dpolar/counts.hpp"
 #include "dpolar/energy_loss.hpp"
+#include "dpolar/inference.hpp"
 #include "dpolar/plotting.hpp"
 
 #include <filesystem>
@@ -16,7 +17,8 @@ enum class LayoutPreset {
 
 enum class RatioMode {
     Deuteron,
-    Proton
+    Proton,
+    Coincidence
 };
 
 class AnalysisSession {
@@ -30,6 +32,7 @@ public:
     AnalysisArtifacts runEnergyPlot(const std::filesystem::path& output_root) const;
     AnalysisArtifacts runRatioScan(RatioMode mode, const std::filesystem::path& output_root) const;
     AnalysisArtifacts runLrudScan(const std::filesystem::path& output_root) const;
+    AnalysisArtifacts runLrudScan(LrudObservable observable, const std::filesystem::path& output_root) const;
     AnalysisArtifacts runCoincidenceScan(const std::filesystem::path& output_root) const;
     AnalysisArtifacts runCoincidenceTotalScan(const std::filesystem::path& output_root) const;
     AnalysisArtifacts runCrossSectionScan(const std::filesystem::path& output_root) const;
@@ -38,7 +41,9 @@ public:
 
 private:
     AnalysisArtifacts runRatioScanSingleDuration(RatioMode mode, const std::filesystem::path& analysis_dir) const;
-    AnalysisArtifacts runLrudScanSingleDuration(const std::filesystem::path& analysis_dir) const;
+    AnalysisArtifacts runLrudScanSingleDuration(
+        LrudObservable observable,
+        const std::filesystem::path& analysis_dir) const;
     AnalysisArtifacts runCoincidenceScanSingleDuration(const std::filesystem::path& analysis_dir) const;
     AnalysisArtifacts runCoincidenceTotalScanSingleDuration(const std::filesystem::path& analysis_dir) const;
 

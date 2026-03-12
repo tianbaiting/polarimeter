@@ -1,0 +1,11 @@
+key,value
+duration_count,3
+duration_1_label,10min
+duration_1_seconds,600.0
+duration_1_dir,/home/tian/workspace/dpol/polarimeter/code/output/default/lrud_coincidence/10min
+duration_2_label,1h
+duration_2_seconds,3600.0
+duration_2_dir,/home/tian/workspace/dpol/polarimeter/code/output/default/lrud_coincidence/1h
+duration_3_label,3h
+duration_3_seconds,10800.0
+duration_3_dir,/home/tian/workspace/dpol/polarimeter/code/output/default/lrud_coincidence/3h

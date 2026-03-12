@@ -1,0 +1,37 @@
+key,value
+window_1_begin_deg,65.0877
+window_1_end_deg,72.2818
+window_1_delta_phi_deg,4.6044
+window_2_begin_deg,151.7167
+window_2_end_deg,159.6988
+window_2_delta_phi_deg,16.0610
+duration_label,1h
+duration_s,3600.0
+ratio_observable,coincidence
+beam_particles,35951092268.8940
+ratio_sector_multiplier,1.0
+ratio_at_min_pol,0.42589548
+ratio_at_max_pol,0.62400281
+ratio_stat_sigma_at_max_pol,0.00615732
+ratio_total_sigma_at_max_pol,0.00617697
+stat_only_definition_1,N1 = Np+d(coincidence, proton arm 1 with deuteron forward branch, #theta_{lab}^{p} = 53.4 deg)
+stat_only_definition_2,N2 = Np+d(coincidence, proton arm 2 with deuteron backward branch, #theta_{lab}^{p} = 11.2 deg)
+stat_only_definition_3,R = N1 / N2; proton and deuteron coincidence gate is used
+stat_only_definition_4,Ni = M x Ntarget x Nbeam x #int_{CM overlap} d#theta d#phi [d#sigma/d#Omega x (1 + #sqrt{2}/2 T20 pzz)]
+stat_only_definition_5,#sigma_{R,stat}^{2} = N1/N2^{2} + N1^{2}/N2^{3} + 2N1/(Nbeam N2^{2})
+stat_only_definition_6,#sigma = #sigma_{stat} only
+stat_only_definition_7,I = 1.600e-12 A; t = 3600.0 s; Nbeam = I/e x t = 3.595e+10
+stat_plus_T_definition_1,N1 = Np+d(coincidence, proton arm 1 with deuteron forward branch, #theta_{lab}^{p} = 53.4 deg)
+stat_plus_T_definition_2,N2 = Np+d(coincidence, proton arm 2 with deuteron backward branch, #theta_{lab}^{p} = 11.2 deg)
+stat_plus_T_definition_3,R = N1 / N2; proton and deuteron coincidence gate is used
+stat_plus_T_definition_4,Ni = M x Ntarget x Nbeam x #int_{CM overlap} d#theta d#phi [d#sigma/d#Omega x (1 + #sqrt{2}/2 T20 pzz)]
+stat_plus_T_definition_5,#sigma_{R,stat}^{2} = N1/N2^{2} + N1^{2}/N2^{3} + 2N1/(Nbeam N2^{2})
+stat_plus_T_definition_6,#sigma_{tot}^{2} = #sigma_{stat}^{2} + #sigma_{T}^{2}
+stat_plus_T_definition_7,I = 1.600e-12 A; t = 3600.0 s; Nbeam = I/e x t = 3.595e+10
+inference_estimator,pair_binomial
+inference_observable,coincidence
+inference_point_count,11
+inference_estimate_at_min_pol,0.00000000
+inference_estimate_at_max_pol,1.00000000
+inference_ci68_width_at_max_pol,0.02344487
+inference_ci95_width_at_max_pol,0.04609040

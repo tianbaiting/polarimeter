@@ -3,11 +3,13 @@
 #include "TAxis.h"
 #include "TBox.h"
 #include "TCanvas.h"
+#include "TGraphAsymmErrors.h"
 #include "TGraph.h"
 #include "TGraphErrors.h"
 #include "TH2D.h"
 #include "TLegend.h"
 #include "TLatex.h"
+#include "TLine.h"
 #include "TPad.h"
 #include "TPaveText.h"
 #include "TROOT.h"
@@ -40,6 +42,15 @@ struct LrudStatModel {
 struct PlotRange {
     double minimum {};
     double maximum {};
+};
+
+struct InferenceScanPoint {
+    double true_polarization {};
+    double observed_first_count {std::numeric_limits<double>::quiet_NaN()};
+    double observed_second_count {std::numeric_limits<double>::quiet_NaN()};
+    double observed_total_count {std::numeric_limits<double>::quiet_NaN()};
+    double observed_ratio_or_asymmetry {std::numeric_limits<double>::quiet_NaN()};
+    PolarizationEstimate estimate;
 };
 
 struct OverlayAnnotation {
@@ -141,6 +152,44 @@ const char* particleLabel(const CoverageParticle particle) {
 
 const char* errorSourceLabel(const bool include_tensor) {
     return include_tensor ? "Statistical + T uncertainty" : "Statistical only";
+}
+
+const char* pzzObservableLabel(const PzzObservable observable) {
+    switch (observable) {
+        case PzzObservable::Proton:
+            return "proton";
+        case PzzObservable::Deuteron:
+            return "deuteron";
+        case PzzObservable::Coincidence:
+            return "coincidence";
+    }
+    throw std::runtime_error("Unsupported pzz observable");
+}
+
+const char* lrudObservableLabel(const LrudObservable observable) {
+    switch (observable) {
+        case LrudObservable::Proton:
+            return "proton";
+        case LrudObservable::Coincidence:
+            return "coincidence";
+    }
+    throw std::runtime_error("Unsupported LRUD observable");
+}
+
+std::string ratioAnalysisName(const RatioMode mode) {
+    switch (mode) {
+        case RatioMode::Deuteron:
+            return "ratio_deuteron";
+        case RatioMode::Proton:
+            return "ratio_proton";
+        case RatioMode::Coincidence:
+            return "ratio_coincidence";
+    }
+    throw std::runtime_error("Unsupported ratio mode");
+}
+
+std::string lrudAnalysisName(const LrudObservable observable) {
+    return observable == LrudObservable::Coincidence ? "lrud_coincidence" : "lrud_scan";
 }
 
 double legacyRatioStatSigma(
@@ -442,16 +491,29 @@ std::vector<std::string> ratioDefinitionLines(
         lines.push_back(
             "N2 = 4 x Np(single, #theta_{lab} = " +
             formatDouble(scenario.custom_layout.proton_arms[1].theta_lab_deg, 1) + " deg)");
-    } else {
+        lines.push_back("R = N1 / N2; no coincidence gate is used");
+        lines.push_back("Ni = M x Ntarget x Nbeam x #int d#theta d#phi [d#sigma/d#Omega x (1 + #sqrt{2}/2 T20 pzz)]");
+    } else if (mode == RatioMode::Deuteron) {
         lines.push_back(
             "N1 = 4 x Nd(single, #theta_{lab} = " +
             formatDouble(scenario.custom_layout.deuteron_arm.theta_lab_deg, 1) + " deg, forward branch)");
         lines.push_back(
             "N2 = 4 x Nd(single, #theta_{lab} = " +
             formatDouble(scenario.custom_layout.deuteron_arm.theta_lab_deg, 1) + " deg, backward branch)");
+        lines.push_back("R = N1 / N2; no coincidence gate is used");
+        lines.push_back("Ni = M x Ntarget x Nbeam x #int d#theta d#phi [d#sigma/d#Omega x (1 + #sqrt{2}/2 T20 pzz)]");
+    } else {
+        lines.push_back(
+            "N1 = Np+d(coincidence, proton arm 1 with deuteron forward branch, #theta_{lab}^{p} = " +
+            formatDouble(scenario.custom_layout.proton_arms[0].theta_lab_deg, 1) +
+            " deg)");
+        lines.push_back(
+            "N2 = Np+d(coincidence, proton arm 2 with deuteron backward branch, #theta_{lab}^{p} = " +
+            formatDouble(scenario.custom_layout.proton_arms[1].theta_lab_deg, 1) +
+            " deg)");
+        lines.push_back("R = N1 / N2; proton and deuteron coincidence gate is used");
+        lines.push_back("Ni = M x Ntarget x Nbeam x #int_{CM overlap} d#theta d#phi [d#sigma/d#Omega x (1 + #sqrt{2}/2 T20 pzz)]");
     }
-    lines.push_back("R = N1 / N2; no coincidence gate is used");
-    lines.push_back("Ni = M x Ntarget x Nbeam x #int d#theta d#phi [d#sigma/d#Omega x (1 + #sqrt{2}/2 T20 pzz)]");
     lines.push_back("#sigma_{R,stat}^{2} = N1/N2^{2} + N1^{2}/N2^{3} + 2N1/(Nbeam N2^{2})");
     lines.push_back(include_tensor ? "#sigma_{tot}^{2} = #sigma_{stat}^{2} + #sigma_{T}^{2}" : "#sigma = #sigma_{stat} only");
     lines.push_back(runContextLine(scenario, beam_particles));
@@ -460,18 +522,31 @@ std::vector<std::string> ratioDefinitionLines(
 
 std::vector<std::string> lrudDefinitionLines(
     const ScenarioConfig& scenario,
+    const LrudObservable observable,
     const bool include_tensor,
     const double beam_particles) {
     std::vector<std::string> lines;
-    lines.push_back(
-        "NLR = 2 x Np(single LR sector, #theta_{lab} = " +
-        formatDouble(scenario.custom_layout.proton_arms[0].theta_lab_deg, 1) + " deg)");
-    lines.push_back(
-        "NUD = 2 x Np(single UD sector, #theta_{lab} = " +
-        formatDouble(scenario.custom_layout.proton_arms[0].theta_lab_deg, 1) + " deg)");
-    lines.push_back("R_{LRUD} = (NLR - NUD) / (NLR + NUD); no coincidence gate is used");
-    lines.push_back("NLR #propto #int d#theta d#phi [d#sigma/d#Omega x (1 - #sqrt{3}/2 T22 pyy - #sqrt{2}/4 T20 pyy)]");
-    lines.push_back("NUD #propto #int d#theta d#phi [d#sigma/d#Omega x (1 + #sqrt{3}/2 T22 pyy - #sqrt{2}/4 T20 pyy)]");
+    if (observable == LrudObservable::Coincidence) {
+        lines.push_back(
+            "NLR = 2 x Np+d(coincidence LR sector, proton arm 1 with deuteron forward branch, #theta_{lab}^{p} = " +
+            formatDouble(scenario.custom_layout.proton_arms[0].theta_lab_deg, 1) + " deg)");
+        lines.push_back(
+            "NUD = 2 x Np+d(coincidence UD sector, proton arm 1 with deuteron forward branch, #theta_{lab}^{p} = " +
+            formatDouble(scenario.custom_layout.proton_arms[0].theta_lab_deg, 1) + " deg)");
+        lines.push_back("R_{LRUD} = (NLR - NUD) / (NLR + NUD); proton and deuteron coincidence gate is used");
+        lines.push_back("NLR #propto #int_{CM overlap} d#theta d#phi [d#sigma/d#Omega x (1 - #sqrt{3}/2 T22 pyy - #sqrt{2}/4 T20 pyy)]");
+        lines.push_back("NUD #propto #int_{CM overlap} d#theta d#phi [d#sigma/d#Omega x (1 + #sqrt{3}/2 T22 pyy - #sqrt{2}/4 T20 pyy)]");
+    } else {
+        lines.push_back(
+            "NLR = 2 x Np(single LR sector, #theta_{lab} = " +
+            formatDouble(scenario.custom_layout.proton_arms[0].theta_lab_deg, 1) + " deg)");
+        lines.push_back(
+            "NUD = 2 x Np(single UD sector, #theta_{lab} = " +
+            formatDouble(scenario.custom_layout.proton_arms[0].theta_lab_deg, 1) + " deg)");
+        lines.push_back("R_{LRUD} = (NLR - NUD) / (NLR + NUD); no coincidence gate is used");
+        lines.push_back("NLR #propto #int d#theta d#phi [d#sigma/d#Omega x (1 - #sqrt{3}/2 T22 pyy - #sqrt{2}/4 T20 pyy)]");
+        lines.push_back("NUD #propto #int d#theta d#phi [d#sigma/d#Omega x (1 + #sqrt{3}/2 T22 pyy - #sqrt{2}/4 T20 pyy)]");
+    }
     lines.push_back(include_tensor ? "#sigma_{tot}^{2} = #sigma_{stat}^{2} + #sigma_{T}^{2}" : "#sigma = #sigma_{stat} only");
     lines.push_back(runContextLine(scenario, beam_particles));
     return lines;
@@ -805,6 +880,201 @@ void writeCoincidenceTotalScanCsv(
             << formatDouble(coincidence_backward[index], 8) << ','
             << formatDouble(coincidence_total[index], 8) << '\n';
     }
+}
+
+std::vector<InferenceScanPoint> buildPzzInferenceScanPoints(
+    const std::vector<RatioScanPoint>& points,
+    const PolarizationInference& inference,
+    const PzzObservable observable) {
+    std::vector<InferenceScanPoint> inference_points;
+    inference_points.reserve(points.size());
+    for (const RatioScanPoint& point : points) {
+        InferenceScanPoint inference_point;
+        inference_point.true_polarization = point.polarization;
+        inference_point.observed_first_count = point.first_count.value;
+        inference_point.observed_second_count = point.second_count.value;
+        inference_point.observed_total_count = point.first_count.value + point.second_count.value;
+        inference_point.observed_ratio_or_asymmetry = point.ratio.value;
+        inference_point.estimate =
+            inference.inferPzzFromCounts(observable, point.first_count.value, point.second_count.value);
+        inference_points.push_back(inference_point);
+    }
+    return inference_points;
+}
+
+std::vector<InferenceScanPoint> buildPyyInferenceScanPoints(
+    const std::vector<LrudScanPoint>& points,
+    const PolarizationInference& inference,
+    const LrudObservable observable) {
+    std::vector<InferenceScanPoint> inference_points;
+    inference_points.reserve(points.size());
+    for (const LrudScanPoint& point : points) {
+        InferenceScanPoint inference_point;
+        inference_point.true_polarization = point.polarization;
+        inference_point.observed_first_count = point.left_right_count.value;
+        inference_point.observed_second_count = point.up_down_count.value;
+        inference_point.observed_total_count = point.left_right_count.value + point.up_down_count.value;
+        inference_point.observed_ratio_or_asymmetry = point.asymmetry.value;
+        inference_point.estimate =
+            inference.inferPyyFromLrudCounts(observable, point.left_right_count.value, point.up_down_count.value);
+        inference_points.push_back(inference_point);
+    }
+    return inference_points;
+}
+
+void writeInferenceScanCsv(const std::filesystem::path& path, const std::vector<InferenceScanPoint>& points) {
+    std::ofstream output(path);
+    output << "true_polarization,observed_first_count,observed_second_count,observed_total_count,observed_ratio_or_asymmetry,mle,sigma_mle,ci68_low,ci68_high,ci95_low,ci95_high,at_lower_bound,at_upper_bound\n";
+    for (const InferenceScanPoint& point : points) {
+        output
+            << formatDouble(point.true_polarization, 8) << ','
+            << formatDouble(point.observed_first_count, 8) << ','
+            << formatDouble(point.observed_second_count, 8) << ','
+            << formatDouble(point.observed_total_count, 8) << ','
+            << formatDouble(point.observed_ratio_or_asymmetry, 10) << ','
+            << formatDouble(point.estimate.estimate, 10) << ','
+            << formatDouble(point.estimate.sigma_mle, 10) << ','
+            << formatDouble(point.estimate.ci68.low, 10) << ','
+            << formatDouble(point.estimate.ci68.high, 10) << ','
+            << formatDouble(point.estimate.ci95.low, 10) << ','
+            << formatDouble(point.estimate.ci95.high, 10) << ','
+            << (point.estimate.at_lower_bound ? "true" : "false") << ','
+            << (point.estimate.at_upper_bound ? "true" : "false") << '\n';
+    }
+}
+
+void addInferenceSummary(
+    std::vector<SummaryEntry>& summary,
+    const std::vector<InferenceScanPoint>& points,
+    const std::string& estimator,
+    const std::string& observable_label) {
+    summary.push_back({"inference_estimator", estimator});
+    summary.push_back({"inference_observable", observable_label});
+    summary.push_back({"inference_point_count", std::to_string(points.size())});
+    if (!points.empty()) {
+        summary.push_back({"inference_estimate_at_min_pol", formatDouble(points.front().estimate.estimate, 8)});
+        summary.push_back({"inference_estimate_at_max_pol", formatDouble(points.back().estimate.estimate, 8)});
+        summary.push_back({"inference_ci68_width_at_max_pol", formatDouble(points.back().estimate.ci68.high - points.back().estimate.ci68.low, 8)});
+        summary.push_back({"inference_ci95_width_at_max_pol", formatDouble(points.back().estimate.ci95.high - points.back().estimate.ci95.low, 8)});
+    }
+}
+
+void drawInferenceSummaryCanvas(
+    const std::vector<InferenceScanPoint>& points,
+    const std::string& parameter_axis_label,
+    const std::string& observable_label,
+    const std::vector<std::string>& definition_lines,
+    const std::filesystem::path& base_path) {
+    std::vector<double> true_values;
+    std::vector<double> mle_values;
+    std::vector<double> zero_errors(points.size(), 0.0);
+    std::vector<double> lower_errors_68;
+    std::vector<double> upper_errors_68;
+    std::vector<double> lower_errors_95;
+    std::vector<double> upper_errors_95;
+    std::vector<double> y_range_values;
+    std::vector<double> y_range_errors;
+    true_values.reserve(points.size());
+    mle_values.reserve(points.size());
+    lower_errors_68.reserve(points.size());
+    upper_errors_68.reserve(points.size());
+    lower_errors_95.reserve(points.size());
+    upper_errors_95.reserve(points.size());
+    y_range_values.reserve(points.size());
+    y_range_errors.reserve(points.size());
+    for (const InferenceScanPoint& point : points) {
+        true_values.push_back(point.true_polarization);
+        mle_values.push_back(point.estimate.estimate);
+        lower_errors_68.push_back(point.estimate.estimate - point.estimate.ci68.low);
+        upper_errors_68.push_back(point.estimate.ci68.high - point.estimate.estimate);
+        lower_errors_95.push_back(point.estimate.estimate - point.estimate.ci95.low);
+        upper_errors_95.push_back(point.estimate.ci95.high - point.estimate.estimate);
+        y_range_values.push_back(point.estimate.estimate);
+        y_range_errors.push_back(std::max(lower_errors_95.back(), upper_errors_95.back()));
+    }
+
+    const PlotRange y_range = computePaddedRange(y_range_values, y_range_errors, 0.12);
+    const double x_min = true_values.front();
+    const double x_max = true_values.back();
+
+    TCanvas canvas(("inference_summary_" + base_path.stem().string()).c_str(), "inference_summary", 960, 820);
+    gStyle->SetEndErrorSize(10.0);
+    TPad info_pad(("inference_info_" + base_path.stem().string()).c_str(), "", 0.0, 0.73, 1.0, 1.0);
+    TPad plot_pad(("inference_plot_" + base_path.stem().string()).c_str(), "", 0.0, 0.0, 1.0, 0.73);
+    configureInfoPad(info_pad);
+    configurePlotPad(plot_pad);
+    info_pad.Draw();
+    plot_pad.Draw();
+    info_pad.cd();
+
+    std::vector<std::string> info_lines;
+    info_lines.push_back("observable = " + observable_label);
+    info_lines.push_back("estimator = pair_binomial MLE");
+    info_lines.push_back("error bars show 68% and 95% profile-likelihood intervals");
+    info_lines.insert(info_lines.end(), definition_lines.begin(), definition_lines.end());
+    drawInfoBox(info_lines, 0.02, 0.08, 0.98, 0.92, 0.046);
+
+    plot_pad.cd();
+    TGraph reference_line(
+        static_cast<int>(true_values.size()),
+        true_values.data(),
+        true_values.data());
+    reference_line.SetTitle((";True " + parameter_axis_label + ";Inferred " + parameter_axis_label).c_str());
+    reference_line.SetLineColor(kGray + 2);
+    reference_line.SetLineStyle(2);
+    reference_line.SetLineWidth(2);
+    reference_line.SetMinimum(y_range.minimum);
+    reference_line.SetMaximum(y_range.maximum);
+    reference_line.Draw("AL");
+
+    TGraphAsymmErrors graph95(
+        static_cast<int>(true_values.size()),
+        true_values.data(),
+        mle_values.data(),
+        zero_errors.data(),
+        zero_errors.data(),
+        lower_errors_95.data(),
+        upper_errors_95.data());
+    TGraphAsymmErrors graph68(
+        static_cast<int>(true_values.size()),
+        true_values.data(),
+        mle_values.data(),
+        zero_errors.data(),
+        zero_errors.data(),
+        lower_errors_68.data(),
+        upper_errors_68.data());
+    TGraph markers(
+        static_cast<int>(true_values.size()),
+        true_values.data(),
+        mle_values.data());
+    graph95.SetLineColor(kOrange + 7);
+    graph95.SetLineWidth(2);
+    graph95.SetMarkerSize(0.0);
+    graph68.SetLineColor(kGreen + 2);
+    graph68.SetLineWidth(4);
+    graph68.SetMarkerSize(0.0);
+    styleMarkerGraph(markers, kBlue + 1, 20, 1.1);
+
+    graph95.Draw("[] SAME");
+    graph68.Draw("[] SAME");
+    markers.Draw("P SAME");
+
+    TLine diagonal(x_min, x_min, x_max, x_max);
+    diagonal.SetLineColor(kGray + 1);
+    diagonal.SetLineStyle(3);
+    diagonal.SetLineWidth(2);
+    diagonal.Draw("SAME");
+
+    TLegend legend(0.60, 0.16, 0.88, 0.32);
+    legend.SetFillStyle(0);
+    legend.SetBorderSize(0);
+    legend.AddEntry(&markers, "MLE", "p");
+    legend.AddEntry(&graph68, "68% interval", "l");
+    legend.AddEntry(&graph95, "95% interval", "l");
+    legend.AddEntry(&diagonal, "y = x", "l");
+    legend.Draw();
+
+    saveCanvas(canvas, base_path);
 }
 
 AnalysisArtifacts finalizeArtifacts(AnalysisArtifacts artifacts) {
@@ -1275,11 +1545,11 @@ AnalysisArtifacts AnalysisSession::runEnergyPlot(const std::filesystem::path& ou
 AnalysisArtifacts AnalysisSession::runRatioScan(const RatioMode mode, const std::filesystem::path& output_root) const {
     const std::filesystem::path root = resolveOutputRoot(scenario_, output_root);
     const std::vector<double> durations_s = effectiveDurations(scenario_);
+    const std::string analysis_name = ratioAnalysisName(mode);
     if (durations_s.size() == 1U) {
-        return runRatioScanSingleDuration(mode, analysisOutputDir(root, scenario_.scenario_name, mode == RatioMode::Deuteron ? "ratio_deuteron" : "ratio_proton"));
+        return runRatioScanSingleDuration(mode, analysisOutputDir(root, scenario_.scenario_name, analysis_name));
     }
 
-    const std::string analysis_name = mode == RatioMode::Deuteron ? "ratio_deuteron" : "ratio_proton";
     const std::filesystem::path parent_dir = analysisOutputDir(root, scenario_.scenario_name, analysis_name);
     clearParentAnalysisIndexDir(parent_dir);
     std::vector<AnalysisArtifacts> runs;
@@ -1296,25 +1566,37 @@ AnalysisArtifacts AnalysisSession::runRatioScanSingleDuration(const RatioMode mo
 
     CmBranchWindow first_window;
     CmBranchWindow second_window;
+    PzzObservable observable = PzzObservable::Proton;
+    double sector_scale = scenario_.run.single_arm_sector_multiplier;
+    std::string first_label;
+    std::string second_label;
     if (mode == RatioMode::Deuteron) {
         const BranchPair windows = deuteronWindowsFromArm(kinematics_, scenario_.custom_layout.deuteron_arm);
         first_window = windows.forward;
         second_window = windows.backward;
+        observable = PzzObservable::Deuteron;
+        first_label = "d single forward branch";
+        second_label = "d single backward branch";
+    } else if (mode == RatioMode::Coincidence) {
+        const BranchPair deuteron_windows = deuteronWindowsFromArm(kinematics_, scenario_.custom_layout.deuteron_arm);
+        const CmBranchWindow proton_forward = protonWindowFromArm(kinematics_, scenario_.custom_layout.proton_arms[0]);
+        const CmBranchWindow proton_backward = protonWindowFromArm(kinematics_, scenario_.custom_layout.proton_arms[1]);
+        first_window = intersectWindows(proton_forward, deuteron_windows.forward);
+        second_window = intersectWindows(proton_backward, deuteron_windows.backward);
+        observable = PzzObservable::Coincidence;
+        sector_scale = scenario_.run.coincidence_sector_multiplier;
+        first_label = "p+d coincidence branch 1";
+        second_label = "p+d coincidence branch 2";
     } else {
         first_window = protonWindowFromArm(kinematics_, scenario_.custom_layout.proton_arms[0]);
         second_window = protonWindowFromArm(kinematics_, scenario_.custom_layout.proton_arms[1]);
+        first_label = "p single arm 1";
+        second_label = "p single arm 2";
     }
 
     const std::vector<double> polarization_values = scanPolarizationValues(scenario_.scan);
     const double beam_particles = counts_.beamParticleCount();
-    const double sector_scale = scenario_.run.single_arm_sector_multiplier;
     const double sector_scale_squared = sector_scale * sector_scale;
-    const std::string first_label = mode == RatioMode::Deuteron
-                                        ? "d single forward branch"
-                                        : "p single arm 1";
-    const std::string second_label = mode == RatioMode::Deuteron
-                                         ? "d single backward branch"
-                                         : "p single arm 2";
     std::vector<RatioScanPoint> points;
     points.reserve(polarization_values.size());
 
@@ -1541,8 +1823,9 @@ AnalysisArtifacts AnalysisSession::runRatioScanSingleDuration(const RatioMode mo
     addWindowSummary(artifacts.summary, "window_2", second_window);
     artifacts.summary.push_back({"duration_label", durationLabel(scenario_.run.duration_s)});
     artifacts.summary.push_back({"duration_s", formatDouble(scenario_.run.duration_s, 1)});
+    artifacts.summary.push_back({"ratio_observable", pzzObservableLabel(observable)});
     artifacts.summary.push_back({"beam_particles", formatDouble(beam_particles, 4)});
-    artifacts.summary.push_back({"single_arm_sector_multiplier", formatDouble(sector_scale, 1)});
+    artifacts.summary.push_back({"ratio_sector_multiplier", formatDouble(sector_scale, 1)});
     artifacts.summary.push_back({"ratio_at_min_pol", formatDouble(points.front().ratio.value, 8)});
     artifacts.summary.push_back({"ratio_at_max_pol", formatDouble(points.back().ratio.value, 8)});
     artifacts.summary.push_back({"ratio_stat_sigma_at_max_pol", formatDouble(points.back().ratio.stat_sigma, 8)});
@@ -1572,31 +1855,62 @@ AnalysisArtifacts AnalysisSession::runRatioScanSingleDuration(const RatioMode mo
         artifacts.files.push_back(base.string() + ".png");
         artifacts.files.push_back(base.string() + ".pdf");
     }
+
+    const PolarizationInference inference(scenario_);
+    const std::vector<InferenceScanPoint> inference_points =
+        buildPzzInferenceScanPoints(points, inference, observable);
+    const std::filesystem::path inference_csv = dir / "inference_scan.csv";
+    writeInferenceScanCsv(inference_csv, inference_points);
+    artifacts.files.push_back(inference_csv);
+    addInferenceSummary(artifacts.summary, inference_points, "pair_binomial", pzzObservableLabel(observable));
+    const std::filesystem::path inference_base = dir / "Inferred_pzz_vs_true_pzz";
+    drawInferenceSummaryCanvas(
+        inference_points,
+        "#it{p}_{zz}",
+        std::string("pzz_") + pzzObservableLabel(observable),
+        ratioDefinitionLines(scenario_, mode, false, beam_particles),
+        inference_base);
+    artifacts.files.push_back(inference_base.string() + ".png");
+    artifacts.files.push_back(inference_base.string() + ".pdf");
     return finalizeArtifacts(std::move(artifacts));
 }
 
 AnalysisArtifacts AnalysisSession::runLrudScan(const std::filesystem::path& output_root) const {
+    return runLrudScan(LrudObservable::Proton, output_root);
+}
+
+AnalysisArtifacts AnalysisSession::runLrudScan(
+    const LrudObservable observable,
+    const std::filesystem::path& output_root) const {
     const std::filesystem::path root = resolveOutputRoot(scenario_, output_root);
     const std::vector<double> durations_s = effectiveDurations(scenario_);
+    const std::string analysis_name = lrudAnalysisName(observable);
     if (durations_s.size() == 1U) {
-        return runLrudScanSingleDuration(analysisOutputDir(root, scenario_.scenario_name, "lrud_scan"));
+        return runLrudScanSingleDuration(observable, analysisOutputDir(root, scenario_.scenario_name, analysis_name));
     }
 
-    const std::filesystem::path parent_dir = analysisOutputDir(root, scenario_.scenario_name, "lrud_scan");
+    const std::filesystem::path parent_dir = analysisOutputDir(root, scenario_.scenario_name, analysis_name);
     clearParentAnalysisIndexDir(parent_dir);
     std::vector<AnalysisArtifacts> runs;
     runs.reserve(durations_s.size());
     for (const double duration_s : durations_s) {
         AnalysisSession child_session(scenarioWithDuration(scenario_, duration_s));
-        runs.push_back(child_session.runLrudScanSingleDuration(durationOutputDir(parent_dir, duration_s)));
+        runs.push_back(child_session.runLrudScanSingleDuration(observable, durationOutputDir(parent_dir, duration_s)));
     }
     return finalizeArtifacts(aggregateDurationRuns(parent_dir, durations_s, runs));
 }
 
-AnalysisArtifacts AnalysisSession::runLrudScanSingleDuration(const std::filesystem::path& dir) const {
+AnalysisArtifacts AnalysisSession::runLrudScanSingleDuration(
+    const LrudObservable observable,
+    const std::filesystem::path& dir) const {
     std::filesystem::create_directories(dir);
 
-    const CmBranchWindow window = protonWindowFromArm(kinematics_, scenario_.custom_layout.proton_arms[0]);
+    const CmBranchWindow proton_window = protonWindowFromArm(kinematics_, scenario_.custom_layout.proton_arms[0]);
+    const CmBranchWindow window = observable == LrudObservable::Coincidence
+                                      ? intersectWindows(
+                                            proton_window,
+                                            deuteronWindowsFromArm(kinematics_, scenario_.custom_layout.deuteron_arm).forward)
+                                      : proton_window;
     const std::vector<double> polarization_values = scanPolarizationValues(scenario_.scan);
     const double beam_particles = counts_.beamParticleCount();
     const double sector_scale = scenario_.run.lrud_sector_multiplier;
@@ -1661,21 +1975,100 @@ AnalysisArtifacts AnalysisSession::runLrudScanSingleDuration(const std::filesyst
     }
 
     std::vector<double> polarizations;
+    std::vector<double> left_right_values;
+    std::vector<double> up_down_values;
     std::vector<double> asymmetry_values;
+    std::vector<double> left_right_stat_errors;
+    std::vector<double> left_right_total_errors;
+    std::vector<double> up_down_stat_errors;
+    std::vector<double> up_down_total_errors;
     std::vector<double> stat_errors;
     std::vector<double> total_errors;
     polarizations.reserve(points.size());
+    left_right_values.reserve(points.size());
+    up_down_values.reserve(points.size());
     asymmetry_values.reserve(points.size());
+    left_right_stat_errors.reserve(points.size());
+    left_right_total_errors.reserve(points.size());
+    up_down_stat_errors.reserve(points.size());
+    up_down_total_errors.reserve(points.size());
     stat_errors.reserve(points.size());
     total_errors.reserve(points.size());
     for (const LrudScanPoint& point : points) {
         polarizations.push_back(point.polarization);
+        left_right_values.push_back(point.left_right_count.value);
+        up_down_values.push_back(point.up_down_count.value);
         asymmetry_values.push_back(point.asymmetry.value);
+        left_right_stat_errors.push_back(point.left_right_count.stat_sigma);
+        left_right_total_errors.push_back(point.left_right_count.total_sigma);
+        up_down_stat_errors.push_back(point.up_down_count.stat_sigma);
+        up_down_total_errors.push_back(point.up_down_count.total_sigma);
         stat_errors.push_back(point.asymmetry.stat_sigma);
         total_errors.push_back(point.asymmetry.total_sigma);
     }
 
-    auto drawCanvas = [&](const bool include_tensor, const std::filesystem::path& base_path) {
+    auto drawCountCanvas = [&](const bool include_tensor, const std::filesystem::path& base_path) {
+        TCanvas canvas(("lrud_counts_" + base_path.stem().string()).c_str(), "lrud_counts", 960, 820);
+        gStyle->SetEndErrorSize(10.0);
+        TPad info_pad(("lrud_counts_info_" + base_path.stem().string()).c_str(), "", 0.0, 0.73, 1.0, 1.0);
+        TPad plot_pad(("lrud_counts_plot_" + base_path.stem().string()).c_str(), "", 0.0, 0.0, 1.0, 0.73);
+        configureInfoPad(info_pad);
+        configurePlotPad(plot_pad);
+        info_pad.Draw();
+        plot_pad.Draw();
+        info_pad.cd();
+        drawInfoBox(lrudDefinitionLines(scenario_, observable, include_tensor, beam_particles), 0.02, 0.08, 0.98, 0.92, 0.078);
+
+        plot_pad.cd();
+        const std::vector<double>& left_right_errors = include_tensor ? left_right_total_errors : left_right_stat_errors;
+        const std::vector<double>& up_down_errors = include_tensor ? up_down_total_errors : up_down_stat_errors;
+        const PlotRange left_right_range = computePaddedRange(left_right_values, left_right_errors);
+        const PlotRange up_down_range = computePaddedRange(up_down_values, up_down_errors);
+        const PlotRange plot_range = mergePlotRanges(left_right_range, up_down_range);
+        TGraph left_right_markers(
+            static_cast<int>(polarizations.size()),
+            polarizations.data(),
+            left_right_values.data());
+        TGraph up_down_markers(
+            static_cast<int>(polarizations.size()),
+            polarizations.data(),
+            up_down_values.data());
+        TGraphErrors left_right_graph(
+            static_cast<int>(polarizations.size()),
+            polarizations.data(),
+            left_right_values.data(),
+            nullptr,
+            left_right_errors.data());
+        TGraphErrors up_down_graph(
+            static_cast<int>(polarizations.size()),
+            polarizations.data(),
+            up_down_values.data(),
+            nullptr,
+            up_down_errors.data());
+        styleMarkerGraph(left_right_markers, kRed + 1, 20, 1.0);
+        styleMarkerGraph(up_down_markers, kBlue + 1, 21, 1.0);
+        styleErrorGraph(left_right_graph, kRed + 1, 4.0);
+        styleErrorGraph(up_down_graph, kBlue + 1, 4.0);
+
+        left_right_markers.SetTitle(";#it{p}_{y'y'};Counts");
+        left_right_markers.SetMinimum(plot_range.minimum);
+        left_right_markers.SetMaximum(plot_range.maximum);
+        left_right_markers.Draw("AP");
+        up_down_markers.Draw("P SAME");
+        left_right_graph.Draw("P SAME");
+        up_down_graph.Draw("P SAME");
+
+        TLegend legend(0.62, 0.16, 0.88, 0.30);
+        legend.SetFillStyle(0);
+        legend.SetBorderSize(0);
+        legend.SetHeader(errorSourceLabel(include_tensor), "C");
+        legend.AddEntry(&left_right_markers, "N_{LR}", "p");
+        legend.AddEntry(&up_down_markers, "N_{UD}", "p");
+        legend.Draw();
+        saveCanvas(canvas, base_path);
+    };
+
+    auto drawAsymmetryCanvas = [&](const bool include_tensor, const std::filesystem::path& base_path) {
         TCanvas canvas(("lrud_" + base_path.stem().string()).c_str(), "lrud_scan", 960, 820);
         gStyle->SetEndErrorSize(10.0);
         TPad info_pad(("lrud_info_" + base_path.stem().string()).c_str(), "", 0.0, 0.73, 1.0, 1.0);
@@ -1685,7 +2078,7 @@ AnalysisArtifacts AnalysisSession::runLrudScanSingleDuration(const std::filesyst
         info_pad.Draw();
         plot_pad.Draw();
         info_pad.cd();
-        drawInfoBox(lrudDefinitionLines(scenario_, include_tensor, beam_particles), 0.02, 0.08, 0.98, 0.92, 0.078);
+        drawInfoBox(lrudDefinitionLines(scenario_, observable, include_tensor, beam_particles), 0.02, 0.08, 0.98, 0.92, 0.078);
 
         plot_pad.cd();
         const std::vector<double>& errors = include_tensor ? total_errors : stat_errors;
@@ -1723,27 +2116,51 @@ AnalysisArtifacts AnalysisSession::runLrudScanSingleDuration(const std::filesyst
     addWindowSummary(artifacts.summary, "lrud_window", window);
     artifacts.summary.push_back({"duration_label", durationLabel(scenario_.run.duration_s)});
     artifacts.summary.push_back({"duration_s", formatDouble(scenario_.run.duration_s, 1)});
+    artifacts.summary.push_back({"lrud_observable", lrudObservableLabel(observable)});
     artifacts.summary.push_back({"beam_particles", formatDouble(beam_particles, 4)});
     artifacts.summary.push_back({"lrud_sector_multiplier", formatDouble(sector_scale, 1)});
     artifacts.summary.push_back({"asymmetry_at_min_pol", formatDouble(points.front().asymmetry.value, 8)});
     artifacts.summary.push_back({"asymmetry_at_max_pol", formatDouble(points.back().asymmetry.value, 8)});
     artifacts.summary.push_back({"asymmetry_stat_sigma_at_max_pol", formatDouble(points.back().asymmetry.stat_sigma, 8)});
     artifacts.summary.push_back({"asymmetry_total_sigma_at_max_pol", formatDouble(points.back().asymmetry.total_sigma, 8)});
-    addDefinitionSummary(artifacts.summary, "stat_only_definition", lrudDefinitionLines(scenario_, false, beam_particles));
-    addDefinitionSummary(artifacts.summary, "stat_plus_T_definition", lrudDefinitionLines(scenario_, true, beam_particles));
+    addDefinitionSummary(artifacts.summary, "stat_only_definition", lrudDefinitionLines(scenario_, observable, false, beam_particles));
+    addDefinitionSummary(artifacts.summary, "stat_plus_T_definition", lrudDefinitionLines(scenario_, observable, true, beam_particles));
 
     const std::filesystem::path scan_csv = dir / "scan_points.csv";
     writeLrudScanCsv(scan_csv, points);
     artifacts.files.push_back(scan_csv);
 
-    const std::filesystem::path stat_only_base = dir / "R_LRUD_vs_pyy_stat_only";
-    const std::filesystem::path stat_plus_tensor_base = dir / "R_LRUD_vs_pyy_stat_plus_T";
-    drawCanvas(false, stat_only_base);
-    drawCanvas(true, stat_plus_tensor_base);
-    artifacts.files.push_back(stat_only_base.string() + ".png");
-    artifacts.files.push_back(stat_only_base.string() + ".pdf");
-    artifacts.files.push_back(stat_plus_tensor_base.string() + ".png");
-    artifacts.files.push_back(stat_plus_tensor_base.string() + ".pdf");
+    const std::vector<std::filesystem::path> bases = {
+        dir / "N_LR_N_UD_vs_pyy_stat_only",
+        dir / "N_LR_N_UD_vs_pyy_stat_plus_T",
+        dir / "R_LRUD_vs_pyy_stat_only",
+        dir / "R_LRUD_vs_pyy_stat_plus_T",
+    };
+    drawCountCanvas(false, bases[0]);
+    drawCountCanvas(true, bases[1]);
+    drawAsymmetryCanvas(false, bases[2]);
+    drawAsymmetryCanvas(true, bases[3]);
+    for (const std::filesystem::path& base : bases) {
+        artifacts.files.push_back(base.string() + ".png");
+        artifacts.files.push_back(base.string() + ".pdf");
+    }
+
+    const PolarizationInference inference(scenario_);
+    const std::vector<InferenceScanPoint> inference_points =
+        buildPyyInferenceScanPoints(points, inference, observable);
+    const std::filesystem::path inference_csv = dir / "inference_scan.csv";
+    writeInferenceScanCsv(inference_csv, inference_points);
+    artifacts.files.push_back(inference_csv);
+    addInferenceSummary(artifacts.summary, inference_points, "pair_binomial", lrudObservableLabel(observable));
+    const std::filesystem::path inference_base = dir / "Inferred_pyy_vs_true_pyy";
+    drawInferenceSummaryCanvas(
+        inference_points,
+        "#it{p}_{y'y'}",
+        std::string("pyy_") + lrudObservableLabel(observable),
+        lrudDefinitionLines(scenario_, observable, false, beam_particles),
+        inference_base);
+    artifacts.files.push_back(inference_base.string() + ".png");
+    artifacts.files.push_back(inference_base.string() + ".pdf");
     return finalizeArtifacts(std::move(artifacts));
 }
 
@@ -2128,7 +2545,9 @@ AnalysisArtifacts AnalysisSession::runBatchWorkflow(const std::filesystem::path&
         runEnergyPlot(root),
         runRatioScan(RatioMode::Deuteron, root),
         runRatioScan(RatioMode::Proton, root),
-        runLrudScan(root),
+        runRatioScan(RatioMode::Coincidence, root),
+        runLrudScan(LrudObservable::Proton, root),
+        runLrudScan(LrudObservable::Coincidence, root),
         runCoincidenceScan(root),
         runCoincidenceTotalScan(root),
         runCrossSectionScan(root),

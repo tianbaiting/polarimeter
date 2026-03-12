@@ -1,0 +1,4 @@
+duration_label,duration_s,summary_csv,summary_json
+10min,600.0,/home/tian/workspace/dpol/polarimeter/code/output/default/ratio_coincidence/10min/summary.csv,/home/tian/workspace/dpol/polarimeter/code/output/default/ratio_coincidence/10min/summary.json
+1h,3600.0,/home/tian/workspace/dpol/polarimeter/code/output/default/ratio_coincidence/1h/summary.csv,/home/tian/workspace/dpol/polarimeter/code/output/default/ratio_coincidence/1h/summary.json
+3h,10800.0,/home/tian/workspace/dpol/polarimeter/code/output/default/ratio_coincidence/3h/summary.csv,/home/tian/workspace/dpol/polarimeter/code/output/default/ratio_coincidence/3h/summary.json
