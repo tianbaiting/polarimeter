@@ -29,6 +29,9 @@ infrontofSamuraiMag/.pytest_cache/
 code/build/
 code/output/
 
+skills/
+polar_infrontSamurai.pdf
+
 *.step
 *.FCStd
 *.FCBak
