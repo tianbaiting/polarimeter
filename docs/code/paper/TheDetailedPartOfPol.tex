@@ -1,0 +1,354 @@
+
+\documentclass[twocolumn,twoside,showpacs,preprintnumbers,superscriptaddress,amsmath,amssymb,prc]{revtex4}
+%\documentclass[preprint,preprintnumbers,superscriptaddress,amsmath,amssymb]{revtex4}
+ %\documentclass[preprint,preprintnumbers,amsmath,amssymb]{revtex4}
+ % Some other (several out of many) possibilities
+ %\documentclass[preprint,aps]{revtex4}
+ %\documentclass[preprint,aps,draft]{revtex4}
+ %\documentclass[prb]{revtex4}% Physical Review B
+ \usepackage{cases}
+ \usepackage{CJK}
+ %\usepackage{ccmap}
+ \usepackage{txfonts}
+ \usepackage{mathrsfs}
+ \usepackage{amssymb}
+ \usepackage{graphicx}% Include figure files
+ \usepackage{dcolumn}% Align table columns on decimal point
+ \usepackage{bm}% bold math
+ \usepackage{subfigure}
+ \usepackage{floatflt}
+ \usepackage{float}
+ \usepackage{siunitx}
+ \usepackage{rotating}
+ \usepackage{tikz}
+ \usepackage{physics}
+ \usepackage{multirow}
+ \usepackage[bookmarksnumbered,bookmarksopen,colorlinks,citecolor=blue,linkcolor=blue]{hyperref} %
+ %\usepackage{booktabs}
+ \usepackage{epsfig,graphics,psfrag,amsmath}
+ \usepackage{sidecap}
+ \usepackage{graphicx}% Include figure files
+ %\bibliographystyle{apssamp}
+ \bibliographystyle{apsrev}
+
+
+\def\thu{Department of Physics, Tsinghua University, Beijing 100084, China}
+
+\begin{document}
+
+ \title{Simulation studies of the isovector reorientation effect of deuteron scattering on heavy target}
+
+ \author{Baiting Tian}
+ 
+ \section{ab}
+\subsection{Density matrix}
+
+In quantum dynamics , we can use a vector in Hilbert space to describe the pure state. And we have to use the density matrix for mixed state which deal with a statistical ensemble of possible preparations.
+
+For a system with probility $p_j$ in $\ket{\phi}$, the measurement is the average of the individual pure state values, weighted by their probabilities:
+
+\begin{align}
+\begin{aligned}
+    \langle \hat{f}\rangle&=\sum_j p_j\left\langle\psi_j|\hat{f}| 
+\psi_j\right\rangle\\
+&=\sum_j p_j \operatorname{tr}\left(\left|\psi_j\right\rangle\left\langle\psi_j\right| \hat{f}\right) \\ 
+&=\operatorname{tr}\left(\sum_j p_j\left|\psi_j\right\rangle\left\langle\psi_j\right| \hat{f}\right) \\
+&=\operatorname{tr}(\rho \hat{f}).
+\end{aligned}
+\end{align}
+
+The density matrix is :
+\begin{align}
+    \rho = \sum_i p_i \ket*{\phi} \bra*{\phi}。
+\end{align}
+
+
+
+
+
+A pure state $\phi = \sum c_i \phi_i$ is unable to describe an unpolarized state. Take the example of a spin-$\frac{1}{2}$ system, based on symmetry, it should have a random orientation. However, a state like $\phi = c_1 \ket*{+} + c_2 \ket*{-}$, even though it has an equal probability of exploring the spin-up and spin-down eigenstates upon measurement when $c_1= c_2 = \frac{1}{\sqrt{2}}$, it has a definite spin direction. The polar and azimuthal angles are determined by $\frac{c_1}{c_2} = \frac{\cos(\beta/2)}{e^{i\alpha} \sin(\beta/2)}$.
+
+\subsection{The Analysing Power}
+
+Deuteron is a particle with spin 1. The Cartesian components of the spin operator are:
+
+\begin{align}
+  S_x=\frac{1}{\sqrt{2}}\left(\begin{array}{ccc}
+0 & 1 & 0 \\
+1 & 0 & 1 \\
+0 & 1 & 0
+\end{array}\right) ，\quad 
+S_y=\frac{1}{\sqrt{2}}\left(\begin{array}{ccc}
+0 & -\mathrm{i} & 0 \\
+\mathrm{i} & 0 & -\mathrm{i} \\
+0 & \mathrm{i} & 0
+\end{array}\right) ，\quad
+ S_z=\left(\begin{array}{ccc}
+1 & 0 & 0 \\
+0 & 0 & 0 \\
+0 & 0 & -1
+\end{array}\right).
+\end{align}
+
+The density matrix of a spin-1 particle can be decomposed using Pauli matrices and products of Pauli matrices. This set of matrices is called the rectangular operators.
+The rectangular  operators for a spin-1 particle are as follows:
+
+\begin{align}
+& I=\left(\begin{array}{lll}
+1 & 0 & 0 \\
+0 & 1 & 0 \\
+0 & 0 & 1
+\end{array}\right) \\
+& \mathscr{P}_x=S_x=\frac{1}{\sqrt{2}}\left(\begin{array}{lll}
+0 & 1 & 0 \\
+1 & 0 & 1 \\
+0 & 1 & 0
+\end{array}\right) \\
+& \mathscr{P}_y=S_y=\frac{1}{\sqrt{2}}\left(\begin{array}{ccc}
+0 & -\mathrm{i} & 0 \\
+\mathrm{i} & 0 & -\mathrm{i} \\
+0 & \mathrm{i} & 0
+\end{array}\right) \\
+& \mathscr{P}_z=S_z=\left(\begin{array}{ccc}
+1 & 0 & 0 \\
+0 & 0 & 0 \\
+0 & 0 & -1
+\end{array}\right) \\
+& \mathscr{P}_{x y}=3 S_x S_y=\frac{3 \mathrm{i}}{2}\left(\begin{array}{ccc}
+0 & 0 & -1 \\
+0 & 0 & 0 \\
+1 & 0 & 0
+\end{array}\right) \\
+& \mathscr{P}_{x z}=3 S_x S_z=\frac{3 \mathrm{i}}{\sqrt{8}}\left(\begin{array}{ccc}
+0 & -1 & 0 \\
+1 & 0 & 1 \\
+0 & -1 & 0
+\end{array}\right) \\
+& \mathscr{P}_{y z}=3 S_y S_z=\frac{1}{\sqrt{8}}\left(\begin{array}{ccc}
+0 & 1 & 0 \\
+1 & 0 & -1 \\
+0 & -1 & 0
+\end{array}\right) \\
+& \mathscr{P}_{x x}=3 S_x S_x-2 I=\frac{1}{2}\left(\begin{array}{ccc}
+-1 & 0 & 3 \\
+0 & 2 & 0 \\
+3 & 0 & -1
+\end{array}\right) \\
+& \mathscr{P}_{y y}=3 S_y S_z-2 I=\frac{1}{2}\left(\begin{array}{ccc}
+-1 & 0 & -3 \\
+0 & 2 & 0 \\
+-3 & 0 & -1
+\end{array}\right) \\
+& \mathscr{P}_{z z}=3 S_z S_z-2 I=\left(\begin{array}{ccc}
+1 & 0 & 0 \\
+0 & -2 & 0 \\
+0 & 0 & 1
+\end{array}\right) .
+\label{rectangular_operator}
+\end{align}
+
+ All the matrices in \ref{rectangular_operator} are constructed to be traceless except for the identity matrix. As a result, these traceless matrices are orthogonal to the identity matrix, and their expectation values in an unpolarized state are all zero. These ten operators can span a space that can fully describe the density matrix. However, the last three operators are linearly dependent\ref{xianxingxiangguan}. In fact, only nine operators are needed to form a complete basis set.
+
+\begin{align}
+    \mathscr{P}_{x x}+\mathscr{P}_{y y}+\mathscr{P}_{z z}=\left(\begin{array}{lll}
+0 & 0 & 0 \\
+0 & 0 & 0 \\
+0 & 0 & 0
+\end{array}\right)
+\label{xianxingxiangguan}
+\end{align}
+
+We can expand density matrix as follows:
+\begin{align}
+  \rho = \frac{1}{3} \{
+  I + \frac{3}{2} \left( p_x \mathscr{P}_x + p_y \mathscr{P}_y + p_z \mathscr{P}_z \right) + 
+   \frac{2}{3} 
+  \left( 
+  p_{xy} 
+  \mathscr{P}_{xy} + 
+  p_{yz} \mathscr{P}_{yz} + p_{xz} \mathscr{P}_{xz} 
+  \right) 
+ \\ \nonumber
+  + 
+  \frac{1}{6} (p_{xx} - p_{yy})(\mathscr{P}_{xx} - \mathscr{P}_{yy}) +\frac{1}{2} p_{zz} \mathscr{P}_{zz} 
+  \}，
+\end{align}
+where $p_i = Tr(\rho \mathscr{P}_i)$。
+
+We can also rewrite it in the symmetric form:
+
+\begin{align}
+  \rho = \frac{1}{3} \{
+  I + \frac{3}{2} \left( p_x \mathscr{P}_x + p_y \mathscr{P}_y + p_z \mathscr{P}_z \right) + 
+   \frac{2}{3} 
+  \left( 
+  p_{xy} 
+  \mathscr{P}_{xy} + 
+  p_{yz} \mathscr{P}_{yz} + p_{xz} \mathscr{P}_{xz} 
+  \right) 
+ \\ \nonumber
+  + 
+  \frac{1}{3} ( p_{xx} \mathscr{P}_{xx} + p_{yy} \mathscr{P}_{yy} +p_{zz} \mathscr{P}_{zz} )
+  \}.
+\end{align}
+
+
+Since quantum mechanics is a linear theory, the final state and initial state can be connected by the scattering matrix $M$:
+    \begin{align}
+        \ket*{\phi_f}  = M \ket*{\phi_i},
+    \end{align}
+
+So , the relationship between final system's density matrix and the initial system's density matrix is :
+    \begin{align}
+        \rho_f &= \sum p_i \ket*{\phi_f} \bra*{\phi_f} = \sum p_i M \ket*{\phi_i} \bra*{\phi_i} M^\dagger \\
+        &=M\rho_i M^\dagger
+    \end{align}。
+
+For unpolarized deuteron, we can write the density marix:
+\begin{align}
+        \rho_{0i} = 1/3 \begin{pmatrix}
+            1& & &\\
+            & &1 & \\
+            & & &1
+        \end{pmatrix}。
+\end{align}
+where $\frac{1}{3}$ is for the normalization requirement.,subscript "0" represents the unpolarized state.
+The final state is:
+\begin{align}
+    \rho_{0f} = M \rho_i M^\dagger =\frac{1}{3} M M^\dagger.
+\end{align}
+The differential scattering cross-section for the unpolarized deuteron is given by
+\begin{align}
+    I_0(\theta) =\frac{1}{3} Tr M M^\dagger。
+\end{align}
+
+And for polarized case , the density matrix is:
+\begin{align}
+  \rho_i =           \frac{1}{3} \{
+  & I + \frac{3}{2} \left( p_x \mathcal{P}_x + p_y \mathcal{P}_y + p_z \mathcal{P}_z \right) + 
+  \frac{2}{3} 
+  \left( 
+  p_{xy} 
+  \mathcal{P}_{xy} + 
+  p_{yz} \mathcal{P}_{yz} + p_{xz} \mathcal{P}_{xz} 
+  \right) 
+ \\ \nonumber
+  & + 
+  \frac{1}{3} ( p_{xx} \mathcal{P}_{xx} + p_{yy} \mathcal{P}_{yy} +p_{zz} \mathcal{P}_{zz} )
+  \}
+\end{align}
+The final system's density matrix is:
+\begin{align}
+  \rho_f =M \frac{1}{3} \{
+  & I + \frac{3}{2} \left( p_x \mathcal{P}_x + p_y \mathcal{P}_y + p_z \mathcal{P}_z \right) + 
+  % \frac{2}{3} 
+  \left( 
+  p_{xy} 
+  \mathcal{P}_{xy} + 
+  p_{yz} \mathcal{P}_{yz} + p_{xz} \mathcal{P}_{xz} 
+  \right) 
+ \\ \nonumber
+  &+ 
+  \frac{1}{3} ( p_{xx} \mathcal{P}_{xx} + p_{yy} \mathcal{P}_{yy} +p_{zz} \mathcal{P}_{zz} )
+  \} M^\dagger
+\end{align}
+
+If we define the analysing power as :
+\begin{align}
+    A_i = M \mathcal{P}_i M^\dagger \\
+    A_{ij} = \frac{Tr (M \mathcal{P}_{ij} M^\dagger)}{Tr(MM^\dagger)}。
+\end{align}
+we can write the relationship between unpolarized and polarized differential scattering cross-section :
+\begin{align}
+    I&= \frac{1}{3} \{ MM^\dagger + MM^\dagger \frac{3}{2} \sum p_i A_i   + MM^\dagger \frac{1}{3}\sum_{i \neq j} p_{ij}A_{ij}  \} \\ \nonumber
+    &= I_0(\theta) \{ 1 + \frac{3}{2} \sum_i p_i A_i  + \frac{1}{3} \sum_{ij} p_{ij} A_{ij}\}.
+\end{align}
+
+
+
+We will now describe the coordinate system we have chosen, as shown in Figure \ref{zuobiaoxi}. The S coordinate system is the projectile coordinate system, where its z-axis aligns with the direction of the incident particle $k_{\text{in}}$, and the y-axis is perpendicular to both the incident particle direction and the outgoing particle direction, which is along $k_{\text{in}} \times k_{\text{out}}$. In the beam frame S', the z' axis aligns with the incident particle direction $k_{\text{in}}$, and the y' axis points upwards. In Figure \ref{zuobiaoxi}, $\phi$ represents the azimuthal angle. The motion direction of the outgoing particle in S' is given by $(\sin \theta \sin \phi, \sin \theta \cos \phi, \cos \theta)$.
+
+
+
+\subsection{Symmetry analysis}
+
+\begin{figure}
+\begin{center}
+\begin{tikzpicture}[>=latex, x={(1cm,0cm)}, y={(0cm,1cm)}, z={(0.5cm,0.5cm)}]
+% 绘制直角坐标系
+\draw[->] (0,0,0) -- (-3,0,0) node[below left] {$x'$};
+\draw[->] (0,0,0) -- (0,3,0) node[right] {$y'$};
+\draw[->] (0,0,0) -- (0,0,3) node[above] {$z'$};
+% 绘制绕z轴旋转10度后的新坐标系
+\draw[->,red] (0,0,0) -- (-{3*cos(10)}, -{3*sin(10)}, 0) node[below right] {$x$};
+\draw[->,red] (0,0,0) -- ({-3*sin(10)}, {3*cos(10)}, 0) node[above left] {$y$};
+\draw[->,red] (0,0,0) -- (0,0,3) node[below] {$z$};
+\draw[->,blue] (0,1,0.3) -- (0,1,1.5) node[above]{$beam$};
+% 添加标记
+\draw[dashed] (0,0,0) -- ({-3*cos(10)}, {-3*sin(10)}, 0);
+\draw[dashed] (0,0,0) -- ({-3*sin(10)}, {3*cos(10)}, 0);
+\draw[dashed] (0,0,0) -- (0,0,2);
+\draw (0,0,0) -- (0.8,0.8,0) -- (0.8,0.8,1.6) -- cycle;
+\draw[->] (0,1,0) arc (90:100:1) node[midway,above] {$\phi$};
+\end{tikzpicture}
+\end{center}
+\caption{coordinate system}
+\label{zuobiaoxi}
+\end{figure}
+
+In the S system, we analyze the properties of the analyzing power $A_i$. In this coordinate system, $A_i$ depends only on $\theta$ and not on $\phi$, which makes our analysis convenient.
+
+\subsubsection{Restrictions from Parity Conservation}
+
+Under parity transformation, except for pseudovectors like spin, all vectors reverse direction. Therefore, $k_{\text{in}} \rightarrow -k_{\text{in}}$, $k_{\text{out}} \rightarrow -k_{\text{out}}$, and $k_{\text{in}} \times k_{\text{out}} \rightarrow k_{\text{in}} \times k_{\text{out}}$. Since x and z are linear combinations of $k_{\text{in}}$ and $k_{\text{out}}$, they change sign under parity transformation. However, the y-axis remains unchanged. If parity is conserved, then the transformed system should be identical to the original system. This implies that all coefficients, including those related to the analyzing power, should remain the same before and after the system transformation.
+
+
+Parity conservation requires that an observable must have an even $N_x + N_z$ for non-zero values.
+
+Here, $N_x$ and $N_z$ represent the number of occurrences of x and z as subscripts, respectively. The subscripts actually represent the components of a tensor. When $N_x + N_z$ is odd, the components of the tensor change sign under coordinate transformation due to parity, but due to the restriction from parity conservation, the observable can only be zero.
+
+
+\subsection{Coordinate System Transformation}
+
+In the projectile coordinate system S, we can conveniently investigate the properties of the analyzing power. However, our focus is on the polarization state in the beam frame S'. Therefore, we need to express the vector $p$ in S coordinate system in terms of the vector $p'$ in S' coordinate system. As shown in Figure \ref{zuobiaoxi}, S is obtained from S' by rotating around the negative z'-axis by an angle $\phi$. It is straightforward to express the vector transformation as follows:
+\begin{align}
+\left(\begin{array}{c}
+p_x \\
+p_y \\
+p_z
+\end{array}\right)=\left(\begin{array}{ccc}
+\cos \phi & -\sin \phi & 0 \\
+\sin \phi & \cos \phi & 0 \\
+0 & 0 & 1
+\end{array}\right)\left(\begin{array}{c}
+p_{x^{\prime}} \\
+p_{y^{\prime}} \\
+p_{z^{\prime}}
+\end{array}\right)
+\end{align}
+We can write it as $\overrightarrow{p} = U \overrightarrow{p'}$. The transformation of a second-order tensor can be written as $\overleftrightarrow{p} = U \overleftrightarrow{p'} U^\dagger$.
+% In matrix form, it is expressed as:
+% \begin{align}
+% \begin{aligned}
+% \left(\begin{array}{ccc}
+% p_{x x} & p_{x y} & p_{x z} \\
+% p_{x y} & p_{y y} & p_{y z} \\
+% p_{x z} & p_{y z} & p_{z z}
+% \end{array}\right)= & \left(\begin{array}{ccc}
+% \cos \phi & -\sin \phi & 0 \\
+% \sin \phi & \cos \phi & 0 \\
+% 0 & 0 & 1
+% \end{array}\right) 
+% \left(\begin{array}{ccc}
+% p_{x^{\prime} x^{\prime}} & p_{x^{\prime} y^{\prime}} & p_{x^{\prime} z^{\prime}} \\
+% p_{x^{\prime} y^{\prime}} & p_{y^{\prime} y^{\prime}} & p_{y^{\prime} z^{\prime}} \\
+% p_{x^{\prime} z^{\prime}} & p_{y^{\prime} z^{\prime}} & p_{z^{\prime} z^{\prime}}
+% \end{array}\right)\left(\begin{array}{ccc}
+% \cos \phi & \sin \phi & 0 \\
+% -\sin \phi & \cos \phi & 0 \\
+% 0 & 0 & 1
+% \end{array}\right)。
+% \end{aligned}
+% \end{align}
+
+\end{document}

@@ -1,0 +1,17 @@
+In order to verify the feasibility of our experiment, detailed Geant4 simulations were performed, with the ImQMD transport model serving as the event generator. For the polarized deuteron, the squared modulus of the deuteron ground state wave function exhibits a "dumbbell" shape, where the relative vector from the neutron to the proton $\Vec{r}^{np}$ is aligned with the polarization axis. This initialization reflects the realistic spin-1 nature of the deuteron and ensures that the polarization effects are properly incorporated into the simulation.
+
+
+
+To investigate the sensitivity of the observables to the nuclear symmetry energy, the density dependence of $E_{\mathrm{sym}}\left(\rho\right)$ is modeled by varying the parameter $\gamma$ in
+\[
+E_{\mathrm{sym}}\left(\rho\right)=\frac{C_{\mathrm{s,k}}}{2}\left(\frac{\rho}{\rho_{0}}\right)^{\frac{2}{3}}+\frac{C_{\mathrm{s,p}}}{2}\left(\frac{\rho}{\rho_{0}}\right)^{\gamma}
+\]
+where $C_{\mathrm{s,k}}$ and $C_{\mathrm{s,p}}$ are the symmetry kinetic and potential energy parameters, respectively. The parameter $\gamma$ is varied from 0.5 to 1.0 to cover the current range of world data, and for each $\gamma$ value, $10\,\mathrm{M}$ incident deuterons are simulated to ensure sufficient statistics.
+
+The reaction plane is reconstructed event-by-event using the vector sum of the neutron and proton momenta, $\vec{p}^{\mathrm{n}}+\vec{p}^{\mathrm{p}}$, and the reference frame is defined as shown in Figure \ref{fig:frame}. This approach allows for a consistent analysis of the momentum distributions in the reaction plane, which is crucial given the partial azimuthal coverage of the detectors in the real experiment.
+
+Figure \ref{fig:p_xdistribution} presents the $P_x$ distribution of the breakup neutrons and protons in the reaction plane for different $\gamma$ values. The $x$ axis represents the total momentum of the proton and neutron, corresponding to the magnitude of the impulse received, and thus provides information about the collision parameter. The y-axis shows the momentum difference between the proton and neutron, which reflects the difference in the total impulse received by each nucleon. This difference is sensitive to the isovector nuclear force and the Coulomb interaction. As the $\gamma$ parameter changes, the momentum difference between the proton and neutron also varies, demonstrating the sensitivity of the observable to the symmetry energy.
+
+To quantify the isovector reorientation effect, we define the observable $R = \frac{\mathrm{Counts}(P_{xp}>P_{xn}) }{\mathrm{Counts}(P_{xp}<P_{xn})}$, which compares the number of events where the proton's $x$-momentum exceeds that of the neutron to those where the opposite is true. This ratio is particularly sensitive to the underlying symmetry energy parameter $\gamma$.
+
+Figure \ref{fig:IVR_effect} shows the dependence of $R$ on the $\gamma$ parameter. The results clearly indicate that $R$ varies significantly with $\gamma$, making it a robust and sensitive observable for probing the isovector reorientation effect. This strong sensitivity demonstrates that $R$ can serve as a clean probe to constrain the stiffness of the symmetry energy $E_{\mathrm{sym}}(\rho)$ in nuclear matter. The simulation results thus provide strong support for the feasibility and scientific value of the proposed experimental approach.

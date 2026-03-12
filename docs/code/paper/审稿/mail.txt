@@ -1,0 +1,124 @@
+收到，是不是还有附件在投稿网页上，请查看一下。
+我看了一下这些意见，都是一些技术性意见，很好回复的，除此之外我们还可以再稍微打磨一下文本。
+接下来的修改，是一个细致工作，在PDF中要标记颜色，以便查看。
+
+志刚
+
+
+
+> -----原始邮件-----
+> 发件人: 田柏汀 <tbt23@mails.tsinghua.edu.cn>
+> 发送时间:2025-08-15 08:29:26 (星期五)
+> 收件人: 肖志刚 <xiaozg@tsinghua.edu.cn>, 王轶杰 <yj-wang15@tsinghua.org.cn>
+> 主题: Fw: Major Revisions requested RDTM-D-25-00113
+> 
+> 
+> 
+> 
+> > -----原始邮件-----
+> > 发件人: "Radiation Detection Technology and Methods (RDTM)" <em@editorialmanager.com>
+> > 发送时间:2025-08-14 15:21:41 (星期四)
+> > 收件人: "Baiting Tian" <tbt23@mails.tsinghua.edu.cn>
+> > 主题: Major Revisions requested RDTM-D-25-00113
+> > 
+> > CC: erdtm@ihep.ac.cn
+> > 
+> > Dear Mr Tian,
+> > 
+> > We have received the reports from our advisors on your manuscript, "Simulation studies of the isovector reorientation effect of deuteron scattering on heavy target", which you submitted to Radiation Detection Technology and Methods.
+> > 
+> > Based on the advice received, I have decided that your manuscript could be reconsidered for publication should you be prepared to incorporate major revisions. When preparing your revised manuscript, you are asked to carefully consider the reviewer comments which can be found below, and submit a list of responses to the comments. You are kindly requested to also check the website for possible reviewer attachment(s).
+> > 
+> > While submitting, please check the filled in author data carefully and update them if applicable - they need to be complete and correct in order for the revision to be processed further.
+> > 
+> > Please submit your revised manuscript online by using the Editorial Manager system.
+> > 
+> > Your username is: tbt 
+> > If you forgot your password, you can click the 'Send Login Details' link on the EM Login page at https://www.editorialmanager.com/rdtm/
+> > 
+> > We look forward to receiving your revised manuscript before 13 Sep 2025
+> > 
+> > Please note: When uploading your revised manuscript files, please make sure only to submit your editable source files (i.e. Word, Tex). PDF is not allowed at this stage.
+> > 
+> > 
+> > In order to add the due date to your electronic calendar, please open the attached file.
+> > 
+> > Thank you very much.
+> > 
+> > With kind regards,
+> > Junguang Lv
+> > Reviewing Editor
+> > Radiation Detection Technology and Methods
+> > 
+> > Comments to the author (if any):
+> > Reviewer #1: "Simulation studies of the isovector reorientation effect of deuteron scattering on heavy target" discussed the simulation of IVR,  it seems the description need further update.
+> > while just few comments on the draft.
+> > 1.	Page 2 line 15, AVF, RPC, SRC, please define the abbreviate before use it.
+> > 2.	Page 4 line 11, Fig3, "the red axis" difficult to identify.
+> > 3.	Page 4 line 33, figure 7 seems showing up not in sequence.
+> > 4.	Page 4 line 49, figure 4, please define theta c.m. before use it.
+> > 5.	Page 5, line 26, fig 5, please add note to (a)/(b)
+> > 6.	Page 5 line 53, what's the "10%" from?
+> > 7.	Page 6 line 47, "0.5 degree" for proton?
+> > 8.	Page 16 line 17 "+/-12," "30 degree" where come from?
+> > 9.	Please unify Figure or Fig  
+> > 
+> > 
+> > 
+> > Reviewer #2: The authors present a valuable proposal for measuring nuclear isovector potential at RIKEN. 
+> > 
+> > The reviewer-2 would like to suggest modifications in writing. Please find the remarks on the attached pdf manuscript. 
+> > 
+> > 1. the experiment facility needs detailed description.
+> > 
+> > 2. SAMURAI is only a dipole magnet?
+> > NEBULA, what kind of detector is it.
+> > Many of the facilities are given a name with very little description.
+> > 
+> > 3. The parameters shall be given the definition, e.g. b, rho, etc.
+> > 
+> > 
+> > There is additional documentation related to this decision letter. To access the file(s), please click the link below. You may also login to the system and click the 'View Attachments' link in the Action column.
+> > https://www.editorialmanager.com/rdtm/l.asp?i=80742&l=OORY7BUP
+> > 
+> > Authors may need to take specific actions to achieve compliance with funder and institutional open access mandates. If your research is supported by a funder that requires immediate open access (e.g. according to Plan S principles (https://www.springernature.com/gp/open-science/plan-s-compliance) or the NIH public access policy (https://www.springernature.com/gp/open-science/us-federal-agency-compliance)) then you should select the gold OA route, and we will direct you to the compliant route where possible. Because authors warrant under our subscription licensing terms that they haven't committed to licensing any version of their article under a licence inconsistent with the terms of our agreement - including the applicable embargo period - publication under the subscription model isn't suitable for authors whose funders require no embargo.
+> > 
+> > This letter contains confidential information, is for your own use, and should not be forwarded to third parties.
+> > 
+> > Recipients of this email are registered users within the Editorial Manager database for this journal. We will keep your information on file to use in the process of submitting, evaluating and publishing a manuscript. For more information on how we use your personal details please see our privacy policy at https://www.springernature.com/production-privacy-policy. If you no longer wish to receive messages from this journal or you have questions regarding database management, please contact the Publication Office at the link below.
+> > 
+> > __________________________________________________
+> > In compliance with data protection regulations, you may request that we remove your personal registration details at any time.  (Use the following URL: https://www.editorialmanager.com/rdtm/login.asp?a=r). Please contact the publication office if you have any questions.
+
+
+待办
+
+决定：稿件需 Major Revisions（大修），编辑愿意在你按评审意见修改后重新考虑发表。
+
+截止：请在 2025-09-13 前通过 Editorial Manager 提交修订稿（只提交可编辑源文件，PDF 在此阶段不允许）。
+
+提交要求：
+
+提交修订后的可编辑源文件（.tex、.bib、图等）。
+提交一份逐条回应审稿人意见的回复（response letter）。
+在 PDF 中用颜色标注修改位置以便审稿人查看（编辑在邮件中建议这样做）。
+检查作者信息是否完整正确（用户名 tbt，若忘记密码可用系统找回）。
+注意邮件附件/评审附注（有评审者在稿件上做了标注），请在系统里查看附件链接。
+评审意见要点（摘要）：
+
+Reviewer 1（若干技术性与版面细节）：
+在首次使用缩写前定义（如 AVF、RPC、SRC）。
+图表问题：红色坐标轴难辨认；图序问题（某些图未按顺序出现）；图注需说明 (a)/(b)；定义 θ_c.m.；文中若干数值来源不明（如 “10%”、“0.5 degree”、“+/-12”、“30 degree”）——请给出来源或说明。
+统一 “Figure” 与 “Fig” 的用法。
+Reviewer 2（结构与说明需补充）：
+实验设施需更详细描述（例如 SAMURAI 是不是只有一个弯磁？NEBULA 属于何种探测器？）。
+给出主要参数的定义（例如 b、ρ 等）。
+评审在稿件 PDF 上还做了逐条标注（请查看附件）。
+附件/链接：编辑提供了附件查看链接（需登录 Editorial Manager 查看具体评审标注）。
+
+建议的下一步：
+
+下载并阅读评审在 PDF 上的标注（逐条记录修改点）。
+按照两位评审的要求补充实验设施描述、定义所有符号与缩写、修正图注与图序、说明所有数值来源。
+在正文修改处用颜色标注并准备一份逐点回复文档（中英对照可选）。
+准备可编辑源文件（.tex/.bib/图），并在截止日前通过系统提交。

@@ -1,0 +1,115 @@
+Dear Editor and Reviewers,
+
+Manuscript ID: RDTM-D-25-00113
+Title: Simulation studies of the isovector reorientation effect of deuteron scattering on heavy target
+
+We thank the editor and reviewers for their careful reading and constructive comments. Below we reply to each comment point-by-point. Revised manuscript files (editable .tex, .bib and figure files) have been uploaded. All changes in the revised manuscript are highlighted in color (blue) for easy checking.
+
+Files submitted:
+- polarization.tex (revised)
+- ref_tbt.bib (revised)
+- some figures has update
+- response_to_reviewers.txt (this file)
+
+Summary of major revisions:
+- Added detailed description of experimental facility (SAMURAI, NEBULA, PDC).
+- Defined all abbreviations and symbols at first use (AVF, RPC, SRC, b, ρ, θ_c.m., etc.).
+- Fixed figure sequencing and captions, clarified (a)/(b) panels.
+- Clarified sources/definitions for quoted numbers (10%, 0.5°, ±12, 30°).
+- Improved language and consistency, and incorporated reviewer PDF annotations.
+
+-----------------------------
+Response to Reviewer #1
+-----------------------------
+
+Comment 1.1 (Page 2, line 15): "AVF, RPC, SRC, please define the abbreviate before use it."
+
+Author response: Thank you. We have added full names and short descriptions at first use (page X, lines Y–Z).  
+Changes made: Added definitions:
+- AVF: Azimuthally Varying Field cyclotron (brief description).  
+- RPC: Resistive Plate Chamber (role in timing/trigger).  
+- SRC: Superconducting Ring Cyclotron (role in beam delivery).  
+(See manuscript p. X, highlighted in blue.)
+
+Comment 1.2 (Page 4, line 11): "Fig3, 'the red axis' difficult to identify."
+Author response: We replaced/updated the red axis.  
+
+
+Comment 1.3 (Page 4, line 33): "figure 7 seems showing up not in sequence."
+
+
+Author response: We fixed figure ordering and cross-references so figures appear sequentially.  
+Changes made: Reordered figure calls and updated labels; checked all \ref links.
+
+Comment 1.4 (Page 4, line 49): "figure 4, please define theta c.m. before use it."
+
+Author response: θ_c.m. is now defined at first use as the scattering angle in the center-of-mass frame.  
+
+Comment 1.5 (Page 5, line 26): "fig 5, please add note to (a)/(b)."
+
+Author response: We have added notes to panels (a) and (b) of Fig. 5 and clarified the panel descriptions in the figure caption.
+
+
+
+Comment 1.6 (Page 5, line 53): "what's the '10%' from?"
+
+Author response: The quoted "10%" refers to the relative uncertainty on the measured detector count ratios that are used to extract the tensor observables (pzz/p yy). Figures 6 and 7 contain large event samples so the pure statistical error is small; the ≈10% figure is the combined uncertainty from residual statistical contribution and systematic effects (detector efficiency, background subtraction and normalization). This level of uncertainty is sufficient to resolve pzz vs pyy at the stated precision. We have added a short explanation in the text and a clarifying note in the captions of Figs. 6 and 7.
+
+Changes made:
+- Updated Fig. 6 and Fig. 7 captions to include the origin of "10%".
+
+
+Comment 1.7 (Page 6, line 47): "'0.5 degree' for proton?"
+
+Author response: We clarified the statement. The angular straggling is different for deuterons and protons: \textcolor{blue}{$0.5^\circ$ for deuterons and $1.0^\circ$ for protons} for a 3 mm thick target. These values are estimated from the Highland multiple-scattering formula and confirmed by GEANT4 simulation; a brief justification is added.
+
+Changes made: Added the following sentence (highlighted in blue):
+\textcolor{blue}{the \\textcolor{blue}{angular straggling} is about \textcolor{blue}{$0.5^\circ$ for deutron and $1^\circ$ for proton for a 3 mm thick target}.}
+
+Comment 1.8 (Page 16, line 17): "'+/-12,' '30 degree' where come from?"
+Author response: 
+
+Comment 1.9: Origins of "+/-12" and "30°":
+
+Author response: The "+/-12" value is determined by the combination of the target position and the angular acceptance of the NEBULA detector and PDC. NEBULA's nominal angular acceptance is about ±10°, but by placing the target closer to NEBULA the effective coverage increases to roughly ±12°. And the position of PDC is designed to have nearly the same position ad NEBULA. A concise explanation has been added to the manuscript.
+
+The "30°" spectrometer setting results from mechanical and entrance-window constraints of the SAMURAI magnet. Although SAMURAI can nominally rotate from −5° to 95°, the entrance-window geometry restricts practical positions (without replacing the window) to 0°, 30° and 90°. The 90° configuration blocks neutrons, while the 30° setting provides a larger proton angular acceptance than 0°, so we selected 30°. These are shown clearly in the note:
+https://ribf.riken.jp/RIBF-TAC05/10_SAMURAI.pdf
+
+-----------------------------
+Response to Reviewer #2
+-----------------------------
+
+General comment: "The experiment facility needs detailed description. SAMURAI is only a dipole magnet? NEBULA, what kind of detector is it. Many facilities are given a name with very little description."
+
+Author response: We thank the reviewer for this suggestion.   
+Changes made: Added these descriptions in the figure caption and at their first appearance.
+
+
+Comment 2.1: "The parameters shall be given the definition, e.g. b, rho, etc."
+
+Author response: All simulation and physics parameters — impact parameter (b), density (ρ), Fermi momentum (k_F), etc. — are now defined at first occurrence.
+
+
+
+
+Other specific annotations in reviewer PDF:
+
+Author response: We reviewed the annotated PDF and addressed each point. Where reviewers suggested rewording, clarifications or added references, we implemented the changes.
+
+-----------------------------
+Formatting and files
+-----------------------------
+- We highlighted all changes in the revised manuscript in blue using \textcolor{blue}{...} and also provide a clean copy.  
+- Editable files uploaded: polarization.tex, ref_tbt.bib, all figure pdfs.  
+- A point-by-point response file (this document) is uploaded.
+
+-----------------------------
+Concluding remark
+-----------------------------
+We appreciate the reviewers' constructive comments which improved the clarity and completeness of our manuscript. We hope the revisions address all concerns; we are ready to make further changes if requested.
+
+Sincerely,  
+On behalf of all authors,  
+Baiting Tian
+
