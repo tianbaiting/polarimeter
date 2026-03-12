@@ -68,6 +68,50 @@ Ownership rules:
   - validation result,
   - updated files.
 
+## `code/` Reconstruction and Analysis Module
+- Scope: `code/` contains ROOT-based reconstruction / plotting / analysis code for the polarimeter, separate from the stateful FreeCAD pipeline.
+- Source files live under:
+  - `code/src/`
+  - `code/include/dpolar/`
+  - `code/apps/`
+  - `code/tests/`
+  - `code/config/`
+- Generated directories:
+  - `code/build/`
+  - `code/output/`
+  These are generated artifacts and must not be committed.
+- Environment:
+  - ROOT-based work under `code/` MUST run inside the `micromamba` environment `anaroot-env`.
+- Preferred configure/build flow:
+  - `micromamba run -n anaroot-env cmake -S code -B code/build -DDPOLAR_BUILD_TESTS=ON`
+  - `micromamba run -n anaroot-env cmake --build code/build`
+- Preferred test flow:
+  - `micromamba run -n anaroot-env ctest --test-dir code/build --output-on-failure`
+- Main executable entrypoints:
+  - `code/build/dpol_tool`
+  - `code/build/dpol_batch`
+- If analysis logic, CLI behavior, or numerical outputs change, update or add regression coverage in `code/tests/test_main.cpp` or additional tests under `code/tests/`.
+- Keep scenario/config changes in `code/config/*.ini` instead of hard-coding constants into apps where practical.
+- Treat ROOT plotting outputs as generated results; keep reproducible commands in commit messages or handoff notes instead of committing `code/output/`.
+
+## FreeCAD Interactive Drawing and Review Rules
+- For FreeCAD GUI or MCP-driven work, distinguish three tasks clearly:
+  1) parametric model generation,
+  2) geometry validation,
+  3) drawing / screenshot generation for review.
+- The authoritative build path for `infrontofSamuraiMag` remains the stateful pipeline; ad-hoc GUI drawing must not bypass target/config ownership rules.
+- Before producing review drawings or screenshots, first confirm the geometry source:
+  - stateful pipeline output (`infrontofSamuraiMag`)
+  - or quick macro/reference preview (`infrontofSamuraiMag/build_polarimeter.py`)
+- Use beam-axis-consistent standard views when sharing geometry snapshots:
+  - `Isometric`
+  - `Front`
+  - `Top`
+  - `Right`
+- When a user asks to “画图” / make FreeCAD visuals, default to screenshots or view captures unless they explicitly ask for a dimensioned engineering drawing.
+- Do not present screenshots as manufacturing drawings; if dimensions or fabrication intent matter, validate against `docs/specs/BLP_v1_requirement_baseline.md` and the parametric config first.
+- For interactive review, prefer object-focused captures of the changed subsystem rather than whole-assembly clutter.
+
 ## Module Scope
 - Current active stateful module: `infrontofSamuraiMag`.
 - `upstreamBLP` is reserved for next phase. When activated, it must adopt the same target/state contract and be registered in `codex_targets.yaml`.
