@@ -7,6 +7,7 @@
 #include "TGraphErrors.h"
 #include "TH2D.h"
 #include "TLegend.h"
+#include "TLatex.h"
 #include "TPad.h"
 #include "TPaveText.h"
 #include "TROOT.h"
@@ -39,6 +40,27 @@ struct LrudStatModel {
 struct PlotRange {
     double minimum {};
     double maximum {};
+};
+
+struct OverlayAnnotation {
+    std::string short_label;
+    std::string table_line;
+    CoverageParticle particle {CoverageParticle::Deuteron};
+    double box_x_min {};
+    double box_x_max {};
+    double box_y_min {};
+    double box_y_max {};
+    double theta_lab_min_deg {};
+    double theta_lab_max_deg {};
+    double theta_cm_min_deg {};
+    double theta_cm_max_deg {};
+    int fill_color {};
+};
+
+struct OverlayLabelPlacement {
+    double x {};
+    double y {};
+    int text_align {22};
 };
 
 std::string formatDouble(const double value, const int precision = 6) {
@@ -270,6 +292,128 @@ void drawInfoBox(
     box.DrawClone();
 }
 
+std::string formatOverlayRangeLine(
+    const std::string& short_label,
+    const double theta_lab_min_deg,
+    const double theta_lab_max_deg,
+    const double theta_cm_min_deg,
+    const double theta_cm_max_deg) {
+    return short_label + ": theta_lab=[" + formatDouble(theta_lab_min_deg, 1) + "," +
+           formatDouble(theta_lab_max_deg, 1) + "] deg; theta_cm=[" +
+           formatDouble(theta_cm_min_deg, 1) + "," + formatDouble(theta_cm_max_deg, 1) + "] deg";
+}
+
+double overlayInfoTextSize(const std::size_t line_count) {
+    return std::clamp(0.30 / static_cast<double>(std::max<std::size_t>(line_count + 1U, 1U)), 0.024, 0.034);
+}
+
+void drawOverlayInfoSection(
+    const std::string& title,
+    const std::vector<std::string>& lines,
+    const double y1,
+    const double y2) {
+    TPaveText box(0.02, y1, 0.98, y2, "NDC");
+    box.SetFillColor(kWhite);
+    box.SetFillStyle(1001);
+    box.SetBorderSize(1);
+    box.SetTextAlign(12);
+    box.SetTextSize(overlayInfoTextSize(lines.size()));
+    if (TText* header = box.AddText(title.c_str()); header != nullptr) {
+        header->SetTextFont(62);
+    }
+    for (const std::string& line : lines) {
+        box.AddText(line.c_str());
+    }
+    box.DrawClone();
+}
+
+OverlayLabelPlacement computeOverlayLabelPlacement(
+    const OverlayAnnotation& annotation,
+    const PlotRange& x_range,
+    const PlotRange& y_range) {
+    const double x_span = x_range.maximum - x_range.minimum;
+    const double y_span = y_range.maximum - y_range.minimum;
+    const double box_width = std::abs(annotation.box_x_max - annotation.box_x_min);
+    const double box_height = std::abs(annotation.box_y_max - annotation.box_y_min);
+    OverlayLabelPlacement placement {
+        0.5 * (annotation.box_x_min + annotation.box_x_max),
+        0.5 * (annotation.box_y_min + annotation.box_y_max),
+        22
+    };
+
+    if (box_width < 0.04 * x_span || box_height < 0.04 * y_span) {
+        placement.x = std::clamp(
+            std::max(annotation.box_x_min, annotation.box_x_max) + 0.012 * x_span,
+            x_range.minimum + 0.02 * x_span,
+            x_range.maximum - 0.02 * x_span);
+        placement.y = std::clamp(
+            std::max(annotation.box_y_min, annotation.box_y_max) + 0.012 * y_span,
+            y_range.minimum + 0.02 * y_span,
+            y_range.maximum - 0.02 * y_span);
+        placement.text_align = 11;
+    }
+
+    return placement;
+}
+
+void drawOverlayAnnotations(
+    const std::vector<OverlayAnnotation>& annotations,
+    const PlotRange& x_range,
+    const PlotRange& y_range) {
+    TLatex latex;
+    latex.SetTextFont(42);
+    latex.SetTextSize(0.022);
+    latex.SetTextColor(kBlack);
+
+    for (const OverlayAnnotation& annotation : annotations) {
+        TBox box(annotation.box_x_min, annotation.box_y_min, annotation.box_x_max, annotation.box_y_max);
+        box.SetFillColorAlpha(annotation.fill_color, 0.25);
+        box.SetLineColor(annotation.fill_color);
+        box.SetLineWidth(2);
+        box.DrawClone("same");
+
+        const OverlayLabelPlacement placement = computeOverlayLabelPlacement(annotation, x_range, y_range);
+        latex.SetTextAlign(placement.text_align);
+        latex.DrawLatex(placement.x, placement.y, annotation.short_label.c_str());
+    }
+}
+
+void drawOverlayInfoPanel(
+    TPad& info_pad,
+    const std::vector<OverlayAnnotation>& annotations) {
+    std::vector<std::string> proton_lines;
+    std::vector<std::string> deuteron_lines;
+    proton_lines.reserve(annotations.size());
+    deuteron_lines.reserve(annotations.size());
+    for (const OverlayAnnotation& annotation : annotations) {
+        if (annotation.particle == CoverageParticle::Proton) {
+            proton_lines.push_back(annotation.table_line);
+        } else {
+            deuteron_lines.push_back(annotation.table_line);
+        }
+    }
+
+    info_pad.cd();
+    drawOverlayInfoSection("Proton windows", proton_lines, 0.52, 0.98);
+    drawOverlayInfoSection("Deuteron windows", deuteron_lines, 0.02, 0.48);
+}
+
+void addOverlayAnnotationSummary(
+    std::vector<SummaryEntry>& summary,
+    const std::vector<OverlayAnnotation>& annotations) {
+    const auto proton_count = static_cast<int>(std::count_if(
+        annotations.begin(),
+        annotations.end(),
+        [](const OverlayAnnotation& annotation) {
+            return annotation.particle == CoverageParticle::Proton;
+        }));
+    const int deuteron_count = static_cast<int>(annotations.size()) - proton_count;
+    summary.push_back({"overlay_annotation_count", std::to_string(annotations.size())});
+    summary.push_back({"overlay_proton_annotation_count", std::to_string(proton_count)});
+    summary.push_back({"overlay_deuteron_annotation_count", std::to_string(deuteron_count)});
+    summary.push_back({"overlay_annotation_style", "inline_short_label_plus_side_table"});
+}
+
 void addDefinitionSummary(
     std::vector<SummaryEntry>& summary,
     const std::string& prefix,
@@ -353,6 +497,25 @@ std::vector<std::string> coincidenceDefinitionLines(
     lines.push_back(
         std::string("Efficiency = Ncoin / Np(single arm ") + (forward_branch ? "1" : "2") +
         "); channels are not summed");
+    lines.push_back(runContextLine(scenario, beam_particles));
+    return lines;
+}
+
+std::vector<std::string> coincidenceTotalDefinitionLines(
+    const ScenarioConfig& scenario,
+    const double beam_particles) {
+    std::vector<std::string> lines;
+    lines.push_back("Channel: total coincidence, forward + backward branches summed");
+    lines.push_back(
+        "Proton arms: #theta_{lab} = " + formatDouble(scenario.custom_layout.proton_arms[0].theta_lab_deg, 1) +
+        " deg and " + formatDouble(scenario.custom_layout.proton_arms[1].theta_lab_deg, 1) + " deg");
+    lines.push_back(
+        "Deuteron arm: #theta_{lab} = " +
+        formatDouble(scenario.custom_layout.deuteron_arm.theta_lab_deg, 1) + " deg");
+    lines.push_back(
+        "Ntotal = Ncoin(forward overlap) + Ncoin(backward overlap)");
+    lines.push_back("Each Ncoin = Ntarget x Nbeam x #int_{CM overlap} d#theta d#phi [d#sigma/d#Omega x (1 + #sqrt{2}/2 T20 pzz)]");
+    lines.push_back("Coincidence sector multiplier is applied before summation");
     lines.push_back(runContextLine(scenario, beam_particles));
     return lines;
 }
@@ -627,6 +790,23 @@ void writeCoincidenceScanCsv(
     }
 }
 
+void writeCoincidenceTotalScanCsv(
+    const std::filesystem::path& path,
+    const std::vector<double>& polarizations,
+    const std::vector<double>& coincidence_forward,
+    const std::vector<double>& coincidence_backward,
+    const std::vector<double>& coincidence_total) {
+    std::ofstream output(path);
+    output << "polarization,coincidence_forward,coincidence_backward,coincidence_total\n";
+    for (std::size_t index = 0; index < polarizations.size(); ++index) {
+        output
+            << formatDouble(polarizations[index], 8) << ','
+            << formatDouble(coincidence_forward[index], 8) << ','
+            << formatDouble(coincidence_backward[index], 8) << ','
+            << formatDouble(coincidence_total[index], 8) << '\n';
+    }
+}
+
 AnalysisArtifacts finalizeArtifacts(AnalysisArtifacts artifacts) {
     writeSummaryFiles(artifacts);
     return artifacts;
@@ -712,12 +892,21 @@ AnalysisArtifacts AnalysisSession::runLayoutOverlay(const LayoutPreset preset, c
         proton_theta_lab_deg.push_back(toDegrees(solution.proton.theta_lab_rad));
     }
 
-    TCanvas projection_canvas("layout_projection", "layout_projection", 900, 700);
-    configureCanvasMargins(projection_canvas);
+    TCanvas projection_canvas("layout_projection", "layout_projection", 1500, 900);
+    TPad plot_pad("layout_projection_plot", "", 0.0, 0.0, 0.68, 1.0);
+    TPad info_pad("layout_projection_info", "", 0.68, 0.0, 1.0, 1.0);
+    configurePlotPad(plot_pad);
+    configureInfoPad(info_pad);
+    plot_pad.Draw();
+    info_pad.Draw();
+    plot_pad.cd();
 
     AnalysisArtifacts artifacts;
     artifacts.output_dir = dir;
     std::vector<AcceptanceCoverage> coverages;
+    std::vector<OverlayAnnotation> annotations;
+    PlotRange overlay_x_range;
+    PlotRange overlay_y_range;
 
     if (preset == LayoutPreset::Custom) {
         TGraph deuteron_graph(
@@ -736,23 +925,33 @@ AnalysisArtifacts AnalysisSession::runLayoutOverlay(const LayoutPreset preset, c
         deuteron_graph.SetLineColor(kRed + 1);
         proton_graph.Draw("AL");
         deuteron_graph.Draw("L SAME");
-
-        TLegend legend(0.68, 0.74, 0.9, 0.9);
-        legend.AddEntry(&proton_graph, "proton", "l");
-        legend.AddEntry(&deuteron_graph, "deuteron", "l");
-        legend.Draw();
+        overlay_x_range = PlotRange {0.0, 90.0};
+        overlay_y_range = PlotRange {0.0, 180.0};
+        annotations.reserve(scenario_.custom_layout.proton_arms.size() + 2U);
 
         for (std::size_t index = 0; index < scenario_.custom_layout.proton_arms.size(); ++index) {
             const DetectorArm& arm = scenario_.custom_layout.proton_arms[index];
             const CmBranchWindow window = protonWindowFromArm(kinematics_, arm);
             const std::string label = "proton_arm_" + std::to_string(index + 1);
-            TBox box(
-                arm.theta_lab_deg - toDegrees(thetaAcceptanceRad(arm.width_theta_mm, arm.distance_mm)) / 2.0,
-                toDegrees(window.begin_rad),
-                arm.theta_lab_deg + toDegrees(thetaAcceptanceRad(arm.width_theta_mm, arm.distance_mm)) / 2.0,
-                toDegrees(window.end_rad));
-            box.SetFillColorAlpha(kCyan + 1, 0.25);
-            box.Draw("same");
+            const double delta_theta_deg = toDegrees(thetaAcceptanceRad(arm.width_theta_mm, arm.distance_mm));
+            const double theta_lab_min_deg = arm.theta_lab_deg - delta_theta_deg / 2.0;
+            const double theta_lab_max_deg = arm.theta_lab_deg + delta_theta_deg / 2.0;
+            const double theta_cm_min_deg = toDegrees(window.begin_rad);
+            const double theta_cm_max_deg = toDegrees(window.end_rad);
+            annotations.push_back(OverlayAnnotation {
+                "P" + std::to_string(index + 1),
+                formatOverlayRangeLine("P" + std::to_string(index + 1), theta_lab_min_deg, theta_lab_max_deg, theta_cm_min_deg, theta_cm_max_deg),
+                CoverageParticle::Proton,
+                theta_lab_min_deg,
+                theta_lab_max_deg,
+                theta_cm_min_deg,
+                theta_cm_max_deg,
+                theta_lab_min_deg,
+                theta_lab_max_deg,
+                theta_cm_min_deg,
+                theta_cm_max_deg,
+                kCyan + 1
+            });
             addWindowSummary(artifacts.summary, label + "_window", window);
             AcceptanceCoverage coverage = computeCoverage(
                 kinematics_,
@@ -767,27 +966,51 @@ AnalysisArtifacts AnalysisSession::runLayoutOverlay(const LayoutPreset preset, c
         const DetectorArm& arm = scenario_.custom_layout.deuteron_arm;
         const BranchPair windows = deuteronWindowsFromArm(kinematics_, arm);
         const std::vector<std::pair<CmBranchWindow, std::string>> branches = {
-            {windows.forward, "deuteron_forward"},
-            {windows.backward, "deuteron_backward"},
+            {windows.forward, "D1F"},
+            {windows.backward, "D1B"},
         };
-        for (const auto& [window, label] : branches) {
-            TBox box(
-                arm.theta_lab_deg - toDegrees(thetaAcceptanceRad(arm.width_theta_mm, arm.distance_mm)) / 2.0,
-                toDegrees(window.begin_rad),
-                arm.theta_lab_deg + toDegrees(thetaAcceptanceRad(arm.width_theta_mm, arm.distance_mm)) / 2.0,
-                toDegrees(window.end_rad));
-            box.SetFillColorAlpha(kPink + 1, 0.25);
-            box.Draw("same");
-            addWindowSummary(artifacts.summary, label + "_window", window);
+        for (std::size_t index = 0; index < branches.size(); ++index) {
+            const auto& [window, short_label] = branches[index];
+            const double delta_theta_deg = toDegrees(thetaAcceptanceRad(arm.width_theta_mm, arm.distance_mm));
+            const double theta_lab_min_deg = arm.theta_lab_deg - delta_theta_deg / 2.0;
+            const double theta_lab_max_deg = arm.theta_lab_deg + delta_theta_deg / 2.0;
+            const double theta_cm_min_deg = toDegrees(window.begin_rad);
+            const double theta_cm_max_deg = toDegrees(window.end_rad);
+            const std::string summary_label = index == 0U ? "deuteron_forward" : "deuteron_backward";
+            annotations.push_back(OverlayAnnotation {
+                short_label,
+                formatOverlayRangeLine(short_label, theta_lab_min_deg, theta_lab_max_deg, theta_cm_min_deg, theta_cm_max_deg),
+                CoverageParticle::Deuteron,
+                theta_lab_min_deg,
+                theta_lab_max_deg,
+                theta_cm_min_deg,
+                theta_cm_max_deg,
+                theta_lab_min_deg,
+                theta_lab_max_deg,
+                theta_cm_min_deg,
+                theta_cm_max_deg,
+                kPink + 1
+            });
+            addWindowSummary(artifacts.summary, summary_label + "_window", window);
             AcceptanceCoverage coverage = computeCoverage(
                 kinematics_,
                 arm,
                 CoverageParticle::Deuteron,
                 window,
                 scenario_.coverage);
-            coverage.label = label;
+            coverage.label = summary_label;
             coverages.push_back(std::move(coverage));
         }
+
+        drawOverlayAnnotations(annotations, overlay_x_range, overlay_y_range);
+        TLegend legend(0.66, 0.77, 0.92, 0.92);
+        legend.SetFillStyle(1001);
+        legend.SetFillColor(kWhite);
+        legend.AddEntry(&proton_graph, "proton", "l");
+        legend.AddEntry(&deuteron_graph, "deuteron", "l");
+        legend.Draw();
+        drawOverlayInfoPanel(info_pad, annotations);
+        addOverlayAnnotationSummary(artifacts.summary, annotations);
 
         saveCanvasAndTrack(artifacts, projection_canvas, dir / "Pol_angcover_flipped");
 
@@ -821,35 +1044,48 @@ AnalysisArtifacts AnalysisSession::runLayoutOverlay(const LayoutPreset preset, c
         proton_graph.SetLineColor(kBlue + 1);
         deuteron_graph.Draw("AL");
         proton_graph.Draw("L SAME");
-
-        TLegend legend(0.68, 0.74, 0.9, 0.9);
-        legend.AddEntry(&proton_graph, "proton", "l");
-        legend.AddEntry(&deuteron_graph, "deuteron", "l");
-        legend.Draw();
+        overlay_x_range = PlotRange {0.0, 180.0};
+        overlay_y_range = PlotRange {0.0, 90.0};
+        annotations.reserve(scenario_.sekiguchi_layout.proton_arms.size() + 2U * scenario_.sekiguchi_layout.deuteron_arms.size());
 
         for (std::size_t index = 0; index < scenario_.sekiguchi_layout.deuteron_arms.size(); ++index) {
             const DetectorArm& arm = scenario_.sekiguchi_layout.deuteron_arms[index];
             const BranchPair windows = deuteronWindowsFromArm(kinematics_, arm);
             const std::vector<std::pair<CmBranchWindow, std::string>> branches = {
-                {windows.forward, "deuteron_arm_" + std::to_string(index + 1) + "_forward"},
-                {windows.backward, "deuteron_arm_" + std::to_string(index + 1) + "_backward"},
+                {windows.forward, "D" + std::to_string(index + 1) + "F"},
+                {windows.backward, "D" + std::to_string(index + 1) + "B"},
             };
-            for (const auto& [window, label] : branches) {
-                TBox box(
-                    toDegrees(window.begin_rad),
-                    arm.theta_lab_deg - toDegrees(thetaAcceptanceRad(arm.width_theta_mm, arm.distance_mm)) / 2.0,
-                    toDegrees(window.end_rad),
-                    arm.theta_lab_deg + toDegrees(thetaAcceptanceRad(arm.width_theta_mm, arm.distance_mm)) / 2.0);
-                box.SetFillColorAlpha(kPink + 1, 0.25);
-                box.Draw("same");
-                addWindowSummary(artifacts.summary, label + "_window", window);
+            for (std::size_t branch_index = 0; branch_index < branches.size(); ++branch_index) {
+                const auto& [window, short_label] = branches[branch_index];
+                const double delta_theta_deg = toDegrees(thetaAcceptanceRad(arm.width_theta_mm, arm.distance_mm));
+                const double theta_lab_min_deg = arm.theta_lab_deg - delta_theta_deg / 2.0;
+                const double theta_lab_max_deg = arm.theta_lab_deg + delta_theta_deg / 2.0;
+                const double theta_cm_min_deg = toDegrees(window.begin_rad);
+                const double theta_cm_max_deg = toDegrees(window.end_rad);
+                const std::string summary_label = "deuteron_arm_" + std::to_string(index + 1) +
+                                                  (branch_index == 0U ? "_forward" : "_backward");
+                annotations.push_back(OverlayAnnotation {
+                    short_label,
+                    formatOverlayRangeLine(short_label, theta_lab_min_deg, theta_lab_max_deg, theta_cm_min_deg, theta_cm_max_deg),
+                    CoverageParticle::Deuteron,
+                    theta_cm_min_deg,
+                    theta_cm_max_deg,
+                    theta_lab_min_deg,
+                    theta_lab_max_deg,
+                    theta_lab_min_deg,
+                    theta_lab_max_deg,
+                    theta_cm_min_deg,
+                    theta_cm_max_deg,
+                    kPink + 1
+                });
+                addWindowSummary(artifacts.summary, summary_label + "_window", window);
                 AcceptanceCoverage coverage = computeCoverage(
                     kinematics_,
                     arm,
                     CoverageParticle::Deuteron,
                     window,
                     scenario_.coverage);
-                coverage.label = label;
+                coverage.label = summary_label;
                 coverages.push_back(std::move(coverage));
             }
         }
@@ -858,13 +1094,25 @@ AnalysisArtifacts AnalysisSession::runLayoutOverlay(const LayoutPreset preset, c
             const DetectorArm& arm = scenario_.sekiguchi_layout.proton_arms[index];
             const CmBranchWindow window = protonWindowFromArm(kinematics_, arm);
             const std::string label = "proton_arm_" + std::to_string(index + 1);
-            TBox box(
-                toDegrees(window.begin_rad),
-                arm.theta_lab_deg - toDegrees(thetaAcceptanceRad(arm.width_theta_mm, arm.distance_mm)) / 2.0,
-                toDegrees(window.end_rad),
-                arm.theta_lab_deg + toDegrees(thetaAcceptanceRad(arm.width_theta_mm, arm.distance_mm)) / 2.0);
-            box.SetFillColorAlpha(kCyan + 1, 0.25);
-            box.Draw("same");
+            const double delta_theta_deg = toDegrees(thetaAcceptanceRad(arm.width_theta_mm, arm.distance_mm));
+            const double theta_lab_min_deg = arm.theta_lab_deg - delta_theta_deg / 2.0;
+            const double theta_lab_max_deg = arm.theta_lab_deg + delta_theta_deg / 2.0;
+            const double theta_cm_min_deg = toDegrees(window.begin_rad);
+            const double theta_cm_max_deg = toDegrees(window.end_rad);
+            annotations.push_back(OverlayAnnotation {
+                "P" + std::to_string(index + 1),
+                formatOverlayRangeLine("P" + std::to_string(index + 1), theta_lab_min_deg, theta_lab_max_deg, theta_cm_min_deg, theta_cm_max_deg),
+                CoverageParticle::Proton,
+                theta_cm_min_deg,
+                theta_cm_max_deg,
+                theta_lab_min_deg,
+                theta_lab_max_deg,
+                theta_lab_min_deg,
+                theta_lab_max_deg,
+                theta_cm_min_deg,
+                theta_cm_max_deg,
+                kCyan + 1
+            });
             addWindowSummary(artifacts.summary, label + "_window", window);
             AcceptanceCoverage coverage = computeCoverage(
                 kinematics_,
@@ -876,6 +1124,15 @@ AnalysisArtifacts AnalysisSession::runLayoutOverlay(const LayoutPreset preset, c
             coverages.push_back(std::move(coverage));
         }
 
+        drawOverlayAnnotations(annotations, overlay_x_range, overlay_y_range);
+        TLegend legend(0.66, 0.77, 0.92, 0.92);
+        legend.SetFillStyle(1001);
+        legend.SetFillColor(kWhite);
+        legend.AddEntry(&proton_graph, "proton", "l");
+        legend.AddEntry(&deuteron_graph, "deuteron", "l");
+        legend.Draw();
+        drawOverlayInfoPanel(info_pad, annotations);
+        addOverlayAnnotationSummary(artifacts.summary, annotations);
         artifacts.summary.push_back({"sekiguchi_deuteron_detectors", std::to_string(scenario_.sekiguchi_layout.deuteron_arms.size())});
         artifacts.summary.push_back({"sekiguchi_proton_detectors", std::to_string(scenario_.sekiguchi_layout.proton_arms.size())});
         saveCanvasAndTrack(artifacts, projection_canvas, dir / "ThetaLab_vs_ThetaDc_deg");
@@ -1650,6 +1907,127 @@ AnalysisArtifacts AnalysisSession::runCoincidenceScanSingleDuration(const std::f
     return finalizeArtifacts(std::move(artifacts));
 }
 
+AnalysisArtifacts AnalysisSession::runCoincidenceTotalScan(const std::filesystem::path& output_root) const {
+    const std::filesystem::path root = resolveOutputRoot(scenario_, output_root);
+    const std::vector<double> durations_s = effectiveDurations(scenario_);
+    if (durations_s.size() == 1U) {
+        return runCoincidenceTotalScanSingleDuration(analysisOutputDir(root, scenario_.scenario_name, "coincidence_total"));
+    }
+
+    const std::filesystem::path parent_dir = analysisOutputDir(root, scenario_.scenario_name, "coincidence_total");
+    clearParentAnalysisIndexDir(parent_dir);
+    std::vector<AnalysisArtifacts> runs;
+    runs.reserve(durations_s.size());
+    for (const double duration_s : durations_s) {
+        AnalysisSession child_session(scenarioWithDuration(scenario_, duration_s));
+        runs.push_back(child_session.runCoincidenceTotalScanSingleDuration(durationOutputDir(parent_dir, duration_s)));
+    }
+    return finalizeArtifacts(aggregateDurationRuns(parent_dir, durations_s, runs));
+}
+
+AnalysisArtifacts AnalysisSession::runCoincidenceTotalScanSingleDuration(const std::filesystem::path& dir) const {
+    std::filesystem::create_directories(dir);
+
+    const CmBranchWindow proton_forward = protonWindowFromArm(kinematics_, scenario_.custom_layout.proton_arms[0]);
+    const CmBranchWindow proton_backward = protonWindowFromArm(kinematics_, scenario_.custom_layout.proton_arms[1]);
+    const BranchPair deuteron_windows = deuteronWindowsFromArm(kinematics_, scenario_.custom_layout.deuteron_arm);
+    const CmBranchWindow overlap_forward = intersectWindows(proton_forward, deuteron_windows.forward);
+    const CmBranchWindow overlap_backward = intersectWindows(proton_backward, deuteron_windows.backward);
+
+    const std::vector<double> polarization_values = scanPolarizationValues(scenario_.scan);
+    const double beam_particles = counts_.beamParticleCount();
+    std::vector<double> coincidence_forward_counts;
+    std::vector<double> coincidence_backward_counts;
+    std::vector<double> coincidence_total_counts;
+    coincidence_forward_counts.reserve(polarization_values.size());
+    coincidence_backward_counts.reserve(polarization_values.size());
+    coincidence_total_counts.reserve(polarization_values.size());
+
+    for (const double polarization : polarization_values) {
+        const double forward_coincidence_integral = counts_.integralForPzz(overlap_forward, polarization);
+        const double backward_coincidence_integral = counts_.integralForPzz(overlap_backward, polarization);
+        const double forward_coincidence_value = counts_.countsFromIntegratedCrossSection(forward_coincidence_integral)
+                                                 * scenario_.run.coincidence_sector_multiplier;
+        const double backward_coincidence_value = counts_.countsFromIntegratedCrossSection(backward_coincidence_integral)
+                                                  * scenario_.run.coincidence_sector_multiplier;
+        coincidence_forward_counts.push_back(forward_coincidence_value);
+        coincidence_backward_counts.push_back(backward_coincidence_value);
+        coincidence_total_counts.push_back(forward_coincidence_value + backward_coincidence_value);
+    }
+
+    TCanvas canvas("coincidence_total", "coincidence_total", 960, 820);
+    gStyle->SetEndErrorSize(10.0);
+    TPad info_pad("coincidence_total_info", "", 0.0, 0.73, 1.0, 1.0);
+    TPad plot_pad("coincidence_total_plot", "", 0.0, 0.0, 1.0, 0.73);
+    configureInfoPad(info_pad);
+    configurePlotPad(plot_pad);
+    info_pad.Draw();
+    plot_pad.Draw();
+    info_pad.cd();
+    drawInfoBox(coincidenceTotalDefinitionLines(scenario_, beam_particles), 0.02, 0.08, 0.98, 0.92, 0.078);
+
+    plot_pad.cd();
+    const PlotRange plot_range = computePaddedRange(coincidence_total_counts, {});
+    TGraph total_markers(
+        static_cast<int>(polarization_values.size()),
+        polarization_values.data(),
+        coincidence_total_counts.data());
+    TGraph forward_markers(
+        static_cast<int>(polarization_values.size()),
+        polarization_values.data(),
+        coincidence_forward_counts.data());
+    TGraph backward_markers(
+        static_cast<int>(polarization_values.size()),
+        polarization_values.data(),
+        coincidence_backward_counts.data());
+    styleMarkerGraph(total_markers, kBlue + 1, 20, 1.2);
+    styleMarkerGraph(forward_markers, kGreen + 2, 21, 1.0);
+    styleMarkerGraph(backward_markers, kRed + 1, 22, 1.0);
+
+    total_markers.SetTitle(";#it{p}_{zz};Coincidence counts");
+    total_markers.SetMinimum(plot_range.minimum);
+    total_markers.SetMaximum(plot_range.maximum);
+    total_markers.Draw("AP");
+    forward_markers.Draw("P SAME");
+    backward_markers.Draw("P SAME");
+
+    TLegend legend(0.60, 0.16, 0.88, 0.31);
+    legend.SetFillStyle(0);
+    legend.SetBorderSize(0);
+    legend.AddEntry(&total_markers, "total coincidence", "p");
+    legend.AddEntry(&forward_markers, "forward branch", "p");
+    legend.AddEntry(&backward_markers, "backward branch", "p");
+    legend.Draw();
+
+    AnalysisArtifacts artifacts;
+    artifacts.output_dir = dir;
+    addWindowSummary(artifacts.summary, "forward_overlap", overlap_forward);
+    addWindowSummary(artifacts.summary, "backward_overlap", overlap_backward);
+    artifacts.summary.push_back({"duration_label", durationLabel(scenario_.run.duration_s)});
+    artifacts.summary.push_back({"duration_s", formatDouble(scenario_.run.duration_s, 1)});
+    artifacts.summary.push_back({"beam_particles", formatDouble(beam_particles, 4)});
+    artifacts.summary.push_back({"coincidence_sector_multiplier", formatDouble(scenario_.run.coincidence_sector_multiplier, 1)});
+    artifacts.summary.push_back({"coincidence_forward_at_min_pol", formatDouble(coincidence_forward_counts.front(), 6)});
+    artifacts.summary.push_back({"coincidence_backward_at_min_pol", formatDouble(coincidence_backward_counts.front(), 6)});
+    artifacts.summary.push_back({"coincidence_total_at_min_pol", formatDouble(coincidence_total_counts.front(), 6)});
+    artifacts.summary.push_back({"coincidence_forward_at_max_pol", formatDouble(coincidence_forward_counts.back(), 6)});
+    artifacts.summary.push_back({"coincidence_backward_at_max_pol", formatDouble(coincidence_backward_counts.back(), 6)});
+    artifacts.summary.push_back({"coincidence_total_at_max_pol", formatDouble(coincidence_total_counts.back(), 6)});
+    addDefinitionSummary(artifacts.summary, "coincidence_total_definition", coincidenceTotalDefinitionLines(scenario_, beam_particles));
+
+    const std::filesystem::path scan_csv = dir / "scan_points.csv";
+    writeCoincidenceTotalScanCsv(
+        scan_csv,
+        polarization_values,
+        coincidence_forward_counts,
+        coincidence_backward_counts,
+        coincidence_total_counts);
+    artifacts.files.push_back(scan_csv);
+
+    saveCanvasAndTrack(artifacts, canvas, dir / "Coincidence_total_vs_pzz");
+    return finalizeArtifacts(std::move(artifacts));
+}
+
 AnalysisArtifacts AnalysisSession::runCrossSectionScan(const std::filesystem::path& output_root) const {
     const std::filesystem::path dir = analysisOutputDir(resolveOutputRoot(scenario_, output_root), scenario_.scenario_name, "cross_section_scan");
     std::filesystem::create_directories(dir);
@@ -1752,6 +2130,7 @@ AnalysisArtifacts AnalysisSession::runBatchWorkflow(const std::filesystem::path&
         runRatioScan(RatioMode::Proton, root),
         runLrudScan(root),
         runCoincidenceScan(root),
+        runCoincidenceTotalScan(root),
         runCrossSectionScan(root),
         runEnergyLossScan(root),
     };

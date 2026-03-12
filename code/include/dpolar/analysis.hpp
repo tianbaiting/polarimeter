@@ -31,6 +31,7 @@ public:
     AnalysisArtifacts runRatioScan(RatioMode mode, const std::filesystem::path& output_root) const;
     AnalysisArtifacts runLrudScan(const std::filesystem::path& output_root) const;
     AnalysisArtifacts runCoincidenceScan(const std::filesystem::path& output_root) const;
+    AnalysisArtifacts runCoincidenceTotalScan(const std::filesystem::path& output_root) const;
     AnalysisArtifacts runCrossSectionScan(const std::filesystem::path& output_root) const;
     AnalysisArtifacts runEnergyLossScan(const std::filesystem::path& output_root) const;
     AnalysisArtifacts runBatchWorkflow(const std::filesystem::path& output_root) const;
@@ -39,6 +40,7 @@ private:
     AnalysisArtifacts runRatioScanSingleDuration(RatioMode mode, const std::filesystem::path& analysis_dir) const;
     AnalysisArtifacts runLrudScanSingleDuration(const std::filesystem::path& analysis_dir) const;
     AnalysisArtifacts runCoincidenceScanSingleDuration(const std::filesystem::path& analysis_dir) const;
+    AnalysisArtifacts runCoincidenceTotalScanSingleDuration(const std::filesystem::path& analysis_dir) const;
 
     ScenarioConfig scenario_;
     ElasticDpKinematics kinematics_;

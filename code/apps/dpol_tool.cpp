@@ -21,7 +21,7 @@ std::string requireValue(int& index, const int argc, char* argv[]) {
 void printUsage() {
     std::cout
         << "Usage: dpol_tool <command> --scenario <path> [--preset custom|sekiguchi] [--mode deuteron|proton] [--output-dir <path>]\n"
-        << "Commands: validate-transform, layout, energy, ratio, lrud, coincidence, cross-section, energy-loss\n";
+        << "Commands: validate-transform, layout, energy, ratio, lrud, coincidence, coincidence-total, cross-section, energy-loss\n";
 }
 
 }  // namespace
@@ -74,6 +74,8 @@ int main(int argc, char* argv[]) {
             artifacts = session.runLrudScan(output_dir);
         } else if (command == "coincidence") {
             artifacts = session.runCoincidenceScan(output_dir);
+        } else if (command == "coincidence-total") {
+            artifacts = session.runCoincidenceTotalScan(output_dir);
         } else if (command == "cross-section") {
             artifacts = session.runCrossSectionScan(output_dir);
         } else if (command == "energy-loss") {
