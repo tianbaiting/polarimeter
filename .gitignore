@@ -4,6 +4,22 @@
 *.ipynb
 **/.ipynb_checkpoints/
 
+# LaTeX intermediate files should remain local-only.
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+*.toc
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+*.nav
+*.snm
+*.xdv
+
 # Generated analysis plots in dpolarization_archive should not be committed.
 dpolarization_archive/energy_deposition/energy_lise/eloss.png
 dpolarization_archive/energy_deposition/root_analysis/Energy_vs_ThetaDc_deg.png
