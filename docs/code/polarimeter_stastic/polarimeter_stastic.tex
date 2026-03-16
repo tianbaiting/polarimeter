@@ -120,6 +120,66 @@ For the monitoring of the longitudinal polarization $p_{z'z'}$, we establish a r
 \end{equation}
 In practice, to eliminate systemic errors caused by beam intensity fluctuations, the experimental scheme involves simultaneous measurements at two different polar angles ($\theta_1$ and $\theta_2$) to extract their ratio.
 
+\subsection{Center-of-mass and laboratory differential cross sections}
+\label{sec:cm_lab_cross_section}
+
+The unpolarized differential cross-section table used by the code is the digitized c.m.\ cross-section table stored in the observables data directory. It is interpreted as a function of the center-of-mass scattering angle,
+\begin{equation}
+\left.\frac{d\sigma}{d\Omega}\right|_{\mathrm{c.m.}}
+=
+f(\theta_{\mathrm{c.m.}}),
+\qquad
+\theta_{\mathrm{c.m.}} \in [26.46^\circ,\,169.98^\circ].
+\label{eq:cm_cross_section_definition}
+\end{equation}
+This convention is consistent with the tensor-observable table and with the spline interface used in the analysis code.
+
+For the relativistic two-body kinematics of $d+p \rightarrow d+p$, the c.m.\ four-momenta are boosted to the laboratory frame along the beam axis. Writing $p_{\mathrm{c.m.}}$ for the common c.m.\ momentum magnitude and $E_{d,\mathrm{c.m.}}$, $E_{p,\mathrm{c.m.}}$ for the outgoing deuteron and proton c.m.\ energies, the laboratory polar angles are
+\begin{equation}
+\tan \theta_{d,\mathrm{lab}}
+=
+\frac{p_{\mathrm{c.m.}}\sin \theta_{\mathrm{c.m.}}}
+{\gamma \left(\beta E_{d,\mathrm{c.m.}} + p_{\mathrm{c.m.}}\cos \theta_{\mathrm{c.m.}}\right)},
+\qquad
+\tan \theta_{p,\mathrm{lab}}
+=
+\frac{p_{\mathrm{c.m.}}\sin \theta_{\mathrm{c.m.}}}
+{\gamma \left(\beta E_{p,\mathrm{c.m.}} - p_{\mathrm{c.m.}}\cos \theta_{\mathrm{c.m.}}\right)}.
+\label{eq:lab_angle_transform}
+\end{equation}
+Because the boost is collinear with the beam, the azimuthal angle is unchanged ($\phi_{\mathrm{lab}}=\phi_{\mathrm{c.m.}}$), so the differential cross-section in the laboratory frame is obtained from the solid-angle Jacobian,
+\begin{equation}
+\left.\frac{d\sigma}{d\Omega}\right|_{\mathrm{lab}}
+=
+\left.\frac{d\sigma}{d\Omega}\right|_{\mathrm{c.m.}}
+\left|\frac{d\Omega_{\mathrm{c.m.}}}{d\Omega_{\mathrm{lab}}}\right|
+=
+\left.\frac{d\sigma}{d\Omega}\right|_{\mathrm{c.m.}}
+\frac{\sin \theta_{\mathrm{c.m.}}}{\sin \theta_{\mathrm{lab}}}
+\left|\frac{d\theta_{\mathrm{c.m.}}}{d\theta_{\mathrm{lab}}}\right|.
+\label{eq:lab_cross_section_jacobian}
+\end{equation}
+For the proton branch, the mapping is single valued in the angular range used here. For the deuteron branch, a given laboratory angle can receive contributions from two c.m.\ solutions, so the physical laboratory cross-section is the branch sum
+\begin{equation}
+\left.\frac{d\sigma}{d\Omega}\right|_{d,\mathrm{lab}}
+(\theta_{d,\mathrm{lab}})
+=
+\sum_i
+\left.\frac{d\sigma}{d\Omega}\right|_{\mathrm{c.m.}}
+\bigl(\theta_{\mathrm{c.m.}}^{(i)}\bigr)
+\frac{\sin \theta_{\mathrm{c.m.}}^{(i)}}{\sin \theta_{d,\mathrm{lab}}}
+\left|\frac{d\theta_{\mathrm{c.m.}}^{(i)}}{d\theta_{d,\mathrm{lab}}}\right|.
+\label{eq:deuteron_lab_cross_section_sum}
+\end{equation}
+In the implementation, the Jacobian is evaluated numerically from the same relativistic kinematics used elsewhere in the code base.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.98\textwidth]{img/dp_cross_section_frames.pdf}
+    \caption{Unpolarized $d$-$p$ elastic-scattering differential cross-sections used by the analysis code at $T_d=\SI{380}{MeV}$. Left: the c.m.\ cross-section spline built from \texttt{DSigamaOverDOmega.txt}. Right: the corresponding laboratory-frame cross-sections after applying the relativistic angle transformation and the solid-angle Jacobian. The deuteron laboratory curve is shown both as individual kinematic branches and as their summed physical cross-section.}
+    \label{fig:dp_cross_section_frames}
+\end{figure}
+
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.45\textwidth]{img/A_zzshow.pdf}

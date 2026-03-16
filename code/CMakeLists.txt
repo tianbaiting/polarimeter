@@ -53,6 +53,17 @@ target_link_libraries(dpol_tool PRIVATE dpolar_core ROOT::Core)
 add_executable(dpol_batch apps/dpol_batch.cpp)
 target_link_libraries(dpol_batch PRIVATE dpolar_core ROOT::Core)
 
+add_executable(dpol_plot_cross_sections apps/dpol_plot_cross_sections.cpp)
+target_link_libraries(
+    dpol_plot_cross_sections
+    PRIVATE
+        dpolar_core
+        ROOT::Core
+        ROOT::Graf
+        ROOT::Gpad
+        ROOT::Hist
+)
+
 if(DPOLAR_BUILD_TESTS)
     enable_testing()
     add_executable(dpolar_tests tests/test_main.cpp)
