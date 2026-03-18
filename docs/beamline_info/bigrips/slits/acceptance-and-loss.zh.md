@@ -1,5 +1,6 @@
+# BigRIPS Slits: Large-Angle Particles 与 Momentum Tail
 
-# Large-Angle Particles 与 Momentum Tail 在 BigRIPS 中的含义
+这份说明用于解释 BigRIPS slit 会去掉哪类粒子，以及这件事为什么会同时影响 transmission、beam quality 和 downstream background。
 
 在 RIKEN RIBF 的 BigRIPS fragment separator 中，  
 slits（束流限束器）常用于限制束流的 **角度接受度 (angular acceptance)** 和 **动量接受度 (momentum acceptance)**。  
@@ -252,4 +253,3 @@ $$
 $$
 
 这样可以提高束流纯度和分辨率，但会降低束流强度。
-
