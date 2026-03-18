@@ -14,13 +14,17 @@
 
 ## Interface-Oriented Open Questions
 
-- Polarized ion source standard operation details.
+- Polarized ion source standard operation details. See [../pis/polarized-ion-source-status.en.md](../pis/polarized-ion-source-status.en.md) for sourced status and performance notes.
+- Current primary-beam constraints for polarized deuterons in BigRIPS-based experiments.
 - BigRIPS slit settings and how much transmission is intentionally lost.
 - Exact upstream interface standard and available installation envelope near SAMURAI.
 
 ## Linked Working Pages
 
-- [BigRIPS slit acceptance and beam loss note](../bigrips/slits/acceptance-and-loss.zh.md)
+- [RIKEN/RIBF polarized ion source status](../pis/polarized-ion-source-status.en.md)
+- [BigRIPS overview](../bigrips/overview.md)
+- [BigRIPS primary beams and polarized deuteron beam](../bigrips/primary-beam-and-polarized-deuteron.md)
+- [BigRIPS slit acceptance and beam loss note](../bigrips/slits/acceptance-and-loss.md)
 - [SAMURAI beam-pipe overview](../samurai/beam-pipe/overview.md)
 - [SAMURAI JIS flange reference](../samurai/beam-pipe/jis-flange-reference.md)
 - [SAMURAI upstream detector questionnaire](../samurai/upstream-detector/questionnaire.en.md)
