@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 
 import FreeCAD as App
 import Part
@@ -14,6 +15,33 @@ from .layout import (
     scaled,
 )
 from .primitives import ring_shape, slit_prism, tube_shape
+
+
+@dataclass(frozen=True)
+class DetectorFixtureGeometry:
+    front_center: App.Vector
+    direction: App.Vector
+    mount_axis: App.Vector
+    mount_lateral_axis: App.Vector
+    plate_normal: App.Vector
+    base_u_axis: App.Vector
+    base_v_axis: App.Vector
+    mount_projection: App.Vector
+    mount_base_center: App.Vector
+    mount_base_top_center: App.Vector
+    clamp_center: App.Vector
+    block_center: App.Vector
+    bridge_center: App.Vector
+    bridge_plate_face_center: App.Vector
+    bridge_thickness_mm: float
+    bridge_span_mm: float
+    bridge_depth_mm: float
+    upright_offsets: tuple[float, ...]
+    upright_length_mm: float
+    upright_width_mm: float
+    upright_depth_mm: float
+    plate_hole_centers: tuple[App.Vector, ...]
+    base_hole_centers: tuple[App.Vector, ...]
 
 
 def _chamber_halves(cfg: GeometryConfig) -> tuple[float, float, float]:
@@ -469,19 +497,16 @@ def _detector_mount_plate_holes(
     holes: dict[str, list[Part.Shape]] = {"h": [], "v1": [], "v2": []}
     clamp_cfg = cfg.detector.clamp
     for placement in placements:
+        layout = detector_fixture_geometry(cfg, placement)
         plate = _plate_cfg_from_sector(cfg, placement.sector_name)
-        _, axis_t, axis_v, axis_w = _plate_axes(plate)
-        proj = _project_point_to_plate(front_face_center(placement), plate)
-        for du in (-0.5 * clamp_cfg.mount_bolt_pitch_u_mm, 0.5 * clamp_cfg.mount_bolt_pitch_u_mm):
-            for dv in (-0.5 * clamp_cfg.mount_bolt_pitch_v_mm, 0.5 * clamp_cfg.mount_bolt_pitch_v_mm):
-                center = proj + scaled(axis_v, du) + scaled(axis_w, dv)
-                hole = Part.makeCylinder(
-                    0.5 * clamp_cfg.mount_bolt_hole_diameter_mm,
-                    plate.thickness_mm + 2.0,
-                    center - scaled(axis_t, 0.5 * plate.thickness_mm + 1.0),
-                    axis_t,
-                )
-                holes[plate_key_for_sector(placement.sector_name)].append(hole)
+        for center in layout.plate_hole_centers:
+            hole = Part.makeCylinder(
+                0.5 * clamp_cfg.mount_bolt_hole_diameter_mm,
+                plate.thickness_mm + 2.0,
+                center - scaled(layout.plate_normal, 0.5 * plate.thickness_mm + 1.0),
+                layout.plate_normal,
+            )
+            holes[plate_key_for_sector(placement.sector_name)].append(hole)
     return holes
 
 
@@ -573,6 +598,106 @@ def _detector_mount_axes(
         lateral_axis = _normalize_vector(lateral_axis)
 
     return mount_axis, lateral_axis, plate_normal
+
+
+def _detector_mount_base_axes(
+    direction: App.Vector,
+    plate_normal: App.Vector,
+    fallback_u_axis: App.Vector,
+) -> tuple[App.Vector, App.Vector]:
+    in_plane_direction = direction - scaled(plate_normal, _dot(direction, plate_normal))
+    if _vector_length(in_plane_direction) <= 1e-9:
+        in_plane_direction = fallback_u_axis
+
+    base_u_axis = _normalize_vector(in_plane_direction)
+    base_v_axis = plate_normal.cross(base_u_axis)
+    if _vector_length(base_v_axis) <= 1e-9:
+        base_v_axis = fallback_u_axis.cross(plate_normal)
+    base_v_axis = _normalize_vector(base_v_axis)
+    return base_u_axis, base_v_axis
+
+
+def detector_fixture_geometry(
+    cfg: GeometryConfig,
+    placement: DetectorPlacement,
+) -> DetectorFixtureGeometry:
+    clamp_cfg = cfg.detector.clamp
+    adapter_cfg = cfg.detector.adapter_block
+    plate = _plate_cfg_from_sector(cfg, placement.sector_name)
+
+    front_center = front_face_center(placement)
+    direction, _axis_v, axis_w = local_basis_from_direction(placement.direction)
+    _, _, plate_u_axis, _plate_v_axis = _plate_axes(plate)
+    mount_axis, mount_lateral_axis, plate_normal = _detector_mount_axes(direction, plate, axis_w)
+    base_u_axis, base_v_axis = _detector_mount_base_axes(direction, plate_normal, plate_u_axis)
+
+    clamp_center = front_center + scaled(direction, clamp_cfg.support_overlap_mm)
+
+    effective_radial_standoff = adapter_cfg.radial_standoff_mm
+    if not cfg.stand.enable_plate_ties:
+        # [EN] Direct-mount mode keeps detector support compact to avoid visually long cantilever connectors. / [CN] 直连模式下缩短径向悬挑，避免出现过长悬臂连接件的观感。
+        effective_radial_standoff = max(4.0, min(adapter_cfg.radial_standoff_mm, 0.5 * adapter_cfg.radial_standoff_mm + 2.0))
+    support_to_block_center = 0.5 * clamp_cfg.outer_diameter_mm + effective_radial_standoff + 0.5 * adapter_cfg.width_mm
+    block_center = clamp_center - scaled(mount_axis, support_to_block_center)
+
+    bridge_thickness = max(8.0, min(16.0, 0.25 * adapter_cfg.height_mm))
+    bridge_axis_offset = (0.25 * adapter_cfg.width_mm) if not cfg.stand.enable_plate_ties else (0.5 * adapter_cfg.width_mm)
+    bridge_center = block_center - scaled(mount_axis, bridge_axis_offset + 0.5 * bridge_thickness)
+    bridge_plate_face_center = bridge_center - scaled(mount_axis, 0.5 * bridge_thickness)
+
+    mount_projection = _project_point_to_plate(front_center, plate)
+    mount_base_center = mount_projection + scaled(
+        plate_normal,
+        0.5 * (plate.thickness_mm + clamp_cfg.mount_base_thickness_mm),
+    )
+    mount_base_top_center = mount_base_center + scaled(plate_normal, 0.5 * clamp_cfg.mount_base_thickness_mm)
+
+    upright_width = max(12.0, min(24.0, 0.2 * clamp_cfg.mount_base_u_mm))
+    upright_depth = max(8.0, min(18.0, 0.22 * clamp_cfg.mount_base_v_mm))
+    max_upright_offset = 0.5 * (clamp_cfg.mount_base_u_mm - upright_width - 6.0)
+    upright_offset = min(max_upright_offset, 0.2 * clamp_cfg.mount_base_u_mm, 26.0)
+    if upright_offset < 6.0:
+        upright_offsets = (0.0,)
+    else:
+        upright_offsets = (-upright_offset, upright_offset)
+
+    upright_length = _axis_distance(bridge_plate_face_center, mount_base_top_center, mount_axis)
+    bridge_span = max(upright_width + 6.0, 2.0 * abs(upright_offsets[0]) + upright_width - 6.0)
+    bridge_depth = max(upright_depth, min(20.0, 1.1 * upright_depth))
+
+    plate_hole_centers: list[App.Vector] = []
+    base_hole_centers: list[App.Vector] = []
+    for du in (-0.5 * clamp_cfg.mount_bolt_pitch_u_mm, 0.5 * clamp_cfg.mount_bolt_pitch_u_mm):
+        for dv in (-0.5 * clamp_cfg.mount_bolt_pitch_v_mm, 0.5 * clamp_cfg.mount_bolt_pitch_v_mm):
+            in_plane_offset = scaled(base_u_axis, du) + scaled(base_v_axis, dv)
+            plate_hole_centers.append(mount_projection + in_plane_offset)
+            base_hole_centers.append(mount_base_center + in_plane_offset)
+
+    return DetectorFixtureGeometry(
+        front_center=front_center,
+        direction=direction,
+        mount_axis=mount_axis,
+        mount_lateral_axis=mount_lateral_axis,
+        plate_normal=plate_normal,
+        base_u_axis=base_u_axis,
+        base_v_axis=base_v_axis,
+        mount_projection=mount_projection,
+        mount_base_center=mount_base_center,
+        mount_base_top_center=mount_base_top_center,
+        clamp_center=clamp_center,
+        block_center=block_center,
+        bridge_center=bridge_center,
+        bridge_plate_face_center=bridge_plate_face_center,
+        bridge_thickness_mm=bridge_thickness,
+        bridge_span_mm=bridge_span,
+        bridge_depth_mm=bridge_depth,
+        upright_offsets=upright_offsets,
+        upright_length_mm=upright_length,
+        upright_width_mm=upright_width,
+        upright_depth_mm=upright_depth,
+        plate_hole_centers=tuple(plate_hole_centers),
+        base_hole_centers=tuple(base_hole_centers),
+    )
 
 
 def build_plate_load_ties(cfg: GeometryConfig) -> dict[str, Part.Shape]:
@@ -808,94 +933,59 @@ def build_detector_fixture(
         clamp_half_a = clamp_half_a.cut(bolt_hole)
         clamp_half_b = clamp_half_b.cut(bolt_hole)
 
-    plate = _plate_cfg_from_sector(cfg, placement.sector_name)
-    _, _, plate_u_axis, plate_v_axis = _plate_axes(plate)
-    mount_axis, mount_lateral_axis, plate_normal = _detector_mount_axes(direction, plate, axis_w)
-
-    effective_radial_standoff = adapter_cfg.radial_standoff_mm
-    if not cfg.stand.enable_plate_ties:
-        # [EN] Direct-mount mode keeps detector support compact to avoid visually long cantilever connectors. / [CN] 直连模式下缩短径向悬挑，避免出现过长悬臂连接件的观感。
-        effective_radial_standoff = max(4.0, min(adapter_cfg.radial_standoff_mm, 0.5 * adapter_cfg.radial_standoff_mm + 2.0))
-    support_to_block_center = 0.5 * clamp_cfg.outer_diameter_mm + effective_radial_standoff + 0.5 * adapter_cfg.width_mm
-    block_center = clamp_center - scaled(mount_axis, support_to_block_center)
+    layout = detector_fixture_geometry(cfg, placement)
     adapter_block = slit_prism(
-        center=block_center,
+        center=layout.block_center,
         axis_u=direction,
-        axis_v=mount_axis,
-        axis_w=mount_lateral_axis,
+        axis_v=layout.mount_axis,
+        axis_w=layout.mount_lateral_axis,
         length_mm=adapter_cfg.length_mm,
         width_mm=adapter_cfg.width_mm,
         height_mm=adapter_cfg.height_mm,
     )
-    adapter_block.rotate(block_center, mount_lateral_axis, adapter_cfg.tilt_deg)
+    adapter_block.rotate(layout.block_center, layout.mount_lateral_axis, adapter_cfg.tilt_deg)
 
-    mount_proj = _project_point_to_plate(front_center, plate)
-    mount_base_center = mount_proj + scaled(
-        plate_normal,
-        0.5 * (plate.thickness_mm + clamp_cfg.mount_base_thickness_mm),
-    )
     mount_base_plate = slit_prism(
-        center=mount_base_center,
-        axis_u=plate_normal,
-        axis_v=plate_u_axis,
-        axis_w=plate_v_axis,
+        center=layout.mount_base_center,
+        axis_u=layout.plate_normal,
+        axis_v=layout.base_u_axis,
+        axis_w=layout.base_v_axis,
         length_mm=clamp_cfg.mount_base_thickness_mm,
         width_mm=clamp_cfg.mount_base_u_mm,
         height_mm=clamp_cfg.mount_base_v_mm,
     )
     hole_length = clamp_cfg.mount_base_thickness_mm + 1.0
-    for du in (-0.5 * clamp_cfg.mount_bolt_pitch_u_mm, 0.5 * clamp_cfg.mount_bolt_pitch_u_mm):
-        for dv in (-0.5 * clamp_cfg.mount_bolt_pitch_v_mm, 0.5 * clamp_cfg.mount_bolt_pitch_v_mm):
-            hole_center = mount_base_center + scaled(plate_u_axis, du) + scaled(plate_v_axis, dv)
-            hole = Part.makeCylinder(
-                0.5 * clamp_cfg.mount_bolt_hole_diameter_mm,
-                hole_length,
-                hole_center - scaled(plate_normal, 0.5 * hole_length),
-                plate_normal,
-            )
-            mount_base_plate = mount_base_plate.cut(hole)
-
-    mount_base_top_center = mount_base_center + scaled(plate_normal, 0.5 * clamp_cfg.mount_base_thickness_mm)
-    bridge_target = block_center - scaled(mount_axis, 0.5 * adapter_cfg.width_mm)
-    if not cfg.stand.enable_plate_ties:
-        bridge_target = block_center - scaled(mount_axis, 0.25 * adapter_cfg.width_mm)
-    bridge_length = _axis_distance(bridge_target, mount_base_top_center, mount_axis)
-
-    bridge_thickness = max(8.0, min(16.0, 0.25 * adapter_cfg.height_mm))
-    upright_width = max(12.0, min(24.0, 0.2 * clamp_cfg.mount_base_u_mm))
-    upright_depth = max(8.0, min(18.0, 0.22 * clamp_cfg.mount_base_v_mm))
-    max_upright_offset = 0.5 * (clamp_cfg.mount_base_u_mm - upright_width - 6.0)
-    upright_offset = min(max_upright_offset, 0.2 * clamp_cfg.mount_base_u_mm, 26.0)
-    if upright_offset < 6.0:
-        upright_offsets = (0.0,)
-    else:
-        upright_offsets = (-upright_offset, upright_offset)
+    for hole_center in layout.base_hole_centers:
+        hole = Part.makeCylinder(
+            0.5 * clamp_cfg.mount_bolt_hole_diameter_mm,
+            hole_length,
+            hole_center - scaled(layout.plate_normal, 0.5 * hole_length),
+            layout.plate_normal,
+        )
+        mount_base_plate = mount_base_plate.cut(hole)
 
     # [EN] The base-uprights-bridge stack is intentionally continuous so the detector fixture has a load path to the assigned HVV plate instead of a floating projected pad. / [CN] 底座-立板-桥接件保持连续实体，确保探测器夹具对指定 HVV 板形成承载路径，而非仅有投影落点。
-    upright_length = max(10.0, bridge_length - 0.6 * bridge_thickness)
     uprights: list[Part.Shape] = []
-    for offset in upright_offsets:
+    for offset in layout.upright_offsets:
         upright = slit_prism(
-            center=mount_base_top_center + scaled(mount_axis, 0.5 * upright_length) + scaled(direction, offset),
-            axis_u=mount_axis,
+            center=layout.mount_base_top_center + scaled(layout.mount_axis, 0.5 * layout.upright_length_mm) + scaled(direction, offset),
+            axis_u=layout.mount_axis,
             axis_v=direction,
-            axis_w=mount_lateral_axis,
-            length_mm=upright_length,
-            width_mm=upright_width,
-            height_mm=upright_depth,
+            axis_w=layout.mount_lateral_axis,
+            length_mm=layout.upright_length_mm,
+            width_mm=layout.upright_width_mm,
+            height_mm=layout.upright_depth_mm,
         )
         uprights.append(upright)
 
-    bridge_span = max(upright_width + 6.0, 2.0 * abs(upright_offsets[0]) + upright_width - 6.0)
-    bridge_depth = max(upright_depth, min(20.0, 1.1 * upright_depth))
     top_bridge = slit_prism(
-        center=mount_base_top_center + scaled(mount_axis, upright_length),
-        axis_u=mount_axis,
+        center=layout.bridge_center,
+        axis_u=layout.mount_axis,
         axis_v=direction,
-        axis_w=mount_lateral_axis,
-        length_mm=bridge_thickness,
-        width_mm=bridge_span,
-        height_mm=bridge_depth,
+        axis_w=layout.mount_lateral_axis,
+        length_mm=layout.bridge_thickness_mm,
+        width_mm=layout.bridge_span_mm,
+        height_mm=layout.bridge_depth_mm,
     )
 
     mount_base = mount_base_plate

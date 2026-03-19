@@ -1,7 +1,7 @@
 schema_version: 1
 module: infrontofSamuraiMag
 intent:
-  description: "Locked legacy-center preview baseline: HVV plate placement/size frozen for iterative tuning, detector bases direct-mounted to plates, plate cuts disabled, overlap checks skipped."
+  description: "Locked legacy-center preview baseline: HVV plate placement/size frozen for iterative tuning, detector bridge pose rigidly referenced to the detector body, plate drilling derived from fixture direction, plate cuts disabled, overlap checks skipped."
 build:
   config: config/profiles/legacy_center_preview_locked.yaml
   overrides: []

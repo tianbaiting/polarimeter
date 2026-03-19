@@ -50,7 +50,9 @@ def test_default_runtime_validation_passes_strict_gate() -> None:
     assert plate_tie_check.passed
     assert "mode=disabled" in plate_tie_check.detail
     assert _check_by_name(report, "detector", "clamp_fastening_and_key_features").passed
-    assert _check_by_name(report, "detector", "detector_mount_base_projected_orthogonally").passed
+    assert _check_by_name(report, "detector", "detector_mount_bridge_pose_fixed_relative_to_detector_body").passed
+    assert _check_by_name(report, "detector", "detector_mount_hole_pattern_derived_from_fixture_direction").passed
+    assert _check_by_name(report, "detector", "detector_mount_plate_landing_within_envelope").passed
     assert _check_by_name(report, "detector", "detector_mount_bolt_pattern_4hole_rectangular").passed
     assert _check_by_name(report, "detector", "detector_mount_base_and_plate_hole_alignment").passed
     assert _check_by_name(report, "detector", "detector_mount_fixture_structural_continuity").passed
@@ -134,3 +136,32 @@ def test_v2_los_scope_reports_fullpath_scope_string() -> None:
 
     los_scope = _check_by_name(report, "plates", "los_all_occluders_clear")
     assert "scope=v2_fullpath" in los_scope.detail
+
+
+def test_detector_bridge_pose_and_drill_axes_are_fixture_driven() -> None:
+    pytest.importorskip("FreeCAD")
+
+    from ifsm.components import detector_fixture_geometry
+    from ifsm.config import load_build_config
+    from ifsm.layout import build_detector_placements, normalize, scaled
+
+    cfg = load_build_config(ROOT / "config" / "default_infront.yaml")
+    placements = build_detector_placements(cfg.layout)
+
+    reference_signature = None
+    for placement in placements:
+        layout = detector_fixture_geometry(cfg.geometry, placement)
+        signature = (
+            (layout.bridge_center - layout.front_center).dot(layout.direction),
+            (layout.bridge_center - layout.front_center).dot(layout.mount_axis),
+            (layout.bridge_center - layout.front_center).dot(layout.mount_lateral_axis),
+        )
+        if reference_signature is None:
+            reference_signature = signature
+        else:
+            assert signature == pytest.approx(reference_signature)
+
+        projected_direction = normalize(
+            layout.direction - scaled(layout.plate_normal, layout.direction.dot(layout.plate_normal))
+        )
+        assert projected_direction.dot(layout.base_u_axis) == pytest.approx(1.0)

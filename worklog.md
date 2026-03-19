@@ -130,3 +130,21 @@ Entry Template:
 - Validation Result: fail (expected for preview geometry), command exit=0 due non-strict gate
 - Artifacts/State: `state.json.run_id=20260306T104059Z-556601`, `run.status=fail`, `validation.strict=false`, STEP `sha256=f3fa8e86...` synced to root and old-version path
 - Next Action: perform incremental visual tuning with small parameter deltas on locked profile.
+
+- Timestamp UTC: 2026-03-18T15:11:54Z
+- Timestamp Local: 2026-03-19 00:11:54 JST
+- Module/Scope: infrontofSamuraiMag (strict validate-only after rigid bridge / fixture-driven drilling update)
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: baseline + target intent updated for rigid bridge pose and direction-derived drilling; `strict=true`
+- Validation Result: fail (`plates.los_all_occluders_clear` still fails in locked legacy preview); new detector checks `detector_mount_bridge_pose_fixed_relative_to_detector_body`, `detector_mount_hole_pattern_derived_from_fixture_direction`, and `detector_mount_plate_landing_within_envelope` pass
+- Artifacts/State: `state.json.run_id=20260318T151148Z-7`, `run.status=fail`, `validation.status=fail`, report refreshed (`sha256=452275d3...`)
+- Next Action: run full rebuild to export FCStd/STEP with the new mount semantics despite non-strict preview LOS failure.
+
+- Timestamp UTC: 2026-03-18T15:12:13Z
+- Timestamp Local: 2026-03-19 00:12:13 JST
+- Module/Scope: infrontofSamuraiMag (force rebuild after rigid bridge / fixture-driven drilling update)
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: rigid bridge pose held relative to detector body; plate drilling now follows fixture direction; preview profile remains `strict=false`
+- Validation Result: fail (same locked preview LOS blockers), command exit=0 due non-strict gate
+- Artifacts/State: `state.json.run_id=20260318T151203Z-7`, `run.status=fail`, FCStd `sha256=61af516a...`, STEP `sha256=6eefd243...`, report `sha256=3d33ef52...`
+- Next Action: continue visual/LOS tuning on the preview profile or promote the new detector mount semantics into a strict-pass geometry profile.

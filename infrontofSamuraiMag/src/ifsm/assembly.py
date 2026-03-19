@@ -231,7 +231,7 @@ def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> B
             f"DetectorMountBase_{tag}",
             mount_base,
             subsystem="detector",
-            role="orthogonally projected detector mount base with rectangular 4-hole bolt pattern",
+            role="direction-indexed detector mount base with rectangular 4-hole bolt pattern",
         )
 
         for obj in (housing_obj, clamp_a_obj, clamp_b_obj, adapter_obj, mount_obj):

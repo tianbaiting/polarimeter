@@ -13,14 +13,15 @@
 - 三板均偏离束流轴
 - 三板全实体外置于 chamber 外
 - 三板均包含承重语义：主板+连接耳+螺栓孔+加劲肋
-- 探测器安装采用“沿板法向正交投影落板 + 4孔矩形螺栓固定”
+- 探测器安装采用“桥接件相对探测体圆柱刚性固定 + 4孔矩形由总成方向带出确定打孔位置”
 - 禁止使用杆件支撑
 
 验收：
 - `plate_pose_valid_hvv=pass`
 - `all_plates_offset_from_beam_axis=pass`
 - `load_path_complete=pass`
-- `detector_mount_base_projected_orthogonally=pass`
+- `detector_mount_bridge_pose_fixed_relative_to_detector_body=pass`
+- `detector_mount_hole_pattern_derived_from_fixture_direction=pass`
 - `detector_mount_bolt_pattern_4hole_rectangular=pass`
 
 ### 1.2 LOS/干涉硬验证

@@ -19,6 +19,7 @@ from .components import (
     build_stand,
     build_target_holders,
     build_target_ladder,
+    detector_fixture_geometry,
 )
 from .config import GeometryConfig, PlateConfig
 from .layout import DetectorPlacement, front_face_center, norm, plate_key_for_sector, ray_point_at_z, scaled
@@ -159,58 +160,26 @@ def _dot(a: App.Vector, b: App.Vector) -> float:
     return (a.x * b.x) + (a.y * b.y) + (a.z * b.z)
 
 
-def _plate_outward_normal(plate: PlateConfig) -> App.Vector:
-    if plate.mount_plane == "xy":
-        z_sign = 1.0 if plate.z_mm >= 0.0 else -1.0
-        if abs(plate.z_mm) < 1e-9:
-            z_sign = 1.0
-        return App.Vector(0.0, 0.0, z_sign)
-    if plate.mount_plane == "xz":
-        y_sign = 1.0 if plate.offset_y_mm >= 0.0 else -1.0
-        if abs(plate.offset_y_mm) < 1e-9:
-            y_sign = 1.0
-        return App.Vector(0.0, y_sign, 0.0)
-    if plate.mount_plane == "yz":
-        x_sign = 1.0 if plate.offset_x_mm >= 0.0 else -1.0
-        if abs(plate.offset_x_mm) < 1e-9:
-            x_sign = 1.0
-        return App.Vector(x_sign, 0.0, 0.0)
-    raise ValueError(f"unsupported mount_plane {plate.mount_plane!r}")
-
-
-def _detector_mount_axis(placement: DetectorPlacement, plate: PlateConfig) -> App.Vector:
-    direction = _normalize_vector(placement.direction)
-    inward = scaled(_plate_outward_normal(plate), -1.0)
-    projected = inward - scaled(direction, _dot(inward, direction))
-    if _vector_length(projected) <= 1e-9:
-        projected = inward
-    return _normalize_vector(projected)
-
-
 def _detector_mount_bridge_length_mm(cfg: GeometryConfig, placement: DetectorPlacement) -> float:
-    plate = _plate_for_sector(cfg, placement.sector_name)
-    clamp = cfg.detector.clamp
-    adapter = cfg.detector.adapter_block
-    direction = _normalize_vector(placement.direction)
-    mount_axis = _detector_mount_axis(placement, plate)
+    return detector_fixture_geometry(cfg, placement).upright_length_mm
 
-    front_center = front_face_center(placement)
-    clamp_center = front_center + scaled(direction, clamp.support_overlap_mm)
-    mount_proj = _plate_hit_point(placement, plate)
-    plate_normal = _plate_outward_normal(plate)
-    mount_base_center = mount_proj + scaled(plate_normal, 0.5 * (plate.thickness_mm + clamp.mount_base_thickness_mm))
-    mount_base_top_center = mount_base_center + scaled(plate_normal, 0.5 * clamp.mount_base_thickness_mm)
 
-    effective_radial_standoff = adapter.radial_standoff_mm
-    if not cfg.stand.enable_plate_ties:
-        effective_radial_standoff = max(4.0, min(adapter.radial_standoff_mm, 0.5 * adapter.radial_standoff_mm + 2.0))
-    support_to_block_center = 0.5 * clamp.outer_diameter_mm + effective_radial_standoff + 0.5 * adapter.width_mm
-    block_center = clamp_center - scaled(mount_axis, support_to_block_center)
-    bridge_target = block_center - scaled(mount_axis, 0.5 * adapter.width_mm)
-    if not cfg.stand.enable_plate_ties:
-        bridge_target = block_center - scaled(mount_axis, 0.25 * adapter.width_mm)
+def _detector_bridge_pose_signature(cfg: GeometryConfig, placement: DetectorPlacement) -> tuple[float, float, float]:
+    layout = detector_fixture_geometry(cfg, placement)
+    delta = layout.bridge_center - layout.front_center
+    return (
+        _dot(delta, layout.direction),
+        _dot(delta, layout.mount_axis),
+        _dot(delta, layout.mount_lateral_axis),
+    )
 
-    return _dot(bridge_target - mount_base_top_center, mount_axis)
+
+def _detector_mount_direction_alignment_deg(cfg: GeometryConfig, placement: DetectorPlacement) -> float:
+    layout = detector_fixture_geometry(cfg, placement)
+    projected = layout.direction - scaled(layout.plate_normal, _dot(layout.direction, layout.plate_normal))
+    projected = _normalize_vector(projected)
+    cos_angle = _clamp(_dot(projected, layout.base_u_axis), -1.0, 1.0)
+    return math.degrees(math.acos(cos_angle))
 
 
 def _los_hit_with_margin(
@@ -942,13 +911,16 @@ def _validate_detector(
     pair_failures: list[str] = []
     fixtures: dict[str, list[Part.Shape]] = {}
     mount_bases: dict[str, Part.Shape] = {}
-    mount_projection_failures: list[str] = []
+    mount_landing_failures: list[str] = []
+    mount_direction_failures: list[str] = []
     mount_bolt_failures: list[str] = []
     mount_contact_failures: list[str] = []
     mount_continuity_failures: list[str] = []
     mount_assignment_failures: list[str] = []
+    bridge_pose_failures: list[str] = []
     bridge_length_failures: list[str] = []
     bridge_lengths: list[float] = []
+    bridge_signatures: list[tuple[str, tuple[float, float, float]]] = []
     mount_margin = cfg.clearance.los_margin_mm
     clamp = cfg.detector.clamp
     adapter = cfg.detector.adapter_block
@@ -960,6 +932,7 @@ def _validate_detector(
         + 0.5 * adapter.width_mm
     )
     for placement in placements:
+        layout = detector_fixture_geometry(cfg, placement)
         housing, clamp_a, clamp_b, adapter_block, mount_base = build_detector_fixture(
             cfg,
             placement,
@@ -968,21 +941,24 @@ def _validate_detector(
         mount_bases[placement.tag] = mount_base
 
         plate_cfg = _plate_for_sector(cfg, placement.sector_name)
-        proj = _plate_hit_point(placement, plate_cfg)
-        u0, v0 = _plate_local_uv(proj, plate_cfg)
+        u0, v0 = _plate_local_uv(layout.mount_projection, plate_cfg)
         if abs(u0) > (0.5 * plate_cfg.width_mm - mount_margin) or abs(v0) > (0.5 * plate_cfg.height_mm - mount_margin):
-            mount_projection_failures.append(
-                f"{placement.tag}: projected_base_center(u={u0:.1f},v={v0:.1f}) outside plate envelope"
+            mount_landing_failures.append(
+                f"{placement.tag}: landing_center(u={u0:.1f},v={v0:.1f}) outside plate envelope"
             )
 
-        for du in (-0.5 * clamp.mount_bolt_pitch_u_mm, 0.5 * clamp.mount_bolt_pitch_u_mm):
-            for dv in (-0.5 * clamp.mount_bolt_pitch_v_mm, 0.5 * clamp.mount_bolt_pitch_v_mm):
-                uh = u0 + du
-                vh = v0 + dv
-                if abs(uh) > (0.5 * plate_cfg.width_mm - mount_margin) or abs(vh) > (0.5 * plate_cfg.height_mm - mount_margin):
-                    mount_bolt_failures.append(
-                        f"{placement.tag}: bolt_hole(u={uh:.1f},v={vh:.1f}) outside plate envelope"
-                    )
+        direction_alignment_deg = _detector_mount_direction_alignment_deg(cfg, placement)
+        if direction_alignment_deg > 1e-6:
+            mount_direction_failures.append(
+                f"{placement.tag}: direction_alignment_deg={direction_alignment_deg:.6f}"
+            )
+
+        for hole_center in layout.plate_hole_centers:
+            uh, vh = _plate_local_uv(hole_center, plate_cfg)
+            if abs(uh) > (0.5 * plate_cfg.width_mm - mount_margin) or abs(vh) > (0.5 * plate_cfg.height_mm - mount_margin):
+                mount_bolt_failures.append(
+                    f"{placement.tag}: bolt_hole(u={uh:.1f},v={vh:.1f}) outside plate envelope"
+                )
 
         mount_base = mount_bases[placement.tag]
         if mount_base.isNull() or mount_base.Volume <= 1e-6:
@@ -1018,6 +994,17 @@ def _validate_detector(
             bridge_length_failures.append(
                 f"{placement.tag}: bridge_length={bridge_length_mm:.3f} mm outside (0, {bridge_length_limit_mm:.3f}]"
             )
+        bridge_signatures.append((placement.tag, _detector_bridge_pose_signature(cfg, placement)))
+
+    if bridge_signatures:
+        ref_tag, ref_signature = bridge_signatures[0]
+        bridge_tol_mm = 1e-6
+        for tag, signature in bridge_signatures[1:]:
+            deltas = tuple(abs(signature[i] - ref_signature[i]) for i in range(3))
+            if max(deltas) > bridge_tol_mm:
+                bridge_pose_failures.append(
+                    f"{tag}: bridge_pose_delta=({deltas[0]:.6f},{deltas[1]:.6f},{deltas[2]:.6f}) mm vs {ref_tag}"
+                )
 
     tags = sorted(fixtures.keys())
     if cfg.clearance.skip_overlap_checks:
@@ -1093,12 +1080,36 @@ def _validate_detector(
 
     checks.append(
         SubsystemCheck(
-            name="detector_mount_base_projected_orthogonally",
-            passed=not mount_projection_failures,
+            name="detector_mount_bridge_pose_fixed_relative_to_detector_body",
+            passed=not bridge_pose_failures,
+            detail=(
+                "bridge local pose is invariant across all detector placements"
+                if not bridge_pose_failures
+                else "; ".join(bridge_pose_failures)
+            ),
+        )
+    )
+
+    checks.append(
+        SubsystemCheck(
+            name="detector_mount_hole_pattern_derived_from_fixture_direction",
+            passed=not mount_direction_failures,
+            detail=(
+                "fixture in-plane drill axis follows detector direction for all placements"
+                if not mount_direction_failures
+                else "; ".join(mount_direction_failures)
+            ),
+        )
+    )
+
+    checks.append(
+        SubsystemCheck(
+            name="detector_mount_plate_landing_within_envelope",
+            passed=not mount_landing_failures,
             detail=(
                 f"margin={mount_margin:.3f} mm"
-                if not mount_projection_failures
-                else "; ".join(mount_projection_failures)
+                if not mount_landing_failures
+                else "; ".join(mount_landing_failures)
             ),
         )
     )

@@ -144,3 +144,23 @@ Entry Template:
 - State Snapshot: run_id=`20260306T104059Z-556601`, run.status=`fail`, validation.status=`fail`, strict=`false`.
 - Artifacts: FCStd `sha256=1fce28cd...`, STEP `sha256=f3fa8e86...`, report `sha256=552d823a...`.
 - Next Action: continue micro-adjustments directly in locked profile with one-to-three parameter deltas per iteration.
+
+- Timestamp UTC: 2026-03-18T15:11:54Z
+- Timestamp Local: 2026-03-19 00:11:54 JST
+- Intent: Validate the rigid bridge / fixture-driven drilling detector mount semantics against the locked preview target before export.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: baseline updated to freeze bridge-to-detector rigid pose and direction-derived drilling; validation now checks bridge local-pose invariance + fixture-driven drill axis; strict gate on.
+- Validation Result: fail due `plates.los_all_occluders_clear` in legacy preview; detector subsystem passes the new rigid-mount checks.
+- State Snapshot: run_id=`20260318T151148Z-7`, run.status=`fail`, validation.status=`fail`, strict=`true`.
+- Artifacts: report only (`sha256=452275d3...`).
+- Next Action: run force rebuild to regenerate FCStd/STEP with the new detector mount semantics while keeping preview LOS failure visible.
+
+- Timestamp UTC: 2026-03-18T15:12:13Z
+- Timestamp Local: 2026-03-19 00:12:13 JST
+- Intent: Export updated preview artifacts after implementing rigid bridge pose and direction-indexed detector drilling.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: detector top-bridge pose fixed relative to housing/clamp/adapter; base hole axes follow fixture direction; target remains `validation.strict=false`.
+- Validation Result: fail (same preview LOS blockers), but non-strict gate exports artifacts successfully.
+- State Snapshot: run_id=`20260318T151203Z-7`, run.status=`fail`, validation.status=`fail`, strict=`false`.
+- Artifacts: FCStd `sha256=61af516a...`, STEP `sha256=6eefd243...`, report `sha256=3d33ef52...`.
+- Next Action: use the regenerated artifacts for visual review or continue LOS/plate tuning on top of the new detector mount semantics.
