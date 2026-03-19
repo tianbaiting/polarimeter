@@ -12,6 +12,7 @@
 | Accelerator operation | polarization preservation during acceleration, beam energy, beam intensity | Ohnishi / Okuno  |
 | Beamline / SAMURAI tuning | transmission from F0 to SAMURAI, beam quality, optics conditions | BigRIPS team, Kubo / Otsu  |
 
+
 ## Interface-Oriented Open Questions
 
 - Polarized ion source standard operation details. See [../pis/polarized-ion-source-status.en.md](../pis/polarized-ion-source-status.en.md) for sourced status and performance notes.

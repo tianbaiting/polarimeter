@@ -20,7 +20,7 @@ The current RIKEN accelerator technical tables are the best source for proposal-
 Additional planning note:
 
 - The same technical-information page explicitly states that proposal planning should use the `expected` currents from the table rather than the maximum instantaneous values.
-- The same page also gives a tentative BigRIPS-based primary-beam plan: `FY2025` includes `^{238}U`, `^{124}Xe`, `^{78}Kr`, `^{70}Zn`, and `light ions`; `FY2026` is listed as `to be decided`.
+- The same page also gives a tentative BigRIPS-based primary-beam plan: `FY2025` includes $^{238}U$, $^{124}Xe$, $^{78}Kr$, $^{70}Zn$, and `light ions`; `FY2026` is listed as `to be decided`.
 
 ## Historical / Design-Era Statements
 

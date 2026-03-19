@@ -1,4 +1,4 @@
-# SAMURAI Upstream Beam-Pipe Overview
+# SAMURAI pipe
 
 This page summarizes the pipe section immediately upstream of the SAMURAI gate valve and keeps the canonical figures reused by related notes.
 

@@ -1,4 +1,4 @@
-# SAMURAI JIS Flange Reference
+# JIS Flange Reference
 
 This page collects the flange standard notes used for the pipe section immediately upstream of SAMURAI.
 

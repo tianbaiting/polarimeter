@@ -1,4 +1,4 @@
-# RIKEN / RIBF Polarized Ion Source (PIS)
+# Polarized Ion Source (PIS)
 
 This page summarizes public-source information on the polarized deuteron source used for spin-dependent beam work at RIKEN RIBF. Quantitative statements are linked to primary or near-primary sources. If a desired quantity was not found in public sources, that absence is stated explicitly instead of being estimated.
 
