@@ -17,11 +17,17 @@ from .components import (
     build_plate_load_ties,
     build_ports,
     build_stand,
+    build_single_rotary_target_shapes,
     build_target_holders,
     build_target_ladder,
     detector_fixture_geometry,
+    plate_los_plane_hit_point,
+    plate_opening_local_polylines,
+    plate_slot_half_width_mm,
+    single_rotary_target_center,
+    target_detector_los_tube,
 )
-from .config import GeometryConfig, PlateConfig
+from .config import ChamberCoreConfig, GeometryConfig, PlateConfig
 from .layout import DetectorPlacement, front_face_center, norm, plate_key_for_sector, ray_point_at_z, scaled
 
 
@@ -108,6 +114,41 @@ def _distance(a: App.Vector, b: App.Vector) -> float:
     return math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2 + (a.z - b.z) ** 2)
 
 
+def _ray_box_exit_faces(core: ChamberCoreConfig, direction: App.Vector) -> tuple[str, ...]:
+    half_x = 0.5 * core.size_x_mm
+    half_y = 0.5 * core.size_y_mm
+    half_z = 0.5 * core.size_z_mm
+
+    candidates: list[tuple[float, str]] = []
+    if abs(direction.x) > 1e-12:
+        candidates.append((half_x / abs(direction.x), "+x" if direction.x > 0.0 else "-x"))
+    if abs(direction.y) > 1e-12:
+        candidates.append((half_y / abs(direction.y), "+y" if direction.y > 0.0 else "-y"))
+    if abs(direction.z) > 1e-12:
+        candidates.append((half_z / abs(direction.z), "+z" if direction.z > 0.0 else "-z"))
+    if not candidates:
+        raise ValueError("ray direction must have at least one non-zero component")
+
+    t_min = min(t for t, _ in candidates)
+    return tuple(face for t, face in candidates if abs(t - t_min) <= 1e-9)
+
+
+def _expected_exit_face_for_sector(sector_name: str) -> str:
+    if sector_name == "left":
+        return "-x"
+    if sector_name == "right":
+        return "+x"
+    if sector_name == "up":
+        return "+y"
+    if sector_name == "down":
+        return "-y"
+    raise ValueError(f"unsupported sector_name {sector_name!r}")
+
+
+def _end_module_has_groove(standard: str) -> bool:
+    return standard.upper().startswith("VG")
+
+
 def _normalize_deg(angle_deg: float) -> float:
     out = angle_deg
     while out > 180.0:
@@ -149,6 +190,37 @@ def _plate_local_uv(hit: App.Vector, plate: PlateConfig) -> tuple[float, float]:
     raise ValueError(f"unsupported mount_plane {plate.mount_plane!r}")
 
 
+def _point_segment_distance_2d(
+    point_uv: tuple[float, float],
+    start_uv: tuple[float, float],
+    end_uv: tuple[float, float],
+) -> float:
+    px, py = point_uv
+    x0, y0 = start_uv
+    x1, y1 = end_uv
+    dx = x1 - x0
+    dy = y1 - y0
+    length_sq = dx * dx + dy * dy
+    if length_sq <= 1e-12:
+        return math.hypot(px - x0, py - y0)
+    t = _clamp(((px - x0) * dx + (py - y0) * dy) / length_sq, 0.0, 1.0)
+    proj_x = x0 + t * dx
+    proj_y = y0 + t * dy
+    return math.hypot(px - proj_x, py - proj_y)
+
+
+def _point_polyline_distance_2d(
+    point_uv: tuple[float, float],
+    polyline_uv: tuple[tuple[float, float], ...],
+) -> float:
+    if len(polyline_uv) == 1:
+        return math.hypot(point_uv[0] - polyline_uv[0][0], point_uv[1] - polyline_uv[0][1])
+    return min(
+        _point_segment_distance_2d(point_uv, start_uv, end_uv)
+        for start_uv, end_uv in zip(polyline_uv, polyline_uv[1:])
+    )
+
+
 def _normalize_vector(v: App.Vector) -> App.Vector:
     n = _vector_length(v)
     if n <= 1e-12:
@@ -183,10 +255,44 @@ def _detector_mount_direction_alignment_deg(cfg: GeometryConfig, placement: Dete
 
 
 def _los_hit_with_margin(
+    cfg: GeometryConfig,
     placement: DetectorPlacement,
+    plate_key: str,
     plate: PlateConfig,
+    assigned_placements: list[DetectorPlacement],
     margin_mm: float,
+    plate_shape: Part.Shape | None = None,
 ) -> tuple[bool, str]:
+    if plate.opening_style == "los_tube":
+        if plate_shape is None:
+            return False, "los_tube validation requires plate_shape"
+        los_tube = target_detector_los_tube(cfg, placement, 0.5 * cfg.chamber.los_channels.channel_diameter_mm + margin_mm)
+        if los_tube is None:
+            return False, "target_detector_los_tube is degenerate"
+        overlap_volume = _shape_interference_volume(plate_shape, los_tube)
+        plane_hit = plate_los_plane_hit_point(cfg, placement, plate)
+        if plane_hit is None:
+            if overlap_volume <= 1e-3:
+                return True, (
+                    f"tube_radius={0.5 * cfg.chamber.los_channels.channel_diameter_mm + margin_mm:.3f} "
+                    f"plane_hit=none overlap_volume={overlap_volume:.6f}"
+                )
+            return False, (
+                f"tube_radius={0.5 * cfg.chamber.los_channels.channel_diameter_mm + margin_mm:.3f} "
+                f"plane_hit=none overlap_volume={overlap_volume:.6f}"
+            )
+
+        u, v = _plate_local_uv(plane_hit, plate)
+        if overlap_volume <= 1e-3:
+            return True, (
+                f"u={u:.3f} v={v:.3f} tube_radius={0.5 * cfg.chamber.los_channels.channel_diameter_mm + margin_mm:.3f} "
+                f"overlap_volume={overlap_volume:.6f}"
+            )
+        return False, (
+            f"u={u:.3f} v={v:.3f} tube_radius={0.5 * cfg.chamber.los_channels.channel_diameter_mm + margin_mm:.3f} "
+            f"overlap_volume={overlap_volume:.6f}"
+        )
+
     hit = _plate_hit_point(placement, plate)
     u, v = _plate_local_uv(hit, plate)
 
@@ -194,6 +300,26 @@ def _los_hit_with_margin(
         return False, f"|u|={abs(u):.3f} exceeds width margin at plate {plate.orientation}/{plate.mount_plane}"
     if abs(v) > (0.5 * plate.height_mm - margin_mm):
         return False, f"|v|={abs(v):.3f} exceeds height margin at plate {plate.orientation}/{plate.mount_plane}"
+
+    if plate.opening_style == "rounded_slot":
+        polylines = plate_opening_local_polylines(cfg, plate_key, plate, assigned_placements)
+        if not polylines:
+            return False, "rounded_slot opening has no generated centerline polylines"
+        slot_half_width = plate_slot_half_width_mm(cfg)
+        allowed_distance = slot_half_width - margin_mm
+        if allowed_distance < 0.0:
+            return False, f"slot_half_width={slot_half_width:.3f} is smaller than required margin={margin_mm:.3f}"
+
+        min_distance = min(_point_polyline_distance_2d((u, v), polyline) for polyline in polylines)
+        if min_distance <= allowed_distance + 1e-6:
+            return True, (
+                f"u={u:.3f} v={v:.3f} slot_half_width={slot_half_width:.3f} "
+                f"centerline_distance={min_distance:.3f}"
+            )
+        return False, (
+            f"u={u:.3f} v={v:.3f} slot_half_width={slot_half_width:.3f} "
+            f"centerline_distance={min_distance:.3f} exceeds allowed={allowed_distance:.3f}"
+        )
 
     radius = math.hypot(u, v)
     azimuth = math.degrees(math.atan2(v, u))
@@ -318,6 +444,9 @@ def _shape_bbox_overlap(a: Part.Shape, b: Part.Shape) -> bool:
 def _shape_interference_volume(a: Part.Shape, b: Part.Shape) -> float:
     if not _shape_bbox_overlap(a, b):
         return 0.0
+    # [EN] OCC can report a non-empty common solid for near-miss shell interactions, so reject pairs with finite separation before trusting boolean overlap volume. / [CN] OCC 在近邻壳体布尔运算中可能给出伪公共体，因此先用实体最小距离过滤，再信任布尔重叠体积。
+    if _shape_min_distance(a, b) > 1e-6:
+        return 0.0
     try:
         common = a.common(b)
     except Exception:
@@ -404,15 +533,32 @@ def _validate_chamber(
         )
     )
 
-    standards_ok = (
-        cfg.chamber.end_modules.front_standard.upper() == "VG150"
-        and cfg.chamber.end_modules.rear_standard.upper() == "VF150"
-    )
+    front_module = cfg.chamber.end_modules.front
+    rear_module = cfg.chamber.end_modules.rear
+
+    standards_ok = front_module.standard.upper() == "VG150" and rear_module.standard.upper() == "VF80"
     checks.append(
         SubsystemCheck(
             name="end_module_standard",
             passed=standards_ok,
-            detail=f"front={cfg.chamber.end_modules.front_standard}, rear={cfg.chamber.end_modules.rear_standard}",
+            detail=f"front={front_module.standard}, rear={rear_module.standard}",
+        )
+    )
+
+    type_semantics_ok = (
+        _end_module_has_groove(front_module.standard)
+        and not _end_module_has_groove(rear_module.standard)
+        and front_module.oring_groove_depth_mm > 0.0
+        and rear_module.oring_groove_depth_mm <= 0.0
+    )
+    checks.append(
+        SubsystemCheck(
+            name="end_module_type_semantics",
+            passed=type_semantics_ok,
+            detail=(
+                f"front={front_module.standard}[groove_depth={front_module.oring_groove_depth_mm:.3f}], "
+                f"rear={rear_module.standard}[groove_depth={rear_module.oring_groove_depth_mm:.3f}]"
+            ),
         )
     )
 
@@ -428,23 +574,56 @@ def _validate_chamber(
         )
     )
 
-    end = cfg.chamber.end_modules
-    interface_ok = (
-        end.seal_face_width_mm > 0.0
-        and end.bolt_count >= 6
-        and end.bolt_circle_diameter_mm > end.module_inner_diameter_mm
-        and end.bolt_circle_diameter_mm < end.module_outer_diameter_mm
-        and end.oring_groove_width_mm > 0.0
-        and end.oring_groove_depth_mm > 0.0
+    exit_failures: list[str] = []
+    if placements:
+        for placement in placements:
+            actual_faces = _ray_box_exit_faces(cfg.chamber.core, placement.direction)
+            expected_face = _expected_exit_face_for_sector(placement.sector_name)
+            if actual_faces != (expected_face,):
+                exit_failures.append(
+                    f"{placement.tag}: expected={expected_face}, actual={','.join(actual_faces)}"
+                )
+    checks.append(
+        SubsystemCheck(
+            name="channel_first_exit_face_by_sector",
+            passed=not exit_failures,
+            detail=(
+                "left/right/up/down rays exit via -x/+x/+y/-y side walls before +z"
+                if not exit_failures
+                else "; ".join(exit_failures)
+            ),
+        )
     )
+
+    interface_ok = True
+    interface_parts: list[str] = []
+    for side_name, module in (("front", front_module), ("rear", rear_module)):
+        side_ok = (
+            module.seal_face_width_mm > 0.0
+            and module.bolt_count >= 4
+            and module.bolt_circle_diameter_mm > module.module_inner_diameter_mm
+            and module.bolt_circle_diameter_mm < module.module_outer_diameter_mm
+            and module.flange_bolt_hole_diameter_mm > module.interface_bolt_diameter_mm
+        )
+        if _end_module_has_groove(module.standard):
+            side_ok = side_ok and module.oring_groove_depth_mm > 0.0
+        else:
+            side_ok = side_ok and module.oring_groove_depth_mm <= 0.0
+        interface_ok = interface_ok and side_ok
+        groove_detail = (
+            f"groove={module.oring_groove_inner_diameter_mm:.1f}-{module.oring_groove_outer_diameter_mm:.1f}x{module.oring_groove_depth_mm:.1f}"
+            if _end_module_has_groove(module.standard)
+            else "groove=none"
+        )
+        interface_parts.append(
+            f"{side_name}[std={module.standard},od={module.module_outer_diameter_mm:.1f},id={module.module_inner_diameter_mm:.1f},"
+            f"bc={module.bolt_circle_diameter_mm:.1f},n={module.bolt_count},{groove_detail}]"
+        )
     checks.append(
         SubsystemCheck(
             name="end_module_interface_complete",
             passed=interface_ok,
-            detail=(
-                f"seal_face={end.seal_face_width_mm:.3f}, bolt_circle={end.bolt_circle_diameter_mm:.3f}, "
-                f"bolt_count={end.bolt_count}, oring={end.oring_groove_width_mm:.3f}x{end.oring_groove_depth_mm:.3f}"
-            ),
+            detail="; ".join(interface_parts),
         )
     )
 
@@ -452,16 +631,13 @@ def _validate_chamber(
     bolt_parts = [name for name in fastener_parts if "InterfaceBolt_" in name]
     washer_parts = [name for name in fastener_parts if "InterfaceWasher_" in name]
     nut_parts = [name for name in fastener_parts if "InterfaceNut_" in name]
+    total_bolt_count = front_module.bolt_count + rear_module.bolt_count
     fastener_ok = (
-        len(bolt_parts) == 2 * end.bolt_count
-        and len(washer_parts) == 2 * end.bolt_count
-        and len(nut_parts) == 2 * end.bolt_count
-        and end.interface_bolt_diameter_mm > 0.0
-        and end.interface_bolt_length_mm > 0.0
-        and end.interface_nut_outer_diameter_mm > 0.0
-        and end.interface_nut_thickness_mm > 0.0
-        and end.interface_washer_outer_diameter_mm > 0.0
-        and end.interface_washer_thickness_mm > 0.0
+        len(bolt_parts) == total_bolt_count
+        and len(washer_parts) == total_bolt_count
+        and len(nut_parts) == total_bolt_count
+        and front_module.interface_bolt_diameter_mm > 0.0
+        and rear_module.interface_bolt_diameter_mm > 0.0
     )
     checks.append(
         SubsystemCheck(
@@ -469,16 +645,20 @@ def _validate_chamber(
             passed=fastener_ok,
             detail=(
                 f"bolts={len(bolt_parts)}, washers={len(washer_parts)}, nuts={len(nut_parts)}, "
-                f"spec=({end.interface_bolt_diameter_mm:.1f},{end.interface_bolt_length_mm:.1f},"
-                f"{end.interface_nut_outer_diameter_mm:.1f},{end.interface_nut_thickness_mm:.1f},"
-                f"{end.interface_washer_outer_diameter_mm:.1f},{end.interface_washer_thickness_mm:.1f})"
+                f"front_spec=({front_module.interface_bolt_diameter_mm:.1f},{front_module.interface_bolt_length_mm:.1f},"
+                f"{front_module.interface_nut_outer_diameter_mm:.1f},{front_module.interface_nut_thickness_mm:.1f},"
+                f"{front_module.interface_washer_outer_diameter_mm:.1f},{front_module.interface_washer_thickness_mm:.1f}), "
+                f"rear_spec=({rear_module.interface_bolt_diameter_mm:.1f},{rear_module.interface_bolt_length_mm:.1f},"
+                f"{rear_module.interface_nut_outer_diameter_mm:.1f},{rear_module.interface_nut_thickness_mm:.1f},"
+                f"{rear_module.interface_washer_outer_diameter_mm:.1f},{rear_module.interface_washer_thickness_mm:.1f})"
             ),
         )
     )
 
     vacuum_param_ok = (
         cfg.chamber.core.wall_thickness_mm > 0.0
-        and cfg.chamber.end_modules.module_inner_diameter_mm < cfg.chamber.end_modules.module_outer_diameter_mm
+        and front_module.module_inner_diameter_mm < front_module.module_outer_diameter_mm
+        and rear_module.module_inner_diameter_mm < rear_module.module_outer_diameter_mm
         and cfg.ports.main_pump.inner_diameter_mm < cfg.ports.main_pump.outer_diameter_mm
         and cfg.ports.gauge_safety.inner_diameter_mm < cfg.ports.gauge_safety.outer_diameter_mm
         and cfg.ports.rotary_feedthrough.inner_diameter_mm < cfg.ports.rotary_feedthrough.outer_diameter_mm
@@ -607,18 +787,25 @@ def _validate_plates(cfg: GeometryConfig, placements: list[DetectorPlacement]) -
 
         max_u = 0.0
         max_v = 0.0
+        hit_count = 0
         for placement in assigned:
-            hit = _plate_hit_point(placement, plate)
+            if plate.opening_style == "los_tube":
+                hit = plate_los_plane_hit_point(cfg, placement, plate)
+                if hit is None:
+                    continue
+            else:
+                hit = _plate_hit_point(placement, plate)
             u, v = _plate_local_uv(hit, plate)
             max_u = max(max_u, abs(u))
             max_v = max(max_v, abs(v))
+            hit_count += 1
 
-        required_width = 2.0 * (max_u + los_margin)
-        required_height = 2.0 * (max_v + los_margin)
+        required_width = 2.0 * (max_u + los_margin) if hit_count > 0 else 0.0
+        required_height = 2.0 * (max_v + los_margin) if hit_count > 0 else 0.0
         plate_ok = plate.width_mm >= required_width and plate.height_mm >= required_height
         min_envelope_ok = min_envelope_ok and plate_ok
         min_envelope_detail_parts.append(
-            f"{key}[w={plate.width_mm:.1f}/req>={required_width:.1f},h={plate.height_mm:.1f}/req>={required_height:.1f}]"
+            f"{key}[hits={hit_count},w={plate.width_mm:.1f}/req>={required_width:.1f},h={plate.height_mm:.1f}/req>={required_height:.1f}]"
         )
 
     checks.append(
@@ -629,31 +816,45 @@ def _validate_plates(cfg: GeometryConfig, placements: list[DetectorPlacement]) -
         )
     )
 
-    annulus_detail_parts: list[str] = []
-    annulus_enabled = any(
-        plate.sector_opening_deg > 0.0 for plate in (cfg.plate.h, cfg.plate.v1, cfg.plate.v2)
-    )
-    if annulus_enabled:
-        annulus_ok = True
-        for name, plate in (("h", cfg.plate.h), ("v1", cfg.plate.v1), ("v2", cfg.plate.v2)):
+    opening_ok = True
+    opening_detail_parts: list[str] = []
+    for key, plate in (("h", cfg.plate.h), ("v1", cfg.plate.v1), ("v2", cfg.plate.v2)):
+        if plate.opening_style == "rounded_slot":
+            polylines = plate_opening_local_polylines(cfg, key, plate, placements_by_plate[key])
+            slot_count = len(polylines)
+            expected_slots = 2 if key == "h" else 1
+            valid = slot_count == expected_slots and slot_count > 0
+            opening_ok = opening_ok and valid
+            opening_detail_parts.append(
+                f"{key}[style=rounded_slot,slots={slot_count},expected={expected_slots},half_width={plate_slot_half_width_mm(cfg):.1f}]"
+            )
+        elif plate.opening_style == "los_tube":
+            hit_count = sum(
+                1
+                for placement in placements_by_plate[key]
+                if plate_los_plane_hit_point(cfg, placement, plate) is not None
+            )
+            valid = plate_slot_half_width_mm(cfg) > 0.0
+            opening_ok = opening_ok and valid
+            opening_detail_parts.append(
+                f"{key}[style=los_tube,plane_hits={hit_count},half_width={plate_slot_half_width_mm(cfg):.1f}]"
+            )
+        else:
             valid = (
                 plate.outer_radius_mm > plate.inner_radius_mm
                 and plate.sector_opening_deg > 0.0
                 and bool(plate.azimuth_centers_deg)
             )
-            annulus_ok = annulus_ok and valid
-            annulus_detail_parts.append(
-                f"{name}[inner={plate.inner_radius_mm:.3f},outer={plate.outer_radius_mm:.3f},open={plate.sector_opening_deg:.3f}]"
+            opening_ok = opening_ok and valid
+            opening_detail_parts.append(
+                f"{key}[style=annular_sector,inner={plate.inner_radius_mm:.1f},outer={plate.outer_radius_mm:.1f},open={plate.sector_opening_deg:.1f}]"
             )
-    else:
-        annulus_ok = True
-        annulus_detail_parts.append("mode=disabled (sector_opening_deg=0 for all plates)")
 
     checks.append(
         SubsystemCheck(
-            name="regular_annular_sector_openings",
-            passed=annulus_ok,
-            detail="; ".join(annulus_detail_parts),
+            name="plate_opening_geometry_valid",
+            passed=opening_ok,
+            detail="; ".join(opening_detail_parts),
         )
     )
 
@@ -695,11 +896,19 @@ def _validate_plates(cfg: GeometryConfig, placements: list[DetectorPlacement]) -
                 detail="mode=skipped by geometry.clearance.skip_overlap_checks=true",
             )
         )
+        checks.append(
+            SubsystemCheck(
+                name="single_continuous_plate_solids",
+                passed=True,
+                detail="mode=skipped by geometry.clearance.skip_overlap_checks=true",
+            )
+        )
     else:
         chamber_shape = build_chamber(cfg, placements=placements)
         overlap_ok = True
         overlap_parts: list[str] = []
-        for plate_name, plate_shape in build_all_plates(cfg, placements=placements).items():
+        plate_shapes = build_all_plates(cfg, placements=placements)
+        for plate_name, plate_shape in plate_shapes.items():
             overlap_vol = _shape_interference_volume(plate_shape, chamber_shape)
             overlap_parts.append(f"{plate_name}={overlap_vol:.3f}")
             overlap_ok = overlap_ok and overlap_vol <= 1e-3
@@ -716,7 +925,7 @@ def _validate_plates(cfg: GeometryConfig, placements: list[DetectorPlacement]) -
         half_z = 0.5 * cfg.chamber.core.size_z_mm
         outside_ok = True
         outside_parts: list[str] = []
-        for plate_name, plate_shape in build_all_plates(cfg, placements=placements).items():
+        for plate_name, plate_shape in plate_shapes.items():
             inside_vertices = 0
             for vertex in plate_shape.Vertexes:
                 p = vertex.Point
@@ -729,6 +938,20 @@ def _validate_plates(cfg: GeometryConfig, placements: list[DetectorPlacement]) -
                 name="all_plate_solids_outside_chamber",
                 passed=outside_ok,
                 detail=", ".join(outside_parts),
+            )
+        )
+
+        continuity_ok = True
+        continuity_parts: list[str] = []
+        for plate_name, plate_shape in plate_shapes.items():
+            solid_count = len(plate_shape.Solids)
+            continuity_ok = continuity_ok and solid_count == 1
+            continuity_parts.append(f"{plate_name}:solids={solid_count}")
+        checks.append(
+            SubsystemCheck(
+                name="single_continuous_plate_solids",
+                passed=continuity_ok,
+                detail=", ".join(continuity_parts),
             )
         )
 
@@ -821,18 +1044,29 @@ def _validate_plates(cfg: GeometryConfig, placements: list[DetectorPlacement]) -
 
     for placement in placements:
         plate = _plate_for_sector(cfg, placement.sector_name)
+        plate_key = plate_key_for_sector(placement.sector_name)
         own_plate_name = {
             "h": "HPlate",
             "v1": "VPlate1",
             "v2": "VPlate2",
-        }[plate_key_for_sector(placement.sector_name)]
+        }[plate_key]
+        own_plate_shape = plate_shapes[own_plate_name]
         start, end = _los_segment_endpoints(cfg, placement)
-        own_plate_intersects = _shape_intersects_segment(plate_shapes[own_plate_name], start, end)
-        if own_plate_intersects:
-            los_hit_checked += 1
-            passed, detail = _los_hit_with_margin(placement, plate, cfg.clearance.los_margin_mm)
-            if not passed:
-                los_failures.append(f"{placement.tag}: {detail}")
+        los_hit_checked += 1
+        if _shape_intersects_segment(own_plate_shape, start, end):
+            los_failures.append(f"{placement.tag}: own_plate_material_blocks_los")
+
+        passed, detail = _los_hit_with_margin(
+            cfg,
+            placement,
+            plate_key,
+            plate,
+            placements_by_plate[plate_key],
+            cfg.clearance.los_margin_mm,
+            plate_shape=own_plate_shape,
+        )
+        if not passed:
+            los_failures.append(f"{placement.tag}: {detail}")
 
         blockers: list[str] = []
         for name, shape in _los_occluders(cfg, placements, exclude_tag=placement.tag):
@@ -1225,44 +1459,121 @@ def _validate_detector(
 def _validate_target(cfg: GeometryConfig) -> SubsystemValidationResult:
     checks: list[SubsystemCheck] = []
 
-    ladder = cfg.target.ladder
-    holder = cfg.target.holder
+    if cfg.target.mode == "linear_ladder":
+        ladder = cfg.target.ladder
+        holder = cfg.target.holder
+        if ladder is None or holder is None:
+            raise ValueError("linear_ladder mode requires ladder and holder config")
 
-    checks.append(
-        SubsystemCheck(
-            name="linear_3_position_ladder",
-            passed=ladder.active_index in {0, 1, 2},
-            detail=f"slot_pitch={ladder.slot_pitch_mm:.3f}, active_index={ladder.active_index}",
+        checks.append(
+            SubsystemCheck(
+                name="linear_3_position_ladder",
+                passed=ladder.active_index in {0, 1, 2},
+                detail=f"slot_pitch={ladder.slot_pitch_mm:.3f}, active_index={ladder.active_index}",
+            )
         )
-    )
 
+        checks.append(
+            SubsystemCheck(
+                name="target_set_empty_experiment_fluorescence",
+                passed=(
+                    holder.experiment_target_thickness_mm > 0.0
+                    and holder.fluorescence_target_thickness_mm > 0.0
+                ),
+                detail=(
+                    f"experiment_t={holder.experiment_target_thickness_mm:.3f}, "
+                    f"fluorescence_t={holder.fluorescence_target_thickness_mm:.3f}"
+                ),
+            )
+        )
+
+        holder_parts = build_target_holders(cfg)
+        screw_count = sum(1 for name in holder_parts.keys() if "HolderClampScrew_" in name)
+        holder_dual_screw_ok = (
+            holder.clamp_block_width_mm > 0.0
+            and holder.clamp_block_height_mm > 0.0
+            and holder.clamp_screw_diameter_mm > 0.0
+            and holder.clamp_screw_head_diameter_mm > 0.0
+            and holder.clamp_screw_head_height_mm > 0.0
+            and screw_count == 6
+        )
+        checks.append(
+            SubsystemCheck(
+                name="removable_holder_dual_screw_clamp",
+                passed=holder_dual_screw_ok,
+                detail=(
+                    f"clamp_block=({holder.clamp_block_width_mm:.3f},{holder.clamp_block_height_mm:.3f}), "
+                    f"screw=({holder.clamp_screw_diameter_mm:.3f},{holder.clamp_screw_head_diameter_mm:.3f},{holder.clamp_screw_head_height_mm:.3f}), "
+                    f"screw_parts={screw_count}"
+                ),
+            )
+        )
+
+        checks.append(
+            SubsystemCheck(
+                name="external_rotary_feedthrough_drive",
+                passed=(ladder.feedthrough_shaft_diameter_mm > 0.0 and ladder.handwheel_diameter_mm > 0.0),
+                detail=(
+                    f"shaft_d={ladder.feedthrough_shaft_diameter_mm:.3f}, handwheel_d={ladder.handwheel_diameter_mm:.3f}"
+                ),
+            )
+        )
+
+        drive_ok = (
+            ladder.motor_mount_width_mm > 0.0
+            and ladder.motor_mount_height_mm > 0.0
+            and ladder.motor_mount_thickness_mm > 0.0
+            and ladder.hard_stop_span_mm > 0.0
+            and ladder.hard_stop_thickness_mm > 0.0
+            and ladder.index_disk_diameter_mm > 0.0
+            and ladder.index_disk_thickness_mm > 0.0
+            and ladder.index_pin_diameter_mm > 0.0
+            and ladder.index_pin_length_mm > 0.0
+        )
+        checks.append(
+            SubsystemCheck(
+                name="drive_semantics_complete",
+                passed=drive_ok,
+                detail=(
+                    f"motor_mount=({ladder.motor_mount_width_mm:.1f},{ladder.motor_mount_height_mm:.1f},{ladder.motor_mount_thickness_mm:.1f}), "
+                    f"hard_stop=({ladder.hard_stop_span_mm:.1f},{ladder.hard_stop_thickness_mm:.1f}), "
+                    f"index=({ladder.index_disk_diameter_mm:.1f},{ladder.index_pin_diameter_mm:.1f})"
+                ),
+            )
+        )
+        return _subsystem_status("target", checks)
+
+    rotary = cfg.target.rotary
+    holder = cfg.target.single_holder
+    if rotary is None or holder is None:
+        raise ValueError("single_rotary mode requires rotary and single_holder config")
+
+    work_center = single_rotary_target_center(cfg, rotary.work_angle_deg)
+    work_pose_ok = abs(work_center.x) <= 1e-6 and abs(work_center.z) <= 1e-6
     checks.append(
         SubsystemCheck(
-            name="target_set_empty_experiment_fluorescence",
-            passed=(
-                holder.experiment_target_thickness_mm > 0.0
-                and holder.fluorescence_target_thickness_mm > 0.0
-            ),
+            name="single_rotary_target_mode",
+            passed=work_pose_ok and rotary.park_angle_deg > rotary.work_angle_deg,
             detail=(
-                f"experiment_t={holder.experiment_target_thickness_mm:.3f}, "
-                f"fluorescence_t={holder.fluorescence_target_thickness_mm:.3f}"
+                f"pivot_x={rotary.pivot_x_mm:.3f}, work_angle={rotary.work_angle_deg:.3f}, "
+                f"park_angle={rotary.park_angle_deg:.3f}, work_center=({work_center.x:.3f},{work_center.z:.3f})"
             ),
         )
     )
 
     holder_parts = build_target_holders(cfg)
-    screw_count = sum(1 for name in holder_parts.keys() if "HolderClampScrew_" in name)
+    screw_count = sum(1 for name in holder_parts.keys() if "SingleTargetHolderClampScrew_" in name)
     holder_dual_screw_ok = (
         holder.clamp_block_width_mm > 0.0
         and holder.clamp_block_height_mm > 0.0
         and holder.clamp_screw_diameter_mm > 0.0
         and holder.clamp_screw_head_diameter_mm > 0.0
         and holder.clamp_screw_head_height_mm > 0.0
-        and screw_count == 6
+        and screw_count == 2
     )
     checks.append(
         SubsystemCheck(
-            name="removable_holder_dual_screw_clamp",
+            name="single_target_holder_dual_screw_clamp",
             passed=holder_dual_screw_ok,
             detail=(
                 f"clamp_block=({holder.clamp_block_width_mm:.3f},{holder.clamp_block_height_mm:.3f}), "
@@ -1275,32 +1586,56 @@ def _validate_target(cfg: GeometryConfig) -> SubsystemValidationResult:
     checks.append(
         SubsystemCheck(
             name="external_rotary_feedthrough_drive",
-            passed=(ladder.feedthrough_shaft_diameter_mm > 0.0 and ladder.handwheel_diameter_mm > 0.0),
+            passed=(rotary.feedthrough_shaft_diameter_mm > 0.0 and rotary.handwheel_diameter_mm > 0.0),
             detail=(
-                f"shaft_d={ladder.feedthrough_shaft_diameter_mm:.3f}, handwheel_d={ladder.handwheel_diameter_mm:.3f}"
+                f"shaft_d={rotary.feedthrough_shaft_diameter_mm:.3f}, handwheel_d={rotary.handwheel_diameter_mm:.3f}"
             ),
         )
     )
 
     drive_ok = (
-        ladder.motor_mount_width_mm > 0.0
-        and ladder.motor_mount_height_mm > 0.0
-        and ladder.motor_mount_thickness_mm > 0.0
-        and ladder.hard_stop_span_mm > 0.0
-        and ladder.hard_stop_thickness_mm > 0.0
-        and ladder.index_disk_diameter_mm > 0.0
-        and ladder.index_disk_thickness_mm > 0.0
-        and ladder.index_pin_diameter_mm > 0.0
-        and ladder.index_pin_length_mm > 0.0
+        rotary.motor_mount_width_mm > 0.0
+        and rotary.motor_mount_height_mm > 0.0
+        and rotary.motor_mount_thickness_mm > 0.0
+        and rotary.hard_stop_span_mm > 0.0
+        and rotary.hard_stop_thickness_mm > 0.0
+        and rotary.index_disk_diameter_mm > 0.0
+        and rotary.index_disk_thickness_mm > 0.0
+        and rotary.index_pin_diameter_mm > 0.0
+        and rotary.index_pin_length_mm > 0.0
+        and rotary.hub_diameter_mm > 0.0
+        and rotary.arm_length_mm > 0.0
     )
     checks.append(
         SubsystemCheck(
             name="drive_semantics_complete",
             passed=drive_ok,
             detail=(
-                f"motor_mount=({ladder.motor_mount_width_mm:.1f},{ladder.motor_mount_height_mm:.1f},{ladder.motor_mount_thickness_mm:.1f}), "
-                f"hard_stop=({ladder.hard_stop_span_mm:.1f},{ladder.hard_stop_thickness_mm:.1f}), "
-                f"index=({ladder.index_disk_diameter_mm:.1f},{ladder.index_pin_diameter_mm:.1f})"
+                f"motor_mount=({rotary.motor_mount_width_mm:.1f},{rotary.motor_mount_height_mm:.1f},{rotary.motor_mount_thickness_mm:.1f}), "
+                f"hard_stop=({rotary.hard_stop_span_mm:.1f},{rotary.hard_stop_thickness_mm:.1f}), "
+                f"hub_arm=({rotary.hub_diameter_mm:.1f},{rotary.arm_length_mm:.1f}), "
+                f"index=({rotary.index_disk_diameter_mm:.1f},{rotary.index_pin_diameter_mm:.1f})"
+            ),
+        )
+    )
+
+    axis_extent = max(2.0 * cfg.chamber.core.size_z_mm, rotary.arm_length_mm + rotary.pivot_x_mm + 50.0)
+    beam_axis = Part.makeLine(App.Vector(0.0, 0.0, -axis_extent), App.Vector(0.0, 0.0, axis_extent))
+    park_drive_shapes, park_holder_shapes = build_single_rotary_target_shapes(cfg, rotary.park_angle_deg)
+    beam_clear_radius = 0.5 * cfg.beamline.inlet_diameter_mm + cfg.clearance.los_margin_mm
+    park_failures: list[str] = []
+    for name, shape in {**park_drive_shapes, **park_holder_shapes}.items():
+        clearance = _shape_min_distance(shape, beam_axis)
+        if clearance < (beam_clear_radius - 1e-6):
+            park_failures.append(f"{name}:{clearance:.3f}")
+    checks.append(
+        SubsystemCheck(
+            name="park_position_clears_beam_axis",
+            passed=not park_failures,
+            detail=(
+                f"required_clearance={beam_clear_radius:.3f} mm"
+                if not park_failures
+                else f"required_clearance={beam_clear_radius:.3f} mm; " + "; ".join(park_failures)
             ),
         )
     )
@@ -1323,14 +1658,25 @@ def _validate_stand(cfg: GeometryConfig) -> SubsystemValidationResult:
         SubsystemCheck(
             name="anchor_slots_and_leveling",
             passed=(
-                cfg.stand.anchor_slot_length_mm > 0.0
-                and cfg.stand.anchor_slot_width_mm > 0.0
-                and cfg.stand.leveling_screw_diameter_mm > 0.0
-                and cfg.stand.shim_thickness_mm > 0.0
+                (
+                    cfg.stand.anchor_slot_length_mm > 0.0
+                    and cfg.stand.anchor_slot_width_mm > 0.0
+                    and cfg.stand.leveling_screw_diameter_mm > 0.0
+                    and cfg.stand.shim_thickness_mm > 0.0
+                )
+                if cfg.stand.with_base_plate
+                else (cfg.stand.leveling_screw_diameter_mm > 0.0 and cfg.stand.shim_thickness_mm > 0.0)
             ),
             detail=(
-                f"slot=({cfg.stand.anchor_slot_length_mm:.3f},{cfg.stand.anchor_slot_width_mm:.3f}), "
-                f"level_screw_d={cfg.stand.leveling_screw_diameter_mm:.3f}, shim_t={cfg.stand.shim_thickness_mm:.3f}"
+                (
+                    f"base_plate=enabled, slot=({cfg.stand.anchor_slot_length_mm:.3f},{cfg.stand.anchor_slot_width_mm:.3f}), "
+                    f"level_screw_d={cfg.stand.leveling_screw_diameter_mm:.3f}, shim_t={cfg.stand.shim_thickness_mm:.3f}"
+                )
+                if cfg.stand.with_base_plate
+                else (
+                    f"base_plate=disabled, slot=not_instantiated, "
+                    f"level_screw_d={cfg.stand.leveling_screw_diameter_mm:.3f}, shim_t={cfg.stand.shim_thickness_mm:.3f}"
+                )
             ),
         )
     )

@@ -19,7 +19,7 @@ def test_load_default_config() -> None:
     cfg = load_build_config(ROOT / "config" / "default_infront.yaml")
     assert cfg.geometry.beamline.axis == "z"
     assert cfg.geometry.chamber.end_modules.front_standard == "VG150"
-    assert cfg.geometry.chamber.end_modules.rear_standard == "VF150"
+    assert cfg.geometry.chamber.end_modules.rear_standard == "VF80"
     assert len(cfg.layout.channels) == 3
     assert set(cfg.layout.sectors) == {"left", "right", "up", "down"}
     assert {channel.confidence for channel in cfg.layout.channels} <= {"high", "medium", "low"}
@@ -28,36 +28,54 @@ def test_load_default_config() -> None:
     assert cfg.geometry.detector.clamp.mount_base_u_mm > 0.0
     assert cfg.geometry.plate.h.orientation == "horizontal"
     assert cfg.geometry.plate.h.mount_plane == "xz"
-    assert cfg.geometry.plate.h.offset_mode == "auto"
+    assert cfg.geometry.plate.h.offset_mode == "manual"
+    assert cfg.geometry.plate.h.opening_style == "los_tube"
     assert cfg.geometry.plate.v1.orientation == "vertical"
     assert cfg.geometry.plate.v1.mount_plane == "yz"
-    assert cfg.geometry.plate.v1.offset_mode == "auto"
+    assert cfg.geometry.plate.v1.offset_mode == "manual"
+    assert cfg.geometry.plate.v1.opening_style == "los_tube"
     assert cfg.geometry.plate.v2.orientation == "vertical"
     assert cfg.geometry.plate.v2.mount_plane == "yz"
-    assert cfg.geometry.plate.v2.offset_mode == "auto"
-    assert cfg.geometry.chamber.end_modules.bolt_count >= 6
-    assert cfg.geometry.chamber.end_modules.interface_bolt_diameter_mm > 0.0
-    assert cfg.geometry.target.ladder.motor_mount_width_mm > 0.0
+    assert cfg.geometry.plate.v2.offset_mode == "manual"
+    assert cfg.geometry.plate.v2.opening_style == "los_tube"
+    assert cfg.geometry.chamber.end_modules.front.bolt_count >= 6
+    assert cfg.geometry.chamber.end_modules.rear.bolt_count == 4
+    assert cfg.geometry.chamber.end_modules.front.interface_bolt_diameter_mm > 0.0
+    assert cfg.geometry.chamber.end_modules.rear.interface_bolt_diameter_mm > 0.0
+    assert cfg.geometry.target.mode == "single_rotary"
+    assert cfg.geometry.target.rotary is not None
+    assert cfg.geometry.target.single_holder is not None
+    assert cfg.geometry.target.rotary.motor_mount_width_mm > 0.0
     assert cfg.geometry.detector.clamp.clamp_bolt_diameter_mm > 0.0
     assert cfg.geometry.detector.clamp.anti_rotation_key_depth_mm > 0.0
-    assert cfg.geometry.target.holder.clamp_screw_diameter_mm > 0.0
+    assert cfg.geometry.target.single_holder.clamp_screw_diameter_mm > 0.0
     assert cfg.geometry.stand.enable_plate_ties is False
-    assert cfg.geometry.clearance.los_scope == "v1_conceptual"
+    assert cfg.geometry.stand.with_base_plate is False
+    assert cfg.geometry.clearance.los_scope == "v2_fullpath"
     assert cfg.geometry.clearance.vv_min_gap_factor == pytest.approx(2.0)
     assert cfg.geometry.clearance.plate_auto_gap_mm == pytest.approx(5.0)
     assert cfg.geometry.clearance.plate_chamber_cutout_margin_mm == pytest.approx(5.0)
-    assert not cfg.geometry.chamber.los_channels.enabled
+    assert cfg.geometry.chamber.los_channels.enabled
+    assert cfg.geometry.ports.rotary_feedthrough.center_x_mm == pytest.approx(70.0)
+
+
+def test_legacy_profile_still_parses_linear_ladder() -> None:
+    cfg = load_build_config(ROOT / "config" / "profiles" / "legacy_center_preview_locked.yaml")
+    assert cfg.geometry.target.mode == "linear_ladder"
+    assert cfg.geometry.target.ladder is not None
+    assert cfg.geometry.target.holder is not None
+    assert cfg.geometry.target.ladder.active_index == 1
 
 
 def test_override_core_size_and_output_basename() -> None:
     cfg = load_build_config(
         ROOT / "config" / "default_infront.yaml",
         overrides=[
-            "geometry.chamber.core.size_z_mm=460.0",
+            "geometry.chamber.core.size_z_mm=640.0",
             "output.basename=v1_override",
         ],
     )
-    assert cfg.geometry.chamber.core.size_z_mm == pytest.approx(460.0)
+    assert cfg.geometry.chamber.core.size_z_mm == pytest.approx(640.0)
     assert cfg.output.basename == "v1_override"
 
 
@@ -142,7 +160,7 @@ def test_invalid_end_module_bolt_count() -> None:
         load_build_config(
             ROOT / "config" / "default_infront.yaml",
             overrides=[
-                "geometry.chamber.end_modules.bolt_count=4",
+                "geometry.chamber.end_modules.rear.bolt_count=3",
             ],
         )
 
@@ -152,7 +170,7 @@ def test_invalid_end_module_interface_bolt_diameter() -> None:
         load_build_config(
             ROOT / "config" / "default_infront.yaml",
             overrides=[
-                "geometry.chamber.end_modules.interface_bolt_diameter_mm=8.0",
+                "geometry.chamber.end_modules.rear.interface_bolt_diameter_mm=12.0",
             ],
         )
 
@@ -162,7 +180,7 @@ def test_invalid_target_hard_stop_span() -> None:
         load_build_config(
             ROOT / "config" / "default_infront.yaml",
             overrides=[
-                "geometry.target.ladder.hard_stop_span_mm=200",
+                "geometry.target.rotary.hard_stop_span_mm=200",
             ],
         )
 
@@ -182,7 +200,17 @@ def test_invalid_holder_screw_diameter() -> None:
         load_build_config(
             ROOT / "config" / "default_infront.yaml",
             overrides=[
-                "geometry.target.holder.clamp_screw_diameter_mm=10",
+                "geometry.target.single_holder.clamp_screw_diameter_mm=10",
+            ],
+        )
+
+
+def test_rotary_arm_length_must_match_pivot() -> None:
+    with pytest.raises(ValueError, match="arm_length_mm must equal pivot_x_mm"):
+        load_build_config(
+            ROOT / "config" / "default_infront.yaml",
+            overrides=[
+                "geometry.target.rotary.arm_length_mm=80",
             ],
         )
 
@@ -213,6 +241,18 @@ def test_disabled_plate_ties_allow_zero_tie_dimensions() -> None:
     assert cfg.geometry.stand.enable_plate_ties is False
 
 
+def test_disabled_base_plate_allows_zero_anchor_slots() -> None:
+    cfg = load_build_config(
+        ROOT / "config" / "default_infront.yaml",
+        overrides=[
+            "geometry.stand.with_base_plate=false",
+            "geometry.stand.anchor_slot_length_mm=0",
+            "geometry.stand.anchor_slot_width_mm=0",
+        ],
+    )
+    assert cfg.geometry.stand.with_base_plate is False
+
+
 def test_invalid_los_scope() -> None:
     with pytest.raises(ValueError, match="los_scope"):
         load_build_config(
@@ -228,7 +268,7 @@ def test_v2_scope_requires_los_channels_enabled() -> None:
         load_build_config(
             ROOT / "config" / "default_infront.yaml",
             overrides=[
-                "geometry.clearance.los_scope=v2_fullpath",
+                "geometry.chamber.los_channels.enabled=false",
             ],
         )
 

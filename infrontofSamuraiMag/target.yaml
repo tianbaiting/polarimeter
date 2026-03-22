@@ -1,14 +1,14 @@
 schema_version: 1
 module: infrontofSamuraiMag
 intent:
-  description: "Locked legacy-center preview baseline: HVV plate placement/size frozen for iterative tuning, detector bridge pose rigidly referenced to the detector body, plate drilling derived from fixture direction, plate cuts disabled, overlap checks skipped."
+  description: "Strict side-exit chamber redesign: elongate chamber along z, shrink transverse span so all 12 channels exit via the four side faces, keep the upstream interface at VG150, reduce the +z downstream interface to VF80, replace the linear three-position target ladder with a single eccentric rotary target that parks clear of the z-axis beam, remove the monolithic stand base plate so only four support feet plus leveling hardware remain, pull the three HVV plates tight against the target chamber in a photo-like layout, and let the H plate use rectangular relief holes only where the lower detector packages or their true target-to-detector LOS intersect it."
 build:
-  config: config/profiles/legacy_center_preview_locked.yaml
+  config: config/profiles/side_exit_single_rotary_strict.yaml
   overrides: []
   doc_name: infrontofSamuraiMag
   mode: build
 validation:
-  strict: false
+  strict: true
   angle_tolerance_deg: 0.05
   radius_tolerance_mm: 0.2
 output:

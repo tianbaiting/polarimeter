@@ -148,3 +148,102 @@ Entry Template:
 - Validation Result: fail (same locked preview LOS blockers), command exit=0 due non-strict gate
 - Artifacts/State: `state.json.run_id=20260318T151203Z-7`, `run.status=fail`, FCStd `sha256=61af516a...`, STEP `sha256=6eefd243...`, report `sha256=3d33ef52...`
 - Next Action: continue visual/LOS tuning on the preview profile or promote the new detector mount semantics into a strict-pass geometry profile.
+
+- Timestamp UTC: 2026-03-22T15:09:52Z
+- Timestamp Local: 2026-03-23 00:09:52 JST
+- Module/Scope: infrontofSamuraiMag (side-exit chamber + single rotary target strict gate)
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: active target switched to `config/profiles/side_exit_single_rotary_strict.yaml`; chamber `220x220x1200 mm`; `los_scope=v2_fullpath`; single rotary target enabled; detector support plates tightened to `H.y=360 mm`, `V1.x=360 mm`, `V2.x=-360 mm`; stand feet moved to base-footprint corners to clear side-exit detector corridors.
+- Validation Result: pass (strict gate green across chamber/plates/detector/target/stand)
+- Artifacts/State: `state.json.run_id=20260322T150952Z-7`, `run.status=pass`, `validation.status=pass`, report refreshed (`sha256=268a7f29...`)
+- Next Action: run full rebuild to regenerate FCStd/STEP artifacts from the new strict-pass profile.
+
+- Timestamp UTC: 2026-03-22T15:10:22Z
+- Timestamp Local: 2026-03-23 00:10:22 JST
+- Module/Scope: infrontofSamuraiMag (export artifacts for side-exit chamber + single rotary target strict-pass geometry)
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: same strict profile as validate-only run; detector-vs-assembly overlap now distance-filtered before boolean common-volume acceptance to suppress false chamber overlaps; FCStd/STEP regenerated from strict-pass geometry.
+- Validation Result: pass
+- Artifacts/State: `state.json.run_id=20260322T151022Z-7`, `run.status=pass`, FCStd `sha256=731b6211...`, STEP `sha256=dc6bd74a...`, report `sha256=268a7f29...`
+- Next Action: hand off updated target/config/code changes and strict-pass artifacts to the user for review.
+
+- Timestamp UTC: 2026-03-22T16:02:28Z
+- Timestamp Local: 2026-03-23 01:02:28 JST
+- Module/Scope: infrontofSamuraiMag (continuous rounded-slot plates + rear VF80 strict gate)
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: H/V/V detector windows rebuilt as continuous rounded slots; `rear` end module reduced from `VF150` to `VF80`; `front` kept at `VG150`; end-module groove semantics parameterized by `VG/VF` type; plate hard cutout skipped for rounded-slot plates so each plate remains a single continuous solid.
+- Validation Result: pass (strict gate green across chamber/plates/detector/target/stand)
+- Artifacts/State: `state.json.run_id=20260322T160228Z-7`, `run.status=pass`, `validation.status=pass`, report refreshed (`sha256=b5e69e46...`)
+- Next Action: run full rebuild to export FCStd/STEP artifacts for the new rear-80A and continuous-slot geometry.
+
+- Timestamp UTC: 2026-03-22T16:02:57Z
+- Timestamp Local: 2026-03-23 01:02:57 JST
+- Module/Scope: infrontofSamuraiMag (export artifacts for continuous rounded-slot plates + rear VF80)
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: same strict profile as validate-only run; rebuilt FCStd/STEP after splitting end-module config into `front/rear`, changing `rear` to `VF80`, and replacing fragmented plate openings with single-solid rounded-slot plates.
+- Validation Result: pass
+- Artifacts/State: `state.json.run_id=20260322T160257Z-7`, `run.status=pass`, FCStd `sha256=4727cff4...`, STEP `sha256=326f132a...`, report `sha256=b5e69e46...`
+- Next Action: hand off the updated strict-pass geometry and artifacts for visual review.
+
+- Timestamp UTC: 2026-03-22T16:28:28Z
+- Timestamp Local: 2026-03-23 01:28:28 JST
+- Module/Scope: infrontofSamuraiMag (photo-like plate relocation strict gate)
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: active target kept on `config/profiles/side_exit_single_rotary_strict.yaml`; horizontal plate flipped to `-y`; manual offsets tightened to `H.y=-305 mm`, `V1.x=125 mm`, `V2.x=-125 mm`; plate cuts remain limited to chamber/LOS openings only.
+- Validation Result: pass (strict gate green across chamber/plates/detector/target/stand)
+- Artifacts/State: `state.json.run_id=20260322T162828Z-7`, `run.status=pass`, `validation.status=pass`, report refreshed (`sha256=ea28a1b4...`)
+- Next Action: run force rebuild to export FCStd/STEP artifacts for the new photo-like plate placement.
+
+- Timestamp UTC: 2026-03-22T16:28:58Z
+- Timestamp Local: 2026-03-23 01:28:58 JST
+- Module/Scope: infrontofSamuraiMag (export artifacts for photo-like plate relocation)
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: same strict profile as preceding validate-only run; rebuilt FCStd/STEP after flipping `H` to the `-y` side and pulling all three plates inboard to the first strict-pass offsets plus 5 mm manufacturing margin.
+- Validation Result: pass
+- Artifacts/State: `state.json.run_id=20260322T162858Z-7`, `run.status=pass`, FCStd `sha256=93b99e26...`, STEP `sha256=85706800...`, report `sha256=ea28a1b4...`
+- Next Action: hand off the updated strict-pass geometry for visual review against the reference photo.
+
+- Timestamp UTC: 2026-03-22T16:52:20Z
+- Timestamp Local: 2026-03-23 01:52:20 JST
+- Module/Scope: infrontofSamuraiMag (true target-to-detector LOS tube plate openings strict gate)
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: active profile kept on `config/profiles/side_exit_single_rotary_strict.yaml`; `geometry.plate.{h,v1,v2}.opening_style` switched from `rounded_slot` to `los_tube`; plate cut generation now uses true `active_target -> detector_active_face` LOS tubes instead of detector-to-plate orthogonal projections; current photo-like plate offsets retained.
+- Validation Result: pass (strict gate green across chamber/plates/detector/target/stand)
+- Artifacts/State: `state.json.run_id=20260322T165220Z-7`, `run.status=pass`, `validation.status=pass`, report refreshed (`sha256=817383cb...`)
+- Next Action: run force rebuild to export FCStd/STEP artifacts for the true LOS-tube opening geometry.
+
+- Timestamp UTC: 2026-03-22T16:52:48Z
+- Timestamp Local: 2026-03-23 01:52:48 JST
+- Module/Scope: infrontofSamuraiMag (export artifacts for true target-to-detector LOS tube plate openings)
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: same strict profile as preceding validate-only run; regenerated FCStd/STEP after replacing projection-based continuous slots with target-to-detector LOS tube cuts; validation report shows `plate_opening_geometry_valid` as `style=los_tube` with `plane_hits=0` for all three offset HVV plates.
+- Validation Result: pass
+- Artifacts/State: `state.json.run_id=20260322T165248Z-7`, `run.status=pass`, FCStd `sha256=f8ba3d1f...`, STEP `sha256=d9b1ad5b...`, report `sha256=817383cb...`
+- Next Action: hand off the corrected LOS-based plate geometry and confirm whether any residual stand anchor slots should be removed for aesthetics.
+
+- Timestamp UTC: 2026-03-22T17:11:49Z
+- Timestamp Local: 2026-03-23 02:11:49 JST
+- Module/Scope: infrontofSamuraiMag (photo-like plate-hugging layout, remove monolithic stand base plate, add H rectangular relief holes)
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: updated active strict profile to `H.y=-125 mm`, `V1.x=125 mm`, `V2.x=-125 mm`; `geometry.stand.with_base_plate=false`; first draft of H rectangular relief generation used detector-package/LOS intersections to clear lower detectors while keeping true LOS semantics.
+- Validation Result: fail (`plates.single_continuous_plate_solids` failed because `HPlate` was cut into `2` solids by an over-wide relief window)
+- Artifacts/State: `state.json.run_id=20260322T171149Z-7`, `run.status=fail`, `validation.status=fail`, report `sha256=ad1442b4...`
+- Next Action: tighten H relief generation so only the real lower-detector package/LOS intersections are cut and recover a single continuous H plate.
+
+- Timestamp UTC: 2026-03-22T17:18:21Z
+- Timestamp Local: 2026-03-23 02:18:21 JST
+- Module/Scope: infrontofSamuraiMag (export corrected photo-like HVV layout with no monolithic stand base plate)
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: kept `H.y=-125 mm`, removed `StandBasePlate`, regenerated H rectangular reliefs using package bbox crossing the actual H-plate thickness plus true LOS plane hits; relief windows settled to two local rectangles instead of one full-height slot.
+- Validation Result: pass
+- Artifacts/State: `state.json.run_id=20260322T171821Z-7`, `run.status=pass`, FCStd `sha256=b7f2d710...`, STEP `sha256=f84bd5d9...`, report `sha256=fa7f7c52...`
+- Next Action: run one more strict validate-only confirmation and then hand off the rebuilt geometry for visual review.
+
+- Timestamp UTC: 2026-03-22T17:19:59Z
+- Timestamp Local: 2026-03-23 02:19:59 JST
+- Module/Scope: infrontofSamuraiMag (post-rebuild strict confirmation for the photo-like HVV layout)
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: unchanged target hash after the successful rebuild; stateful runner reused the current strict-pass artifacts and validation report.
+- Validation Result: pass via hash-skip (`run.status=skipped`, `validation.status=pass`)
+- Artifacts/State: `state.json.run_id=20260322T171959Z-7`, FCStd `sha256=b7f2d710...`, STEP `sha256=f84bd5d9...`, report `sha256=fa7f7c52...`
+- Next Action: deliver the updated chamber-hugging three-plate geometry and collect user review on plate aesthetics.

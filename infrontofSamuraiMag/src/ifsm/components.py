@@ -53,13 +53,13 @@ def _port_pose(cfg: GeometryConfig, port: PortConfig) -> tuple[App.Vector, App.V
     half_x, half_y, _ = _chamber_halves(cfg)
 
     if port.side == "right":
-        return App.Vector(half_x, 0.0, port.center_z_mm), App.Vector(1.0, 0.0, 0.0)
+        return App.Vector(half_x, port.center_y_mm, port.center_z_mm), App.Vector(1.0, 0.0, 0.0)
     if port.side == "left":
-        return App.Vector(-half_x, 0.0, port.center_z_mm), App.Vector(-1.0, 0.0, 0.0)
+        return App.Vector(-half_x, port.center_y_mm, port.center_z_mm), App.Vector(-1.0, 0.0, 0.0)
     if port.side == "top":
-        return App.Vector(0.0, half_y, port.center_z_mm), App.Vector(0.0, 1.0, 0.0)
+        return App.Vector(port.center_x_mm, half_y, port.center_z_mm), App.Vector(0.0, 1.0, 0.0)
     if port.side == "bottom":
-        return App.Vector(0.0, -half_y, port.center_z_mm), App.Vector(0.0, -1.0, 0.0)
+        return App.Vector(port.center_x_mm, -half_y, port.center_z_mm), App.Vector(0.0, -1.0, 0.0)
     raise ValueError(f"unsupported side: {port.side}")
 
 
@@ -92,6 +92,125 @@ def _dot(a: App.Vector, b: App.Vector) -> float:
 def _axis_distance(target: App.Vector, origin: App.Vector, axis: App.Vector) -> float:
     delta = target - origin
     return _dot(delta, axis)
+
+
+def _midpoint(a: App.Vector, b: App.Vector) -> App.Vector:
+    return App.Vector(0.5 * (a.x + b.x), 0.5 * (a.y + b.y), 0.5 * (a.z + b.z))
+
+
+def _plate_hit_point_on_mount_plane(placement: DetectorPlacement, plate: PlateConfig) -> App.Vector:
+    center = front_face_center(placement)
+    if plate.mount_plane == "xy":
+        return App.Vector(center.x, center.y, plate.z_mm)
+    if plate.mount_plane == "xz":
+        return App.Vector(center.x, plate.offset_y_mm, center.z)
+    if plate.mount_plane == "yz":
+        return App.Vector(plate.offset_x_mm, center.y, center.z)
+    raise ValueError(f"unsupported mount_plane {plate.mount_plane!r}")
+
+
+def _plate_local_uv_from_world(plate: PlateConfig, point: App.Vector) -> tuple[float, float]:
+    center, _axis_t, axis_v, axis_w = _plate_axes(plate)
+    delta = point - center
+    return _dot(delta, axis_v), _dot(delta, axis_w)
+
+
+def _plate_world_from_local_uv(plate: PlateConfig, u_mm: float, v_mm: float) -> App.Vector:
+    center, _axis_t, axis_v, axis_w = _plate_axes(plate)
+    return center + scaled(axis_v, u_mm) + scaled(axis_w, v_mm)
+
+
+def plate_slot_half_width_mm(cfg: GeometryConfig) -> float:
+    # [EN] Rounded-slot half-width freezes LOS channel radius plus clearance margin into the plate opening itself, avoiding a second interpretation layer during validation. / [CN] 圆角槽半宽直接固化“LOS 通道半径 + 裕量”，避免生成与校验各自再解释一次开口宽度。
+    return 0.5 * cfg.chamber.los_channels.channel_diameter_mm + cfg.clearance.los_margin_mm
+
+
+def active_target_los_source_point(cfg: GeometryConfig) -> App.Vector:
+    # [EN] Plate LOS openings must reference the active scattering target instead of detector-to-plate orthogonal projections, otherwise material between fixtures gets cut spuriously. / [CN] 板上 LOS 开口必须参考当前有效散射靶点，而不是探测器到板的正交投影，否则会错误切掉夹具之间的材料。
+    if cfg.target.mode == "single_rotary":
+        rotary = cfg.target.rotary
+        if rotary is None:
+            raise ValueError("single_rotary target config requires geometry.target.rotary")
+        return single_rotary_target_center(cfg, rotary.active_angle_deg)
+
+    ladder = cfg.target.ladder
+    if ladder is None:
+        raise ValueError("linear_ladder target config requires geometry.target.ladder")
+    return App.Vector(_target_slot_positions_x(cfg)[ladder.active_index], 0.0, 0.0)
+
+
+def target_detector_los_segment_endpoints(
+    cfg: GeometryConfig,
+    placement: DetectorPlacement,
+) -> tuple[App.Vector, App.Vector]:
+    start = active_target_los_source_point(cfg)
+    end = front_face_center(placement) + scaled(placement.direction, cfg.clearance.los_detector_active_face_offset_mm)
+    return start, end
+
+
+def target_detector_los_tube(
+    cfg: GeometryConfig,
+    placement: DetectorPlacement,
+    radius_mm: float,
+    overshoot_mm: float = 1.0,
+) -> Part.Shape | None:
+    start, end = target_detector_los_segment_endpoints(cfg, placement)
+    delta = end - start
+    length = _vector_length(delta)
+    if length <= 1e-9:
+        return None
+    axis = _normalize_vector(delta)
+    return Part.makeCylinder(radius_mm, length + 2.0 * overshoot_mm, start - scaled(axis, overshoot_mm), axis)
+
+
+def plate_los_plane_hit_point(
+    cfg: GeometryConfig,
+    placement: DetectorPlacement,
+    plate: PlateConfig,
+) -> App.Vector | None:
+    start, end = target_detector_los_segment_endpoints(cfg, placement)
+    delta = end - start
+    center, axis_t, _axis_v, _axis_w = _plate_axes(plate)
+    denom = _dot(delta, axis_t)
+    if abs(denom) <= 1e-9:
+        return None
+    t = _dot(center - start, axis_t) / denom
+    if t < -1e-9 or t > 1.0 + 1e-9:
+        return None
+    return start + scaled(delta, t)
+
+
+def plate_opening_local_polylines(
+    cfg: GeometryConfig,
+    plate_key: str,
+    plate: PlateConfig,
+    placements: list[DetectorPlacement],
+) -> tuple[tuple[tuple[float, float], ...], ...]:
+    if plate.opening_style != "rounded_slot":
+        return ()
+
+    if plate_key == "h":
+        grouped = [
+            [placement for placement in placements if placement.sector_name == "left"],
+            [placement for placement in placements if placement.sector_name == "right"],
+        ]
+    elif plate_key == "v1":
+        grouped = [[placement for placement in placements if placement.sector_name == "up"]]
+    elif plate_key == "v2":
+        grouped = [[placement for placement in placements if placement.sector_name == "down"]]
+    else:
+        raise ValueError(f"unsupported plate_key {plate_key!r}")
+
+    polylines: list[tuple[tuple[float, float], ...]] = []
+    for group in grouped:
+        ordered = sorted(group, key=lambda placement: front_face_center(placement).z)
+        local_points: list[tuple[float, float]] = []
+        for placement in ordered:
+            hit = _plate_hit_point_on_mount_plane(placement, plate)
+            local_points.append(_plate_local_uv_from_world(plate, hit))
+        if local_points:
+            polylines.append(tuple(local_points))
+    return tuple(polylines)
 
 
 def _annular_sector_cut(plate: PlateConfig) -> list[Part.Shape]:
@@ -200,13 +319,25 @@ def build_chamber(cfg: GeometryConfig, placements: list[DetectorPlacement] | Non
     return chamber
 
 
+def _end_module_has_groove(standard: str) -> bool:
+    return standard.upper().startswith("VG")
+
+
+def _end_module_side_cfg(cfg: GeometryConfig, side: str):
+    if side == "front":
+        return cfg.chamber.end_modules.front
+    if side == "rear":
+        return cfg.chamber.end_modules.rear
+    raise ValueError(f"unsupported side {side!r}")
+
+
 def _build_end_module(
     cfg: GeometryConfig,
     side: str,
     placements: list[DetectorPlacement] | None = None,
 ) -> Part.Shape:
     half_z = 0.5 * cfg.chamber.core.size_z_mm
-    module = cfg.chamber.end_modules
+    module = _end_module_side_cfg(cfg, side)
     axis = App.Vector(0.0, 0.0, 1.0)
 
     if side == "front":
@@ -232,7 +363,9 @@ def _build_end_module(
 
     seal_outer = min(
         module.module_outer_diameter_mm - 2.0,
-        module.module_inner_diameter_mm + (2.0 * module.seal_face_width_mm) + (2.0 * module.oring_groove_width_mm),
+        module.module_inner_diameter_mm
+        + (2.0 * module.seal_face_width_mm)
+        + max(0.0, module.oring_groove_outer_diameter_mm - module.oring_groove_inner_diameter_mm),
     )
     seal_ring = tube_shape(
         outer_diameter_mm=seal_outer,
@@ -243,33 +376,28 @@ def _build_end_module(
     )
     flange = flange.fuse(seal_ring)
 
-    bolt_hole_diameter = min(
-        0.6 * module.seal_face_width_mm,
-        0.2 * (module.module_outer_diameter_mm - module.module_inner_diameter_mm),
-    )
     bolt_radius = 0.5 * module.bolt_circle_diameter_mm
     for idx in range(module.bolt_count):
         angle = (2.0 * math.pi * float(idx)) / float(module.bolt_count)
         x = bolt_radius * math.cos(angle)
         y = bolt_radius * math.sin(angle)
         hole = Part.makeCylinder(
-            0.5 * bolt_hole_diameter,
+            0.5 * module.flange_bolt_hole_diameter_mm,
             module.module_thickness_mm + 2.0,
             App.Vector(x, y, origin.z - 1.0),
             axis,
         )
         flange = flange.cut(hole)
 
-    groove_inner = module.module_inner_diameter_mm + module.oring_groove_width_mm
-    groove_outer = groove_inner + (2.0 * module.oring_groove_width_mm)
-    groove_cut = tube_shape(
-        outer_diameter_mm=groove_outer,
-        inner_diameter_mm=groove_inner,
-        length_mm=module.oring_groove_depth_mm,
-        origin=groove_origin,
-        axis=axis,
-    )
-    flange = flange.cut(groove_cut)
+    if _end_module_has_groove(module.standard) and module.oring_groove_depth_mm > 0.0:
+        groove_cut = tube_shape(
+            outer_diameter_mm=module.oring_groove_outer_diameter_mm,
+            inner_diameter_mm=module.oring_groove_inner_diameter_mm,
+            length_mm=module.oring_groove_depth_mm,
+            origin=groove_origin,
+            axis=axis,
+        )
+        flange = flange.cut(groove_cut)
 
     if side == "rear":
         for cut in _los_channel_cuts(cfg, placements):
@@ -287,7 +415,7 @@ def build_end_modules(
 
 def _build_end_module_fasteners_for_side(cfg: GeometryConfig, side: str) -> dict[str, Part.Shape]:
     half_z = 0.5 * cfg.chamber.core.size_z_mm
-    module = cfg.chamber.end_modules
+    module = _end_module_side_cfg(cfg, side)
     bolt_radius = 0.5 * module.bolt_circle_diameter_mm
     bolt_clearance_d = module.interface_bolt_diameter_mm + 0.8
 
@@ -386,6 +514,51 @@ def _build_plate_base_with_openings(plate: PlateConfig) -> Part.Shape:
     return base
 
 
+def _rounded_slot_cut(
+    plate: PlateConfig,
+    local_polyline: tuple[tuple[float, float], ...],
+    half_width_mm: float,
+) -> Part.Shape:
+    center, axis_t, _axis_v, _axis_w = _plate_axes(plate)
+    cut_length = plate.thickness_mm + 4.0
+
+    parts: list[Part.Shape] = []
+    world_points = [_plate_world_from_local_uv(plate, u_mm, v_mm) for u_mm, v_mm in local_polyline]
+    for point in world_points:
+        parts.append(
+            Part.makeCylinder(
+                half_width_mm,
+                cut_length,
+                point - scaled(axis_t, 0.5 * cut_length),
+                axis_t,
+            )
+        )
+
+    for start, end in zip(world_points, world_points[1:]):
+        delta = end - start
+        segment_length = _vector_length(delta)
+        if segment_length <= 1e-9:
+            continue
+        axis_segment = _normalize_vector(delta)
+        axis_perp = _normalize_vector(axis_t.cross(axis_segment))
+        parts.append(
+            slit_prism(
+                center=_midpoint(start, end),
+                axis_u=axis_t,
+                axis_v=axis_segment,
+                axis_w=axis_perp,
+                length_mm=cut_length + 0.2,
+                width_mm=segment_length + 0.2,
+                height_mm=2.0 * half_width_mm + 0.2,
+            )
+        )
+
+    out = parts[0]
+    for part in parts[1:]:
+        out = out.fuse(part)
+    return out
+
+
 def _build_plate_lugs_with_bolt_holes(plate: PlateConfig) -> Part.Shape:
     center, axis_t, axis_v, axis_w = _plate_axes(plate)
 
@@ -467,9 +640,45 @@ def _build_plate_stiffeners(plate: PlateConfig) -> Part.Shape:
     return out
 
 
-def build_load_bearing_plate(plate: PlateConfig) -> Part.Shape:
+def build_load_bearing_plate(
+    cfg: GeometryConfig,
+    plate_key: str,
+    plate: PlateConfig,
+    placements: list[DetectorPlacement],
+) -> Part.Shape:
     # [EN] Fused base+lugs+stiffeners encode a deterministic structural load path for validation and assembly mapping. / [CN] 融合主板+连接耳+加劲肋，形成可验证且可装配映射的确定性承载路径。
-    base = _build_plate_base_with_openings(plate)
+    if plate.opening_style == "annular_sector":
+        base = _build_plate_base_with_openings(plate)
+    elif plate.opening_style == "rounded_slot":
+        center, axis_t, axis_v, axis_w = _plate_axes(plate)
+        base = slit_prism(
+            center=center,
+            axis_u=axis_t,
+            axis_v=axis_v,
+            axis_w=axis_w,
+            length_mm=plate.thickness_mm,
+            width_mm=plate.width_mm,
+            height_mm=plate.height_mm,
+        )
+        for polyline in plate_opening_local_polylines(cfg, plate_key, plate, placements):
+            base = base.cut(_rounded_slot_cut(plate, polyline, plate_slot_half_width_mm(cfg)))
+    elif plate.opening_style == "los_tube":
+        center, axis_t, axis_v, axis_w = _plate_axes(plate)
+        base = slit_prism(
+            center=center,
+            axis_u=axis_t,
+            axis_v=axis_v,
+            axis_w=axis_w,
+            length_mm=plate.thickness_mm,
+            width_mm=plate.width_mm,
+            height_mm=plate.height_mm,
+        )
+        for placement in placements:
+            cut = target_detector_los_tube(cfg, placement, plate_slot_half_width_mm(cfg))
+            if cut is not None:
+                base = base.cut(cut)
+    else:
+        raise ValueError(f"unsupported opening_style {plate.opening_style!r}")
     lugs = _build_plate_lugs_with_bolt_holes(plate)
     stiffeners = _build_plate_stiffeners(plate)
     return base.fuse(lugs).fuse(stiffeners)
@@ -510,14 +719,113 @@ def _detector_mount_plate_holes(
     return holes
 
 
+def _plate_rectangular_relief_cuts(
+    cfg: GeometryConfig,
+    plate: PlateConfig,
+    placements: list[DetectorPlacement],
+) -> list[Part.Shape]:
+    if not placements:
+        return []
+
+    center, axis_t, axis_v, axis_w = _plate_axes(plate)
+    cut_depth_mm = plate.thickness_mm + plate.lug_thickness_mm + plate.stiffener_height_mm + 20.0
+    relief_margin_mm = max(cfg.clearance.los_margin_mm, 6.0)
+    half_plate_width = 0.5 * plate.width_mm
+    half_plate_height = 0.5 * plate.height_mm
+    package_band_half_mm = 0.5 * plate.thickness_mm + relief_margin_mm
+    plate_band_min = center.y - package_band_half_mm
+    plate_band_max = center.y + package_band_half_mm
+
+    cuts: list[Part.Shape] = []
+    for placement in placements:
+        housing, clamp_a, clamp_b, adapter_block, mount_base = build_detector_fixture(cfg, placement)
+        local_min_u: float | None = None
+        local_max_u = 0.0
+        local_min_v: float | None = None
+        local_max_v = 0.0
+
+        for contributor in (housing, clamp_a, clamp_b, adapter_block, mount_base):
+            bbox = contributor.BoundBox
+            if bbox.YMax < plate_band_min or bbox.YMin > plate_band_max:
+                continue
+
+            contributor_min_u = bbox.XMin - plate.offset_x_mm
+            contributor_max_u = bbox.XMax - plate.offset_x_mm
+            contributor_min_v = bbox.ZMin - plate.z_mm
+            contributor_max_v = bbox.ZMax - plate.z_mm
+
+            if local_min_u is None or local_min_v is None:
+                local_min_u = contributor_min_u
+                local_max_u = contributor_max_u
+                local_min_v = contributor_min_v
+                local_max_v = contributor_max_v
+            else:
+                local_min_u = min(local_min_u, contributor_min_u)
+                local_max_u = max(local_max_u, contributor_max_u)
+                local_min_v = min(local_min_v, contributor_min_v)
+                local_max_v = max(local_max_v, contributor_max_v)
+
+        los_hit = plate_los_plane_hit_point(cfg, placement, plate)
+        if los_hit is not None:
+            hit_u, hit_v = _plate_local_uv_from_world(plate, los_hit)
+            if abs(hit_u) <= half_plate_width and abs(hit_v) <= half_plate_height:
+                los_radius_mm = plate_slot_half_width_mm(cfg)
+                los_min_u = hit_u - los_radius_mm
+                los_max_u = hit_u + los_radius_mm
+                los_min_v = hit_v - los_radius_mm
+                los_max_v = hit_v + los_radius_mm
+                if local_min_u is None or local_min_v is None:
+                    local_min_u = los_min_u
+                    local_max_u = los_max_u
+                    local_min_v = los_min_v
+                    local_max_v = los_max_v
+                else:
+                    local_min_u = min(local_min_u, los_min_u)
+                    local_max_u = max(local_max_u, los_max_u)
+                    local_min_v = min(local_min_v, los_min_v)
+                    local_max_v = max(local_max_v, los_max_v)
+
+        if local_min_u is None or local_min_v is None:
+            continue
+
+        min_u = max(-half_plate_width, local_min_u - relief_margin_mm)
+        max_u = min(half_plate_width, local_max_u + relief_margin_mm)
+        min_v = max(-half_plate_height, local_min_v - relief_margin_mm)
+        max_v = min(half_plate_height, local_max_v + relief_margin_mm)
+        if (max_u - min_u) <= 1e-6 or (max_v - min_v) <= 1e-6:
+            continue
+
+        # [EN] Rectangular reliefs follow the actual detector package plus target-to-detector LOS overlap with the H plate, matching the photographed service-panel style without linking unrelated material. / [CN] 长方形让位孔按探测器包络与靶到探测器真实 LOS 对 H 板的实际相交范围生成，贴近照片里的维护面板做法，不再把无关区域连成槽口。
+        cuts.append(
+            slit_prism(
+                center=_plate_world_from_local_uv(plate, 0.5 * (min_u + max_u), 0.5 * (min_v + max_v)),
+                axis_u=axis_t,
+                axis_v=axis_v,
+                axis_w=axis_w,
+                length_mm=cut_depth_mm,
+                width_mm=max_u - min_u,
+                height_mm=max_v - min_v,
+            )
+        )
+
+    return cuts
+
+
 def build_all_plates(
     cfg: GeometryConfig,
     placements: list[DetectorPlacement] | None = None,
 ) -> dict[str, Part.Shape]:
+    if placements is None:
+        raise ValueError("build_all_plates requires detector placements for plate opening generation")
+
+    placements_by_plate: dict[str, list[DetectorPlacement]] = {"h": [], "v1": [], "v2": []}
+    for placement in placements:
+        placements_by_plate[plate_key_for_sector(placement.sector_name)].append(placement)
+
     plates = {
-        "HPlate": build_load_bearing_plate(cfg.plate.h),
-        "VPlate1": build_load_bearing_plate(cfg.plate.v1),
-        "VPlate2": build_load_bearing_plate(cfg.plate.v2),
+        "HPlate": build_load_bearing_plate(cfg, "h", cfg.plate.h, placements_by_plate["h"]),
+        "VPlate1": build_load_bearing_plate(cfg, "v1", cfg.plate.v1, placements_by_plate["v1"]),
+        "VPlate2": build_load_bearing_plate(cfg, "v2", cfg.plate.v2, placements_by_plate["v2"]),
     }
 
     if cfg.clearance.disable_plate_cuts:
@@ -525,16 +833,22 @@ def build_all_plates(
         return plates
 
     cutout = _chamber_plate_cutout(cfg)
+    plate_cfg_map = {"HPlate": cfg.plate.h, "VPlate1": cfg.plate.v1, "VPlate2": cfg.plate.v2}
     for name, plate in list(plates.items()):
+        if plate_cfg_map[name].opening_style == "rounded_slot":
+            continue
         # [EN] Remove chamber overlap from full load-bearing solids (base+lugs+stiffeners), preserving strict no-overlap assembly gate. / [CN] 对完整承重实体（主板+连接耳+加劲肋）执行去腔体干涉挖孔，满足严格零重叠装配门。
         plates[name] = plate.cut(cutout)
 
-    if placements:
-        holes_by_plate = _detector_mount_plate_holes(cfg, placements)
-        plate_key_map = {"HPlate": "h", "VPlate1": "v1", "VPlate2": "v2"}
-        for plate_name, key in plate_key_map.items():
-            for hole in holes_by_plate[key]:
-                plates[plate_name] = plates[plate_name].cut(hole)
+    h_relief_placements = [placement for placement in placements if plate_key_for_sector(placement.sector_name) != "h"]
+    for cut in _plate_rectangular_relief_cuts(cfg, cfg.plate.h, h_relief_placements):
+        plates["HPlate"] = plates["HPlate"].cut(cut)
+
+    holes_by_plate = _detector_mount_plate_holes(cfg, placements)
+    plate_key_map = {"HPlate": "h", "VPlate1": "v1", "VPlate2": "v2"}
+    for plate_name, key in plate_key_map.items():
+        for hole in holes_by_plate[key]:
+            plates[plate_name] = plates[plate_name].cut(hole)
     return plates
 
 
@@ -997,12 +1311,46 @@ def build_detector_fixture(
 
 
 def _target_slot_positions_x(cfg: GeometryConfig) -> tuple[float, float, float]:
-    pitch = cfg.target.ladder.slot_pitch_mm
+    ladder = cfg.target.ladder
+    if ladder is None:
+        raise ValueError("linear ladder target config is required for slot-based holder positions")
+    pitch = ladder.slot_pitch_mm
     return (-pitch, 0.0, pitch)
 
 
-def build_target_ladder(cfg: GeometryConfig) -> dict[str, Part.Shape]:
+def _rotated_shape(shape: Part.Shape, center: App.Vector, axis: App.Vector, angle_deg: float) -> Part.Shape:
+    if abs(angle_deg) <= 1e-9:
+        return shape
+    rotated = shape.copy()
+    rotated.rotate(center, axis, angle_deg)
+    return rotated
+
+
+def _single_rotary_pivot_center(cfg: GeometryConfig) -> App.Vector:
+    rotary = cfg.target.rotary
+    if rotary is None:
+        raise ValueError("single_rotary target config requires geometry.target.rotary")
+    return App.Vector(rotary.pivot_x_mm, 0.0, 0.0)
+
+
+def single_rotary_target_center(cfg: GeometryConfig, angle_deg: float) -> App.Vector:
+    rotary = cfg.target.rotary
+    if rotary is None:
+        raise ValueError("single_rotary target config requires geometry.target.rotary")
+    theta = math.radians(angle_deg)
+    pivot = _single_rotary_pivot_center(cfg)
+    # [EN] The single target swings in the xz plane about the top-mounted Y-axis feedthrough so work and park poses remain analytically traceable. / [CN] 单靶绕顶部 Y 轴馈通在 xz 平面摆转，使工作位与停靠位都能用解析几何稳定追踪。
+    return pivot + App.Vector(
+        -rotary.arm_length_mm * math.cos(theta),
+        0.0,
+        rotary.arm_length_mm * math.sin(theta),
+    )
+
+
+def _build_linear_target_ladder(cfg: GeometryConfig) -> dict[str, Part.Shape]:
     ladder = cfg.target.ladder
+    if ladder is None:
+        raise ValueError("linear_ladder mode requires geometry.target.ladder")
     slots = _target_slot_positions_x(cfg)
 
     carriage = Part.makeBox(
@@ -1120,6 +1468,8 @@ def build_target_ladder(cfg: GeometryConfig) -> dict[str, Part.Shape]:
 
 def _target_holder_frame(cfg: GeometryConfig, x_pos: float) -> Part.Shape:
     holder = cfg.target.holder
+    if holder is None:
+        raise ValueError("linear_ladder mode requires geometry.target.holder")
     outer = Part.makeBox(
         holder.frame_outer_width_mm,
         holder.frame_outer_height_mm,
@@ -1171,6 +1521,8 @@ def _target_holder_frame(cfg: GeometryConfig, x_pos: float) -> Part.Shape:
 
 def _holder_clamp_screws(cfg: GeometryConfig, x_pos: float, holder_name: str) -> dict[str, Part.Shape]:
     holder = cfg.target.holder
+    if holder is None:
+        raise ValueError("linear_ladder mode requires geometry.target.holder")
     shank_len = holder.frame_thickness_mm + holder.clamp_screw_head_height_mm
     z_top = 0.5 * holder.frame_thickness_mm
 
@@ -1195,22 +1547,25 @@ def _holder_clamp_screws(cfg: GeometryConfig, x_pos: float, holder_name: str) ->
     return out
 
 
-def build_target_holders(cfg: GeometryConfig) -> dict[str, Part.Shape]:
+def _build_linear_target_holders(cfg: GeometryConfig) -> dict[str, Part.Shape]:
     slots = _target_slot_positions_x(cfg)
     holder = cfg.target.holder
+    ladder = cfg.target.ladder
+    if holder is None or ladder is None:
+        raise ValueError("linear_ladder mode requires geometry.target.ladder and geometry.target.holder")
 
     empty_frame = _target_holder_frame(cfg, slots[0])
     experiment_frame = _target_holder_frame(cfg, slots[1])
     fluorescence_frame = _target_holder_frame(cfg, slots[2])
 
     experiment_target = Part.makeCylinder(
-        0.5 * cfg.target.ladder.slot_window_diameter_mm,
+        0.5 * ladder.slot_window_diameter_mm,
         holder.experiment_target_thickness_mm,
         App.Vector(slots[1], 0.0, -0.5 * holder.experiment_target_thickness_mm),
         App.Vector(0.0, 0.0, 1.0),
     )
     fluorescence_target = Part.makeCylinder(
-        0.5 * cfg.target.ladder.slot_window_diameter_mm,
+        0.5 * ladder.slot_window_diameter_mm,
         holder.fluorescence_target_thickness_mm,
         App.Vector(slots[2], 0.0, -0.5 * holder.fluorescence_target_thickness_mm),
         App.Vector(0.0, 0.0, 1.0),
@@ -1229,6 +1584,214 @@ def build_target_holders(cfg: GeometryConfig) -> dict[str, Part.Shape]:
     return out
 
 
+def _single_target_holder_frame(holder) -> Part.Shape:
+    outer = Part.makeBox(
+        holder.frame_outer_width_mm,
+        holder.frame_outer_height_mm,
+        holder.frame_thickness_mm,
+        App.Vector(
+            -0.5 * holder.frame_outer_width_mm,
+            -0.5 * holder.frame_outer_height_mm,
+            -0.5 * holder.frame_thickness_mm,
+        ),
+    )
+    inner_w = holder.frame_outer_width_mm - 2.0 * holder.clamp_block_width_mm
+    inner_h = holder.frame_outer_height_mm - 2.0 * holder.clamp_block_height_mm
+    inner = Part.makeBox(
+        inner_w,
+        inner_h,
+        holder.frame_thickness_mm + 0.4,
+        App.Vector(
+            -0.5 * inner_w,
+            -0.5 * inner_h,
+            -0.5 * holder.frame_thickness_mm - 0.2,
+        ),
+    )
+    frame = outer.cut(inner)
+    clamp_top = Part.makeBox(
+        holder.clamp_block_width_mm,
+        holder.clamp_block_height_mm,
+        holder.frame_thickness_mm,
+        App.Vector(
+            -0.5 * holder.clamp_block_width_mm,
+            0.5 * holder.frame_outer_height_mm,
+            -0.5 * holder.frame_thickness_mm,
+        ),
+    )
+    clamp_bottom = Part.makeBox(
+        holder.clamp_block_width_mm,
+        holder.clamp_block_height_mm,
+        holder.frame_thickness_mm,
+        App.Vector(
+            -0.5 * holder.clamp_block_width_mm,
+            -0.5 * holder.frame_outer_height_mm - holder.clamp_block_height_mm,
+            -0.5 * holder.frame_thickness_mm,
+        ),
+    )
+    return frame.fuse(clamp_top).fuse(clamp_bottom)
+
+
+def _single_target_holder_screws(holder, holder_name: str) -> dict[str, Part.Shape]:
+    shank_len = holder.frame_thickness_mm + holder.clamp_screw_head_height_mm
+    z_top = 0.5 * holder.frame_thickness_mm
+    out: dict[str, Part.Shape] = {}
+    for label, y_pos in (
+        ("Top", 0.5 * holder.frame_outer_height_mm + 0.5 * holder.clamp_block_height_mm),
+        ("Bottom", -0.5 * holder.frame_outer_height_mm - 0.5 * holder.clamp_block_height_mm),
+    ):
+        shank = Part.makeCylinder(
+            0.5 * holder.clamp_screw_diameter_mm,
+            shank_len,
+            App.Vector(0.0, y_pos, z_top),
+            App.Vector(0.0, 0.0, -1.0),
+        )
+        head = Part.makeCylinder(
+            0.5 * holder.clamp_screw_head_diameter_mm,
+            holder.clamp_screw_head_height_mm,
+            App.Vector(0.0, y_pos, z_top),
+            App.Vector(0.0, 0.0, 1.0),
+        )
+        out[f"{holder_name}ClampScrew_{label}"] = shank.fuse(head)
+    return out
+
+
+def build_single_rotary_target_shapes(
+    cfg: GeometryConfig,
+    angle_deg: float,
+) -> tuple[dict[str, Part.Shape], dict[str, Part.Shape]]:
+    rotary = cfg.target.rotary
+    holder = cfg.target.single_holder
+    if rotary is None or holder is None:
+        raise ValueError("single_rotary mode requires geometry.target.rotary and geometry.target.single_holder")
+
+    pivot = _single_rotary_pivot_center(cfg)
+    axis_y = App.Vector(0.0, 1.0, 0.0)
+    half_y = 0.5 * cfg.chamber.core.size_y_mm
+    shaft_length = half_y + rotary.feedthrough_length_mm
+
+    shaft = Part.makeCylinder(
+        0.5 * rotary.feedthrough_shaft_diameter_mm,
+        shaft_length,
+        pivot,
+        axis_y,
+    )
+    handwheel = Part.makeCylinder(
+        0.5 * rotary.handwheel_diameter_mm,
+        8.0,
+        pivot + App.Vector(0.0, shaft_length, 0.0),
+        axis_y,
+    )
+    hub = Part.makeCylinder(
+        0.5 * rotary.hub_diameter_mm,
+        rotary.hub_thickness_mm,
+        pivot - App.Vector(0.0, 0.5 * rotary.hub_thickness_mm, 0.0),
+        axis_y,
+    )
+    arm = slit_prism(
+        center=pivot + App.Vector(-0.5 * rotary.arm_length_mm, 0.0, 0.0),
+        axis_u=App.Vector(-1.0, 0.0, 0.0),
+        axis_v=axis_y,
+        axis_w=App.Vector(0.0, 0.0, 1.0),
+        length_mm=rotary.arm_length_mm,
+        width_mm=rotary.arm_width_mm,
+        height_mm=rotary.arm_thickness_mm,
+    )
+
+    motor_mount = Part.makeBox(
+        rotary.motor_mount_width_mm,
+        rotary.motor_mount_thickness_mm,
+        rotary.motor_mount_height_mm,
+        App.Vector(
+            rotary.pivot_x_mm - 0.5 * rotary.motor_mount_width_mm,
+            half_y + 0.5 * rotary.feedthrough_length_mm,
+            -0.5 * rotary.motor_mount_height_mm,
+        ),
+    )
+    stop_y = half_y + rotary.feedthrough_length_mm - rotary.hard_stop_thickness_mm
+    hard_stop_a = Part.makeBox(
+        26.0,
+        rotary.hard_stop_thickness_mm,
+        rotary.hard_stop_thickness_mm,
+        App.Vector(
+            rotary.pivot_x_mm - 13.0,
+            stop_y,
+            -0.5 * rotary.hard_stop_span_mm,
+        ),
+    )
+    hard_stop_b = Part.makeBox(
+        26.0,
+        rotary.hard_stop_thickness_mm,
+        rotary.hard_stop_thickness_mm,
+        App.Vector(
+            rotary.pivot_x_mm - 13.0,
+            stop_y,
+            0.5 * rotary.hard_stop_span_mm - rotary.hard_stop_thickness_mm,
+        ),
+    )
+    index_disk = Part.makeCylinder(
+        0.5 * rotary.index_disk_diameter_mm,
+        rotary.index_disk_thickness_mm,
+        pivot + App.Vector(0.0, shaft_length - rotary.index_disk_thickness_mm, 0.0),
+        axis_y,
+    )
+    index_pin = Part.makeCylinder(
+        0.5 * rotary.index_pin_diameter_mm,
+        rotary.index_pin_length_mm,
+        pivot
+        + App.Vector(
+            0.5 * rotary.index_disk_diameter_mm,
+            shaft_length - rotary.index_disk_thickness_mm,
+            0.0,
+        ),
+        axis_y,
+    )
+
+    holder_frame = _single_target_holder_frame(holder)
+    inner_w = holder.frame_outer_width_mm - 2.0 * holder.clamp_block_width_mm
+    inner_h = holder.frame_outer_height_mm - 2.0 * holder.clamp_block_height_mm
+    target = Part.makeCylinder(
+        0.5 * min(inner_w, inner_h),
+        holder.target_thickness_mm,
+        App.Vector(0.0, 0.0, -0.5 * holder.target_thickness_mm),
+        App.Vector(0.0, 0.0, 1.0),
+    )
+
+    drive_shapes = {
+        "TargetRotaryFeedthroughShaft": shaft,
+        "TargetEmergencyHandwheel": handwheel,
+        "TargetDriveMotorMount": motor_mount,
+        "TargetDriveHardStop_A": hard_stop_a,
+        "TargetDriveHardStop_B": hard_stop_b,
+        "TargetDriveIndexDisk": index_disk,
+        "TargetDriveIndexPin": index_pin,
+        "TargetRotaryPivotHub": _rotated_shape(hub, pivot, axis_y, angle_deg),
+        "TargetRotaryArm": _rotated_shape(arm, pivot, axis_y, angle_deg),
+    }
+
+    holder_shapes = {
+        "SingleTargetHolder": _rotated_shape(holder_frame, pivot, axis_y, angle_deg),
+        "SingleTarget": _rotated_shape(target, pivot, axis_y, angle_deg),
+    }
+    for name, shape in _single_target_holder_screws(holder, "SingleTargetHolder").items():
+        holder_shapes[name] = _rotated_shape(shape, pivot, axis_y, angle_deg)
+
+    return drive_shapes, holder_shapes
+
+
+def build_target_ladder(cfg: GeometryConfig) -> dict[str, Part.Shape]:
+    if cfg.target.mode == "single_rotary":
+        drive_shapes, _ = build_single_rotary_target_shapes(cfg, cfg.target.rotary.active_angle_deg)
+        return drive_shapes
+    return _build_linear_target_ladder(cfg)
+
+
+def build_target_holders(cfg: GeometryConfig) -> dict[str, Part.Shape]:
+    if cfg.target.mode == "single_rotary":
+        _, holder_shapes = build_single_rotary_target_shapes(cfg, cfg.target.rotary.active_angle_deg)
+        return holder_shapes
+    return _build_linear_target_holders(cfg)
+
+
 def build_stand(cfg: GeometryConfig) -> dict[str, Part.Shape]:
     stand = cfg.stand
     core = cfg.chamber.core
@@ -1236,32 +1799,10 @@ def build_stand(cfg: GeometryConfig) -> dict[str, Part.Shape]:
     chamber_bottom_y = -0.5 * core.size_y_mm
     base_bottom_y = chamber_bottom_y - stand.chamber_support_height_mm - stand.base_thickness_mm
 
-    base = Part.makeBox(
-        stand.base_length_mm,
-        stand.base_thickness_mm,
-        stand.base_width_mm,
-        App.Vector(-0.5 * stand.base_length_mm, base_bottom_y, -0.5 * stand.base_width_mm),
-    )
-
-    for sx in (-1.0, 1.0):
-        for sz in (-1.0, 1.0):
-            slot_cut = slit_prism(
-                center=App.Vector(
-                    sx * 0.35 * stand.base_length_mm,
-                    base_bottom_y + 0.5 * stand.base_thickness_mm,
-                    sz * 0.35 * stand.base_width_mm,
-                ),
-                axis_u=App.Vector(0.0, 1.0, 0.0),
-                axis_v=App.Vector(1.0, 0.0, 0.0),
-                axis_w=App.Vector(0.0, 0.0, 1.0),
-                length_mm=stand.base_thickness_mm + 2.0,
-                width_mm=stand.anchor_slot_length_mm,
-                height_mm=stand.anchor_slot_width_mm,
-            )
-            base = base.cut(slot_cut)
-
-    foot_x = 0.5 * core.size_x_mm - 50.0
-    foot_z = 0.5 * core.size_z_mm - 50.0
+    foot_edge_margin = max(60.0, 0.5 * stand.support_foot_diameter_mm + 20.0)
+    # [EN] Side-exit detector corridors now run close to the chamber side walls, so stand posts are anchored from the wider base footprint instead of the chamber envelope corners. / [CN] 侧向出射后探测器走廊贴近腔体侧壁，因此支脚改按更宽的底座投影布置，而不是贴着腔体包络角点。
+    foot_x = 0.5 * stand.base_length_mm - foot_edge_margin
+    foot_z = 0.5 * stand.base_width_mm - foot_edge_margin
     foot_base_y = base_bottom_y + stand.base_thickness_mm
 
     feet: dict[str, Part.Shape] = {}
@@ -1291,8 +1832,32 @@ def build_stand(cfg: GeometryConfig) -> dict[str, Part.Shape]:
         feet[f"StandLevelingScrew_{idx}"] = screw
         feet[f"StandShim_{idx}"] = shim
 
-    out: dict[str, Part.Shape] = {
-        "StandBasePlate": base,
-    }
+    out: dict[str, Part.Shape] = {}
+    if stand.with_base_plate:
+        base = Part.makeBox(
+            stand.base_length_mm,
+            stand.base_thickness_mm,
+            stand.base_width_mm,
+            App.Vector(-0.5 * stand.base_length_mm, base_bottom_y, -0.5 * stand.base_width_mm),
+        )
+
+        for sx in (-1.0, 1.0):
+            for sz in (-1.0, 1.0):
+                slot_cut = slit_prism(
+                    center=App.Vector(
+                        sx * 0.35 * stand.base_length_mm,
+                        base_bottom_y + 0.5 * stand.base_thickness_mm,
+                        sz * 0.35 * stand.base_width_mm,
+                    ),
+                    axis_u=App.Vector(0.0, 1.0, 0.0),
+                    axis_v=App.Vector(1.0, 0.0, 0.0),
+                    axis_w=App.Vector(0.0, 0.0, 1.0),
+                    length_mm=stand.base_thickness_mm + 2.0,
+                    width_mm=stand.anchor_slot_length_mm,
+                    height_mm=stand.anchor_slot_width_mm,
+                )
+                base = base.cut(slot_cut)
+
+        out["StandBasePlate"] = base
     out.update(feet)
     return out

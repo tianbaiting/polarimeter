@@ -102,7 +102,7 @@ def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> B
         doc,
         assembly,
         export_objects,
-        "FrontEndModule_VG150",
+        f"FrontEndModule_{cfg.geometry.chamber.end_modules.front.standard}",
         front_module,
         subsystem="chamber",
         role="replaceable upstream interface module",
@@ -111,13 +111,13 @@ def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> B
         doc,
         assembly,
         export_objects,
-        "RearEndModule_VF150",
+        f"RearEndModule_{cfg.geometry.chamber.end_modules.rear.standard}",
         rear_module,
         subsystem="chamber",
         role="replaceable downstream interface module",
     )
-    _set_string_property(front_module_obj, "Standard", "Interface", cfg.geometry.chamber.end_modules.front_standard)
-    _set_string_property(rear_module_obj, "Standard", "Interface", cfg.geometry.chamber.end_modules.rear_standard)
+    _set_string_property(front_module_obj, "Standard", "Interface", cfg.geometry.chamber.end_modules.front.standard)
+    _set_string_property(rear_module_obj, "Standard", "Interface", cfg.geometry.chamber.end_modules.rear.standard)
 
     for name, shape in build_end_module_fasteners(cfg.geometry).items():
         _add_component(
@@ -154,7 +154,7 @@ def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> B
             name,
             shape,
             subsystem="plates",
-            role="load-bearing HVV plate with lugs/bolt pattern/stiffeners and annular-sector LOS opening",
+            role="load-bearing HVV plate with lugs/bolt pattern/stiffeners and LOS-based opening cut",
         )
         plate_cfg = plate_cfg_map[name]
         _attach_plate_pose_properties(
@@ -237,6 +237,9 @@ def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> B
         for obj in (housing_obj, clamp_a_obj, clamp_b_obj, adapter_obj, mount_obj):
             _attach_layout_properties(obj, placement)
 
+    target_drive_role = "3-position linear ladder drivetrain"
+    if cfg.geometry.target.mode == "single_rotary":
+        target_drive_role = "single-target rotary drivetrain"
     for name, shape in build_target_ladder(cfg.geometry).items():
         _add_component(
             doc,
@@ -245,11 +248,13 @@ def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> B
             name,
             shape,
             subsystem="target",
-            role="3-position linear ladder drivetrain",
+            role=target_drive_role,
         )
 
     for name, shape in build_target_holders(cfg.geometry).items():
         role = "removable holder and target set"
+        if cfg.geometry.target.mode == "single_rotary":
+            role = "single-target holder and target set"
         if "ClampScrew_" in name:
             role = "holder dual-screw clamp fastener"
         _add_component(

@@ -20,7 +20,9 @@ _ALLOWED_PORT_SIDES = {"right", "left", "top", "bottom"}
 _ALLOWED_PLATE_ORIENTATIONS = {"horizontal", "vertical"}
 _ALLOWED_PLATE_MOUNT_PLANES = {"xy", "xz", "yz"}
 _ALLOWED_PLATE_OFFSET_MODES = {"manual", "auto"}
+_ALLOWED_PLATE_OPENING_STYLES = {"annular_sector", "rounded_slot", "los_tube"}
 _ALLOWED_LOS_SCOPES = {"v1_conceptual", "v2_fullpath"}
+_ALLOWED_TARGET_MODES = {"linear_ladder", "single_rotary"}
 
 
 @dataclass(frozen=True)
@@ -52,16 +54,17 @@ class ChamberCoreConfig:
 
 
 @dataclass(frozen=True)
-class ChamberEndModulesConfig:
-    front_standard: str
-    rear_standard: str
+class ChamberEndModuleSideConfig:
+    standard: str
     module_outer_diameter_mm: float
     module_inner_diameter_mm: float
     module_thickness_mm: float
     seal_face_width_mm: float
     bolt_circle_diameter_mm: float
     bolt_count: int
-    oring_groove_width_mm: float
+    flange_bolt_hole_diameter_mm: float
+    oring_groove_inner_diameter_mm: float
+    oring_groove_outer_diameter_mm: float
     oring_groove_depth_mm: float
     interface_bolt_diameter_mm: float
     interface_bolt_length_mm: float
@@ -69,6 +72,20 @@ class ChamberEndModulesConfig:
     interface_nut_thickness_mm: float
     interface_washer_outer_diameter_mm: float
     interface_washer_thickness_mm: float
+
+
+@dataclass(frozen=True)
+class ChamberEndModulesConfig:
+    front: ChamberEndModuleSideConfig
+    rear: ChamberEndModuleSideConfig
+
+    @property
+    def front_standard(self) -> str:
+        return self.front.standard
+
+    @property
+    def rear_standard(self) -> str:
+        return self.rear.standard
 
 
 @dataclass(frozen=True)
@@ -89,6 +106,8 @@ class ChamberConfig:
 @dataclass(frozen=True)
 class PortConfig:
     side: str
+    center_x_mm: float
+    center_y_mm: float
     center_z_mm: float
     inner_diameter_mm: float
     outer_diameter_mm: float
@@ -108,6 +127,7 @@ class PlateConfig:
     orientation: str
     mount_plane: str
     offset_mode: str
+    opening_style: str
     z_mm: float
     offset_x_mm: float
     offset_y_mm: float
@@ -218,13 +238,55 @@ class TargetHolderConfig:
 
 
 @dataclass(frozen=True)
+class TargetRotaryConfig:
+    pivot_x_mm: float
+    work_angle_deg: float
+    park_angle_deg: float
+    active_angle_deg: float
+    feedthrough_shaft_diameter_mm: float
+    feedthrough_length_mm: float
+    handwheel_diameter_mm: float
+    motor_mount_width_mm: float
+    motor_mount_height_mm: float
+    motor_mount_thickness_mm: float
+    hub_diameter_mm: float
+    hub_thickness_mm: float
+    arm_length_mm: float
+    arm_width_mm: float
+    arm_thickness_mm: float
+    hard_stop_span_mm: float
+    hard_stop_thickness_mm: float
+    index_disk_diameter_mm: float
+    index_disk_thickness_mm: float
+    index_pin_diameter_mm: float
+    index_pin_length_mm: float
+
+
+@dataclass(frozen=True)
+class SingleTargetHolderConfig:
+    frame_outer_width_mm: float
+    frame_outer_height_mm: float
+    frame_thickness_mm: float
+    clamp_block_width_mm: float
+    clamp_block_height_mm: float
+    clamp_screw_diameter_mm: float
+    clamp_screw_head_diameter_mm: float
+    clamp_screw_head_height_mm: float
+    target_thickness_mm: float
+
+
+@dataclass(frozen=True)
 class TargetConfig:
-    ladder: TargetLadderConfig
-    holder: TargetHolderConfig
+    mode: str
+    ladder: TargetLadderConfig | None
+    holder: TargetHolderConfig | None
+    rotary: TargetRotaryConfig | None
+    single_holder: SingleTargetHolderConfig | None
 
 
 @dataclass(frozen=True)
 class StandConfig:
+    with_base_plate: bool
     base_length_mm: float
     base_width_mm: float
     base_thickness_mm: float
@@ -401,6 +463,168 @@ def _parse_beamline(raw: dict[str, Any]) -> BeamlineConfig:
     return cfg
 
 
+def _end_module_has_groove(module: ChamberEndModuleSideConfig) -> bool:
+    return module.standard.upper().startswith("VG")
+
+
+def _parse_end_module_side(
+    raw: dict[str, Any],
+    prefix: str,
+    *,
+    standard_override: str | None = None,
+) -> ChamberEndModuleSideConfig:
+    standard = standard_override if standard_override is not None else _to_str(raw.get("standard"), f"{prefix}.standard")
+
+    module_outer_diameter_mm = _to_float(raw.get("module_outer_diameter_mm"), f"{prefix}.module_outer_diameter_mm")
+    module_inner_diameter_mm = _to_float(raw.get("module_inner_diameter_mm"), f"{prefix}.module_inner_diameter_mm")
+    module_thickness_mm = _to_float(raw.get("module_thickness_mm"), f"{prefix}.module_thickness_mm")
+    seal_face_width_mm = _to_float(raw.get("seal_face_width_mm"), f"{prefix}.seal_face_width_mm")
+    bolt_circle_diameter_mm = _to_float(raw.get("bolt_circle_diameter_mm"), f"{prefix}.bolt_circle_diameter_mm")
+    bolt_count = _to_int(raw.get("bolt_count"), f"{prefix}.bolt_count")
+    flange_bolt_hole_diameter_mm = _to_float(
+        raw.get(
+            "flange_bolt_hole_diameter_mm",
+            min(0.6 * seal_face_width_mm, 0.2 * (module_outer_diameter_mm - module_inner_diameter_mm)),
+        ),
+        f"{prefix}.flange_bolt_hole_diameter_mm",
+    )
+
+    legacy_groove_width = raw.get("oring_groove_width_mm")
+    groove_inner_raw = raw.get("oring_groove_inner_diameter_mm")
+    groove_outer_raw = raw.get("oring_groove_outer_diameter_mm")
+    if groove_inner_raw is None or groove_outer_raw is None:
+        groove_width = _to_float(
+            0.0 if legacy_groove_width is None else legacy_groove_width,
+            f"{prefix}.oring_groove_width_mm",
+        )
+        oring_groove_inner_diameter_mm = module_inner_diameter_mm + groove_width if groove_width > 0.0 else 0.0
+        oring_groove_outer_diameter_mm = (
+            oring_groove_inner_diameter_mm + 2.0 * groove_width if groove_width > 0.0 else 0.0
+        )
+    else:
+        oring_groove_inner_diameter_mm = _to_float(
+            groove_inner_raw,
+            f"{prefix}.oring_groove_inner_diameter_mm",
+        )
+        oring_groove_outer_diameter_mm = _to_float(
+            groove_outer_raw,
+            f"{prefix}.oring_groove_outer_diameter_mm",
+        )
+    oring_groove_depth_mm = _to_float(
+        raw.get("oring_groove_depth_mm", 0.0),
+        f"{prefix}.oring_groove_depth_mm",
+    )
+
+    cfg = ChamberEndModuleSideConfig(
+        standard=standard,
+        module_outer_diameter_mm=module_outer_diameter_mm,
+        module_inner_diameter_mm=module_inner_diameter_mm,
+        module_thickness_mm=module_thickness_mm,
+        seal_face_width_mm=seal_face_width_mm,
+        bolt_circle_diameter_mm=bolt_circle_diameter_mm,
+        bolt_count=bolt_count,
+        flange_bolt_hole_diameter_mm=flange_bolt_hole_diameter_mm,
+        oring_groove_inner_diameter_mm=oring_groove_inner_diameter_mm,
+        oring_groove_outer_diameter_mm=oring_groove_outer_diameter_mm,
+        oring_groove_depth_mm=oring_groove_depth_mm,
+        interface_bolt_diameter_mm=_to_float(
+            raw.get("interface_bolt_diameter_mm"),
+            f"{prefix}.interface_bolt_diameter_mm",
+        ),
+        interface_bolt_length_mm=_to_float(
+            raw.get("interface_bolt_length_mm"),
+            f"{prefix}.interface_bolt_length_mm",
+        ),
+        interface_nut_outer_diameter_mm=_to_float(
+            raw.get("interface_nut_outer_diameter_mm"),
+            f"{prefix}.interface_nut_outer_diameter_mm",
+        ),
+        interface_nut_thickness_mm=_to_float(
+            raw.get("interface_nut_thickness_mm"),
+            f"{prefix}.interface_nut_thickness_mm",
+        ),
+        interface_washer_outer_diameter_mm=_to_float(
+            raw.get("interface_washer_outer_diameter_mm"),
+            f"{prefix}.interface_washer_outer_diameter_mm",
+        ),
+        interface_washer_thickness_mm=_to_float(
+            raw.get("interface_washer_thickness_mm"),
+            f"{prefix}.interface_washer_thickness_mm",
+        ),
+    )
+
+    _require_positive(
+        {
+            f"{prefix}.module_outer_diameter_mm": cfg.module_outer_diameter_mm,
+            f"{prefix}.module_inner_diameter_mm": cfg.module_inner_diameter_mm,
+            f"{prefix}.module_thickness_mm": cfg.module_thickness_mm,
+            f"{prefix}.seal_face_width_mm": cfg.seal_face_width_mm,
+            f"{prefix}.bolt_circle_diameter_mm": cfg.bolt_circle_diameter_mm,
+            f"{prefix}.flange_bolt_hole_diameter_mm": cfg.flange_bolt_hole_diameter_mm,
+            f"{prefix}.interface_bolt_diameter_mm": cfg.interface_bolt_diameter_mm,
+            f"{prefix}.interface_bolt_length_mm": cfg.interface_bolt_length_mm,
+            f"{prefix}.interface_nut_outer_diameter_mm": cfg.interface_nut_outer_diameter_mm,
+            f"{prefix}.interface_nut_thickness_mm": cfg.interface_nut_thickness_mm,
+            f"{prefix}.interface_washer_outer_diameter_mm": cfg.interface_washer_outer_diameter_mm,
+            f"{prefix}.interface_washer_thickness_mm": cfg.interface_washer_thickness_mm,
+        }
+    )
+
+    if cfg.module_inner_diameter_mm >= cfg.module_outer_diameter_mm:
+        raise ValueError(f"{prefix}.module_inner_diameter_mm must be < outer")
+    if cfg.bolt_count < 4:
+        raise ValueError(f"{prefix}.bolt_count must be >= 4")
+    if cfg.bolt_circle_diameter_mm >= cfg.module_outer_diameter_mm:
+        raise ValueError(f"{prefix}.bolt_circle_diameter_mm must be < module_outer_diameter_mm")
+    if cfg.bolt_circle_diameter_mm <= cfg.module_inner_diameter_mm:
+        raise ValueError(f"{prefix}.bolt_circle_diameter_mm must be > module_inner_diameter_mm")
+    if cfg.flange_bolt_hole_diameter_mm >= (cfg.module_outer_diameter_mm - cfg.module_inner_diameter_mm):
+        raise ValueError(f"{prefix}.flange_bolt_hole_diameter_mm must fit inside flange annulus")
+    if cfg.interface_bolt_diameter_mm >= cfg.flange_bolt_hole_diameter_mm:
+        raise ValueError(f"{prefix}.interface_bolt_diameter_mm must be < flange_bolt_hole_diameter_mm")
+    if cfg.interface_bolt_length_mm <= cfg.module_thickness_mm:
+        raise ValueError(f"{prefix}.interface_bolt_length_mm must be > module_thickness_mm")
+    if cfg.interface_nut_outer_diameter_mm <= cfg.interface_bolt_diameter_mm:
+        raise ValueError(f"{prefix}.interface_nut_outer_diameter_mm must be > interface_bolt_diameter_mm")
+    if cfg.interface_washer_outer_diameter_mm <= cfg.interface_bolt_diameter_mm:
+        raise ValueError(f"{prefix}.interface_washer_outer_diameter_mm must be > interface_bolt_diameter_mm")
+    if cfg.interface_nut_thickness_mm >= cfg.interface_bolt_length_mm:
+        raise ValueError(f"{prefix}.interface_nut_thickness_mm must be < interface_bolt_length_mm")
+    if cfg.interface_washer_thickness_mm >= cfg.interface_bolt_length_mm:
+        raise ValueError(f"{prefix}.interface_washer_thickness_mm must be < interface_bolt_length_mm")
+    if cfg.interface_washer_outer_diameter_mm >= cfg.module_outer_diameter_mm:
+        raise ValueError(f"{prefix}.interface_washer_outer_diameter_mm must be < module_outer_diameter_mm")
+    if cfg.interface_nut_outer_diameter_mm > cfg.bolt_circle_diameter_mm:
+        raise ValueError(f"{prefix}.interface_nut_outer_diameter_mm must be <= bolt_circle_diameter_mm")
+
+    if _end_module_has_groove(cfg):
+        _require_positive(
+            {
+                f"{prefix}.oring_groove_inner_diameter_mm": cfg.oring_groove_inner_diameter_mm,
+                f"{prefix}.oring_groove_outer_diameter_mm": cfg.oring_groove_outer_diameter_mm,
+                f"{prefix}.oring_groove_depth_mm": cfg.oring_groove_depth_mm,
+            }
+        )
+        if cfg.oring_groove_inner_diameter_mm <= cfg.module_inner_diameter_mm:
+            raise ValueError(f"{prefix}.oring_groove_inner_diameter_mm must be > module_inner_diameter_mm")
+        if cfg.oring_groove_outer_diameter_mm <= cfg.oring_groove_inner_diameter_mm:
+            raise ValueError(f"{prefix}.oring_groove_outer_diameter_mm must be > inner")
+        if cfg.oring_groove_outer_diameter_mm >= cfg.module_outer_diameter_mm:
+            raise ValueError(f"{prefix}.oring_groove_outer_diameter_mm must be < module_outer_diameter_mm")
+        if cfg.oring_groove_depth_mm >= cfg.module_thickness_mm:
+            raise ValueError(f"{prefix}.oring_groove_depth_mm must be < module_thickness_mm")
+    else:
+        groove_values = (
+            cfg.oring_groove_inner_diameter_mm,
+            cfg.oring_groove_outer_diameter_mm,
+            cfg.oring_groove_depth_mm,
+        )
+        if any(abs(value) > 1e-9 for value in groove_values):
+            raise ValueError(f"{prefix} VF-type modules must not define O-ring groove geometry")
+
+    return cfg
+
+
 def _parse_chamber(raw: dict[str, Any]) -> ChamberConfig:
     core_raw = _to_mapping(raw.get("core"), "geometry.chamber.core")
     end_raw = _to_mapping(raw.get("end_modules"), "geometry.chamber.end_modules")
@@ -414,66 +638,33 @@ def _parse_chamber(raw: dict[str, Any]) -> ChamberConfig:
         wall_thickness_mm=_to_float(core_raw.get("wall_thickness_mm"), "geometry.chamber.core.wall_thickness_mm"),
     )
 
-    end_modules = ChamberEndModulesConfig(
-        front_standard=_to_str(end_raw.get("front_standard"), "geometry.chamber.end_modules.front_standard"),
-        rear_standard=_to_str(end_raw.get("rear_standard"), "geometry.chamber.end_modules.rear_standard"),
-        module_outer_diameter_mm=_to_float(
-            end_raw.get("module_outer_diameter_mm"),
-            "geometry.chamber.end_modules.module_outer_diameter_mm",
-        ),
-        module_inner_diameter_mm=_to_float(
-            end_raw.get("module_inner_diameter_mm"),
-            "geometry.chamber.end_modules.module_inner_diameter_mm",
-        ),
-        module_thickness_mm=_to_float(
-            end_raw.get("module_thickness_mm"),
-            "geometry.chamber.end_modules.module_thickness_mm",
-        ),
-        seal_face_width_mm=_to_float(
-            end_raw.get("seal_face_width_mm"),
-            "geometry.chamber.end_modules.seal_face_width_mm",
-        ),
-        bolt_circle_diameter_mm=_to_float(
-            end_raw.get("bolt_circle_diameter_mm"),
-            "geometry.chamber.end_modules.bolt_circle_diameter_mm",
-        ),
-        bolt_count=_to_int(
-            end_raw.get("bolt_count"),
-            "geometry.chamber.end_modules.bolt_count",
-        ),
-        oring_groove_width_mm=_to_float(
-            end_raw.get("oring_groove_width_mm"),
-            "geometry.chamber.end_modules.oring_groove_width_mm",
-        ),
-        oring_groove_depth_mm=_to_float(
-            end_raw.get("oring_groove_depth_mm"),
-            "geometry.chamber.end_modules.oring_groove_depth_mm",
-        ),
-        interface_bolt_diameter_mm=_to_float(
-            end_raw.get("interface_bolt_diameter_mm"),
-            "geometry.chamber.end_modules.interface_bolt_diameter_mm",
-        ),
-        interface_bolt_length_mm=_to_float(
-            end_raw.get("interface_bolt_length_mm"),
-            "geometry.chamber.end_modules.interface_bolt_length_mm",
-        ),
-        interface_nut_outer_diameter_mm=_to_float(
-            end_raw.get("interface_nut_outer_diameter_mm"),
-            "geometry.chamber.end_modules.interface_nut_outer_diameter_mm",
-        ),
-        interface_nut_thickness_mm=_to_float(
-            end_raw.get("interface_nut_thickness_mm"),
-            "geometry.chamber.end_modules.interface_nut_thickness_mm",
-        ),
-        interface_washer_outer_diameter_mm=_to_float(
-            end_raw.get("interface_washer_outer_diameter_mm"),
-            "geometry.chamber.end_modules.interface_washer_outer_diameter_mm",
-        ),
-        interface_washer_thickness_mm=_to_float(
-            end_raw.get("interface_washer_thickness_mm"),
-            "geometry.chamber.end_modules.interface_washer_thickness_mm",
-        ),
-    )
+    has_split_side_schema = "front" in end_raw or "rear" in end_raw
+    if has_split_side_schema:
+        front = _parse_end_module_side(
+            _to_mapping(end_raw.get("front"), "geometry.chamber.end_modules.front"),
+            "geometry.chamber.end_modules.front",
+        )
+        rear = _parse_end_module_side(
+            _to_mapping(end_raw.get("rear"), "geometry.chamber.end_modules.rear"),
+            "geometry.chamber.end_modules.rear",
+        )
+    else:
+        front = _parse_end_module_side(
+            end_raw,
+            "geometry.chamber.end_modules",
+            standard_override=_to_str(end_raw.get("front_standard"), "geometry.chamber.end_modules.front_standard"),
+        )
+        legacy_rear_raw = dict(end_raw)
+        legacy_rear_raw["oring_groove_width_mm"] = 0.0
+        legacy_rear_raw["oring_groove_depth_mm"] = 0.0
+        legacy_rear_raw["oring_groove_inner_diameter_mm"] = 0.0
+        legacy_rear_raw["oring_groove_outer_diameter_mm"] = 0.0
+        rear = _parse_end_module_side(
+            legacy_rear_raw,
+            "geometry.chamber.end_modules",
+            standard_override=_to_str(end_raw.get("rear_standard"), "geometry.chamber.end_modules.rear_standard"),
+        )
+    end_modules = ChamberEndModulesConfig(front=front, rear=rear)
 
     los_channels = ChamberLOSChannelsConfig(
         enabled=_to_bool(
@@ -500,19 +691,6 @@ def _parse_chamber(raw: dict[str, Any]) -> ChamberConfig:
             "geometry.chamber.core.size_y_mm": core.size_y_mm,
             "geometry.chamber.core.size_z_mm": core.size_z_mm,
             "geometry.chamber.core.wall_thickness_mm": core.wall_thickness_mm,
-            "geometry.chamber.end_modules.module_outer_diameter_mm": end_modules.module_outer_diameter_mm,
-            "geometry.chamber.end_modules.module_inner_diameter_mm": end_modules.module_inner_diameter_mm,
-            "geometry.chamber.end_modules.module_thickness_mm": end_modules.module_thickness_mm,
-            "geometry.chamber.end_modules.seal_face_width_mm": end_modules.seal_face_width_mm,
-            "geometry.chamber.end_modules.bolt_circle_diameter_mm": end_modules.bolt_circle_diameter_mm,
-            "geometry.chamber.end_modules.oring_groove_width_mm": end_modules.oring_groove_width_mm,
-            "geometry.chamber.end_modules.oring_groove_depth_mm": end_modules.oring_groove_depth_mm,
-            "geometry.chamber.end_modules.interface_bolt_diameter_mm": end_modules.interface_bolt_diameter_mm,
-            "geometry.chamber.end_modules.interface_bolt_length_mm": end_modules.interface_bolt_length_mm,
-            "geometry.chamber.end_modules.interface_nut_outer_diameter_mm": end_modules.interface_nut_outer_diameter_mm,
-            "geometry.chamber.end_modules.interface_nut_thickness_mm": end_modules.interface_nut_thickness_mm,
-            "geometry.chamber.end_modules.interface_washer_outer_diameter_mm": end_modules.interface_washer_outer_diameter_mm,
-            "geometry.chamber.end_modules.interface_washer_thickness_mm": end_modules.interface_washer_thickness_mm,
             "geometry.chamber.los_channels.channel_diameter_mm": los_channels.channel_diameter_mm,
             "geometry.chamber.los_channels.channel_length_mm": los_channels.channel_length_mm,
         }
@@ -520,35 +698,6 @@ def _parse_chamber(raw: dict[str, Any]) -> ChamberConfig:
 
     if 2.0 * core.wall_thickness_mm >= min(core.size_x_mm, core.size_y_mm, core.size_z_mm):
         raise ValueError("geometry.chamber.core.wall_thickness_mm is too large for core dimensions")
-
-    if end_modules.module_inner_diameter_mm >= end_modules.module_outer_diameter_mm:
-        raise ValueError("geometry.chamber.end_modules.module_inner_diameter_mm must be < outer")
-    if end_modules.bolt_count < 6:
-        raise ValueError("geometry.chamber.end_modules.bolt_count must be >= 6")
-    if end_modules.bolt_circle_diameter_mm >= end_modules.module_outer_diameter_mm:
-        raise ValueError("geometry.chamber.end_modules.bolt_circle_diameter_mm must be < module_outer_diameter_mm")
-    if end_modules.bolt_circle_diameter_mm <= end_modules.module_inner_diameter_mm:
-        raise ValueError("geometry.chamber.end_modules.bolt_circle_diameter_mm must be > module_inner_diameter_mm")
-    if end_modules.oring_groove_depth_mm >= end_modules.module_thickness_mm:
-        raise ValueError("geometry.chamber.end_modules.oring_groove_depth_mm must be < module_thickness_mm")
-    bolt_hole_diameter = min(
-        0.6 * end_modules.seal_face_width_mm,
-        0.2 * (end_modules.module_outer_diameter_mm - end_modules.module_inner_diameter_mm),
-    )
-    if end_modules.interface_bolt_diameter_mm >= bolt_hole_diameter:
-        raise ValueError("geometry.chamber.end_modules.interface_bolt_diameter_mm must be < modeled flange bolt hole diameter")
-    if end_modules.interface_bolt_length_mm <= end_modules.module_thickness_mm:
-        raise ValueError("geometry.chamber.end_modules.interface_bolt_length_mm must be > module_thickness_mm")
-    if end_modules.interface_nut_outer_diameter_mm <= end_modules.interface_bolt_diameter_mm:
-        raise ValueError("geometry.chamber.end_modules.interface_nut_outer_diameter_mm must be > interface_bolt_diameter_mm")
-    if end_modules.interface_washer_outer_diameter_mm <= end_modules.interface_bolt_diameter_mm:
-        raise ValueError("geometry.chamber.end_modules.interface_washer_outer_diameter_mm must be > interface_bolt_diameter_mm")
-    if end_modules.interface_nut_thickness_mm >= end_modules.interface_bolt_length_mm:
-        raise ValueError("geometry.chamber.end_modules.interface_nut_thickness_mm must be < interface_bolt_length_mm")
-    if end_modules.interface_washer_thickness_mm >= end_modules.interface_bolt_length_mm:
-        raise ValueError("geometry.chamber.end_modules.interface_washer_thickness_mm must be < interface_bolt_length_mm")
-    if end_modules.interface_washer_outer_diameter_mm >= end_modules.module_outer_diameter_mm:
-        raise ValueError("geometry.chamber.end_modules.interface_washer_outer_diameter_mm must be < module_outer_diameter_mm")
     if abs(los_channels.channel_start_z_mm) >= 0.5 * core.size_z_mm:
         raise ValueError("geometry.chamber.los_channels.channel_start_z_mm must lie inside chamber z-span")
     if los_channels.channel_diameter_mm >= min(core.size_x_mm, core.size_y_mm):
@@ -560,6 +709,8 @@ def _parse_chamber(raw: dict[str, Any]) -> ChamberConfig:
 def _parse_port(raw: dict[str, Any], field_prefix: str) -> PortConfig:
     cfg = PortConfig(
         side=_to_str(raw.get("side"), f"{field_prefix}.side").lower(),
+        center_x_mm=_to_float(raw.get("center_x_mm", 0.0), f"{field_prefix}.center_x_mm"),
+        center_y_mm=_to_float(raw.get("center_y_mm", 0.0), f"{field_prefix}.center_y_mm"),
         center_z_mm=_to_float(raw.get("center_z_mm"), f"{field_prefix}.center_z_mm"),
         inner_diameter_mm=_to_float(raw.get("inner_diameter_mm"), f"{field_prefix}.inner_diameter_mm"),
         outer_diameter_mm=_to_float(raw.get("outer_diameter_mm"), f"{field_prefix}.outer_diameter_mm"),
@@ -616,6 +767,7 @@ def _parse_plate(raw: dict[str, Any], prefix: str) -> PlateConfig:
         orientation=_to_str(raw.get("orientation"), f"{prefix}.orientation").lower(),
         mount_plane=_to_str(raw.get("mount_plane"), f"{prefix}.mount_plane").lower(),
         offset_mode=_to_str(raw.get("offset_mode", "manual"), f"{prefix}.offset_mode").lower(),
+        opening_style=_to_str(raw.get("opening_style", "annular_sector"), f"{prefix}.opening_style").lower(),
         z_mm=_to_float(raw.get("z_mm"), f"{prefix}.z_mm"),
         offset_x_mm=_to_float(raw.get("offset_x_mm"), f"{prefix}.offset_x_mm"),
         offset_y_mm=_to_float(raw.get("offset_y_mm"), f"{prefix}.offset_y_mm"),
@@ -673,6 +825,10 @@ def _parse_plate(raw: dict[str, Any], prefix: str) -> PlateConfig:
     if cfg.offset_mode not in _ALLOWED_PLATE_OFFSET_MODES:
         raise ValueError(
             f"{prefix}.offset_mode must be one of {sorted(_ALLOWED_PLATE_OFFSET_MODES)}, got {cfg.offset_mode!r}"
+        )
+    if cfg.opening_style not in _ALLOWED_PLATE_OPENING_STYLES:
+        raise ValueError(
+            f"{prefix}.opening_style must be one of {sorted(_ALLOWED_PLATE_OPENING_STYLES)}, got {cfg.opening_style!r}"
         )
     if cfg.bolt_hole_count < 2:
         raise ValueError(f"{prefix}.bolt_hole_count must be >= 2 for load-bearing connection")
@@ -826,116 +982,73 @@ def _parse_detector(raw: dict[str, Any]) -> DetectorConfig:
     return DetectorConfig(clamp=clamp, adapter_block=adapter)
 
 
-def _parse_target(raw: dict[str, Any]) -> TargetConfig:
-    ladder_raw = _to_mapping(raw.get("ladder"), "geometry.target.ladder")
-    holder_raw = _to_mapping(raw.get("holder"), "geometry.target.holder")
-
+def _parse_target_ladder(raw: dict[str, Any]) -> TargetLadderConfig:
     ladder = TargetLadderConfig(
         carriage_thickness_mm=_to_float(
-            ladder_raw.get("carriage_thickness_mm"),
+            raw.get("carriage_thickness_mm"),
             "geometry.target.ladder.carriage_thickness_mm",
         ),
-        carriage_width_mm=_to_float(ladder_raw.get("carriage_width_mm"), "geometry.target.ladder.carriage_width_mm"),
+        carriage_width_mm=_to_float(raw.get("carriage_width_mm"), "geometry.target.ladder.carriage_width_mm"),
         carriage_height_mm=_to_float(
-            ladder_raw.get("carriage_height_mm"),
+            raw.get("carriage_height_mm"),
             "geometry.target.ladder.carriage_height_mm",
         ),
-        slot_pitch_mm=_to_float(ladder_raw.get("slot_pitch_mm"), "geometry.target.ladder.slot_pitch_mm"),
+        slot_pitch_mm=_to_float(raw.get("slot_pitch_mm"), "geometry.target.ladder.slot_pitch_mm"),
         slot_window_diameter_mm=_to_float(
-            ladder_raw.get("slot_window_diameter_mm"),
+            raw.get("slot_window_diameter_mm"),
             "geometry.target.ladder.slot_window_diameter_mm",
         ),
-        rail_diameter_mm=_to_float(ladder_raw.get("rail_diameter_mm"), "geometry.target.ladder.rail_diameter_mm"),
-        rail_span_mm=_to_float(ladder_raw.get("rail_span_mm"), "geometry.target.ladder.rail_span_mm"),
+        rail_diameter_mm=_to_float(raw.get("rail_diameter_mm"), "geometry.target.ladder.rail_diameter_mm"),
+        rail_span_mm=_to_float(raw.get("rail_span_mm"), "geometry.target.ladder.rail_span_mm"),
         feedthrough_shaft_diameter_mm=_to_float(
-            ladder_raw.get("feedthrough_shaft_diameter_mm"),
+            raw.get("feedthrough_shaft_diameter_mm"),
             "geometry.target.ladder.feedthrough_shaft_diameter_mm",
         ),
         feedthrough_length_mm=_to_float(
-            ladder_raw.get("feedthrough_length_mm"),
+            raw.get("feedthrough_length_mm"),
             "geometry.target.ladder.feedthrough_length_mm",
         ),
         handwheel_diameter_mm=_to_float(
-            ladder_raw.get("handwheel_diameter_mm"),
+            raw.get("handwheel_diameter_mm"),
             "geometry.target.ladder.handwheel_diameter_mm",
         ),
         motor_mount_width_mm=_to_float(
-            ladder_raw.get("motor_mount_width_mm"),
+            raw.get("motor_mount_width_mm"),
             "geometry.target.ladder.motor_mount_width_mm",
         ),
         motor_mount_height_mm=_to_float(
-            ladder_raw.get("motor_mount_height_mm"),
+            raw.get("motor_mount_height_mm"),
             "geometry.target.ladder.motor_mount_height_mm",
         ),
         motor_mount_thickness_mm=_to_float(
-            ladder_raw.get("motor_mount_thickness_mm"),
+            raw.get("motor_mount_thickness_mm"),
             "geometry.target.ladder.motor_mount_thickness_mm",
         ),
         hard_stop_span_mm=_to_float(
-            ladder_raw.get("hard_stop_span_mm"),
+            raw.get("hard_stop_span_mm"),
             "geometry.target.ladder.hard_stop_span_mm",
         ),
         hard_stop_thickness_mm=_to_float(
-            ladder_raw.get("hard_stop_thickness_mm"),
+            raw.get("hard_stop_thickness_mm"),
             "geometry.target.ladder.hard_stop_thickness_mm",
         ),
         index_disk_diameter_mm=_to_float(
-            ladder_raw.get("index_disk_diameter_mm"),
+            raw.get("index_disk_diameter_mm"),
             "geometry.target.ladder.index_disk_diameter_mm",
         ),
         index_disk_thickness_mm=_to_float(
-            ladder_raw.get("index_disk_thickness_mm"),
+            raw.get("index_disk_thickness_mm"),
             "geometry.target.ladder.index_disk_thickness_mm",
         ),
         index_pin_diameter_mm=_to_float(
-            ladder_raw.get("index_pin_diameter_mm"),
+            raw.get("index_pin_diameter_mm"),
             "geometry.target.ladder.index_pin_diameter_mm",
         ),
         index_pin_length_mm=_to_float(
-            ladder_raw.get("index_pin_length_mm"),
+            raw.get("index_pin_length_mm"),
             "geometry.target.ladder.index_pin_length_mm",
         ),
-        active_index=_to_int(ladder_raw.get("active_index"), "geometry.target.ladder.active_index"),
-    )
-
-    holder = TargetHolderConfig(
-        frame_outer_width_mm=_to_float(
-            holder_raw.get("frame_outer_width_mm"),
-            "geometry.target.holder.frame_outer_width_mm",
-        ),
-        frame_outer_height_mm=_to_float(
-            holder_raw.get("frame_outer_height_mm"),
-            "geometry.target.holder.frame_outer_height_mm",
-        ),
-        frame_thickness_mm=_to_float(holder_raw.get("frame_thickness_mm"), "geometry.target.holder.frame_thickness_mm"),
-        clamp_block_width_mm=_to_float(
-            holder_raw.get("clamp_block_width_mm"),
-            "geometry.target.holder.clamp_block_width_mm",
-        ),
-        clamp_block_height_mm=_to_float(
-            holder_raw.get("clamp_block_height_mm"),
-            "geometry.target.holder.clamp_block_height_mm",
-        ),
-        clamp_screw_diameter_mm=_to_float(
-            holder_raw.get("clamp_screw_diameter_mm"),
-            "geometry.target.holder.clamp_screw_diameter_mm",
-        ),
-        clamp_screw_head_diameter_mm=_to_float(
-            holder_raw.get("clamp_screw_head_diameter_mm"),
-            "geometry.target.holder.clamp_screw_head_diameter_mm",
-        ),
-        clamp_screw_head_height_mm=_to_float(
-            holder_raw.get("clamp_screw_head_height_mm"),
-            "geometry.target.holder.clamp_screw_head_height_mm",
-        ),
-        experiment_target_thickness_mm=_to_float(
-            holder_raw.get("experiment_target_thickness_mm"),
-            "geometry.target.holder.experiment_target_thickness_mm",
-        ),
-        fluorescence_target_thickness_mm=_to_float(
-            holder_raw.get("fluorescence_target_thickness_mm"),
-            "geometry.target.holder.fluorescence_target_thickness_mm",
-        ),
+        active_index=_to_int(raw.get("active_index"), "geometry.target.ladder.active_index"),
     )
 
     _require_positive(
@@ -959,6 +1072,62 @@ def _parse_target(raw: dict[str, Any]) -> TargetConfig:
             "geometry.target.ladder.index_disk_thickness_mm": ladder.index_disk_thickness_mm,
             "geometry.target.ladder.index_pin_diameter_mm": ladder.index_pin_diameter_mm,
             "geometry.target.ladder.index_pin_length_mm": ladder.index_pin_length_mm,
+        }
+    )
+
+    if ladder.active_index not in {0, 1, 2}:
+        raise ValueError("geometry.target.ladder.active_index must be 0, 1, or 2 for 3-position ladder")
+    if ladder.index_pin_diameter_mm >= ladder.index_disk_diameter_mm:
+        raise ValueError("geometry.target.ladder.index_pin_diameter_mm must be < index_disk_diameter_mm")
+    if ladder.hard_stop_span_mm >= ladder.handwheel_diameter_mm:
+        raise ValueError("geometry.target.ladder.hard_stop_span_mm must be < handwheel_diameter_mm")
+
+    return ladder
+
+
+def _parse_target_holder(raw: dict[str, Any]) -> TargetHolderConfig:
+    holder = TargetHolderConfig(
+        frame_outer_width_mm=_to_float(
+            raw.get("frame_outer_width_mm"),
+            "geometry.target.holder.frame_outer_width_mm",
+        ),
+        frame_outer_height_mm=_to_float(
+            raw.get("frame_outer_height_mm"),
+            "geometry.target.holder.frame_outer_height_mm",
+        ),
+        frame_thickness_mm=_to_float(raw.get("frame_thickness_mm"), "geometry.target.holder.frame_thickness_mm"),
+        clamp_block_width_mm=_to_float(
+            raw.get("clamp_block_width_mm"),
+            "geometry.target.holder.clamp_block_width_mm",
+        ),
+        clamp_block_height_mm=_to_float(
+            raw.get("clamp_block_height_mm"),
+            "geometry.target.holder.clamp_block_height_mm",
+        ),
+        clamp_screw_diameter_mm=_to_float(
+            raw.get("clamp_screw_diameter_mm"),
+            "geometry.target.holder.clamp_screw_diameter_mm",
+        ),
+        clamp_screw_head_diameter_mm=_to_float(
+            raw.get("clamp_screw_head_diameter_mm"),
+            "geometry.target.holder.clamp_screw_head_diameter_mm",
+        ),
+        clamp_screw_head_height_mm=_to_float(
+            raw.get("clamp_screw_head_height_mm"),
+            "geometry.target.holder.clamp_screw_head_height_mm",
+        ),
+        experiment_target_thickness_mm=_to_float(
+            raw.get("experiment_target_thickness_mm"),
+            "geometry.target.holder.experiment_target_thickness_mm",
+        ),
+        fluorescence_target_thickness_mm=_to_float(
+            raw.get("fluorescence_target_thickness_mm"),
+            "geometry.target.holder.fluorescence_target_thickness_mm",
+        ),
+    )
+
+    _require_positive(
+        {
             "geometry.target.holder.frame_outer_width_mm": holder.frame_outer_width_mm,
             "geometry.target.holder.frame_outer_height_mm": holder.frame_outer_height_mm,
             "geometry.target.holder.frame_thickness_mm": holder.frame_thickness_mm,
@@ -972,12 +1141,6 @@ def _parse_target(raw: dict[str, Any]) -> TargetConfig:
         }
     )
 
-    if ladder.active_index not in {0, 1, 2}:
-        raise ValueError("geometry.target.ladder.active_index must be 0, 1, or 2 for 3-position ladder")
-    if ladder.index_pin_diameter_mm >= ladder.index_disk_diameter_mm:
-        raise ValueError("geometry.target.ladder.index_pin_diameter_mm must be < index_disk_diameter_mm")
-    if ladder.hard_stop_span_mm >= ladder.handwheel_diameter_mm:
-        raise ValueError("geometry.target.ladder.hard_stop_span_mm must be < handwheel_diameter_mm")
     if holder.clamp_screw_diameter_mm >= min(holder.clamp_block_width_mm, holder.clamp_block_height_mm):
         raise ValueError("geometry.target.holder.clamp_screw_diameter_mm must be < min(clamp_block_width_mm, clamp_block_height_mm)")
     if holder.clamp_screw_head_diameter_mm > holder.clamp_block_width_mm:
@@ -985,11 +1148,198 @@ def _parse_target(raw: dict[str, Any]) -> TargetConfig:
     if holder.clamp_screw_head_height_mm >= holder.frame_thickness_mm:
         raise ValueError("geometry.target.holder.clamp_screw_head_height_mm must be < frame_thickness_mm")
 
-    return TargetConfig(ladder=ladder, holder=holder)
+    return holder
+
+
+def _parse_target_rotary(raw: dict[str, Any]) -> TargetRotaryConfig:
+    rotary = TargetRotaryConfig(
+        pivot_x_mm=_to_float(raw.get("pivot_x_mm"), "geometry.target.rotary.pivot_x_mm"),
+        work_angle_deg=_to_float(raw.get("work_angle_deg", 0.0), "geometry.target.rotary.work_angle_deg"),
+        park_angle_deg=_to_float(raw.get("park_angle_deg"), "geometry.target.rotary.park_angle_deg"),
+        active_angle_deg=_to_float(raw.get("active_angle_deg", 0.0), "geometry.target.rotary.active_angle_deg"),
+        feedthrough_shaft_diameter_mm=_to_float(
+            raw.get("feedthrough_shaft_diameter_mm"),
+            "geometry.target.rotary.feedthrough_shaft_diameter_mm",
+        ),
+        feedthrough_length_mm=_to_float(
+            raw.get("feedthrough_length_mm"),
+            "geometry.target.rotary.feedthrough_length_mm",
+        ),
+        handwheel_diameter_mm=_to_float(
+            raw.get("handwheel_diameter_mm"),
+            "geometry.target.rotary.handwheel_diameter_mm",
+        ),
+        motor_mount_width_mm=_to_float(
+            raw.get("motor_mount_width_mm"),
+            "geometry.target.rotary.motor_mount_width_mm",
+        ),
+        motor_mount_height_mm=_to_float(
+            raw.get("motor_mount_height_mm"),
+            "geometry.target.rotary.motor_mount_height_mm",
+        ),
+        motor_mount_thickness_mm=_to_float(
+            raw.get("motor_mount_thickness_mm"),
+            "geometry.target.rotary.motor_mount_thickness_mm",
+        ),
+        hub_diameter_mm=_to_float(raw.get("hub_diameter_mm"), "geometry.target.rotary.hub_diameter_mm"),
+        hub_thickness_mm=_to_float(raw.get("hub_thickness_mm"), "geometry.target.rotary.hub_thickness_mm"),
+        arm_length_mm=_to_float(raw.get("arm_length_mm"), "geometry.target.rotary.arm_length_mm"),
+        arm_width_mm=_to_float(raw.get("arm_width_mm"), "geometry.target.rotary.arm_width_mm"),
+        arm_thickness_mm=_to_float(raw.get("arm_thickness_mm"), "geometry.target.rotary.arm_thickness_mm"),
+        hard_stop_span_mm=_to_float(raw.get("hard_stop_span_mm"), "geometry.target.rotary.hard_stop_span_mm"),
+        hard_stop_thickness_mm=_to_float(
+            raw.get("hard_stop_thickness_mm"),
+            "geometry.target.rotary.hard_stop_thickness_mm",
+        ),
+        index_disk_diameter_mm=_to_float(
+            raw.get("index_disk_diameter_mm"),
+            "geometry.target.rotary.index_disk_diameter_mm",
+        ),
+        index_disk_thickness_mm=_to_float(
+            raw.get("index_disk_thickness_mm"),
+            "geometry.target.rotary.index_disk_thickness_mm",
+        ),
+        index_pin_diameter_mm=_to_float(
+            raw.get("index_pin_diameter_mm"),
+            "geometry.target.rotary.index_pin_diameter_mm",
+        ),
+        index_pin_length_mm=_to_float(
+            raw.get("index_pin_length_mm"),
+            "geometry.target.rotary.index_pin_length_mm",
+        ),
+    )
+
+    _require_positive(
+        {
+            "geometry.target.rotary.pivot_x_mm": rotary.pivot_x_mm,
+            "geometry.target.rotary.feedthrough_shaft_diameter_mm": rotary.feedthrough_shaft_diameter_mm,
+            "geometry.target.rotary.feedthrough_length_mm": rotary.feedthrough_length_mm,
+            "geometry.target.rotary.handwheel_diameter_mm": rotary.handwheel_diameter_mm,
+            "geometry.target.rotary.motor_mount_width_mm": rotary.motor_mount_width_mm,
+            "geometry.target.rotary.motor_mount_height_mm": rotary.motor_mount_height_mm,
+            "geometry.target.rotary.motor_mount_thickness_mm": rotary.motor_mount_thickness_mm,
+            "geometry.target.rotary.hub_diameter_mm": rotary.hub_diameter_mm,
+            "geometry.target.rotary.hub_thickness_mm": rotary.hub_thickness_mm,
+            "geometry.target.rotary.arm_length_mm": rotary.arm_length_mm,
+            "geometry.target.rotary.arm_width_mm": rotary.arm_width_mm,
+            "geometry.target.rotary.arm_thickness_mm": rotary.arm_thickness_mm,
+            "geometry.target.rotary.hard_stop_span_mm": rotary.hard_stop_span_mm,
+            "geometry.target.rotary.hard_stop_thickness_mm": rotary.hard_stop_thickness_mm,
+            "geometry.target.rotary.index_disk_diameter_mm": rotary.index_disk_diameter_mm,
+            "geometry.target.rotary.index_disk_thickness_mm": rotary.index_disk_thickness_mm,
+            "geometry.target.rotary.index_pin_diameter_mm": rotary.index_pin_diameter_mm,
+            "geometry.target.rotary.index_pin_length_mm": rotary.index_pin_length_mm,
+        }
+    )
+
+    if abs(rotary.work_angle_deg) > 1e-9:
+        raise ValueError("geometry.target.rotary.work_angle_deg must be 0 deg for the frozen single-rotary work pose")
+    if rotary.park_angle_deg <= 0.0 or rotary.park_angle_deg >= 180.0:
+        raise ValueError("geometry.target.rotary.park_angle_deg must lie in (0, 180)")
+    if rotary.active_angle_deg < rotary.work_angle_deg or rotary.active_angle_deg > rotary.park_angle_deg:
+        raise ValueError("geometry.target.rotary.active_angle_deg must lie within [work_angle_deg, park_angle_deg]")
+    if rotary.index_pin_diameter_mm >= rotary.index_disk_diameter_mm:
+        raise ValueError("geometry.target.rotary.index_pin_diameter_mm must be < index_disk_diameter_mm")
+    if rotary.hard_stop_span_mm >= rotary.handwheel_diameter_mm:
+        raise ValueError("geometry.target.rotary.hard_stop_span_mm must be < handwheel_diameter_mm")
+
+    return rotary
+
+
+def _parse_single_target_holder(raw: dict[str, Any]) -> SingleTargetHolderConfig:
+    holder = SingleTargetHolderConfig(
+        frame_outer_width_mm=_to_float(
+            raw.get("frame_outer_width_mm"),
+            "geometry.target.single_holder.frame_outer_width_mm",
+        ),
+        frame_outer_height_mm=_to_float(
+            raw.get("frame_outer_height_mm"),
+            "geometry.target.single_holder.frame_outer_height_mm",
+        ),
+        frame_thickness_mm=_to_float(
+            raw.get("frame_thickness_mm"),
+            "geometry.target.single_holder.frame_thickness_mm",
+        ),
+        clamp_block_width_mm=_to_float(
+            raw.get("clamp_block_width_mm"),
+            "geometry.target.single_holder.clamp_block_width_mm",
+        ),
+        clamp_block_height_mm=_to_float(
+            raw.get("clamp_block_height_mm"),
+            "geometry.target.single_holder.clamp_block_height_mm",
+        ),
+        clamp_screw_diameter_mm=_to_float(
+            raw.get("clamp_screw_diameter_mm"),
+            "geometry.target.single_holder.clamp_screw_diameter_mm",
+        ),
+        clamp_screw_head_diameter_mm=_to_float(
+            raw.get("clamp_screw_head_diameter_mm"),
+            "geometry.target.single_holder.clamp_screw_head_diameter_mm",
+        ),
+        clamp_screw_head_height_mm=_to_float(
+            raw.get("clamp_screw_head_height_mm"),
+            "geometry.target.single_holder.clamp_screw_head_height_mm",
+        ),
+        target_thickness_mm=_to_float(
+            raw.get("target_thickness_mm"),
+            "geometry.target.single_holder.target_thickness_mm",
+        ),
+    )
+
+    _require_positive(
+        {
+            "geometry.target.single_holder.frame_outer_width_mm": holder.frame_outer_width_mm,
+            "geometry.target.single_holder.frame_outer_height_mm": holder.frame_outer_height_mm,
+            "geometry.target.single_holder.frame_thickness_mm": holder.frame_thickness_mm,
+            "geometry.target.single_holder.clamp_block_width_mm": holder.clamp_block_width_mm,
+            "geometry.target.single_holder.clamp_block_height_mm": holder.clamp_block_height_mm,
+            "geometry.target.single_holder.clamp_screw_diameter_mm": holder.clamp_screw_diameter_mm,
+            "geometry.target.single_holder.clamp_screw_head_diameter_mm": holder.clamp_screw_head_diameter_mm,
+            "geometry.target.single_holder.clamp_screw_head_height_mm": holder.clamp_screw_head_height_mm,
+            "geometry.target.single_holder.target_thickness_mm": holder.target_thickness_mm,
+        }
+    )
+
+    if holder.clamp_screw_diameter_mm >= min(holder.clamp_block_width_mm, holder.clamp_block_height_mm):
+        raise ValueError("geometry.target.single_holder.clamp_screw_diameter_mm must be < min(clamp_block_width_mm, clamp_block_height_mm)")
+    if holder.clamp_screw_head_diameter_mm > holder.clamp_block_width_mm:
+        raise ValueError("geometry.target.single_holder.clamp_screw_head_diameter_mm must be <= clamp_block_width_mm")
+    if holder.clamp_screw_head_height_mm >= holder.frame_thickness_mm:
+        raise ValueError("geometry.target.single_holder.clamp_screw_head_height_mm must be < frame_thickness_mm")
+
+    return holder
+
+
+def _parse_target(raw: dict[str, Any]) -> TargetConfig:
+    mode = _to_str(raw.get("mode", "linear_ladder"), "geometry.target.mode").lower()
+    if mode not in _ALLOWED_TARGET_MODES:
+        raise ValueError(f"geometry.target.mode must be one of {sorted(_ALLOWED_TARGET_MODES)}, got {mode!r}")
+
+    if mode == "linear_ladder":
+        ladder_raw = _to_mapping(raw.get("ladder"), "geometry.target.ladder")
+        holder_raw = _to_mapping(raw.get("holder"), "geometry.target.holder")
+        return TargetConfig(
+            mode=mode,
+            ladder=_parse_target_ladder(ladder_raw),
+            holder=_parse_target_holder(holder_raw),
+            rotary=None,
+            single_holder=None,
+        )
+
+    rotary_raw = _to_mapping(raw.get("rotary"), "geometry.target.rotary")
+    single_holder_raw = _to_mapping(raw.get("single_holder"), "geometry.target.single_holder")
+    return TargetConfig(
+        mode=mode,
+        ladder=None,
+        holder=None,
+        rotary=_parse_target_rotary(rotary_raw),
+        single_holder=_parse_single_target_holder(single_holder_raw),
+    )
 
 
 def _parse_stand(raw: dict[str, Any]) -> StandConfig:
     cfg = StandConfig(
+        with_base_plate=_to_bool(raw.get("with_base_plate", True), "geometry.stand.with_base_plate"),
         base_length_mm=_to_float(raw.get("base_length_mm"), "geometry.stand.base_length_mm"),
         base_width_mm=_to_float(raw.get("base_width_mm"), "geometry.stand.base_width_mm"),
         base_thickness_mm=_to_float(raw.get("base_thickness_mm"), "geometry.stand.base_thickness_mm"),
@@ -1037,11 +1387,16 @@ def _parse_stand(raw: dict[str, Any]) -> StandConfig:
         "geometry.stand.base_thickness_mm": cfg.base_thickness_mm,
         "geometry.stand.chamber_support_height_mm": cfg.chamber_support_height_mm,
         "geometry.stand.support_foot_diameter_mm": cfg.support_foot_diameter_mm,
-        "geometry.stand.anchor_slot_length_mm": cfg.anchor_slot_length_mm,
-        "geometry.stand.anchor_slot_width_mm": cfg.anchor_slot_width_mm,
         "geometry.stand.leveling_screw_diameter_mm": cfg.leveling_screw_diameter_mm,
         "geometry.stand.shim_thickness_mm": cfg.shim_thickness_mm,
     }
+    if cfg.with_base_plate:
+        positive_fields.update(
+            {
+                "geometry.stand.anchor_slot_length_mm": cfg.anchor_slot_length_mm,
+                "geometry.stand.anchor_slot_width_mm": cfg.anchor_slot_width_mm,
+            }
+        )
     if cfg.enable_plate_ties:
         positive_fields.update(
             {
@@ -1249,6 +1604,19 @@ def _validate_geometry(cfg: GeometryConfig) -> None:
     ):
         if abs(port.center_z_mm) >= 0.5 * core.size_z_mm:
             raise ValueError(f"geometry.ports.{name}.center_z_mm must lie on chamber side wall span")
+        port_radius = 0.5 * port.outer_diameter_mm
+        if port.side in {"right", "left"}:
+            if abs(port.center_x_mm) > 1e-9:
+                raise ValueError(f"geometry.ports.{name}.center_x_mm must be 0 for {port.side} wall ports")
+            if abs(port.center_y_mm) + port_radius >= half_y:
+                raise ValueError(f"geometry.ports.{name}.center_y_mm places the port footprint outside chamber wall span")
+        else:
+            if abs(port.center_y_mm) > 1e-9:
+                raise ValueError(f"geometry.ports.{name}.center_y_mm must be 0 for {port.side} wall ports")
+            if abs(port.center_x_mm) + port_radius >= half_x:
+                raise ValueError(f"geometry.ports.{name}.center_x_mm places the port footprint outside chamber wall span")
+        if abs(port.center_z_mm) + port_radius >= half_z:
+            raise ValueError(f"geometry.ports.{name}.center_z_mm places the port footprint outside chamber wall span")
 
     clamp = cfg.detector.clamp
     if clamp.anti_rotation_key_width_mm >= clamp.inner_diameter_mm:
@@ -1256,11 +1624,19 @@ def _validate_geometry(cfg: GeometryConfig) -> None:
     if clamp.clamp_ear_width_mm <= clamp.clamp_bolt_diameter_mm:
         raise ValueError("geometry.detector.clamp.clamp_ear_width_mm must be > clamp_bolt_diameter_mm")
 
-    end_modules = cfg.chamber.end_modules
-    if end_modules.oring_groove_width_mm >= (end_modules.module_outer_diameter_mm - end_modules.module_inner_diameter_mm):
-        raise ValueError("geometry.chamber.end_modules.oring_groove_width_mm is too large for flange annulus")
-    if end_modules.interface_nut_outer_diameter_mm > end_modules.bolt_circle_diameter_mm:
-        raise ValueError("geometry.chamber.end_modules.interface_nut_outer_diameter_mm must be <= bolt_circle_diameter_mm")
+    for side_name, module in (("front", cfg.chamber.end_modules.front), ("rear", cfg.chamber.end_modules.rear)):
+        if _end_module_has_groove(module):
+            flange_annulus = module.module_outer_diameter_mm - module.module_inner_diameter_mm
+            groove_span = module.oring_groove_outer_diameter_mm - module.oring_groove_inner_diameter_mm
+            if groove_span >= flange_annulus:
+                raise ValueError(
+                    f"geometry.chamber.end_modules.{side_name}.oring_groove_outer_diameter_mm - "
+                    f"geometry.chamber.end_modules.{side_name}.oring_groove_inner_diameter_mm is too large for flange annulus"
+                )
+        if module.interface_nut_outer_diameter_mm > module.bolt_circle_diameter_mm:
+            raise ValueError(
+                f"geometry.chamber.end_modules.{side_name}.interface_nut_outer_diameter_mm must be <= bolt_circle_diameter_mm"
+            )
 
     stand = cfg.stand
     if stand.enable_plate_ties:
@@ -1282,6 +1658,16 @@ def _validate_geometry(cfg: GeometryConfig) -> None:
 
     if cfg.clearance.los_scope == "v2_fullpath" and not cfg.chamber.los_channels.enabled:
         raise ValueError("geometry.chamber.los_channels.enabled must be true when geometry.clearance.los_scope=v2_fullpath")
+
+    if cfg.target.mode == "single_rotary":
+        rotary = cfg.target.rotary
+        holder = cfg.target.single_holder
+        if rotary is None or holder is None:
+            raise ValueError("geometry.target.single_rotary mode requires rotary and single_holder sections")
+        if rotary.pivot_x_mm >= half_x:
+            raise ValueError("geometry.target.rotary.pivot_x_mm must lie inside the chamber transverse span")
+        if rotary.arm_length_mm != rotary.pivot_x_mm:
+            raise ValueError("geometry.target.rotary.arm_length_mm must equal pivot_x_mm so the work pose centers the target on beam")
 
 
 def _parse_layout(raw: dict[str, Any]) -> LayoutConfig:

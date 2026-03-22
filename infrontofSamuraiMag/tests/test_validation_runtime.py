@@ -31,9 +31,18 @@ def test_default_runtime_validation_passes_strict_gate() -> None:
     report = validate_constraints(placements, cfg.geometry, ValidationThresholds())
 
     assert report.status == "pass"
+    end_module_standard = _check_by_name(report, "chamber", "end_module_standard")
+    assert end_module_standard.passed
+    assert "front=VG150" in end_module_standard.detail
+    assert "rear=VF80" in end_module_standard.detail
+    assert _check_by_name(report, "chamber", "end_module_type_semantics").passed
     assert _check_by_name(report, "chamber", "end_module_fastener_hardware").passed
     assert _check_by_name(report, "chamber", "vacuum_boundary_complete").passed
+    assert _check_by_name(report, "chamber", "channel_first_exit_face_by_sector").passed
     assert _check_by_name(report, "plates", "los_unobstructed_margin_5mm").passed
+    opening = _check_by_name(report, "plates", "plate_opening_geometry_valid")
+    assert opening.passed
+    assert "style=los_tube" in opening.detail
     plate_pose = _check_by_name(report, "plates", "plate_pose_valid_hvv")
     assert plate_pose.passed
     assert "h=horizontal/xz" in plate_pose.detail
@@ -43,9 +52,10 @@ def test_default_runtime_validation_passes_strict_gate() -> None:
     assert _check_by_name(report, "plates", "vv_clear_gap_vs_detector_outer_diameter").passed
     assert _check_by_name(report, "plates", "no_plate_chamber_overlap_after_cutout").passed
     assert _check_by_name(report, "plates", "all_plate_solids_outside_chamber").passed
+    assert _check_by_name(report, "plates", "single_continuous_plate_solids").passed
     los_scope = _check_by_name(report, "plates", "los_all_occluders_clear")
     assert los_scope.passed
-    assert "scope=v1_conceptual" in los_scope.detail
+    assert "scope=v2_fullpath" in los_scope.detail
     plate_tie_check = _check_by_name(report, "plates", "plate_to_stand_tie_hardware")
     assert plate_tie_check.passed
     assert "mode=disabled" in plate_tie_check.detail
@@ -59,13 +69,30 @@ def test_default_runtime_validation_passes_strict_gate() -> None:
     assert _check_by_name(report, "detector", "detector_mount_sector_plate_assignment").passed
     assert _check_by_name(report, "detector", "detector_mount_bridge_length_within_limit").passed
     assert _check_by_name(report, "detector", "no_detector_package_interference_with_assembly").passed
-    assert _check_by_name(report, "target", "removable_holder_dual_screw_clamp").passed
+    assert _check_by_name(report, "target", "single_rotary_target_mode").passed
+    assert _check_by_name(report, "target", "single_target_holder_dual_screw_clamp").passed
+    assert _check_by_name(report, "target", "park_position_clears_beam_axis").passed
     stand_tie_check = _check_by_name(report, "stand", "plate_tie_parameterized")
     assert stand_tie_check.passed
     assert "mode=disabled" in stand_tie_check.detail
+    stand_anchor = _check_by_name(report, "stand", "anchor_slots_and_leveling")
+    assert stand_anchor.passed
+    assert "base_plate=disabled" in stand_anchor.detail
 
 
-def test_h_plate_projection_envelope_too_small_is_caught() -> None:
+def test_default_runtime_stand_omits_monolithic_base_plate() -> None:
+    pytest.importorskip("FreeCAD")
+
+    from ifsm.components import build_stand
+    from ifsm.config import load_build_config
+
+    cfg = load_build_config(ROOT / "config" / "default_infront.yaml")
+    stand_parts = build_stand(cfg.geometry)
+
+    assert "StandBasePlate" not in stand_parts
+
+
+def test_legacy_annular_sector_plate_envelope_too_small_is_caught() -> None:
     pytest.importorskip("FreeCAD")
 
     from ifsm.config import load_build_config
@@ -73,7 +100,7 @@ def test_h_plate_projection_envelope_too_small_is_caught() -> None:
     from ifsm.validation import ValidationThresholds, validate_constraints
 
     cfg = load_build_config(
-        ROOT / "config" / "default_infront.yaml",
+        ROOT / "config" / "profiles" / "legacy_center_preview_locked.yaml",
         overrides=["geometry.plate.h.width_mm=200.0"],
     )
     placements = build_detector_placements(cfg.layout)
