@@ -274,3 +274,311 @@ Entry Template:
 - State Snapshot: run_id=`20260322T171959Z-7`, run.status=`skipped`, validation.status=`pass`, strict=`true`.
 - Artifacts: FCStd `sha256=b7f2d710...`, STEP `sha256=f84bd5d9...`, report `sha256=fa7f7c52...`.
 - Next Action: deliver the updated three-plate layout and review the resulting H relief-window aesthetics with the user.
+
+- Timestamp UTC: 2026-03-26T06:18:28Z
+- Timestamp Local: 2026-03-26 15:18:28 JST
+- Intent: Validate the requested chamber-interface swap and z-axis extension against the strict stateful gate before exporting new artifacts.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: active strict profile updated to `front=VF100`, `rear=VG80`, `chamber.core.size_z_mm=1300.0`; front face stays flat (`VF`), rear face carries the O-ring groove (`VG`).
+- Validation Result: pass for all subsystems, including `end_module_standard`, `end_module_type_semantics`, `vacuum_boundary_complete`, `los_all_occluders_clear`, and `no_detector_package_interference_with_assembly`.
+- State Snapshot: run_id=`20260326T061828Z-7`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: report `sha256=3c20d74e...`.
+- Next Action: run force rebuild to materialize FCStd/STEP artifacts for the new `VF100/VG80` and `size_z_mm=1300` geometry.
+
+- Timestamp UTC: 2026-03-26T06:19:26Z
+- Timestamp Local: 2026-03-26 15:19:26 JST
+- Intent: Export FCStd/STEP artifacts for the strict-pass chamber with upstream `VF100`, downstream `VG80`, and +100 mm z length.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: same strict profile as preceding validate-only run; front interface changed to flat-face `VF100`, rear interface changed to groove-face `VG80`, chamber core length increased from `1200` to `1300 mm`; FreeCAD cache warnings did not block export completion.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260326T061926Z-7`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: FCStd `sha256=9ed945d2...`, STEP `sha256=c5f5e76f...`, report `sha256=10e345cb...`.
+- Next Action: hand off the refreshed artifact paths and validation report for visual/mechanical review.
+
+- Timestamp UTC: 2026-03-26T06:44:20Z
+- Timestamp Local: 2026-03-26 15:44:20 JST
+- Intent: Validate the requested chamber-opening semantic change from fixed LOS cylinders to target-center-to-detector-front-face cones before exporting artifacts.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: chamber and rear end module now cut by cones from `active_target_center` to detector front-face circles; this first pass also moved the v2 LOS ray start to `active_target_center` so geometry and reporting matched literally.
+- Validation Result: fail because `plates.los_all_occluders_clear` now treated `SingleTarget` and `TargetRotaryArm` as source-side blockers once the LOS ray itself originated inside target hardware.
+- State Snapshot: run_id=`20260326T064420Z-7`, run.status=`fail`, validation.status=`fail`, strict=`true`.
+- Artifacts: report `sha256=525a1fb0...`.
+- Next Action: keep the conical chamber cuts but revert LOS ray/report start to the existing `source_plane` semantics so strict gate still tests downstream occluders rather than source-internal target hardware.
+
+- Timestamp UTC: 2026-03-26T06:46:04Z
+- Timestamp Local: 2026-03-26 15:46:04 JST
+- Intent: Re-check the conical chamber-opening geometry after restoring the pre-existing v2 LOS ray start semantics.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: chamber/rear-end-module cuts remain target-center-to-detector-front-face cones; LOS detail string now advertises `chamber_opening=cone_to_detector_front_face_circle` while the actual occluder ray starts from the prior `source_plane`.
+- Validation Result: pass for all subsystems, including `vacuum_boundary_complete`, `channel_first_exit_face_by_sector`, `los_unobstructed_margin_5mm`, and `los_all_occluders_clear`.
+- State Snapshot: run_id=`20260326T064604Z-7`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: report `sha256=f18a6a50...`.
+- Next Action: run force rebuild to materialize FCStd/STEP artifacts for the new conical opening geometry.
+
+- Timestamp UTC: 2026-03-26T06:46:52Z
+- Timestamp Local: 2026-03-26 15:46:52 JST
+- Intent: Export FCStd/STEP artifacts after converting chamber side-exit openings to target-center-to-detector-front-face cones.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: same strict profile as preceding validate-only run; chamber and rear end module are rebuilt with conical side-exit cuts; FreeCAD cache warnings did not block export completion.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260326T064652Z-7`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: FCStd `sha256=4de79d3d...`, STEP `sha256=5ba103a4...`, report `sha256=213ed2ff...`.
+- Next Action: hand off the refreshed conical-opening artifacts and note the retained LOS reporting semantics.
+
+- Timestamp UTC: 2026-03-26T06:57:48Z
+- Timestamp Local: 2026-03-26 15:57:48 JST
+- Intent: Validate the requested additional +100 mm chamber extension after the conical side-exit opening update.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: active strict profile and baseline current value updated from `size_z_mm=1300.0` to `1400.0`; VF100/VG80 interfaces and target-center-to-detector-front-face conical chamber cuts unchanged.
+- Validation Result: pass for all subsystems, including `channel_first_exit_face_by_sector`, `vacuum_boundary_complete`, `los_unobstructed_margin_5mm`, and `los_all_occluders_clear`.
+- State Snapshot: run_id=`20260326T065748Z-7`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: report `sha256=59cabf3e...`.
+- Next Action: run force rebuild to materialize FCStd/STEP artifacts for the `1400 mm` chamber.
+
+- Timestamp UTC: 2026-03-26T06:58:36Z
+- Timestamp Local: 2026-03-26 15:58:36 JST
+- Intent: Export FCStd/STEP artifacts for the chamber extended to `1400 mm` along z.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: same strict profile as preceding validate-only run; chamber core length increased from `1300` to `1400 mm`; existing VF100/VG80 interfaces and conical side-exit cuts retained; FreeCAD cache warnings did not block export completion.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260326T065836Z-7`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: FCStd `sha256=1793b963...`, STEP `sha256=91983282...`, report `sha256=3458321a...`.
+- Next Action: hand off the rebuilt 1400 mm chamber artifacts for review.
+
+- Timestamp UTC: 2026-03-26T07:18:10Z
+- Timestamp Local: 2026-03-26 16:18:10 JST
+- Intent: Validate the new welded pipe-stub end-module stack and reduced chamber footprint before exporting artifacts.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: chamber core reduced to `185 x 185 x 1400 mm`; front/rear interfaces re-parameterized as `VF100` / `VG80` JIS flanges carried by welded round pipe stubs (`front=10 mm`, `rear=20 mm`); groove/seal face semantics moved to the outward equipment-side flange face; active target work center kept at `(0,0,0)`.
+- Validation Result: pass for all subsystems, including `welded_pipe_stub_to_jis_flange`, `channel_first_exit_face_by_sector`, `vacuum_boundary_complete`, `los_unobstructed_margin_5mm`, `los_all_occluders_clear`, and `park_position_clears_beam_axis`.
+- State Snapshot: run_id=`20260326T071810Z-7`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: report `sha256=88481da3...`.
+- Next Action: run force rebuild to materialize FCStd/STEP artifacts for the welded-pipe-stub flange geometry.
+
+- Timestamp UTC: 2026-03-26T07:19:03Z
+- Timestamp Local: 2026-03-26 16:19:03 JST
+- Intent: Export FCStd/STEP artifacts for the welded pipe-stub VF100/VG80 chamber geometry.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: same strict profile as preceding validate-only run; end modules rebuilt as `chamber -> pipe stub -> JIS flange` assemblies with `front pipe=10 mm` and `rear pipe=20 mm`; chamber footprint held at `185 x 185 mm`; FreeCAD cache warnings did not block export completion.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260326T071903Z-7`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: FCStd `sha256=3001c758...`, STEP `sha256=8227d300...`, report `sha256=9b87c1ad...`.
+- Next Action: hand off the rebuilt artifacts and note the new welded-pipe-stub end-module semantics.
+
+- Timestamp UTC: 2026-03-26T07:33:27Z
+- Timestamp Local: 2026-03-26 16:33:27 JST
+- Intent: Validate the requested visual rebalance where the target-left chamber span is shortened, the target-right span stays unchanged, and only the front pipe stub becomes much longer.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: chamber core uses asymmetric z placement with `size_z=1300 mm` and `center_z=50 mm`, giving chamber faces `z=[-600,+700] mm`; front `VF100` welded pipe stub increased to `100 mm`; rear `VG80` welded pipe stub held at `20 mm`; active target center kept at `(0,0,0)`.
+- Validation Result: pass for all subsystems, including `welded_pipe_stub_to_jis_flange`, `channel_first_exit_face_by_sector`, `vacuum_boundary_complete`, `los_unobstructed_margin_5mm`, `los_all_occluders_clear`, and `park_position_clears_beam_axis`.
+- State Snapshot: run_id=`20260326T073327Z-7`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: report `sha256=fa05ad39...`.
+- Next Action: run force rebuild to materialize FCStd/STEP artifacts for the asymmetric-z chamber geometry.
+
+- Timestamp UTC: 2026-03-26T07:34:20Z
+- Timestamp Local: 2026-03-26 16:34:20 JST
+- Intent: Export FCStd/STEP artifacts for the asymmetric-z chamber with a longer upstream/front welded pipe stub.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: same strict profile as preceding validate-only run; left/upstream chamber side shortened by `100 mm`, right/downstream side held fixed; front `VF100` pipe stub lengthened to `100 mm`; rear `VG80` pipe stub unchanged at `20 mm`; FreeCAD cache warnings did not block export completion.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260326T073420Z-7`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: FCStd `sha256=f8e4f730...`, STEP `sha256=cce44615...`, report `sha256=49a388c5...`.
+- Next Action: hand off the rebuilt asymmetric-z chamber artifacts for user visual inspection.
+
+- Timestamp UTC: 2026-03-26T07:53:12Z
+- Timestamp Local: 2026-03-26 16:53:12 JST
+- Intent: Validate the requested chamber-left shortening to `z=-200 mm` while keeping the right face unchanged at `z=+700 mm`.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: chamber core set to `size_z=900 mm`, `center_z=250 mm`; front `VF100` pipe stub stays long at `100 mm`; first attempt moved side-wall ports to positive z locations that fit inside the shorter shell but changed LOS environment.
+- Validation Result: fail due `plates.los_all_occluders_clear`; blockers were `GaugeSafetyPort` on `left_deuteron` and `MainPumpPort` on `right_deuteron/right_proton_large`.
+- State Snapshot: run_id=`20260326T075312Z-7`, run.status=`fail`, validation.status=`fail`, strict=`true`.
+- Artifacts: report `sha256=d32d2625...`.
+- Next Action: keep the `z=[-200,+700] mm` chamber but move the fixed side-wall ports back upstream so they clear detector LOS.
+
+- Timestamp UTC: 2026-03-26T07:54:51Z
+- Timestamp Local: 2026-03-26 16:54:51 JST
+- Intent: Re-check the `z=[-200,+700] mm` chamber after moving the side-wall ports upstream inside the shortened shell.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: chamber faces remain `z=[-200,+700] mm`; front `VF100` pipe stub remains `100 mm`; `main_pump / gauge_safety / spare` moved to `center_z=-120 / -140 / -160 mm`.
+- Validation Result: pass for all subsystems, including `welded_pipe_stub_to_jis_flange`, `channel_first_exit_face_by_sector`, `vacuum_boundary_complete`, `los_unobstructed_margin_5mm`, `los_all_occluders_clear`, and `park_position_clears_beam_axis`.
+- State Snapshot: run_id=`20260326T075451Z-7`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: report `sha256=f3a0c484...`.
+- Next Action: run force rebuild to materialize FCStd/STEP artifacts for the shorter-left-span chamber.
+
+- Timestamp UTC: 2026-03-26T07:55:41Z
+- Timestamp Local: 2026-03-26 16:55:41 JST
+- Intent: Export FCStd/STEP artifacts for the chamber with left face `z=-200 mm`, unchanged right face `z=+700 mm`, and long front `VF100` pipe stub.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: same strict profile as preceding validate-only run; front welded pipe stub `100 mm`; rear welded pipe stub `20 mm`; side-wall ports remain at `-120 / -140 / -160 mm`; FreeCAD cache warnings did not block export completion.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260326T075541Z-7`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: FCStd `sha256=70d5385e...`, STEP `sha256=2ea29dba...`, report `sha256=76f1627c...`.
+- Next Action: hand off the rebuilt artifacts for visual review of the `z=-200 mm` left chamber face.
+
+- Timestamp UTC: 2026-03-26T08:08:21Z
+- Timestamp Local: 2026-03-26 17:08:21 JST
+- Intent: Confirm the chamber/LOS geometry still passes strict validation after the FCStd export-path fix.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: target hash unchanged; export path now uses writable XDG cache/config roots and FCStd round-trip verification, but validate-only reused the existing accepted state because skip optimization is target-hash based.
+- Validation Result: skipped + pass; strict validation remained accepted and the existing report was reused unchanged.
+- State Snapshot: run_id=`20260326T080821Z-8`, run.status=`skipped`, validation.status=`pass`, strict=`true`.
+- Artifacts: report `sha256=76f1627c...`.
+- Next Action: run `--force-rebuild` so the export-path fix is applied to a freshly written FCStd artifact.
+
+- Timestamp UTC: 2026-03-26T08:08:29Z
+- Timestamp Local: 2026-03-26 17:08:29 JST
+- Intent: Rebuild FCStd/STEP artifacts after fixing the FreeCAD export environment and adding FCStd round-trip reopen validation.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: chamber remains `z=[-200,+700] mm`; front `VF100` pipe stub `100 mm`; rear `VG80` pipe stub `20 mm`; `run_infrontofSamuraiMag.sh` now writes FreeCAD cache/config under `/tmp/infrontofSamuraiMag-freecad`; `export.py` now saves STEP first, then saves FCStd and reopens it to verify every exported object reloads with a non-null shape.
+- Validation Result: pass, including successful FCStd round-trip reopen during export.
+- State Snapshot: run_id=`20260326T080829Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: FCStd `sha256=adc15199...`, STEP `sha256=b07f1958...`, report `sha256=76f1627c...`.
+- Next Action: hand off the rebuilt FCStd/STEP pair and use `--force-rebuild` for future code-only export fixes when the target hash is unchanged.
+
+- Timestamp UTC: 2026-03-26T08:16:27Z
+- Timestamp Local: 2026-03-26 17:16:27 JST
+- Intent: Rebuild FCStd/STEP after promoting FCStd export to a GUI-backed offscreen save path so desktop FreeCAD receives `GuiDocument.xml` instead of an App-only archive.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: same chamber geometry as prior accepted run; runtime now exports with `QT_QPA_PLATFORM=offscreen`, `QT_OPENGL=software`, `LIBGL_ALWAYS_SOFTWARE=1`; CLI initializes `FreeCADGui.showMainWindow()` before document build when `fcstd` output is requested; FCStd save now records an isometric fitted view, visible tree state for generated solids, and validates that the zip archive contains both `Document.xml` and `GuiDocument.xml`.
+- Validation Result: pass, including FCStd archive structure check and round-trip reopen.
+- State Snapshot: run_id=`20260326T081627Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: FCStd `sha256=1f1e6481...`, STEP `sha256=b07f1958...`, report `sha256=76f1627c...`; FCStd size `953068` bytes and archive entries now include `GuiDocument.xml`.
+- Next Action: have the user reopen the regenerated FCStd in desktop FreeCAD and confirm the model tree / viewport are populated without manual recovery.
+
+- Timestamp UTC: 2026-03-26T08:32:27Z
+- Timestamp Local: 2026-03-26 17:32:27 JST
+- Intent: Validate the new four-foot support layout after moving two supports under the chamber and two under the H plate to shorten the H-plate span.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: centered support-row layout frozen as chamber row `z=250 mm, x=±50 mm` and H row `z=620 mm, x=-24±160 mm`; support feet no longer follow the far outer-corner base footprint.
+- Validation Result: pass; new stand check `support_rows_centered_under_chamber_and_h_plate` passed with detail `chamber_row=z=250.000, x=[-50.0, 50.0]; h_row=z=620.000, x=[-184.0, 136.0]`.
+- State Snapshot: run_id=`20260326T083227Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: report `sha256=e0a4e5ca...`.
+- Next Action: run force rebuild so the centered support rows are written into FCStd/STEP artifacts.
+
+- Timestamp UTC: 2026-03-26T08:33:21Z
+- Timestamp Local: 2026-03-26 17:33:21 JST
+- Intent: Export updated FCStd/STEP artifacts with the centered four-foot support layout.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: stand support feet now materialize at `(-50,250)`, `(50,250)`, `(-184,620)`, `(136,620)` in `x/z` projection, i.e. two under the chamber footprint and two under the H-plate footprint.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260326T083321Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: FCStd `sha256=0dc80c6b...`, STEP `sha256=66e3e71e...`, report `sha256=e7215060...`.
+- Next Action: hand off the rebuilt model for visual confirmation that the H-plate support pair now sits near the center instead of at remote outer corners.
+
+- Timestamp Local: 2026-03-26 19:13:37 JST
+- Intent: Validate the updated stand geometry after moving the front/negative-z support row another `100 mm` upstream.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: chamber-side support pair now targets `z=-200 mm`, `x=±50 mm`; `H`-plate support pair stays at `z=620 mm`, `x=-24±160 mm`.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260326T101337Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: reused current artifact set; stand check detail `chamber_row=z=-200.000, x=[-50.0, 50.0]; h_row=z=620.000, x=[-184.0, 136.0]; foot_d=52.000`.
+- Next Action: force-rebuild FCStd/STEP so the upstream-shifted front support pair is exported into the latest CAD artifacts.
+
+- Timestamp Local: 2026-03-26 19:14:29 JST
+- Intent: Rebuild FCStd/STEP artifacts after shifting the front/negative-z support row to `z=-200 mm`.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: final stand support-foot centers in `x/z` projection are `(-50,-200)`, `(50,-200)`, `(-184,620)`, `(136,620)`.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260326T101429Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: FCStd `sha256=85e4eecb...`, STEP `sha256=88fa5123...`, report `sha256=9421fb4a...`.
+- Next Action: hand off the rebuilt model for visual confirmation that only the front support row moved upstream while the H-plate support row stayed fixed.
+
+- Timestamp Local: 2026-03-26 19:51:50 JST
+- Intent: Validate the new H-plate relief-window sizing against the true target-to-detector cone while moving the front chamber-side support row to `z=-150 mm`.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: first attempt switched the H-plate rectangular relief sizing from a plate-midplane LOS circle to cone-based geometry; chamber-side support pair was moved to `z=-150 mm`, `x=±50 mm`; H-row stayed at `z=620 mm`, `x=-24±160 mm`.
+- Validation Result: fail.
+- State Snapshot: run_id=`20260326T105150Z-8`, run.status=`fail`, validation.status=`fail`, strict=`true`.
+- Artifacts: failing plate check was `single_continuous_plate_solids` with detail `HPlate:solids=2, VPlate1:solids=1, VPlate2:solids=1`.
+- Next Action: replace the over-broad boolean cone-band overlap with sampled cone/plate-band intersections so the H plate keeps one continuous solid while staying clear of the LOS cone.
+
+- Timestamp Local: 2026-03-26 19:54:51 JST
+- Intent: Revalidate after tightening the H-plate relief logic to sampled cone-band footprints.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: H-plate rectangular relief windows now follow sampled intersections of the true target-to-detector front-face cone with both faces of the plate thickness band; front chamber support row frozen at `z=-150 mm`.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260326T105451Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: plate checks now report `h_plate_relief_cones_clear=pass` with all six overlaps `0.000000`; stand detail is `chamber_row=z=-150.000, x=[-50.0, 50.0]; h_row=z=620.000, x=[-184.0, 136.0]; foot_d=52.000`.
+- Next Action: force-rebuild FCStd/STEP so the corrected H-plate relief windows and updated support-row position appear in the exported CAD files.
+
+- Timestamp Local: 2026-03-26 19:55:45 JST
+- Intent: Rebuild FCStd/STEP after correcting the H-plate relief windows and moving the front support row to `z=-150 mm`.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: final support-foot centers in `x/z` projection are `(-50,-150)`, `(50,-150)`, `(-184,620)`, `(136,620)`; the rebuilt FCStd reopens with `HPlate` still as a single solid.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260326T105545Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: FCStd `sha256=0332aceb...`, STEP `sha256=a99c25cb...`, report `sha256=c99a2e3f...`.
+- Next Action: hand off the rebuilt model for visual confirmation that the H-plate cutouts no longer block the target-to-detector cone and the front support row now sits at `z=-150 mm`.
+
+- Timestamp Local: 2026-03-27 09:05:57 JST
+- Intent: Validate the longer downstream chamber span and the new 8-post stand topology (`4` under chamber + `4` under H plate).
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: chamber extended to `size_z=1200 mm, center_z=400 mm`; chamber posts first placed at `x=±50 mm, z=-100/+900 mm`; H-plate posts at `x=-24±160 mm, z=400/840 mm`.
+- Validation Result: fail.
+- State Snapshot: run_id=`20260327T000557Z-8`, run.status=`fail`, validation.status=`fail`, strict=`true`.
+- Artifacts: detector interference check failed with `down_proton_small~StandSupportFoot_3: overlap_volume=2097.651` and `down_proton_small~StandSupportFoot_4: overlap_volume=2097.649`.
+- Next Action: preserve the requested `100 mm` front/rear chamber support offsets in `z`, but move the chamber support pair outward in `x` to clear the downstream/downward detector package.
+
+- Timestamp Local: 2026-03-27 09:07:50 JST
+- Intent: Revalidate after pushing the chamber support pair outward in `x`.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: chamber four-post grid finalized at `x=±60 mm, z=-100/+900 mm`; H-plate four-post grid kept at `x=-24±160 mm, z=400/840 mm`; longer rear chamber span retained at `z_max=+1000 mm`.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260327T000750Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: stand checks report `eight_point_support=pass` and `support_grids_under_chamber_and_h_plate=pass` with `chamber_rows_z=[-100.0, 900.0], x=[-60.0, 60.0]; h_rows_z=[400.0, 840.0], x=[-184.0, 136.0]`.
+- Next Action: force-rebuild FCStd/STEP so the longer chamber and finalized 8-post stand are written into the latest CAD artifacts.
+
+- Timestamp Local: 2026-03-27 09:08:42 JST
+- Intent: Rebuild FCStd/STEP after extending the downstream chamber and finalizing the independent chamber/H-plate four-post grids.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: final support-foot centers in `x/z` projection are chamber `(-60,-100)`, `(60,-100)`, `(-60,900)`, `(60,900)` and H-plate `(-184,400)`, `(136,400)`, `(-184,840)`, `(136,840)`.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260327T000842Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: FCStd `sha256=1aba0586...`, STEP `sha256=44473e31...`, report `sha256=a056dd65...`.
+- Next Action: hand off the rebuilt model for visual confirmation that the chamber is longer downstream and that chamber/H plate are now supported by two independent 4-post grids.
+
+- Timestamp Local: 2026-03-27 09:18:17 JST
+- Intent: Validate the chamber-post end offset change to `50 mm` and extend support height so support feet, not `V` plates, define the ground plane.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: chamber support end margin reduced from `100 mm` to `50 mm`, moving chamber rows to `z=-150/+950 mm`; support height increased from `340 mm` to `760 mm`, driving support-foot bottoms to `y=-852.5 mm`.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260327T001817Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: stand checks now report `support_grids_under_chamber_and_h_plate=pass` with `chamber_rows_z=[-150.0, 950.0]` and `support_feet_extend_below_vertical_plates=pass` with `support_ymin=-852.500, vertical_plate_ymin=-822.000`.
+- Next Action: force-rebuild FCStd/STEP so the shorter chamber-post end offsets and longer support columns are written into the latest CAD artifacts.
+
+- Timestamp Local: 2026-03-27 09:19:14 JST
+- Intent: Rebuild FCStd/STEP after moving chamber posts to `50 mm` from the end faces and lengthening support columns below the vertical plates.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: final chamber support feet occupy `x=±60 mm`, `z=-150/+950 mm` and bottom out at `y=-852.5 mm`; `V2` still bottoms at `y=-822.0 mm`, so the support feet remain the first contact with the floor.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260327T001914Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: FCStd `sha256=961bd3aa...`, STEP `sha256=e55f6942...`, report `sha256=27570e64...`.
+- Next Action: hand off the rebuilt model for visual confirmation that the chamber supports now sit 50 mm from the end faces and extend lower than the vertical plates.
+
+- Timestamp Local: 2026-03-27 09:23:33 JST
+- Intent: Validate a slightly wider H-plate four-post spacing.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: H-plate support pair half-span increased from `160 mm` to `200 mm`, moving the H support x coordinates to `-24±200 mm` while keeping the two H support rows at `z=400/840 mm`.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260327T002333Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: stand detail now reads `chamber_rows_z=[-150.0, 950.0], x=[-60.0, 60.0]; h_rows_z=[400.0, 840.0], x=[-224.0, 176.0]`.
+- Next Action: force-rebuild FCStd/STEP so the widened H-plate support spacing is exported into the current CAD artifacts.
+
+- Timestamp Local: 2026-03-27 09:24:25 JST
+- Intent: Rebuild FCStd/STEP after slightly widening the H-plate support spacing.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: final H-plate support-foot centers in `x/z` projection are `(-224,400)`, `(176,400)`, `(-224,840)`, `(176,840)`; chamber supports and the vertical-plate ground-clearance constraint remain unchanged.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260327T002425Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: FCStd `sha256=97ecdc8a...`, STEP `sha256=ba21b4a6...`, report `sha256=01369ca4...`.
+- Next Action: hand off the rebuilt model for visual confirmation that the H-plate support grid is now slightly wider in x.
+
+- Timestamp UTC: 2026-03-27T00:59:42Z
+- Timestamp Local: 2026-03-27 09:59:42 JST
+- Intent: Re-run the strict gate after introducing shared multi-module support for `afterSRC`.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: regression check for dynamic `MODULE_NAME`, config-path indirection, chamber contract validation, optional-port handling, and generic welded pipe-stub validation naming while preserving the existing `VF100 + VG80 + fixed 4 ports` geometry.
+- Validation Result: pass via hash-skip.
+- State Snapshot: run_id=`20260327T005942Z-8`, run.status=`skipped`, validation.status=`pass`, strict=`true`.
+- Artifacts: FCStd `sha256=97ecdc8a...`, STEP `sha256=ba21b4a6...`, report `sha256=01369ca4...` reused from the latest strict-pass build.
+- Next Action: hand off the new `afterSRC` module together with the shared-engine regression result.

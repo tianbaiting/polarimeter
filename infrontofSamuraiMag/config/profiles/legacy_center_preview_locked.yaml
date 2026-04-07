@@ -199,6 +199,7 @@ geometry:
       fluorescence_target_thickness_mm: 1.20
 
   stand:
+    with_base_plate: false
     base_length_mm: 920.0
     base_width_mm: 620.0
     base_thickness_mm: 24.0
