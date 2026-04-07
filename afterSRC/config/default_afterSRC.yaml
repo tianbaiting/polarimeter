@@ -1,0 +1,332 @@
+geometry:
+  beamline:
+    axis: z
+    inlet_diameter_mm: 63.0
+
+  chamber:
+    core:
+      size_x_mm: 185.0
+      size_y_mm: 185.0
+      size_z_mm: 1200.0
+      center_z_mm: 400.0
+      wall_thickness_mm: 12.0
+    end_modules:
+      front:
+        standard: ICF114
+        module_outer_diameter_mm: 113.5
+        module_inner_diameter_mm: 63.6
+        pipe_outer_diameter_mm: 63.6
+        pipe_inner_diameter_mm: 63.0
+        pipe_length_mm: 80.0
+        module_thickness_mm: 17.5
+        seal_face_width_mm: 10.0
+        bolt_circle_diameter_mm: 92.2
+        bolt_count: 8
+        flange_bolt_hole_diameter_mm: 8.4
+        oring_groove_inner_diameter_mm: 0.0
+        oring_groove_outer_diameter_mm: 0.0
+        oring_groove_depth_mm: 0.0
+        interface_bolt_diameter_mm: 8.0
+        interface_bolt_length_mm: 35.0
+        interface_nut_outer_diameter_mm: 13.0
+        interface_nut_thickness_mm: 6.5
+        interface_washer_outer_diameter_mm: 16.0
+        interface_washer_thickness_mm: 1.5
+      rear:
+        standard: ICF114
+        module_outer_diameter_mm: 113.5
+        module_inner_diameter_mm: 63.6
+        pipe_outer_diameter_mm: 63.6
+        pipe_inner_diameter_mm: 63.0
+        pipe_length_mm: 80.0
+        module_thickness_mm: 17.5
+        seal_face_width_mm: 10.0
+        bolt_circle_diameter_mm: 92.2
+        bolt_count: 8
+        flange_bolt_hole_diameter_mm: 8.4
+        oring_groove_inner_diameter_mm: 0.0
+        oring_groove_outer_diameter_mm: 0.0
+        oring_groove_depth_mm: 0.0
+        interface_bolt_diameter_mm: 8.0
+        interface_bolt_length_mm: 35.0
+        interface_nut_outer_diameter_mm: 13.0
+        interface_nut_thickness_mm: 6.5
+        interface_washer_outer_diameter_mm: 16.0
+        interface_washer_thickness_mm: 1.5
+    contract:
+      front_standard: ICF114
+      rear_standard: ICF114
+      required_ports_enabled: [rotary_feedthrough]
+      forbidden_ports_enabled: [main_pump, gauge_safety, spare]
+      rotary_mount_standard: ICF70
+    los_channels:
+      enabled: true
+      channel_diameter_mm: 72.0
+      channel_start_z_mm: 8.0
+      channel_length_mm: 1400.0
+
+  ports:
+    main_pump:
+      enabled: false
+      side: right
+      center_x_mm: 0.0
+      center_y_mm: 0.0
+      center_z_mm: -120.0
+      inner_diameter_mm: 80.0
+      outer_diameter_mm: 130.0
+      length_mm: 92.0
+    gauge_safety:
+      enabled: false
+      side: left
+      center_x_mm: 0.0
+      center_y_mm: 0.0
+      center_z_mm: -140.0
+      inner_diameter_mm: 36.0
+      outer_diameter_mm: 56.0
+      length_mm: 58.0
+    rotary_feedthrough:
+      enabled: true
+      side: top
+      center_x_mm: 70.0
+      center_y_mm: 0.0
+      center_z_mm: 0.0
+      inner_diameter_mm: 22.0
+      outer_diameter_mm: 42.0
+      length_mm: 8.0
+      interface:
+        standard: ICF70
+        module_outer_diameter_mm: 70.0
+        module_inner_diameter_mm: 38.0
+        pipe_outer_diameter_mm: 38.0
+        pipe_inner_diameter_mm: 22.0
+        pipe_length_mm: 0.0
+        module_thickness_mm: 15.0
+        seal_face_width_mm: 8.0
+        bolt_circle_diameter_mm: 58.7
+        bolt_count: 6
+        flange_bolt_hole_diameter_mm: 6.6
+        oring_groove_inner_diameter_mm: 0.0
+        oring_groove_outer_diameter_mm: 0.0
+        oring_groove_depth_mm: 0.0
+        interface_bolt_diameter_mm: 6.0
+        interface_bolt_length_mm: 25.0
+        interface_nut_outer_diameter_mm: 10.0
+        interface_nut_thickness_mm: 5.0
+        interface_washer_outer_diameter_mm: 12.0
+        interface_washer_thickness_mm: 1.5
+    spare:
+      enabled: false
+      side: bottom
+      center_x_mm: 0.0
+      center_y_mm: 0.0
+      center_z_mm: -160.0
+      inner_diameter_mm: 32.0
+      outer_diameter_mm: 52.0
+      length_mm: 56.0
+
+  plate:
+    h:
+      orientation: horizontal
+      mount_plane: xz
+      offset_mode: manual
+      opening_style: los_tube
+      z_mm: 620.0
+      offset_x_mm: -24.0
+      offset_y_mm: -125.0
+      width_mm: 1500.0
+      height_mm: 640.0
+      thickness_mm: 10.0
+      inner_radius_mm: 260.0
+      outer_radius_mm: 760.0
+      sector_opening_deg: 150.0
+      azimuth_centers_deg: [90.0, -90.0]
+      lug_length_mm: 48.0
+      lug_width_mm: 76.0
+      lug_thickness_mm: 20.0
+      bolt_hole_diameter_mm: 14.0
+      bolt_hole_pitch_mm: 42.0
+      bolt_hole_count: 2
+      stiffener_count: 2
+      stiffener_thickness_mm: 10.0
+      stiffener_height_mm: 30.0
+      stiffener_length_mm: 200.0
+    v1:
+      orientation: vertical
+      mount_plane: yz
+      offset_mode: manual
+      opening_style: los_tube
+      z_mm: 620.0
+      offset_x_mm: 125.0
+      offset_y_mm: 430.0
+      width_mm: 760.0
+      height_mm: 920.0
+      thickness_mm: 10.0
+      inner_radius_mm: 260.0
+      outer_radius_mm: 520.0
+      sector_opening_deg: 150.0
+      azimuth_centers_deg: [0.0, 90.0, 180.0, -90.0]
+      lug_length_mm: 42.0
+      lug_width_mm: 74.0
+      lug_thickness_mm: 20.0
+      bolt_hole_diameter_mm: 14.0
+      bolt_hole_pitch_mm: 40.0
+      bolt_hole_count: 2
+      stiffener_count: 2
+      stiffener_thickness_mm: 10.0
+      stiffener_height_mm: 26.0
+      stiffener_length_mm: 220.0
+    v2:
+      orientation: vertical
+      mount_plane: yz
+      offset_mode: manual
+      opening_style: los_tube
+      z_mm: 620.0
+      offset_x_mm: -125.0
+      offset_y_mm: -430.0
+      width_mm: 700.0
+      height_mm: 820.0
+      thickness_mm: 10.0
+      inner_radius_mm: 260.0
+      outer_radius_mm: 520.0
+      sector_opening_deg: 150.0
+      azimuth_centers_deg: [0.0, 90.0, 180.0, -90.0]
+      lug_length_mm: 42.0
+      lug_width_mm: 74.0
+      lug_thickness_mm: 20.0
+      bolt_hole_diameter_mm: 14.0
+      bolt_hole_pitch_mm: 40.0
+      bolt_hole_count: 2
+      stiffener_count: 2
+      stiffener_thickness_mm: 10.0
+      stiffener_height_mm: 26.0
+      stiffener_length_mm: 180.0
+
+  detector:
+    clamp:
+      detector_diameter_mm: 58.0
+      housing_length_mm: 190.0
+      outer_diameter_mm: 74.0
+      inner_diameter_mm: 62.0
+      width_mm: 30.0
+      split_gap_mm: 1.5
+      shoulder_height_mm: 4.0
+      end_stop_length_mm: 12.0
+      clamp_ear_length_mm: 18.0
+      clamp_ear_width_mm: 14.0
+      clamp_ear_thickness_mm: 16.0
+      clamp_bolt_diameter_mm: 6.0
+      clamp_bolt_pitch_mm: 18.0
+      anti_rotation_key_width_mm: 8.0
+      anti_rotation_key_depth_mm: 1.5
+      anti_rotation_key_length_mm: 12.0
+      support_overlap_mm: 20.0
+      mount_base_u_mm: 170.0
+      mount_base_v_mm: 60.0
+      mount_base_thickness_mm: 15.0
+      mount_bolt_hole_diameter_mm: 9.0
+      mount_bolt_pitch_u_mm: 120.0
+      mount_bolt_pitch_v_mm: 36.0
+    adapter_block:
+      length_mm: 36.0
+      width_mm: 34.0
+      height_mm: 24.0
+      tilt_deg: 4.0
+      radial_standoff_mm: 10.0
+
+  target:
+    mode: single_rotary
+    rotary:
+      pivot_x_mm: 70.0
+      work_angle_deg: 0.0
+      park_angle_deg: 90.0
+      active_angle_deg: 0.0
+      feedthrough_shaft_diameter_mm: 18.0
+      feedthrough_length_mm: 120.0
+      handwheel_diameter_mm: 90.0
+      motor_mount_width_mm: 120.0
+      motor_mount_height_mm: 90.0
+      motor_mount_thickness_mm: 16.0
+      hub_diameter_mm: 32.0
+      hub_thickness_mm: 10.0
+      arm_length_mm: 70.0
+      arm_width_mm: 18.0
+      arm_thickness_mm: 8.0
+      hard_stop_span_mm: 70.0
+      hard_stop_thickness_mm: 10.0
+      index_disk_diameter_mm: 70.0
+      index_disk_thickness_mm: 5.0
+      index_pin_diameter_mm: 6.0
+      index_pin_length_mm: 24.0
+      vendor_reference_enabled: true
+      vendor_reference_model_code: ICF70MRMF50
+      vendor_reference_body_diameter_mm: 38.0
+      vendor_reference_body_length_mm: 107.5
+      vendor_reference_handwheel_diameter_mm: 70.0
+      vendor_reference_handwheel_thickness_mm: 12.0
+    single_holder:
+      frame_outer_width_mm: 58.0
+      frame_outer_height_mm: 58.0
+      frame_thickness_mm: 4.0
+      clamp_block_width_mm: 12.0
+      clamp_block_height_mm: 8.0
+      clamp_screw_diameter_mm: 3.5
+      clamp_screw_head_diameter_mm: 6.5
+      clamp_screw_head_height_mm: 2.2
+      target_thickness_mm: 0.20
+
+  stand:
+    with_base_plate: false
+    base_length_mm: 920.0
+    base_width_mm: 620.0
+    base_thickness_mm: 24.0
+    chamber_support_height_mm: 760.0
+    support_foot_diameter_mm: 52.0
+    chamber_support_end_margin_mm: 50.0
+    chamber_support_pair_half_span_x_mm: 60.0
+    h_plate_support_end_margin_mm: 100.0
+    h_plate_support_pair_half_span_x_mm: 200.0
+    enable_plate_ties: false
+    plate_tie_column_diameter_mm: 12.0
+    plate_tie_cap_width_mm: 32.0
+    plate_tie_cap_height_mm: 26.0
+    plate_tie_cap_thickness_mm: 8.0
+    plate_tie_bolt_diameter_mm: 6.0
+    anchor_slot_length_mm: 30.0
+    anchor_slot_width_mm: 14.0
+    leveling_screw_diameter_mm: 16.0
+    shim_thickness_mm: 2.0
+
+  clearance:
+    los_scope: v2_fullpath
+    los_margin_mm: 5.0
+    vv_min_gap_factor: 2.0
+    plate_auto_gap_mm: 5.0
+    plate_chamber_cutout_margin_mm: 5.0
+    disable_plate_cuts: false
+    skip_overlap_checks: false
+    los_detector_active_face_offset_mm: 0.0
+    detector_front_to_chamber_mm: 40.0
+    detector_pair_min_gap_mm: 65.0
+    top_service_clearance_mm: 180.0
+    side_service_clearance_mm: 150.0
+
+layout:
+  sectors: [left, right, up, down]
+  channels:
+    - name: deuteron
+      angle_deg: 20.9
+      radius_mm: 560.0
+      confidence: high
+    - name: proton_small
+      angle_deg: 11.2
+      radius_mm: 760.0
+      confidence: medium
+    - name: proton_large
+      angle_deg: 53.4
+      radius_mm: 820.0
+      confidence: medium
+
+output:
+  dir: ..
+  basename: afterSRC
+  formats: [fcstd, step]

@@ -96,6 +96,9 @@ active_modules:
   - name: infrontofSamuraiMag
     target: infrontofSamuraiMag/target.yaml
     state: infrontofSamuraiMag/state.json
+  - name: afterSRC
+    target: afterSRC/target.yaml
+    state: afterSRC/state.json
 """,
     )
 
@@ -104,6 +107,28 @@ active_modules:
     assert entry["name"] == "infrontofSamuraiMag"
     assert Path(entry["target"]) == (tmp_path / "infrontofSamuraiMag" / "target.yaml").resolve()
     assert Path(entry["state"]) == (tmp_path / "infrontofSamuraiMag" / "state.json").resolve()
+
+
+def test_load_pipeline_index_resolves_afterSRC_module_paths(tmp_path: Path) -> None:
+    index = _write(
+        tmp_path / "codex_targets.yaml",
+        """
+schema_version: 1
+active_modules:
+  - name: infrontofSamuraiMag
+    target: infrontofSamuraiMag/target.yaml
+    state: infrontofSamuraiMag/state.json
+  - name: afterSRC
+    target: afterSRC/target.yaml
+    state: afterSRC/state.json
+""",
+    )
+
+    entry = load_pipeline_index(index, module_name="afterSRC")
+
+    assert entry["name"] == "afterSRC"
+    assert Path(entry["target"]) == (tmp_path / "afterSRC" / "target.yaml").resolve()
+    assert Path(entry["state"]) == (tmp_path / "afterSRC" / "state.json").resolve()
 
 
 def test_should_skip_build_only_when_hash_status_and_artifacts_match(tmp_path: Path) -> None:

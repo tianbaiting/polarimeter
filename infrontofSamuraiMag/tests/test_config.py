@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = ROOT.parent
 SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
@@ -18,8 +19,29 @@ pytestmark = pytest.mark.pure_python
 def test_load_default_config() -> None:
     cfg = load_build_config(ROOT / "config" / "default_infront.yaml")
     assert cfg.geometry.beamline.axis == "z"
-    assert cfg.geometry.chamber.end_modules.front_standard == "VG150"
-    assert cfg.geometry.chamber.end_modules.rear_standard == "VF80"
+    assert cfg.geometry.chamber.core.size_x_mm == pytest.approx(185.0)
+    assert cfg.geometry.chamber.core.size_y_mm == pytest.approx(185.0)
+    assert cfg.geometry.chamber.core.size_z_mm == pytest.approx(1200.0)
+    assert cfg.geometry.chamber.core.center_z_mm == pytest.approx(400.0)
+    assert cfg.geometry.chamber.end_modules.front_standard == "VF100"
+    assert cfg.geometry.chamber.end_modules.rear_standard == "VG80"
+    assert cfg.geometry.chamber.end_modules.front.pipe_length_mm == pytest.approx(100.0)
+    assert cfg.geometry.chamber.end_modules.rear.pipe_length_mm == pytest.approx(20.0)
+    assert cfg.geometry.chamber.contract.front_standard == "VF100"
+    assert cfg.geometry.chamber.contract.rear_standard == "VG80"
+    assert cfg.geometry.chamber.contract.required_ports_enabled == (
+        "main_pump",
+        "gauge_safety",
+        "rotary_feedthrough",
+        "spare",
+    )
+    assert cfg.geometry.ports.main_pump.center_z_mm == pytest.approx(-120.0)
+    assert cfg.geometry.ports.gauge_safety.center_z_mm == pytest.approx(-140.0)
+    assert cfg.geometry.ports.spare.center_z_mm == pytest.approx(-160.0)
+    assert cfg.geometry.ports.main_pump.enabled is True
+    assert cfg.geometry.ports.gauge_safety.enabled is True
+    assert cfg.geometry.ports.rotary_feedthrough.enabled is True
+    assert cfg.geometry.ports.spare.enabled is True
     assert len(cfg.layout.channels) == 3
     assert set(cfg.layout.sectors) == {"left", "right", "up", "down"}
     assert {channel.confidence for channel in cfg.layout.channels} <= {"high", "medium", "low"}
@@ -46,17 +68,53 @@ def test_load_default_config() -> None:
     assert cfg.geometry.target.rotary is not None
     assert cfg.geometry.target.single_holder is not None
     assert cfg.geometry.target.rotary.motor_mount_width_mm > 0.0
+    assert cfg.geometry.target.rotary.vendor_reference_enabled is False
     assert cfg.geometry.detector.clamp.clamp_bolt_diameter_mm > 0.0
     assert cfg.geometry.detector.clamp.anti_rotation_key_depth_mm > 0.0
     assert cfg.geometry.target.single_holder.clamp_screw_diameter_mm > 0.0
     assert cfg.geometry.stand.enable_plate_ties is False
     assert cfg.geometry.stand.with_base_plate is False
+    assert cfg.geometry.stand.chamber_support_height_mm == pytest.approx(760.0)
+    assert cfg.geometry.stand.chamber_support_end_margin_mm == pytest.approx(50.0)
+    assert cfg.geometry.stand.chamber_support_pair_half_span_x_mm == pytest.approx(60.0)
+    assert cfg.geometry.stand.h_plate_support_end_margin_mm == pytest.approx(100.0)
+    assert cfg.geometry.stand.h_plate_support_pair_half_span_x_mm == pytest.approx(200.0)
     assert cfg.geometry.clearance.los_scope == "v2_fullpath"
     assert cfg.geometry.clearance.vv_min_gap_factor == pytest.approx(2.0)
     assert cfg.geometry.clearance.plate_auto_gap_mm == pytest.approx(5.0)
     assert cfg.geometry.clearance.plate_chamber_cutout_margin_mm == pytest.approx(5.0)
     assert cfg.geometry.chamber.los_channels.enabled
     assert cfg.geometry.ports.rotary_feedthrough.center_x_mm == pytest.approx(70.0)
+
+
+def test_load_afterSRC_config_contract() -> None:
+    cfg = load_build_config(REPO_ROOT / "afterSRC" / "config" / "default_afterSRC.yaml")
+
+    assert cfg.geometry.beamline.inlet_diameter_mm == pytest.approx(63.0)
+    assert cfg.geometry.chamber.end_modules.front_standard == "ICF114"
+    assert cfg.geometry.chamber.end_modules.rear_standard == "ICF114"
+    assert cfg.geometry.chamber.end_modules.front.pipe_length_mm == pytest.approx(80.0)
+    assert cfg.geometry.chamber.end_modules.rear.pipe_length_mm == pytest.approx(80.0)
+    assert cfg.geometry.chamber.contract.front_standard == "ICF114"
+    assert cfg.geometry.chamber.contract.rear_standard == "ICF114"
+    assert cfg.geometry.chamber.contract.required_ports_enabled == ("rotary_feedthrough",)
+    assert cfg.geometry.chamber.contract.forbidden_ports_enabled == (
+        "main_pump",
+        "gauge_safety",
+        "spare",
+    )
+    assert cfg.geometry.chamber.contract.rotary_mount_standard == "ICF70"
+    assert cfg.geometry.ports.main_pump.enabled is False
+    assert cfg.geometry.ports.gauge_safety.enabled is False
+    assert cfg.geometry.ports.spare.enabled is False
+    assert cfg.geometry.ports.rotary_feedthrough.enabled is True
+    assert cfg.geometry.ports.rotary_feedthrough.length_mm == pytest.approx(8.0)
+    assert cfg.geometry.ports.rotary_feedthrough.interface is not None
+    assert cfg.geometry.ports.rotary_feedthrough.interface.standard == "ICF70"
+    assert cfg.geometry.target.rotary is not None
+    assert cfg.geometry.target.rotary.vendor_reference_enabled is True
+    assert cfg.geometry.target.rotary.vendor_reference_model_code == "ICF70MRMF50"
+    assert cfg.output.basename == "afterSRC"
 
 
 def test_legacy_profile_still_parses_linear_ladder() -> None:
@@ -72,10 +130,12 @@ def test_override_core_size_and_output_basename() -> None:
         ROOT / "config" / "default_infront.yaml",
         overrides=[
             "geometry.chamber.core.size_z_mm=640.0",
+            "geometry.chamber.core.center_z_mm=0.0",
             "output.basename=v1_override",
         ],
     )
     assert cfg.geometry.chamber.core.size_z_mm == pytest.approx(640.0)
+    assert cfg.geometry.chamber.core.center_z_mm == pytest.approx(0.0)
     assert cfg.output.basename == "v1_override"
 
 
@@ -175,12 +235,86 @@ def test_invalid_end_module_interface_bolt_diameter() -> None:
         )
 
 
+def test_end_module_pipe_stub_cannot_constrict_beamline() -> None:
+    with pytest.raises(ValueError, match="pipe_inner_diameter_mm"):
+        load_build_config(
+            ROOT / "config" / "default_infront.yaml",
+            overrides=[
+                "geometry.chamber.end_modules.front.pipe_inner_diameter_mm=60.0",
+            ],
+        )
+
+
+def test_afterSRC_forbidden_side_port_must_stay_disabled() -> None:
+    with pytest.raises(ValueError, match="forbidden_ports_enabled"):
+        load_build_config(
+            REPO_ROOT / "afterSRC" / "config" / "default_afterSRC.yaml",
+            overrides=[
+                "geometry.ports.main_pump.enabled=true",
+            ],
+        )
+
+
+def test_afterSRC_rotary_mount_standard_must_match_interface() -> None:
+    with pytest.raises(ValueError, match="rotary_mount_standard"):
+        load_build_config(
+            REPO_ROOT / "afterSRC" / "config" / "default_afterSRC.yaml",
+            overrides=[
+                "geometry.ports.rotary_feedthrough.interface.standard=ICF34",
+            ],
+        )
+
+
+def test_core_center_z_must_keep_target_origin_inside_chamber() -> None:
+    with pytest.raises(ValueError, match="center_z_mm"):
+        load_build_config(
+            ROOT / "config" / "default_infront.yaml",
+            overrides=[
+                "geometry.chamber.core.center_z_mm=700.0",
+            ],
+        )
+
+
 def test_invalid_target_hard_stop_span() -> None:
     with pytest.raises(ValueError, match="hard_stop_span_mm"):
         load_build_config(
             ROOT / "config" / "default_infront.yaml",
             overrides=[
                 "geometry.target.rotary.hard_stop_span_mm=200",
+            ],
+        )
+
+
+def test_stand_support_half_span_must_fit_supported_footprints() -> None:
+    with pytest.raises(ValueError, match="chamber_support_end_margin_mm"):
+        load_build_config(
+            ROOT / "config" / "default_infront.yaml",
+            overrides=[
+                "geometry.stand.chamber_support_end_margin_mm=10.0",
+            ],
+        )
+
+    with pytest.raises(ValueError, match="chamber_support_pair_half_span_x_mm"):
+        load_build_config(
+            ROOT / "config" / "default_infront.yaml",
+            overrides=[
+                "geometry.stand.chamber_support_pair_half_span_x_mm=80.0",
+            ],
+        )
+
+    with pytest.raises(ValueError, match="h_plate_support_pair_half_span_x_mm"):
+        load_build_config(
+            ROOT / "config" / "default_infront.yaml",
+            overrides=[
+                "geometry.stand.h_plate_support_pair_half_span_x_mm=800.0",
+            ],
+        )
+
+    with pytest.raises(ValueError, match="h_plate_support_end_margin_mm"):
+        load_build_config(
+            ROOT / "config" / "default_infront.yaml",
+            overrides=[
+                "geometry.stand.h_plate_support_end_margin_mm=10.0",
             ],
         )
 

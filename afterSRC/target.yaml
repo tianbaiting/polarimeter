@@ -1,0 +1,19 @@
+schema_version: 1
+module: afterSRC
+intent:
+  description: "Build the afterSRC polarimeter variant by reusing the H+V+V detector, stand, and single-target rotary internals from infrontofSamuraiMag while changing the chamber vacuum contract to front=ICF114 and rear=ICF114 with welded round pipe stubs for upstream/downstream beamline connection, removing the main_pump/gauge_safety/spare side ports, and mounting the target rotary feedthrough on a top ICF70 flange aligned to the existing pivot_x=70 mm single-rotary target mechanism."
+build:
+  config: config/default_afterSRC.yaml
+  overrides: []
+  doc_name: afterSRC
+  mode: build
+validation:
+  strict: true
+  angle_tolerance_deg: 0.05
+  radius_tolerance_mm: 0.2
+output:
+  output_dir: .
+  basename: afterSRC
+  formats: [fcstd, step]
+artifacts:
+  report_json: afterSRC.validation_report.json

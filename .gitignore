@@ -40,6 +40,10 @@ infrontofSamuraiMag/*.validation_report.json
 infrontofSamuraiMag/reports/archive/
 infrontofSamuraiMag/.venv-pytest/
 infrontofSamuraiMag/.pytest_cache/
+afterSRC/state.json
+afterSRC/state.lock
+afterSRC/*.validation_report.json
+afterSRC/reports/archive/
 
 # Generated build trees and numerical study outputs under the polarimeter code module.
 code/build/
