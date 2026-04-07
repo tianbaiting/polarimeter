@@ -17,6 +17,7 @@ _ALLOWED_SECTORS = {"left", "right", "up", "down"}
 _ALLOWED_CONFIDENCE = {"high", "medium", "low"}
 _ALLOWED_OUTPUT_FORMATS = {"fcstd", "step"}
 _ALLOWED_PORT_SIDES = {"right", "left", "top", "bottom"}
+_ALLOWED_PORT_NAMES = ("main_pump", "gauge_safety", "rotary_feedthrough", "spare")
 _ALLOWED_PLATE_ORIENTATIONS = {"horizontal", "vertical"}
 _ALLOWED_PLATE_MOUNT_PLANES = {"xy", "xz", "yz"}
 _ALLOWED_PLATE_OFFSET_MODES = {"manual", "auto"}
@@ -50,6 +51,7 @@ class ChamberCoreConfig:
     size_x_mm: float
     size_y_mm: float
     size_z_mm: float
+    center_z_mm: float
     wall_thickness_mm: float
 
 
@@ -58,6 +60,9 @@ class ChamberEndModuleSideConfig:
     standard: str
     module_outer_diameter_mm: float
     module_inner_diameter_mm: float
+    pipe_outer_diameter_mm: float
+    pipe_inner_diameter_mm: float
+    pipe_length_mm: float
     module_thickness_mm: float
     seal_face_width_mm: float
     bolt_circle_diameter_mm: float
@@ -101,10 +106,21 @@ class ChamberConfig:
     core: ChamberCoreConfig
     end_modules: ChamberEndModulesConfig
     los_channels: ChamberLOSChannelsConfig
+    contract: "ChamberContractConfig"
+
+
+@dataclass(frozen=True)
+class ChamberContractConfig:
+    front_standard: str
+    rear_standard: str
+    required_ports_enabled: tuple[str, ...]
+    forbidden_ports_enabled: tuple[str, ...]
+    rotary_mount_standard: str | None
 
 
 @dataclass(frozen=True)
 class PortConfig:
+    enabled: bool
     side: str
     center_x_mm: float
     center_y_mm: float
@@ -112,6 +128,7 @@ class PortConfig:
     inner_diameter_mm: float
     outer_diameter_mm: float
     length_mm: float
+    interface: ChamberEndModuleSideConfig | None
 
 
 @dataclass(frozen=True)
@@ -260,6 +277,12 @@ class TargetRotaryConfig:
     index_disk_thickness_mm: float
     index_pin_diameter_mm: float
     index_pin_length_mm: float
+    vendor_reference_enabled: bool
+    vendor_reference_model_code: str | None
+    vendor_reference_body_diameter_mm: float
+    vendor_reference_body_length_mm: float
+    vendor_reference_handwheel_diameter_mm: float
+    vendor_reference_handwheel_thickness_mm: float
 
 
 @dataclass(frozen=True)
@@ -292,6 +315,10 @@ class StandConfig:
     base_thickness_mm: float
     chamber_support_height_mm: float
     support_foot_diameter_mm: float
+    chamber_support_end_margin_mm: float
+    chamber_support_pair_half_span_x_mm: float
+    h_plate_support_end_margin_mm: float
+    h_plate_support_pair_half_span_x_mm: float
     enable_plate_ties: bool
     plate_tie_column_diameter_mm: float
     plate_tie_cap_width_mm: float
@@ -477,6 +504,18 @@ def _parse_end_module_side(
 
     module_outer_diameter_mm = _to_float(raw.get("module_outer_diameter_mm"), f"{prefix}.module_outer_diameter_mm")
     module_inner_diameter_mm = _to_float(raw.get("module_inner_diameter_mm"), f"{prefix}.module_inner_diameter_mm")
+    pipe_outer_diameter_mm = _to_float(
+        raw.get("pipe_outer_diameter_mm", module_inner_diameter_mm),
+        f"{prefix}.pipe_outer_diameter_mm",
+    )
+    pipe_inner_diameter_mm = _to_float(
+        raw.get("pipe_inner_diameter_mm", module_inner_diameter_mm),
+        f"{prefix}.pipe_inner_diameter_mm",
+    )
+    pipe_length_mm = _to_float(
+        raw.get("pipe_length_mm", 0.0),
+        f"{prefix}.pipe_length_mm",
+    )
     module_thickness_mm = _to_float(raw.get("module_thickness_mm"), f"{prefix}.module_thickness_mm")
     seal_face_width_mm = _to_float(raw.get("seal_face_width_mm"), f"{prefix}.seal_face_width_mm")
     bolt_circle_diameter_mm = _to_float(raw.get("bolt_circle_diameter_mm"), f"{prefix}.bolt_circle_diameter_mm")
@@ -492,6 +531,7 @@ def _parse_end_module_side(
     legacy_groove_width = raw.get("oring_groove_width_mm")
     groove_inner_raw = raw.get("oring_groove_inner_diameter_mm")
     groove_outer_raw = raw.get("oring_groove_outer_diameter_mm")
+    # [EN] Groove dimensions are normalized here so VG/VF sealing semantics follow the declared interface standard instead of historical front/rear assumptions. / [CN] 在这里统一归一化 groove 尺寸，使 VG/VF 密封语义跟随声明的接口标准，而不是沿用历史上的前后端假设。
     if groove_inner_raw is None or groove_outer_raw is None:
         groove_width = _to_float(
             0.0 if legacy_groove_width is None else legacy_groove_width,
@@ -519,6 +559,9 @@ def _parse_end_module_side(
         standard=standard,
         module_outer_diameter_mm=module_outer_diameter_mm,
         module_inner_diameter_mm=module_inner_diameter_mm,
+        pipe_outer_diameter_mm=pipe_outer_diameter_mm,
+        pipe_inner_diameter_mm=pipe_inner_diameter_mm,
+        pipe_length_mm=pipe_length_mm,
         module_thickness_mm=module_thickness_mm,
         seal_face_width_mm=seal_face_width_mm,
         bolt_circle_diameter_mm=bolt_circle_diameter_mm,
@@ -572,6 +615,20 @@ def _parse_end_module_side(
 
     if cfg.module_inner_diameter_mm >= cfg.module_outer_diameter_mm:
         raise ValueError(f"{prefix}.module_inner_diameter_mm must be < outer")
+    if cfg.pipe_length_mm < 0.0:
+        raise ValueError(f"{prefix}.pipe_length_mm must be >= 0")
+    if cfg.pipe_length_mm > 0.0:
+        _require_positive(
+            {
+                f"{prefix}.pipe_outer_diameter_mm": cfg.pipe_outer_diameter_mm,
+                f"{prefix}.pipe_inner_diameter_mm": cfg.pipe_inner_diameter_mm,
+                f"{prefix}.pipe_length_mm": cfg.pipe_length_mm,
+            }
+        )
+        if cfg.pipe_inner_diameter_mm >= cfg.pipe_outer_diameter_mm:
+            raise ValueError(f"{prefix}.pipe_inner_diameter_mm must be < pipe_outer_diameter_mm")
+        if cfg.pipe_outer_diameter_mm > cfg.module_inner_diameter_mm:
+            raise ValueError(f"{prefix}.pipe_outer_diameter_mm must be <= module_inner_diameter_mm")
     if cfg.bolt_count < 4:
         raise ValueError(f"{prefix}.bolt_count must be >= 4")
     if cfg.bolt_circle_diameter_mm >= cfg.module_outer_diameter_mm:
@@ -630,11 +687,18 @@ def _parse_chamber(raw: dict[str, Any]) -> ChamberConfig:
     end_raw = _to_mapping(raw.get("end_modules"), "geometry.chamber.end_modules")
     los_raw_value = raw.get("los_channels", {})
     los_raw = _to_mapping(los_raw_value, "geometry.chamber.los_channels") if los_raw_value is not None else {}
+    contract_raw_value = raw.get("contract", {})
+    contract_raw = (
+        _to_mapping(contract_raw_value, "geometry.chamber.contract")
+        if contract_raw_value is not None
+        else {}
+    )
 
     core = ChamberCoreConfig(
         size_x_mm=_to_float(core_raw.get("size_x_mm"), "geometry.chamber.core.size_x_mm"),
         size_y_mm=_to_float(core_raw.get("size_y_mm"), "geometry.chamber.core.size_y_mm"),
         size_z_mm=_to_float(core_raw.get("size_z_mm"), "geometry.chamber.core.size_z_mm"),
+        center_z_mm=_to_float(core_raw.get("center_z_mm", 0.0), "geometry.chamber.core.center_z_mm"),
         wall_thickness_mm=_to_float(core_raw.get("wall_thickness_mm"), "geometry.chamber.core.wall_thickness_mm"),
     )
 
@@ -698,16 +762,50 @@ def _parse_chamber(raw: dict[str, Any]) -> ChamberConfig:
 
     if 2.0 * core.wall_thickness_mm >= min(core.size_x_mm, core.size_y_mm, core.size_z_mm):
         raise ValueError("geometry.chamber.core.wall_thickness_mm is too large for core dimensions")
-    if abs(los_channels.channel_start_z_mm) >= 0.5 * core.size_z_mm:
+    half_z = 0.5 * core.size_z_mm
+    z_min = core.center_z_mm - half_z
+    z_max = core.center_z_mm + half_z
+    if abs(core.center_z_mm) >= half_z:
+        raise ValueError("geometry.chamber.core.center_z_mm must keep z=0 inside chamber span")
+    if not (z_min < los_channels.channel_start_z_mm < z_max):
         raise ValueError("geometry.chamber.los_channels.channel_start_z_mm must lie inside chamber z-span")
     if los_channels.channel_diameter_mm >= min(core.size_x_mm, core.size_y_mm):
         raise ValueError("geometry.chamber.los_channels.channel_diameter_mm must be smaller than chamber transverse span")
 
-    return ChamberConfig(core=core, end_modules=end_modules, los_channels=los_channels)
+    required_ports_raw = contract_raw.get("required_ports_enabled", list(_ALLOWED_PORT_NAMES))
+    forbidden_ports_raw = contract_raw.get("forbidden_ports_enabled", [])
+    required_ports_enabled = tuple(_parse_port_name_list(required_ports_raw, "geometry.chamber.contract.required_ports_enabled"))
+    forbidden_ports_enabled = tuple(_parse_port_name_list(forbidden_ports_raw, "geometry.chamber.contract.forbidden_ports_enabled"))
+    if set(required_ports_enabled) & set(forbidden_ports_enabled):
+        raise ValueError("geometry.chamber.contract required/forbidden port sets must be disjoint")
+
+    rotary_mount_standard_raw = contract_raw.get("rotary_mount_standard")
+    rotary_mount_standard = (
+        _to_str(rotary_mount_standard_raw, "geometry.chamber.contract.rotary_mount_standard")
+        if rotary_mount_standard_raw is not None
+        else None
+    )
+
+    contract = ChamberContractConfig(
+        front_standard=_to_str(
+            contract_raw.get("front_standard", front.standard),
+            "geometry.chamber.contract.front_standard",
+        ),
+        rear_standard=_to_str(
+            contract_raw.get("rear_standard", rear.standard),
+            "geometry.chamber.contract.rear_standard",
+        ),
+        required_ports_enabled=required_ports_enabled,
+        forbidden_ports_enabled=forbidden_ports_enabled,
+        rotary_mount_standard=rotary_mount_standard,
+    )
+
+    return ChamberConfig(core=core, end_modules=end_modules, los_channels=los_channels, contract=contract)
 
 
 def _parse_port(raw: dict[str, Any], field_prefix: str) -> PortConfig:
     cfg = PortConfig(
+        enabled=_to_bool(raw.get("enabled", True), f"{field_prefix}.enabled"),
         side=_to_str(raw.get("side"), f"{field_prefix}.side").lower(),
         center_x_mm=_to_float(raw.get("center_x_mm", 0.0), f"{field_prefix}.center_x_mm"),
         center_y_mm=_to_float(raw.get("center_y_mm", 0.0), f"{field_prefix}.center_y_mm"),
@@ -715,23 +813,45 @@ def _parse_port(raw: dict[str, Any], field_prefix: str) -> PortConfig:
         inner_diameter_mm=_to_float(raw.get("inner_diameter_mm"), f"{field_prefix}.inner_diameter_mm"),
         outer_diameter_mm=_to_float(raw.get("outer_diameter_mm"), f"{field_prefix}.outer_diameter_mm"),
         length_mm=_to_float(raw.get("length_mm"), f"{field_prefix}.length_mm"),
+        interface=(
+            _parse_end_module_side(
+                _to_mapping(raw.get("interface"), f"{field_prefix}.interface"),
+                f"{field_prefix}.interface",
+            )
+            if raw.get("interface") is not None
+            else None
+        ),
     )
 
     _require_positive(
         {
             f"{field_prefix}.inner_diameter_mm": cfg.inner_diameter_mm,
             f"{field_prefix}.outer_diameter_mm": cfg.outer_diameter_mm,
-            f"{field_prefix}.length_mm": cfg.length_mm,
         }
     )
+    if cfg.length_mm < 0.0:
+        raise ValueError(f"{field_prefix}.length_mm must be >= 0")
 
     if cfg.side not in _ALLOWED_PORT_SIDES:
         raise ValueError(f"{field_prefix}.side must be one of {sorted(_ALLOWED_PORT_SIDES)}, got {cfg.side!r}")
 
     if cfg.inner_diameter_mm >= cfg.outer_diameter_mm:
         raise ValueError(f"{field_prefix}.inner_diameter_mm must be < outer_diameter_mm")
+    if not cfg.enabled and cfg.interface is not None:
+        raise ValueError(f"{field_prefix}.interface requires {field_prefix}.enabled=true")
 
     return cfg
+
+
+def _parse_port_name_list(value: Any, field_name: str) -> list[str]:
+    items = _to_list(value, field_name)
+    out: list[str] = []
+    for idx, item in enumerate(items):
+        name = _to_str(item, f"{field_name}[{idx}]")
+        if name not in _ALLOWED_PORT_NAMES:
+            raise ValueError(f"{field_name}[{idx}] must be one of {list(_ALLOWED_PORT_NAMES)}, got {name!r}")
+        out.append(name)
+    return out
 
 
 def _parse_ports(raw: dict[str, Any]) -> PortsConfig:
@@ -745,14 +865,18 @@ def _parse_ports(raw: dict[str, Any]) -> PortsConfig:
         spare=_parse_port(_to_mapping(raw.get("spare"), "geometry.ports.spare"), "geometry.ports.spare"),
     )
 
-    if cfg.main_pump.side != "right":
+    if cfg.main_pump.enabled and cfg.main_pump.side != "right":
         raise ValueError("geometry.ports.main_pump.side must be 'right' per BLP v1 baseline")
-    if cfg.gauge_safety.side != "left":
+    if cfg.gauge_safety.enabled and cfg.gauge_safety.side != "left":
         raise ValueError("geometry.ports.gauge_safety.side must be 'left' per BLP v1 baseline")
 
-    sides = [cfg.main_pump.side, cfg.gauge_safety.side, cfg.rotary_feedthrough.side, cfg.spare.side]
-    if len(set(sides)) < 3:
-        raise ValueError("geometry.ports requires physically distinct side allocation for the 4 fixed ports")
+    enabled_sides = [
+        port.side
+        for port in (cfg.main_pump, cfg.gauge_safety, cfg.rotary_feedthrough, cfg.spare)
+        if port.enabled
+    ]
+    if len(enabled_sides) != len(set(enabled_sides)):
+        raise ValueError("geometry.ports enabled ports must use distinct chamber sides")
 
     return cfg
 
@@ -1207,6 +1331,31 @@ def _parse_target_rotary(raw: dict[str, Any]) -> TargetRotaryConfig:
             raw.get("index_pin_length_mm"),
             "geometry.target.rotary.index_pin_length_mm",
         ),
+        vendor_reference_enabled=_to_bool(
+            raw.get("vendor_reference_enabled", False),
+            "geometry.target.rotary.vendor_reference_enabled",
+        ),
+        vendor_reference_model_code=(
+            _to_str(raw.get("vendor_reference_model_code"), "geometry.target.rotary.vendor_reference_model_code")
+            if raw.get("vendor_reference_model_code") is not None
+            else None
+        ),
+        vendor_reference_body_diameter_mm=_to_float(
+            raw.get("vendor_reference_body_diameter_mm", 36.0),
+            "geometry.target.rotary.vendor_reference_body_diameter_mm",
+        ),
+        vendor_reference_body_length_mm=_to_float(
+            raw.get("vendor_reference_body_length_mm", 70.0),
+            "geometry.target.rotary.vendor_reference_body_length_mm",
+        ),
+        vendor_reference_handwheel_diameter_mm=_to_float(
+            raw.get("vendor_reference_handwheel_diameter_mm", 52.0),
+            "geometry.target.rotary.vendor_reference_handwheel_diameter_mm",
+        ),
+        vendor_reference_handwheel_thickness_mm=_to_float(
+            raw.get("vendor_reference_handwheel_thickness_mm", 12.0),
+            "geometry.target.rotary.vendor_reference_handwheel_thickness_mm",
+        ),
     )
 
     _require_positive(
@@ -1229,6 +1378,10 @@ def _parse_target_rotary(raw: dict[str, Any]) -> TargetRotaryConfig:
             "geometry.target.rotary.index_disk_thickness_mm": rotary.index_disk_thickness_mm,
             "geometry.target.rotary.index_pin_diameter_mm": rotary.index_pin_diameter_mm,
             "geometry.target.rotary.index_pin_length_mm": rotary.index_pin_length_mm,
+            "geometry.target.rotary.vendor_reference_body_diameter_mm": rotary.vendor_reference_body_diameter_mm,
+            "geometry.target.rotary.vendor_reference_body_length_mm": rotary.vendor_reference_body_length_mm,
+            "geometry.target.rotary.vendor_reference_handwheel_diameter_mm": rotary.vendor_reference_handwheel_diameter_mm,
+            "geometry.target.rotary.vendor_reference_handwheel_thickness_mm": rotary.vendor_reference_handwheel_thickness_mm,
         }
     )
 
@@ -1242,6 +1395,10 @@ def _parse_target_rotary(raw: dict[str, Any]) -> TargetRotaryConfig:
         raise ValueError("geometry.target.rotary.index_pin_diameter_mm must be < index_disk_diameter_mm")
     if rotary.hard_stop_span_mm >= rotary.handwheel_diameter_mm:
         raise ValueError("geometry.target.rotary.hard_stop_span_mm must be < handwheel_diameter_mm")
+    if rotary.vendor_reference_enabled and rotary.vendor_reference_model_code is None:
+        raise ValueError(
+            "geometry.target.rotary.vendor_reference_model_code is required when vendor_reference_enabled=true"
+        )
 
     return rotary
 
@@ -1351,6 +1508,22 @@ def _parse_stand(raw: dict[str, Any]) -> StandConfig:
             raw.get("support_foot_diameter_mm"),
             "geometry.stand.support_foot_diameter_mm",
         ),
+        chamber_support_end_margin_mm=_to_float(
+            raw.get("chamber_support_end_margin_mm", 100.0),
+            "geometry.stand.chamber_support_end_margin_mm",
+        ),
+        chamber_support_pair_half_span_x_mm=_to_float(
+            raw.get("chamber_support_pair_half_span_x_mm", 50.0),
+            "geometry.stand.chamber_support_pair_half_span_x_mm",
+        ),
+        h_plate_support_end_margin_mm=_to_float(
+            raw.get("h_plate_support_end_margin_mm", 100.0),
+            "geometry.stand.h_plate_support_end_margin_mm",
+        ),
+        h_plate_support_pair_half_span_x_mm=_to_float(
+            raw.get("h_plate_support_pair_half_span_x_mm", 160.0),
+            "geometry.stand.h_plate_support_pair_half_span_x_mm",
+        ),
         enable_plate_ties=_to_bool(raw.get("enable_plate_ties", True), "geometry.stand.enable_plate_ties"),
         plate_tie_column_diameter_mm=_to_float(
             raw.get("plate_tie_column_diameter_mm"),
@@ -1387,6 +1560,10 @@ def _parse_stand(raw: dict[str, Any]) -> StandConfig:
         "geometry.stand.base_thickness_mm": cfg.base_thickness_mm,
         "geometry.stand.chamber_support_height_mm": cfg.chamber_support_height_mm,
         "geometry.stand.support_foot_diameter_mm": cfg.support_foot_diameter_mm,
+        "geometry.stand.chamber_support_end_margin_mm": cfg.chamber_support_end_margin_mm,
+        "geometry.stand.chamber_support_pair_half_span_x_mm": cfg.chamber_support_pair_half_span_x_mm,
+        "geometry.stand.h_plate_support_end_margin_mm": cfg.h_plate_support_end_margin_mm,
+        "geometry.stand.h_plate_support_pair_half_span_x_mm": cfg.h_plate_support_pair_half_span_x_mm,
         "geometry.stand.leveling_screw_diameter_mm": cfg.leveling_screw_diameter_mm,
         "geometry.stand.shim_thickness_mm": cfg.shim_thickness_mm,
     }
@@ -1485,10 +1662,11 @@ def _resolve_auto_plate_offset(
 
     # [EN] Auto mode only solves plate-normal standoff to the minimum outside-chamber position plus configured safety gap; in-plane offsets remain user-owned. / [CN] 自动模式仅解算板法向外置距离（腔体外最小距离+安全间隙），板内平移仍由用户控制。
     if plate.mount_plane == "xy":
-        sign = 1.0 if plate.z_mm >= 0.0 else -1.0
+        sign = 1.0 if plate.z_mm >= core.center_z_mm else -1.0
         if abs(plate.z_mm) < 1e-9:
             sign = 1.0
-        z_mm = sign * (0.5 * core.size_z_mm + 0.5 * plate.thickness_mm + clearance.plate_auto_gap_mm)
+        face_z = core.center_z_mm + sign * (0.5 * core.size_z_mm)
+        z_mm = face_z + sign * (0.5 * plate.thickness_mm + clearance.plate_auto_gap_mm)
         return replace(plate, z_mm=z_mm)
 
     if plate.mount_plane == "xz":
@@ -1559,7 +1737,10 @@ def _validate_geometry(cfg: GeometryConfig) -> None:
     half_x = 0.5 * core.size_x_mm
     half_y = 0.5 * core.size_y_mm
     half_z = 0.5 * core.size_z_mm
+    z_min = core.center_z_mm - half_z
+    z_max = core.center_z_mm + half_z
     skip_overlap = cfg.clearance.skip_overlap_checks
+    # [EN] Validate frozen HVV pose semantics and outside-chamber placement numerically before any CAD is built, so configuration errors fail fast without relying on expensive booleans. / [CN] 在生成 CAD 之前先用数值方式验证冻结的 HVV 姿态语义和板件外置条件，让配置错误尽早失败，而不是依赖代价更高的布尔运算。
     for name, plate in (("h", cfg.plate.h), ("v1", cfg.plate.v1), ("v2", cfg.plate.v2)):
         if name == "h":
             if plate.orientation != "horizontal" or plate.mount_plane != "xz":
@@ -1570,8 +1751,14 @@ def _validate_geometry(cfg: GeometryConfig) -> None:
 
         if not skip_overlap:
             if plate.mount_plane == "xy":
-                min_center_distance = half_z + 0.5 * plate.thickness_mm + cfg.clearance.plate_auto_gap_mm
-                if abs(plate.z_mm) < min_center_distance:
+                if z_min <= plate.z_mm <= z_max:
+                    raise ValueError(f"geometry.plate.{name}.z_mm must place full plate outside chamber volume")
+                sign = 1.0 if plate.z_mm >= core.center_z_mm else -1.0
+                face_z = z_max if sign > 0.0 else z_min
+                min_center_distance = 0.5 * plate.thickness_mm + cfg.clearance.plate_auto_gap_mm
+                if sign > 0.0 and plate.z_mm < face_z + min_center_distance:
+                    raise ValueError(f"geometry.plate.{name}.z_mm must place full plate outside chamber volume")
+                if sign < 0.0 and plate.z_mm > face_z - min_center_distance:
                     raise ValueError(f"geometry.plate.{name}.z_mm must place full plate outside chamber volume")
             elif plate.mount_plane == "xz":
                 min_center_distance = half_y + 0.5 * plate.thickness_mm + cfg.clearance.plate_auto_gap_mm
@@ -1602,7 +1789,10 @@ def _validate_geometry(cfg: GeometryConfig) -> None:
         ("rotary_feedthrough", cfg.ports.rotary_feedthrough),
         ("spare", cfg.ports.spare),
     ):
-        if abs(port.center_z_mm) >= 0.5 * core.size_z_mm:
+        if not port.enabled:
+            continue
+        # [EN] Port centers are constrained to stay fully inside their wall footprint so the chamber shell retains a realizable sealing annulus around every nozzle. / [CN] 端口中心必须完全落在所属壁面可用范围内，确保每个接管周围都保留可制造、可密封的壳体环带。
+        if not (z_min < port.center_z_mm < z_max):
             raise ValueError(f"geometry.ports.{name}.center_z_mm must lie on chamber side wall span")
         port_radius = 0.5 * port.outer_diameter_mm
         if port.side in {"right", "left"}:
@@ -1615,8 +1805,42 @@ def _validate_geometry(cfg: GeometryConfig) -> None:
                 raise ValueError(f"geometry.ports.{name}.center_y_mm must be 0 for {port.side} wall ports")
             if abs(port.center_x_mm) + port_radius >= half_x:
                 raise ValueError(f"geometry.ports.{name}.center_x_mm places the port footprint outside chamber wall span")
-        if abs(port.center_z_mm) + port_radius >= half_z:
+        if port.center_z_mm - port_radius <= z_min or port.center_z_mm + port_radius >= z_max:
             raise ValueError(f"geometry.ports.{name}.center_z_mm places the port footprint outside chamber wall span")
+
+    enabled_port_names = {
+        name
+        for name, port in (
+            ("main_pump", cfg.ports.main_pump),
+            ("gauge_safety", cfg.ports.gauge_safety),
+            ("rotary_feedthrough", cfg.ports.rotary_feedthrough),
+            ("spare", cfg.ports.spare),
+        )
+        if port.enabled
+    }
+    missing_required_ports = [name for name in cfg.chamber.contract.required_ports_enabled if name not in enabled_port_names]
+    if missing_required_ports:
+        raise ValueError(
+            "geometry.chamber.contract.required_ports_enabled are not enabled in geometry.ports: "
+            + ", ".join(missing_required_ports)
+        )
+    forbidden_enabled_ports = [name for name in cfg.chamber.contract.forbidden_ports_enabled if name in enabled_port_names]
+    if forbidden_enabled_ports:
+        raise ValueError(
+            "geometry.chamber.contract.forbidden_ports_enabled must stay disabled in geometry.ports: "
+            + ", ".join(forbidden_enabled_ports)
+        )
+    if cfg.chamber.contract.rotary_mount_standard is not None:
+        rotary_port = cfg.ports.rotary_feedthrough
+        if not rotary_port.enabled:
+            raise ValueError("geometry.chamber.contract.rotary_mount_standard requires geometry.ports.rotary_feedthrough.enabled=true")
+        if rotary_port.interface is None:
+            raise ValueError("geometry.chamber.contract.rotary_mount_standard requires geometry.ports.rotary_feedthrough.interface")
+        if rotary_port.interface.standard.upper() != cfg.chamber.contract.rotary_mount_standard.upper():
+            raise ValueError(
+                "geometry.ports.rotary_feedthrough.interface.standard must match "
+                "geometry.chamber.contract.rotary_mount_standard"
+            )
 
     clamp = cfg.detector.clamp
     if clamp.anti_rotation_key_width_mm >= clamp.inner_diameter_mm:
@@ -1625,6 +1849,10 @@ def _validate_geometry(cfg: GeometryConfig) -> None:
         raise ValueError("geometry.detector.clamp.clamp_ear_width_mm must be > clamp_bolt_diameter_mm")
 
     for side_name, module in (("front", cfg.chamber.end_modules.front), ("rear", cfg.chamber.end_modules.rear)):
+        if module.pipe_length_mm > 0.0 and module.pipe_inner_diameter_mm < cfg.beamline.inlet_diameter_mm:
+            raise ValueError(
+                f"geometry.chamber.end_modules.{side_name}.pipe_inner_diameter_mm must be >= geometry.beamline.inlet_diameter_mm"
+            )
         if _end_module_has_groove(module):
             flange_annulus = module.module_outer_diameter_mm - module.module_inner_diameter_mm
             groove_span = module.oring_groove_outer_diameter_mm - module.oring_groove_inner_diameter_mm
@@ -1639,6 +1867,56 @@ def _validate_geometry(cfg: GeometryConfig) -> None:
             )
 
     stand = cfg.stand
+    support_foot_radius_mm = 0.5 * stand.support_foot_diameter_mm
+    if (stand.chamber_support_pair_half_span_x_mm + support_foot_radius_mm) > (0.5 * core.size_x_mm):
+        raise ValueError(
+            "geometry.stand.chamber_support_pair_half_span_x_mm must keep chamber support feet inside chamber x footprint"
+        )
+    chamber_half_z = 0.5 * core.size_z_mm
+    if stand.chamber_support_end_margin_mm < support_foot_radius_mm:
+        raise ValueError(
+            "geometry.stand.chamber_support_end_margin_mm must keep chamber support feet inside chamber z footprint"
+        )
+    if stand.chamber_support_end_margin_mm > (chamber_half_z - support_foot_radius_mm):
+        raise ValueError(
+            "geometry.stand.chamber_support_end_margin_mm leaves no distinct front/rear chamber support rows"
+        )
+    if (stand.h_plate_support_pair_half_span_x_mm + support_foot_radius_mm) > (0.5 * cfg.plate.h.width_mm):
+        raise ValueError(
+            "geometry.stand.h_plate_support_pair_half_span_x_mm must keep H-plate support feet inside plate.h width footprint"
+        )
+    h_plate_half_height = 0.5 * cfg.plate.h.height_mm
+    if stand.h_plate_support_end_margin_mm < support_foot_radius_mm:
+        raise ValueError(
+            "geometry.stand.h_plate_support_end_margin_mm must keep H-plate support feet inside plate.h height footprint"
+        )
+    if stand.h_plate_support_end_margin_mm > (h_plate_half_height - support_foot_radius_mm):
+        raise ValueError(
+            "geometry.stand.h_plate_support_end_margin_mm leaves no distinct front/rear H-plate support rows"
+        )
+    if stand.with_base_plate:
+        chamber_support_front_z = core.center_z_mm - chamber_half_z + stand.chamber_support_end_margin_mm
+        chamber_support_rear_z = core.center_z_mm + chamber_half_z - stand.chamber_support_end_margin_mm
+        h_support_front_z = cfg.plate.h.z_mm - (h_plate_half_height - stand.h_plate_support_end_margin_mm)
+        h_support_rear_z = cfg.plate.h.z_mm + (h_plate_half_height - stand.h_plate_support_end_margin_mm)
+        max_support_z = max(
+            abs(chamber_support_front_z),
+            abs(chamber_support_rear_z),
+            abs(h_support_front_z),
+            abs(h_support_rear_z),
+        )
+        max_support_x = max(
+            stand.chamber_support_pair_half_span_x_mm,
+            abs(cfg.plate.h.offset_x_mm) + stand.h_plate_support_pair_half_span_x_mm,
+        )
+        if (max_support_x + support_foot_radius_mm) > (0.5 * stand.base_length_mm):
+            raise ValueError(
+                "geometry.stand.base_length_mm must span the centered chamber/H support rows when base plate is enabled"
+            )
+        if (max_support_z + support_foot_radius_mm) > (0.5 * stand.base_width_mm):
+            raise ValueError(
+                "geometry.stand.base_width_mm must span the centered chamber/H support rows when base plate is enabled"
+            )
     if stand.enable_plate_ties:
         if stand.plate_tie_cap_width_mm >= min(stand.base_length_mm, stand.base_width_mm):
             raise ValueError("geometry.stand.plate_tie_cap_width_mm must be smaller than stand base span")
@@ -1666,6 +1944,7 @@ def _validate_geometry(cfg: GeometryConfig) -> None:
             raise ValueError("geometry.target.single_rotary mode requires rotary and single_holder sections")
         if rotary.pivot_x_mm >= half_x:
             raise ValueError("geometry.target.rotary.pivot_x_mm must lie inside the chamber transverse span")
+        # [EN] Arm length is forced to equal pivot offset so the work pose lands the single target exactly on the beam axis by pure rotation, without hidden translational compensation. / [CN] 强制臂长等于转轴偏置量，使单靶工作位仅靠纯旋转就能精确落到束轴上，而不依赖隐藏的平移补偿。
         if rotary.arm_length_mm != rotary.pivot_x_mm:
             raise ValueError("geometry.target.rotary.arm_length_mm must equal pivot_x_mm so the work pose centers the target on beam")
 
@@ -1674,6 +1953,7 @@ def _parse_layout(raw: dict[str, Any]) -> LayoutConfig:
     sectors_raw = _to_list(raw.get("sectors"), "layout.sectors")
     channels_raw = _to_list(raw.get("channels"), "layout.channels")
 
+    # [EN] The layout contract is intentionally closed to the frozen 4 sectors, because many chamber/plate validators assume exactly one exit side per sector family. / [CN] 布局契约刻意限制为冻结的 4 个扇区，因为许多腔体/板件校验都默认每个扇区族只对应一个首出腔侧面。
     sectors = tuple(_to_str(item, "layout.sectors[]").lower() for item in sectors_raw)
     if set(sectors) != _ALLOWED_SECTORS or len(sectors) != 4:
         raise ValueError("layout.sectors must contain exactly [left, right, up, down]")
@@ -1696,6 +1976,7 @@ def _parse_layout(raw: dict[str, Any]) -> LayoutConfig:
             )
         )
 
+    # [EN] BLP v1 keeps exactly three scattering-radius families, which expand with the four sectors into the canonical 12 detector stations. / [CN] BLP v1 固定为 3 组散射半径通道，再与 4 个扇区展开成标准的 12 个探测器工位。
     if len(channels) != 3:
         raise ValueError("layout.channels must contain exactly 3 channels for BLP v1")
 

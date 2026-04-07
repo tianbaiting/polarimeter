@@ -16,19 +16,25 @@ from .components import (
     build_end_modules,
     build_plate_load_ties,
     build_ports,
+    build_rotary_feedthrough_vendor_reference,
     build_stand,
     build_single_rotary_target_shapes,
     build_target_holders,
     build_target_ladder,
+    chamber_support_centers,
     detector_fixture_geometry,
+    h_plate_support_centers,
     plate_los_plane_hit_point,
     plate_opening_local_polylines,
     plate_slot_half_width_mm,
+    rotary_port_interface_geometry,
     single_rotary_target_center,
+    stand_support_centers,
+    target_detector_front_face_cone,
     target_detector_los_tube,
 )
 from .config import ChamberCoreConfig, GeometryConfig, PlateConfig
-from .layout import DetectorPlacement, front_face_center, norm, plate_key_for_sector, ray_point_at_z, scaled
+from .layout import DetectorPlacement, chamber_z_bounds, front_face_center, norm, plate_key_for_sector, ray_point_at_z, scaled
 
 
 @dataclass(frozen=True)
@@ -79,6 +85,7 @@ def _scattering_angle_deg(front_center: App.Vector) -> float:
     radius = norm(front_center)
     if radius <= 0.0:
         return 0.0
+    # [EN] Scattering angle is measured from the +z beam axis, so the detector front-center z projection determines cos(theta). / [CN] 散射角相对 +z 束轴定义，因此探测器前端面中心在 z 方向的投影直接决定 cos(theta)。
     cos_theta = _clamp(front_center.z / radius, -1.0, 1.0)
     return math.degrees(math.acos(cos_theta))
 
@@ -117,7 +124,7 @@ def _distance(a: App.Vector, b: App.Vector) -> float:
 def _ray_box_exit_faces(core: ChamberCoreConfig, direction: App.Vector) -> tuple[str, ...]:
     half_x = 0.5 * core.size_x_mm
     half_y = 0.5 * core.size_y_mm
-    half_z = 0.5 * core.size_z_mm
+    z_min, z_max = chamber_z_bounds(core)
 
     candidates: list[tuple[float, str]] = []
     if abs(direction.x) > 1e-12:
@@ -125,10 +132,11 @@ def _ray_box_exit_faces(core: ChamberCoreConfig, direction: App.Vector) -> tuple
     if abs(direction.y) > 1e-12:
         candidates.append((half_y / abs(direction.y), "+y" if direction.y > 0.0 else "-y"))
     if abs(direction.z) > 1e-12:
-        candidates.append((half_z / abs(direction.z), "+z" if direction.z > 0.0 else "-z"))
+        candidates.append((((z_max / direction.z) if direction.z > 0.0 else (z_min / direction.z)), "+z" if direction.z > 0.0 else "-z"))
     if not candidates:
         raise ValueError("ray direction must have at least one non-zero component")
 
+    # [EN] Compare parametric ray distances to each slab; the minimum identifies the first chamber face the channel can escape through. / [CN] 比较射线到各组平板的参数距离，最小者就是该通道首先能够穿出的腔体面。
     t_min = min(t for t, _ in candidates)
     return tuple(face for t, face in candidates if abs(t - t_min) <= 1e-9)
 
@@ -263,6 +271,7 @@ def _los_hit_with_margin(
     margin_mm: float,
     plate_shape: Part.Shape | None = None,
 ) -> tuple[bool, str]:
+    # [EN] Opening validation is geometry-driven: test the actual LOS corridor plus clearance margin against the generated plate solid instead of trusting configuration metadata alone. / [CN] 开孔校验基于几何本身：把真实 LOS 走廊连同净空裕量与生成后的板件实体相测，而不是只信任配置元数据。
     if plate.opening_style == "los_tube":
         if plate_shape is None:
             return False, "los_tube validation requires plate_shape"
@@ -475,7 +484,8 @@ def _los_scope_detail(cfg: GeometryConfig) -> str:
     if cfg.clearance.los_scope == "v2_fullpath":
         return (
             "scope=v2_fullpath; "
-            "path=source_plane->chamber_effective_channels->detector_active_face; "
+            "path=source_plane->detector_active_face; "
+            "chamber_opening=cone_to_detector_front_face_circle; "
             f"occluders={{chamber_shell,end_modules,ports,plates{tie_token},target_hardware,stand}}; "
             "exempt={detector_packages}"
         )
@@ -529,14 +539,17 @@ def _validate_chamber(
         SubsystemCheck(
             name="no_conical_transition",
             passed=True,
-            detail="chamber geometry is rectangular core with planar end modules",
+            detail="chamber geometry is rectangular core with welded pipe-stub end modules and planar flange interfaces",
         )
     )
 
     front_module = cfg.chamber.end_modules.front
     rear_module = cfg.chamber.end_modules.rear
 
-    standards_ok = front_module.standard.upper() == "VG150" and rear_module.standard.upper() == "VF80"
+    standards_ok = (
+        front_module.standard.upper() == cfg.chamber.contract.front_standard.upper()
+        and rear_module.standard.upper() == cfg.chamber.contract.rear_standard.upper()
+    )
     checks.append(
         SubsystemCheck(
             name="end_module_standard",
@@ -546,10 +559,11 @@ def _validate_chamber(
     )
 
     type_semantics_ok = (
-        _end_module_has_groove(front_module.standard)
-        and not _end_module_has_groove(rear_module.standard)
-        and front_module.oring_groove_depth_mm > 0.0
-        and rear_module.oring_groove_depth_mm <= 0.0
+        (_end_module_has_groove(front_module.standard) and front_module.oring_groove_depth_mm > 0.0)
+        or (not _end_module_has_groove(front_module.standard) and front_module.oring_groove_depth_mm <= 0.0)
+    ) and (
+        (_end_module_has_groove(rear_module.standard) and rear_module.oring_groove_depth_mm > 0.0)
+        or (not _end_module_has_groove(rear_module.standard) and rear_module.oring_groove_depth_mm <= 0.0)
     )
     checks.append(
         SubsystemCheck(
@@ -562,15 +576,70 @@ def _validate_chamber(
         )
     )
 
-    ports_ok = cfg.ports.main_pump.side == "right" and cfg.ports.gauge_safety.side == "left"
+    enabled_port_names = tuple(
+        name
+        for name, port in (
+            ("main_pump", cfg.ports.main_pump),
+            ("gauge_safety", cfg.ports.gauge_safety),
+            ("rotary_feedthrough", cfg.ports.rotary_feedthrough),
+            ("spare", cfg.ports.spare),
+        )
+        if port.enabled
+    )
+    required_ports = tuple(cfg.chamber.contract.required_ports_enabled)
+    forbidden_ports = tuple(cfg.chamber.contract.forbidden_ports_enabled)
+    ports_ok = all(name in enabled_port_names for name in required_ports) and all(
+        name not in enabled_port_names for name in forbidden_ports
+    )
     checks.append(
         SubsystemCheck(
-            name="fixed_4_ports",
+            name="port_contract",
             passed=ports_ok,
             detail=(
-                "ports={main_pump,gauge_safety,rotary_feedthrough,spare} "
-                f"with main_pump.side={cfg.ports.main_pump.side}, gauge_safety.side={cfg.ports.gauge_safety.side}"
+                f"enabled={enabled_port_names}, required={required_ports}, forbidden={forbidden_ports}"
             ),
+        )
+    )
+
+    rotary_mount = rotary_port_interface_geometry(cfg)
+    rotary_mount_expected = cfg.chamber.contract.rotary_mount_standard
+    rotary_mount_ok = (
+        rotary_mount_expected is None
+        or (
+            cfg.ports.rotary_feedthrough.enabled
+            and cfg.ports.rotary_feedthrough.interface is not None
+            and cfg.ports.rotary_feedthrough.interface.standard.upper() == rotary_mount_expected.upper()
+            and rotary_mount is not None
+        )
+    )
+    rotary_detail = "none"
+    if cfg.ports.rotary_feedthrough.interface is not None:
+        rotary_detail = cfg.ports.rotary_feedthrough.interface.standard
+    checks.append(
+        SubsystemCheck(
+            name="rotary_mount_standard",
+            passed=rotary_mount_ok,
+            detail=f"expected={rotary_mount_expected}, actual={rotary_detail}",
+        )
+    )
+
+    pipe_stub_ok = True
+    pipe_stub_parts: list[str] = []
+    for side_name, module in (("front", front_module), ("rear", rear_module)):
+        side_ok = (
+            module.pipe_length_mm > 0.0
+            and module.pipe_inner_diameter_mm >= cfg.beamline.inlet_diameter_mm
+            and module.pipe_outer_diameter_mm <= module.module_inner_diameter_mm
+        )
+        pipe_stub_ok = pipe_stub_ok and side_ok
+        pipe_stub_parts.append(
+            f"{side_name}[pipe_od={module.pipe_outer_diameter_mm:.1f},pipe_id={module.pipe_inner_diameter_mm:.1f},pipe_len={module.pipe_length_mm:.1f}]"
+        )
+    checks.append(
+        SubsystemCheck(
+            name="welded_pipe_stub_to_standard_flange",
+            passed=pipe_stub_ok,
+            detail="; ".join(pipe_stub_parts),
         )
     )
 
@@ -617,6 +686,7 @@ def _validate_chamber(
         )
         interface_parts.append(
             f"{side_name}[std={module.standard},od={module.module_outer_diameter_mm:.1f},id={module.module_inner_diameter_mm:.1f},"
+            f"pipe=({module.pipe_outer_diameter_mm:.1f},{module.pipe_inner_diameter_mm:.1f},{module.pipe_length_mm:.1f}),"
             f"bc={module.bolt_circle_diameter_mm:.1f},n={module.bolt_count},{groove_detail}]"
         )
     checks.append(
@@ -659,11 +729,15 @@ def _validate_chamber(
         cfg.chamber.core.wall_thickness_mm > 0.0
         and front_module.module_inner_diameter_mm < front_module.module_outer_diameter_mm
         and rear_module.module_inner_diameter_mm < rear_module.module_outer_diameter_mm
-        and cfg.ports.main_pump.inner_diameter_mm < cfg.ports.main_pump.outer_diameter_mm
-        and cfg.ports.gauge_safety.inner_diameter_mm < cfg.ports.gauge_safety.outer_diameter_mm
-        and cfg.ports.rotary_feedthrough.inner_diameter_mm < cfg.ports.rotary_feedthrough.outer_diameter_mm
-        and cfg.ports.spare.inner_diameter_mm < cfg.ports.spare.outer_diameter_mm
     )
+    for port in (cfg.ports.main_pump, cfg.ports.gauge_safety, cfg.ports.rotary_feedthrough, cfg.ports.spare):
+        if not port.enabled:
+            continue
+        vacuum_param_ok = vacuum_param_ok and (port.inner_diameter_mm < port.outer_diameter_mm)
+        if port.interface is not None:
+            vacuum_param_ok = vacuum_param_ok and (
+                port.interface.module_inner_diameter_mm < port.interface.module_outer_diameter_mm
+            )
 
     vacuum_boundary = build_chamber(cfg, placements=placements)
     front_module, rear_module = build_end_modules(cfg, placements=placements)
@@ -713,6 +787,7 @@ def _validate_chamber(
 def _validate_plates(cfg: GeometryConfig, placements: list[DetectorPlacement]) -> SubsystemValidationResult:
     checks: list[SubsystemCheck] = []
 
+    # [EN] Plate validation mixes frozen semantic checks (H/V/V pose, decentering) with generated-geometry checks (openings, overlap, LOS), because both design intent and CAD realization matter here. / [CN] 板件校验同时覆盖冻结语义检查（H/V/V 姿态、偏心）与生成几何检查（开孔、重叠、LOS），因为这里既要保证设计意图，也要保证 CAD 落地结果。
     checks.append(
         SubsystemCheck(
             name="hvv_topology",
@@ -785,6 +860,7 @@ def _validate_plates(cfg: GeometryConfig, placements: list[DetectorPlacement]) -
             min_envelope_detail_parts.append(f"{key}[no_assigned_placements]")
             continue
 
+        # [EN] Envelope demand is measured from actual hit points on each assigned plate, then inflated by LOS margin, so panel size tracks detector acceptance rather than legacy nominal dimensions. / [CN] 板尺寸需求先由各自命中点在板面上的真实分布确定，再叠加 LOS 裕量，因此面板大小跟随探测器接受立体角，而不是沿用旧版名义尺寸。
         max_u = 0.0
         max_v = 0.0
         hit_count = 0
@@ -829,6 +905,7 @@ def _validate_plates(cfg: GeometryConfig, placements: list[DetectorPlacement]) -
                 f"{key}[style=rounded_slot,slots={slot_count},expected={expected_slots},half_width={plate_slot_half_width_mm(cfg):.1f}]"
             )
         elif plate.opening_style == "los_tube":
+            # [EN] LOS-tube style is considered valid by tube radius semantics plus plane-hit reachability; the exact obstruction check happens later against the built solid. / [CN] `los_tube` 风格的有效性先由管径语义与打到板面的可达性判定，具体是否遮挡则在后续对实体的检查里完成。
             hit_count = sum(
                 1
                 for placement in placements_by_plate[key]
@@ -855,6 +932,30 @@ def _validate_plates(cfg: GeometryConfig, placements: list[DetectorPlacement]) -
             name="plate_opening_geometry_valid",
             passed=opening_ok,
             detail="; ".join(opening_detail_parts),
+        )
+    )
+
+    h_plate_cone_clear_ok = True
+    h_plate_cone_clear_parts: list[str] = []
+    h_plate_shape = build_all_plates(cfg, placements=placements)["HPlate"]
+    cone_front_face_radius_mm = 0.5 * cfg.detector.clamp.detector_diameter_mm
+    for placement in placements:
+        if plate_key_for_sector(placement.sector_name) == "h":
+            continue
+        cone = target_detector_front_face_cone(cfg, placement, cone_front_face_radius_mm)
+        if cone is None:
+            h_plate_cone_clear_ok = False
+            h_plate_cone_clear_parts.append(f"{placement.tag}: cone=degenerate")
+            continue
+        overlap_volume = _shape_interference_volume(h_plate_shape, cone)
+        h_plate_cone_clear_ok = h_plate_cone_clear_ok and overlap_volume <= 1e-3
+        h_plate_cone_clear_parts.append(f"{placement.tag}[overlap={overlap_volume:.6f}]")
+
+    checks.append(
+        SubsystemCheck(
+            name="h_plate_relief_cones_clear",
+            passed=h_plate_cone_clear_ok,
+            detail="; ".join(h_plate_cone_clear_parts),
         )
     )
 
@@ -922,14 +1023,14 @@ def _validate_plates(cfg: GeometryConfig, placements: list[DetectorPlacement]) -
 
         half_x = 0.5 * cfg.chamber.core.size_x_mm
         half_y = 0.5 * cfg.chamber.core.size_y_mm
-        half_z = 0.5 * cfg.chamber.core.size_z_mm
+        z_min, z_max = chamber_z_bounds(cfg.chamber.core)
         outside_ok = True
         outside_parts: list[str] = []
         for plate_name, plate_shape in plate_shapes.items():
             inside_vertices = 0
             for vertex in plate_shape.Vertexes:
                 p = vertex.Point
-                if abs(p.x) < (half_x - 1e-6) and abs(p.y) < (half_y - 1e-6) and abs(p.z) < (half_z - 1e-6):
+                if abs(p.x) < (half_x - 1e-6) and abs(p.y) < (half_y - 1e-6) and (z_min + 1e-6) < p.z < (z_max - 1e-6):
                     inside_vertices += 1
             outside_parts.append(f"{plate_name}:inside_vertices={inside_vertices}")
             outside_ok = outside_ok and inside_vertices == 0
@@ -1125,8 +1226,8 @@ def _validate_detector(
         center = front_face_center(placement)
         half_x = 0.5 * cfg.chamber.core.size_x_mm
         half_y = 0.5 * cfg.chamber.core.size_y_mm
-        half_z = 0.5 * cfg.chamber.core.size_z_mm
-        inside = abs(center.x) <= half_x and abs(center.y) <= half_y and abs(center.z) <= half_z
+        z_min, z_max = chamber_z_bounds(cfg.chamber.core)
+        inside = abs(center.x) <= half_x and abs(center.y) <= half_y and z_min <= center.z <= z_max
         if inside:
             outside_failures.append(f"{placement.tag}: front-center lies inside chamber core")
 
@@ -1165,6 +1266,7 @@ def _validate_detector(
         + adapter.radial_standoff_mm
         + 0.5 * adapter.width_mm
     )
+    # [EN] The bridge-length limit is derived from the continuous load path stack-up, so excessive cantilevering is flagged in terms of actual support geometry rather than a magic number. / [CN] 桥接长度上限由连续承载路径的几何叠加推得，因此过长悬挑是按真实支撑几何判定，而不是用一个神秘常数。
     for placement in placements:
         layout = detector_fixture_geometry(cfg, placement)
         housing, clamp_a, clamp_b, adapter_block, mount_base = build_detector_fixture(
@@ -1459,6 +1561,7 @@ def _validate_detector(
 def _validate_target(cfg: GeometryConfig) -> SubsystemValidationResult:
     checks: list[SubsystemCheck] = []
 
+    # [EN] Target validation branches by mechanism type because linear ladders and single-rotary holders obey different kinematic invariants even when they share the same beamline origin. / [CN] 靶机构校验按机构类型分支，因为线性靶梯和单靶旋转架即便共用同一束线原点，也服从不同的运动学不变量。
     if cfg.target.mode == "linear_ladder":
         ladder = cfg.target.ladder
         holder = cfg.target.holder
@@ -1593,6 +1696,26 @@ def _validate_target(cfg: GeometryConfig) -> SubsystemValidationResult:
         )
     )
 
+    vendor_shapes = build_rotary_feedthrough_vendor_reference(cfg)
+    vendor_reference_ok = (
+        not rotary.vendor_reference_enabled
+        or (
+            rotary.vendor_reference_model_code is not None
+            and rotary_port_interface_geometry(cfg) is not None
+            and len(vendor_shapes) == 3
+        )
+    )
+    checks.append(
+        SubsystemCheck(
+            name="vendor_rotary_feedthrough_reference",
+            passed=vendor_reference_ok,
+            detail=(
+                f"enabled={rotary.vendor_reference_enabled}, model={rotary.vendor_reference_model_code}, "
+                f"shape_count={len(vendor_shapes)}"
+            ),
+        )
+    )
+
     drive_ok = (
         rotary.motor_mount_width_mm > 0.0
         and rotary.motor_mount_height_mm > 0.0
@@ -1643,14 +1766,59 @@ def _validate_target(cfg: GeometryConfig) -> SubsystemValidationResult:
     return _subsystem_status("target", checks)
 
 
-def _validate_stand(cfg: GeometryConfig) -> SubsystemValidationResult:
+def _validate_stand(cfg: GeometryConfig, placements: list[DetectorPlacement]) -> SubsystemValidationResult:
     checks: list[SubsystemCheck] = []
+    support_centers = stand_support_centers(cfg)
+    chamber_supports = chamber_support_centers(cfg)
+    h_plate_supports = h_plate_support_centers(cfg)
+    support_foot_radius_mm = 0.5 * cfg.stand.support_foot_diameter_mm
+    chamber_support_ok = len(chamber_supports) == 4 and all(
+        (abs(center.x) + support_foot_radius_mm) <= (0.5 * cfg.chamber.core.size_x_mm + 1e-6)
+        for center in chamber_supports
+    )
+    h_plate_support_ok = len(h_plate_supports) == 4 and all(
+        (abs(center.x - cfg.plate.h.offset_x_mm) + support_foot_radius_mm) <= (0.5 * cfg.plate.h.width_mm + 1e-6)
+        for center in h_plate_supports
+    )
+    chamber_support_zs = sorted({round(center.z, 3) for center in chamber_supports})
+    h_plate_support_zs = sorted({round(center.z, 3) for center in h_plate_supports})
+
+    # [EN] Stand checks intentionally focus on support semantics and service hardware, because the exact foot solids may move with chamber footprint tuning while those functional obligations stay fixed. / [CN] 支架检查刻意聚焦支撑语义和维护硬件，因为具体脚座实体会随腔体占位调参而变化，而这些功能义务保持不变。
+    checks.append(
+        SubsystemCheck(
+            name="eight_point_support",
+            passed=len(support_centers) == 8,
+            detail=f"support_centers={len(support_centers)}",
+        )
+    )
 
     checks.append(
         SubsystemCheck(
-            name="four_point_support",
-            passed=True,
-            detail="stand generator emits 4 support feet",
+            name="support_grids_under_chamber_and_h_plate",
+            passed=chamber_support_ok and h_plate_support_ok,
+            detail=(
+                f"chamber_rows_z={chamber_support_zs}, x={[round(x, 3) for x in sorted({center.x for center in chamber_supports})]}; "
+                f"h_rows_z={h_plate_support_zs}, x={[round(x, 3) for x in sorted({center.x for center in h_plate_supports})]}; "
+                f"foot_d={cfg.stand.support_foot_diameter_mm:.3f}"
+            ),
+        )
+    )
+
+    stand_parts = build_stand(cfg)
+    plate_shapes = build_all_plates(cfg, placements=placements)
+    support_ymin = min(
+        shape.BoundBox.YMin
+        for name, shape in stand_parts.items()
+        if name.startswith("StandSupportFoot_")
+    )
+    vertical_plate_ymin = min(plate_shapes["VPlate1"].BoundBox.YMin, plate_shapes["VPlate2"].BoundBox.YMin)
+    checks.append(
+        SubsystemCheck(
+            name="support_feet_extend_below_vertical_plates",
+            passed=support_ymin < (vertical_plate_ymin - 1e-6),
+            detail=(
+                f"support_ymin={support_ymin:.3f}, vertical_plate_ymin={vertical_plate_ymin:.3f}"
+            ),
         )
     )
 
@@ -1736,7 +1904,7 @@ def validate_constraints(
         _validate_plates(cfg, placements),
         _validate_detector(cfg, placements, channels),
         _validate_target(cfg),
-        _validate_stand(cfg),
+        _validate_stand(cfg, placements),
     )
 
     status = "pass" if all(item.status == "pass" for item in subsystems) else "fail"

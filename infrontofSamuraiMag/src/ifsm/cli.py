@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import argparse
+import os
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
 from .adapter import LocalBuildAdapter
 from .config import BuildConfig, dump_snapshot_yaml
+from .export import ensure_fcstd_gui_session
 from .layout import front_face_center
 from .stateflow import (
     SUPPORTED_TARGET_SCHEMA_VERSION,
@@ -25,12 +27,15 @@ from .stateflow import (
 from .validation import ValidationThresholds, write_report_json
 
 
-MODULE_NAME = "infrontofSamuraiMag"
+MODULE_NAME = os.environ.get("IFSM_MODULE_NAME", "infrontofSamuraiMag").strip() or "infrontofSamuraiMag"
 _ALLOWED_OUTPUT_FORMATS = {"fcstd", "step"}
 
 
 
 def _default_config_path() -> Path:
+    env_path = os.environ.get("IFSM_DEFAULT_CONFIG_PATH")
+    if env_path is not None and env_path.strip():
+        return Path(env_path).expanduser().resolve()
     return Path(__file__).resolve().parents[2] / "config" / "default_infront.yaml"
 
 
@@ -117,7 +122,7 @@ def _resolve_target_report_path(
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate infrontofSamuraiMag FreeCAD model from modular YAML config.",
+        description=f"Generate {MODULE_NAME} FreeCAD model from modular YAML config.",
     )
     parser.add_argument(
         "--config",
@@ -250,8 +255,12 @@ def _run_build_pipeline(
     exported_paths: dict[str, Path] = {}
 
     if validate_only:
+        # [EN] Validate-only mode still resolves the same analytical placements as a full build so acceptance is checked against geometry-driving numbers even when CAD export is skipped. / [CN] 纯校验模式仍解析出与完整构建相同的解析落位，因此即使跳过 CAD 导出，验收仍基于驱动几何的那组数值进行。
         placements = adapter.build_layout_only(cfg)
     else:
+        if "fcstd" in cfg.output.formats:
+            # [EN] FCStd review files must be built with GUI-side view providers alive from the start; enabling the offscreen GUI after the document exists is too late and can crash or omit GuiDocument.xml. / [CN] FCStd 评审文件必须从建模一开始就带着 GUI 侧 view provider；等文档创建后再补开离屏 GUI 已经太晚，可能崩溃或漏掉 GuiDocument.xml。
+            ensure_fcstd_gui_session()
         result = adapter.build_model(cfg, doc_name=doc_name)
         exported_paths = adapter.export_model(result, cfg.output)
         placements = result.placements
@@ -263,6 +272,7 @@ def _run_build_pipeline(
                 f"front_center=({center.x:.3f}, {center.y:.3f}, {center.z:.3f})"
             )
 
+    # [EN] One threshold object drives both report generation and strict/non-strict exit behavior, avoiding split tolerance semantics between CLI paths. / [CN] 用同一个阈值对象同时驱动报告生成与严格/非严格退出逻辑，避免不同 CLI 路径出现两套容差语义。
     thresholds = ValidationThresholds(
         angle_tolerance_deg=angle_tol_deg,
         radius_tolerance_mm=radius_tol_mm,
@@ -342,6 +352,7 @@ def _build_state_payload(
     if run_status not in {"pass", "fail", "error", "skipped"}:
         raise ValueError(f"Unsupported run_status: {run_status}")
 
+    # [EN] Keep the machine-written state payload compact and normalization-friendly so skip checks can compare hashes/status without reinterpreting human worklogs. / [CN] 机器写入的状态载荷保持紧凑且便于规范化，便于跳过逻辑直接比较哈希与状态，而无需重读人工 worklog。
     run_block: dict[str, Any] = {
         "run_id": run_id,
         "started_at_utc": started_at_utc,
@@ -452,6 +463,7 @@ def _run_target_mode(args: argparse.Namespace, *, target_path: Path, state_path:
         previous_state = read_state_json(effective_state_path)
 
         if should_skip_build(previous_state, target_hash=target_hash, force_rebuild=args.force_rebuild):
+            # [EN] Hash-skip is only legal when the target spec matches a prior passing run and every artifact path still resolves, so "skipped" means reusable rather than unknown. / [CN] 只有当目标规格命中过往通过运行且全部产物路径仍存在时才允许哈希跳过，因此这里的 “skipped” 代表可复用，而不是状态未知。
             finished_at = utc_now_iso()
             prior_validation = previous_state.get("validation", {}) if isinstance(previous_state, dict) else {}
             prior_artifacts = previous_state.get("artifacts", {}) if isinstance(previous_state, dict) else {}
@@ -536,6 +548,7 @@ def _run_target_mode(args: argparse.Namespace, *, target_path: Path, state_path:
 
         except Exception as exc:
             finished_at = utc_now_iso()
+            # [EN] Persist error state before re-raising so other terminals can see that the lock owner failed instead of silently disappearing mid-pipeline. / [CN] 重新抛异常前先持久化错误状态，便于其他终端识别为锁持有者执行失败，而不是在流水线中途无声消失。
             payload = _build_state_payload(
                 module_name=MODULE_NAME,
                 target_path=target_path,

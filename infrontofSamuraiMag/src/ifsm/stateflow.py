@@ -282,6 +282,7 @@ def should_skip_build(
     target_hash: str,
     force_rebuild: bool,
 ) -> bool:
+    # [EN] Reuse is deliberately strict: same schema, same target hash, prior pass state, and all artifacts still present, so skipped runs never mask missing or stale exports. / [CN] 复用条件被刻意收紧：同一 schema、同一目标哈希、上次状态为 pass 且全部产物仍在，避免 skipped 掩盖缺失或过期导出。
     if force_rebuild or previous_state is None:
         return False
 
@@ -312,6 +313,7 @@ def _sha256_file(path: Path) -> str:
     hasher = hashlib.sha256()
     with path.open("rb") as handle:
         while True:
+            # [EN] Stream large STEP/FCStd artifacts in chunks so artifact indexing does not scale memory usage with export size. / [CN] 以分块方式读取大型 STEP/FCStd 产物，使产物索引计算不会随导出文件大小线性占用内存。
             chunk = handle.read(1024 * 1024)
             if not chunk:
                 break
@@ -341,6 +343,7 @@ def write_state_json_atomic(state_path: str | Path, payload: dict[str, Any]) -> 
     path = Path(state_path).expanduser().resolve()
     path.parent.mkdir(parents=True, exist_ok=True)
 
+    # [EN] State is machine-owned and updated atomically so readers never observe a half-written run record while another terminal is exporting geometry. / [CN] 状态文件归机器写入，并以原子方式更新，避免其他终端在导出几何期间读到半写入的运行记录。
     tmp_path = path.parent / f".{path.name}.tmp.{os.getpid()}"
     try:
         tmp_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -411,6 +414,7 @@ def state_lock(lock_path: str | Path) -> Iterator[None]:
                 f"Another process already holds state lock: {path}. Retry after the current run exits."
             ) from exc
 
+        # [EN] Record the owning PID in the lock file so cross-terminal debugging can distinguish a healthy active run from a stale lock artifact. / [CN] 在锁文件中记录持有 PID，便于跨终端排查时区分“正在运行的任务”和“残留锁文件”。
         handle.seek(0)
         handle.truncate(0)
         handle.write(str(os.getpid()))

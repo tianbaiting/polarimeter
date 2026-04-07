@@ -13,6 +13,7 @@ from .components import (
     build_end_modules,
     build_plate_load_ties,
     build_ports,
+    build_rotary_feedthrough_vendor_reference,
     build_stand,
     build_target_holders,
     build_target_ladder,
@@ -81,9 +82,11 @@ def _add_component(
 
 def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> BuildResult:
     doc = App.newDocument(doc_name)
-    assembly = doc.addObject("App::DocumentObjectGroup", "InfrontOfSamuraiMagAssembly")
+    assembly_name = "".join(ch if ch.isalnum() else "_" for ch in f"{doc_name}Assembly")
+    assembly = doc.addObject("App::DocumentObjectGroup", assembly_name)
     export_objects: list[App.DocumentObject] = []
 
+    # [EN] Build the analytical placement set once and fan it out to chamber cuts, plate openings, detector fixtures, and validation metadata so every subsystem shares one channel truth. / [CN] 解析布局只生成一次，并统一供腔体开孔、板件开口、探测器夹具和校验元数据使用，保证各子系统共享同一通道真值。
     placements = build_detector_placements(cfg.layout)
 
     chamber_obj = _add_component(
@@ -146,6 +149,7 @@ def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> B
         "VPlate1": cfg.geometry.plate.v1,
         "VPlate2": cfg.geometry.plate.v2,
     }
+    # [EN] Plate objects retain frozen HVV pose semantics as properties so downstream review can recover which side-exit plane each solid represents. / [CN] 板件对象保留冻结的 HVV 姿态语义属性，便于后续审查时追溯每个实体对应哪一个侧向出射安装平面。
     for name, shape in build_all_plates(cfg.geometry, placements=placements).items():
         plate_obj = _add_component(
             doc,
@@ -234,6 +238,7 @@ def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> B
             role="direction-indexed detector mount base with rectangular 4-hole bolt pattern",
         )
 
+        # [EN] Attach the same channel metadata to every detector subpart so STEP review can trace a clamp or adapter back to the physical sector/channel it serves. / [CN] 给每个探测器子件附上统一通道元数据，使 STEP 审查时能把抱箍或过渡块追溯回其对应的物理扇区/通道。
         for obj in (housing_obj, clamp_a_obj, clamp_b_obj, adapter_obj, mount_obj):
             _attach_layout_properties(obj, placement)
 
@@ -249,6 +254,17 @@ def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> B
             shape,
             subsystem="target",
             role=target_drive_role,
+        )
+
+    for name, shape in build_rotary_feedthrough_vendor_reference(cfg.geometry).items():
+        _add_component(
+            doc,
+            assembly,
+            export_objects,
+            name,
+            shape,
+            subsystem="target",
+            role="external vendor rotary-feedthrough reference envelope",
         )
 
     for name, shape in build_target_holders(cfg.geometry).items():
@@ -267,6 +283,7 @@ def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> B
             role=role,
         )
 
+    # [EN] Stand solids are added last because they react to the frozen detector/chamber footprint instead of driving detector layout themselves. / [CN] 支架实体最后加入，因为它们响应的是已冻结的探测器/腔体占位，而不是反向决定探测器布局。
     for name, shape in build_stand(cfg.geometry).items():
         _add_component(
             doc,

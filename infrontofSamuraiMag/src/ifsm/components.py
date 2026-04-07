@@ -9,6 +9,7 @@ import Part
 from .config import GeometryConfig, PlateConfig, PortConfig
 from .layout import (
     DetectorPlacement,
+    chamber_z_bounds,
     front_face_center,
     local_basis_from_direction,
     plate_key_for_sector,
@@ -42,6 +43,71 @@ class DetectorFixtureGeometry:
     upright_depth_mm: float
     plate_hole_centers: tuple[App.Vector, ...]
     base_hole_centers: tuple[App.Vector, ...]
+
+
+@dataclass(frozen=True)
+class _EndModuleAxialLayout:
+    chamber_face_z: float
+    flange_origin_z: float
+    flange_chamber_face_z: float
+    interface_face_z: float
+    pipe_origin_z: float | None
+    pipe_shape_length_mm: float
+
+
+@dataclass(frozen=True)
+class _MountedPortInterface:
+    shape: Part.Shape
+    interface_face_center: App.Vector
+    axis: App.Vector
+
+
+def _enabled_ports(cfg: GeometryConfig) -> tuple[tuple[str, PortConfig], ...]:
+    return tuple(
+        (name, port)
+        for name, port in (
+            ("main_pump", cfg.ports.main_pump),
+            ("gauge_safety", cfg.ports.gauge_safety),
+            ("rotary_feedthrough", cfg.ports.rotary_feedthrough),
+            ("spare", cfg.ports.spare),
+        )
+        if port.enabled
+    )
+
+
+def chamber_support_centers(cfg: GeometryConfig) -> tuple[App.Vector, ...]:
+    stand = cfg.stand
+    core = cfg.chamber.core
+    z_min, z_max = chamber_z_bounds(core)
+    front_z = z_min + stand.chamber_support_end_margin_mm
+    rear_z = z_max - stand.chamber_support_end_margin_mm
+
+    # [EN] Chamber support is now a self-contained four-post grid: two posts near the upstream end and two near the downstream end, each row staying 100 mm off the chamber end faces while x stays close to the chamber load path. / [CN] chamber 支撑现改为独立四柱网格：上游端附近两根、下游端附近两根，各排离端面 100 mm，同时 x 向仍贴近 chamber 主承载路径。
+    return (
+        App.Vector(-stand.chamber_support_pair_half_span_x_mm, 0.0, front_z),
+        App.Vector(stand.chamber_support_pair_half_span_x_mm, 0.0, front_z),
+        App.Vector(-stand.chamber_support_pair_half_span_x_mm, 0.0, rear_z),
+        App.Vector(stand.chamber_support_pair_half_span_x_mm, 0.0, rear_z),
+    )
+
+
+def h_plate_support_centers(cfg: GeometryConfig) -> tuple[App.Vector, ...]:
+    stand = cfg.stand
+    plate_h = cfg.plate.h
+    front_z = plate_h.z_mm - (0.5 * plate_h.height_mm - stand.h_plate_support_end_margin_mm)
+    rear_z = plate_h.z_mm + (0.5 * plate_h.height_mm - stand.h_plate_support_end_margin_mm)
+
+    # [EN] The H plate gets its own independent four-post grid so the detector-carrying service panel no longer borrows the chamber posts; two rows track the plate height while the x pair stays near the loaded detector zone instead of running out to remote corners. / [CN] `H` 板改为独立四柱支撑，不再借用 chamber 立柱；前后两排跟随板高布置，而 x 向两列仍贴近探测器受力区，不再跑到很远的外角。
+    return (
+        App.Vector(plate_h.offset_x_mm - stand.h_plate_support_pair_half_span_x_mm, 0.0, front_z),
+        App.Vector(plate_h.offset_x_mm + stand.h_plate_support_pair_half_span_x_mm, 0.0, front_z),
+        App.Vector(plate_h.offset_x_mm - stand.h_plate_support_pair_half_span_x_mm, 0.0, rear_z),
+        App.Vector(plate_h.offset_x_mm + stand.h_plate_support_pair_half_span_x_mm, 0.0, rear_z),
+    )
+
+
+def stand_support_centers(cfg: GeometryConfig) -> tuple[App.Vector, ...]:
+    return chamber_support_centers(cfg) + h_plate_support_centers(cfg)
 
 
 def _chamber_halves(cfg: GeometryConfig) -> tuple[float, float, float]:
@@ -120,6 +186,22 @@ def _plate_world_from_local_uv(plate: PlateConfig, u_mm: float, v_mm: float) -> 
     return center + scaled(axis_v, u_mm) + scaled(axis_w, v_mm)
 
 
+def _segment_plane_hit_point(
+    start: App.Vector,
+    end: App.Vector,
+    plane_point: App.Vector,
+    plane_normal: App.Vector,
+) -> App.Vector | None:
+    delta = end - start
+    denom = _dot(delta, plane_normal)
+    if abs(denom) <= 1e-9:
+        return None
+    t = _dot(plane_point - start, plane_normal) / denom
+    if t < -1e-9 or t > 1.0 + 1e-9:
+        return None
+    return start + scaled(delta, t)
+
+
 def plate_slot_half_width_mm(cfg: GeometryConfig) -> float:
     # [EN] Rounded-slot half-width freezes LOS channel radius plus clearance margin into the plate opening itself, avoiding a second interpretation layer during validation. / [CN] 圆角槽半宽直接固化“LOS 通道半径 + 裕量”，避免生成与校验各自再解释一次开口宽度。
     return 0.5 * cfg.chamber.los_channels.channel_diameter_mm + cfg.clearance.los_margin_mm
@@ -144,6 +226,7 @@ def target_detector_los_segment_endpoints(
     placement: DetectorPlacement,
 ) -> tuple[App.Vector, App.Vector]:
     start = active_target_los_source_point(cfg)
+    # [EN] Extend the LOS endpoint to the detector active-face offset rather than the fixture nose so plate openings are sized to sensing geometry, not housing cosmetics. / [CN] LOS 终点延伸到探测器有效面偏移处，而不是夹具外形前端，使板上开孔针对的是探测几何而非外壳外观。
     end = front_face_center(placement) + scaled(placement.direction, cfg.clearance.los_detector_active_face_offset_mm)
     return start, end
 
@@ -161,6 +244,59 @@ def target_detector_los_tube(
         return None
     axis = _normalize_vector(delta)
     return Part.makeCylinder(radius_mm, length + 2.0 * overshoot_mm, start - scaled(axis, overshoot_mm), axis)
+
+
+def target_detector_front_face_cone(
+    cfg: GeometryConfig,
+    placement: DetectorPlacement,
+    front_face_radius_mm: float,
+) -> Part.Shape | None:
+    start = active_target_los_source_point(cfg)
+    end = front_face_center(placement)
+    delta = end - start
+    length = _vector_length(delta)
+    if length <= 1e-9:
+        return None
+    axis = _normalize_vector(delta)
+    # [EN] Chamber side-exit openings follow the exact ruled surface from the active target point to the detector front-face circle, so the vacuum cut matches the physical acceptance cone instead of a constant-radius shortcut. / [CN] 腔体侧向开口按“有效靶点到探测器前表面圆”的真实母线面生成，使真空切口匹配物理接受圆锥，而不是固定半径近似。
+    return Part.makeCone(0.0, front_face_radius_mm, length, start, axis)
+
+
+def _cone_band_local_uv_bounds(
+    cfg: GeometryConfig,
+    placement: DetectorPlacement,
+    plate: PlateConfig,
+    band_half_thickness_mm: float,
+    front_face_radius_mm: float,
+    sample_count: int = 96,
+) -> tuple[float, float, float, float] | None:
+    start = active_target_los_source_point(cfg)
+    front_center = front_face_center(placement)
+    _axis_u, face_v, face_w = local_basis_from_direction(placement.direction)
+    center, axis_t, _axis_v, _axis_w = _plate_axes(plate)
+    local_points: list[tuple[float, float]] = []
+
+    # [EN] The local H-plate relief must clear the full oblique cone through the plate thickness, so sample the detector entrance circle and intersect each ruled ray with both plate-band faces instead of approximating the cone by a mid-plane circle. / [CN] H 板局部长方形让位必须清掉整个斜穿圆锥在板厚方向上的范围，因此对探测器前表面圆做采样，并把每条母线与板厚带前后两面求交，而不是用板中面的圆截面近似。
+    for face_offset_mm in (-band_half_thickness_mm, band_half_thickness_mm):
+        plane_point = center + scaled(axis_t, face_offset_mm)
+        for sample_idx in range(sample_count):
+            phi = (2.0 * math.pi * float(sample_idx)) / float(sample_count)
+            circle_point = (
+                front_center
+                + scaled(face_v, front_face_radius_mm * math.cos(phi))
+                + scaled(face_w, front_face_radius_mm * math.sin(phi))
+            )
+            hit = _segment_plane_hit_point(start, circle_point, plane_point, axis_t)
+            if hit is None:
+                continue
+            local_points.append(_plate_local_uv_from_world(plate, hit))
+
+    if not local_points:
+        return None
+
+    u_values = [u for u, _ in local_points]
+    v_values = [v for _, v in local_points]
+    return min(u_values), max(u_values), min(v_values), max(v_values)
 
 
 def plate_los_plane_hit_point(
@@ -189,6 +325,7 @@ def plate_opening_local_polylines(
     if plate.opening_style != "rounded_slot":
         return ()
 
+    # [EN] Group placements by the physical side served by each plate so rounded slots connect only channels that share one continuous service panel, not unrelated detector families. / [CN] 按每块板实际服务的物理侧面对落位分组，使圆角槽只连接同一维护板上的通道，而不会把无关探测器族连成一片。
     if plate_key == "h":
         grouped = [
             [placement for placement in placements if placement.sector_name == "left"],
@@ -253,29 +390,27 @@ def _los_channel_cuts(
     if cfg.clearance.los_scope != "v2_fullpath" or not los_cfg.enabled or not placements:
         return []
 
+    # [EN] v2 full-path validation models chamber corridors from the active target point to each detector entrance circle, so chamber and rear-interface cuts match the actual side-exit acceptance cone instead of a fixed-radius proxy. / [CN] v2 全路径校验按“有效靶点到各探测器入射圆面”的通道建模，因此腔体与后端接口的切口跟随真实侧向接受圆锥，而不是固定半径近似。
     cuts: list[Part.Shape] = []
-    start = App.Vector(0.0, 0.0, los_cfg.channel_start_z_mm)
+    front_face_radius_mm = 0.5 * cfg.detector.clamp.detector_diameter_mm
     for placement in placements:
-        cuts.append(
-            Part.makeCylinder(
-                0.5 * los_cfg.channel_diameter_mm,
-                los_cfg.channel_length_mm,
-                start,
-                placement.direction,
-            )
-        )
+        cone = target_detector_front_face_cone(cfg, placement, front_face_radius_mm)
+        if cone is not None:
+            cuts.append(cone)
     return cuts
 
 
 def build_chamber(cfg: GeometryConfig, placements: list[DetectorPlacement] | None = None) -> Part.Shape:
     core = cfg.chamber.core
-    half_x, half_y, half_z = _chamber_halves(cfg)
+    half_x, half_y, _ = _chamber_halves(cfg)
+    z_min, z_max = chamber_z_bounds(core)
 
+    # [EN] Start from a rectangular shell and subtract beam, ports, and optional LOS corridors so the vacuum boundary stays a single solid under all side-exit variants. / [CN] 先构造长方体壳体，再减去束流孔、端口和可选 LOS 通道，使真空边界在各类侧向出射方案下都保持为单一实体。
     outer = Part.makeBox(
         core.size_x_mm,
         core.size_y_mm,
         core.size_z_mm,
-        App.Vector(-half_x, -half_y, -half_z),
+        App.Vector(-half_x, -half_y, z_min),
     )
     inner = Part.makeBox(
         core.size_x_mm - 2.0 * core.wall_thickness_mm,
@@ -284,7 +419,7 @@ def build_chamber(cfg: GeometryConfig, placements: list[DetectorPlacement] | Non
         App.Vector(
             -half_x + core.wall_thickness_mm,
             -half_y + core.wall_thickness_mm,
-            -half_z + core.wall_thickness_mm,
+            z_min + core.wall_thickness_mm,
         ),
     )
     chamber = outer.cut(inner)
@@ -292,17 +427,12 @@ def build_chamber(cfg: GeometryConfig, placements: list[DetectorPlacement] | Non
     beam_cut = Part.makeCylinder(
         0.5 * cfg.beamline.inlet_diameter_mm,
         core.size_z_mm + 4.0,
-        App.Vector(0.0, 0.0, -half_z - 2.0),
+        App.Vector(0.0, 0.0, z_min - 2.0),
         App.Vector(0.0, 0.0, 1.0),
     )
     chamber = chamber.cut(beam_cut)
 
-    for port in (
-        cfg.ports.main_pump,
-        cfg.ports.gauge_safety,
-        cfg.ports.rotary_feedthrough,
-        cfg.ports.spare,
-    ):
+    for _name, port in _enabled_ports(cfg):
         wall_point, axis = _port_pose(cfg, port)
         cut_origin = wall_point - scaled(axis, core.wall_thickness_mm + 1.0)
         cut = Part.makeCylinder(
@@ -331,25 +461,54 @@ def _end_module_side_cfg(cfg: GeometryConfig, side: str):
     raise ValueError(f"unsupported side {side!r}")
 
 
+def _end_module_axial_layout(cfg: GeometryConfig, side: str) -> _EndModuleAxialLayout:
+    z_min, z_max = chamber_z_bounds(cfg.chamber.core)
+    module = _end_module_side_cfg(cfg, side)
+    # [EN] The welded pipe is seated slightly into both the flange bore and the chamber wall so boolean fusion gets finite overlap volume instead of a numerically fragile face-only touch. / [CN] 焊接短管会同时少量插入法兰内孔和 chamber 壁厚，使布尔并体获得有限重叠体积，而不是数值上脆弱的纯贴面接触。
+    pipe_seat_mm = min(2.0, 0.5 * module.module_thickness_mm) if module.pipe_length_mm > 0.0 else 0.0
+
+    if side == "front":
+        chamber_face_z = z_min
+        flange_origin_z = chamber_face_z - module.pipe_length_mm - module.module_thickness_mm
+        flange_chamber_face_z = chamber_face_z - module.pipe_length_mm
+        interface_face_z = flange_origin_z
+        pipe_origin_z = chamber_face_z - module.pipe_length_mm - pipe_seat_mm if module.pipe_length_mm > 0.0 else None
+    elif side == "rear":
+        chamber_face_z = z_max
+        flange_origin_z = chamber_face_z + module.pipe_length_mm
+        flange_chamber_face_z = chamber_face_z + module.pipe_length_mm
+        interface_face_z = flange_origin_z + module.module_thickness_mm
+        pipe_origin_z = chamber_face_z - pipe_seat_mm if module.pipe_length_mm > 0.0 else None
+    else:
+        raise ValueError(f"unsupported side {side!r}")
+
+    return _EndModuleAxialLayout(
+        chamber_face_z=chamber_face_z,
+        flange_origin_z=flange_origin_z,
+        flange_chamber_face_z=flange_chamber_face_z,
+        interface_face_z=interface_face_z,
+        pipe_origin_z=pipe_origin_z,
+        pipe_shape_length_mm=(module.pipe_length_mm + 2.0 * pipe_seat_mm) if module.pipe_length_mm > 0.0 else 0.0,
+    )
+
+
 def _build_end_module(
     cfg: GeometryConfig,
     side: str,
     placements: list[DetectorPlacement] | None = None,
 ) -> Part.Shape:
-    half_z = 0.5 * cfg.chamber.core.size_z_mm
     module = _end_module_side_cfg(cfg, side)
+    axial = _end_module_axial_layout(cfg, side)
     axis = App.Vector(0.0, 0.0, 1.0)
 
+    # [EN] Both interfaces now follow the same manufacturing stack: chamber shell -> welded round pipe stub -> JIS flange -> mating equipment, so the external sealing face is always on the outward side of the flange. / [CN] 现在前后接口都遵循同一制造堆栈：腔体壳体 -> 焊接圆管短节 -> JIS 法兰 -> 外部设备，因此密封面始终放在法兰对外的一侧。
+    origin = App.Vector(0.0, 0.0, axial.flange_origin_z)
     if side == "front":
-        origin = App.Vector(0.0, 0.0, -half_z - module.module_thickness_mm)
-        chamber_face_z = -half_z
-        groove_origin = App.Vector(0.0, 0.0, chamber_face_z - module.oring_groove_depth_mm)
-        seal_origin = App.Vector(0.0, 0.0, chamber_face_z - module.seal_face_width_mm)
+        groove_origin = App.Vector(0.0, 0.0, axial.interface_face_z)
+        seal_origin = App.Vector(0.0, 0.0, axial.interface_face_z)
     elif side == "rear":
-        origin = App.Vector(0.0, 0.0, half_z)
-        chamber_face_z = half_z
-        groove_origin = App.Vector(0.0, 0.0, chamber_face_z)
-        seal_origin = App.Vector(0.0, 0.0, chamber_face_z)
+        groove_origin = App.Vector(0.0, 0.0, axial.interface_face_z - module.oring_groove_depth_mm)
+        seal_origin = App.Vector(0.0, 0.0, axial.interface_face_z - module.seal_face_width_mm)
     else:
         raise ValueError(f"unsupported side {side!r}")
 
@@ -360,6 +519,16 @@ def _build_end_module(
         origin=origin,
         axis=axis,
     )
+
+    if module.pipe_length_mm > 0.0 and axial.pipe_origin_z is not None:
+        pipe = tube_shape(
+            outer_diameter_mm=module.pipe_outer_diameter_mm,
+            inner_diameter_mm=module.pipe_inner_diameter_mm,
+            length_mm=axial.pipe_shape_length_mm,
+            origin=App.Vector(0.0, 0.0, axial.pipe_origin_z),
+            axis=axis,
+        )
+        flange = flange.fuse(pipe)
 
     seal_outer = min(
         module.module_outer_diameter_mm - 2.0,
@@ -414,17 +583,17 @@ def build_end_modules(
 
 
 def _build_end_module_fasteners_for_side(cfg: GeometryConfig, side: str) -> dict[str, Part.Shape]:
-    half_z = 0.5 * cfg.chamber.core.size_z_mm
     module = _end_module_side_cfg(cfg, side)
+    axial = _end_module_axial_layout(cfg, side)
     bolt_radius = 0.5 * module.bolt_circle_diameter_mm
     bolt_clearance_d = module.interface_bolt_diameter_mm + 0.8
 
     if side == "front":
-        face_origin = App.Vector(0.0, 0.0, -half_z)
+        face_origin = App.Vector(0.0, 0.0, axial.flange_chamber_face_z)
         axis = App.Vector(0.0, 0.0, -1.0)
         prefix = "FrontInterface"
     elif side == "rear":
-        face_origin = App.Vector(0.0, 0.0, half_z)
+        face_origin = App.Vector(0.0, 0.0, axial.flange_chamber_face_z)
         axis = App.Vector(0.0, 0.0, 1.0)
         prefix = "RearInterface"
     else:
@@ -477,6 +646,85 @@ def build_end_module_fasteners(cfg: GeometryConfig) -> dict[str, Part.Shape]:
     return out
 
 
+def _build_port_interface(
+    cfg: GeometryConfig,
+    port: PortConfig,
+) -> _MountedPortInterface | None:
+    if port.interface is None:
+        return None
+
+    module = port.interface
+    wall_point, axis = _port_pose(cfg, port)
+    axis_u, axis_v, axis_w = local_basis_from_direction(axis)
+    base_origin = wall_point + scaled(axis_u, port.length_mm)
+    flange_origin = base_origin + scaled(axis_u, module.pipe_length_mm)
+    interface_face_center = flange_origin + scaled(axis_u, module.module_thickness_mm)
+
+    flange = tube_shape(
+        outer_diameter_mm=module.module_outer_diameter_mm,
+        inner_diameter_mm=module.module_inner_diameter_mm,
+        length_mm=module.module_thickness_mm,
+        origin=flange_origin,
+        axis=axis_u,
+    )
+    if module.pipe_length_mm > 0.0:
+        pipe = tube_shape(
+            outer_diameter_mm=module.pipe_outer_diameter_mm,
+            inner_diameter_mm=module.pipe_inner_diameter_mm,
+            length_mm=module.pipe_length_mm,
+            origin=base_origin,
+            axis=axis_u,
+        )
+        flange = flange.fuse(pipe)
+
+    seal_outer = min(
+        module.module_outer_diameter_mm - 2.0,
+        module.module_inner_diameter_mm
+        + (2.0 * module.seal_face_width_mm)
+        + max(0.0, module.oring_groove_outer_diameter_mm - module.oring_groove_inner_diameter_mm),
+    )
+    seal_origin = interface_face_center - scaled(axis_u, module.seal_face_width_mm)
+    flange = flange.fuse(
+        tube_shape(
+            outer_diameter_mm=seal_outer,
+            inner_diameter_mm=module.module_inner_diameter_mm,
+            length_mm=module.seal_face_width_mm,
+            origin=seal_origin,
+            axis=axis_u,
+        )
+    )
+
+    bolt_radius = 0.5 * module.bolt_circle_diameter_mm
+    for idx in range(module.bolt_count):
+        angle = (2.0 * math.pi * float(idx)) / float(module.bolt_count)
+        radial = scaled(axis_v, bolt_radius * math.cos(angle)) + scaled(axis_w, bolt_radius * math.sin(angle))
+        hole_origin = flange_origin + radial - scaled(axis_u, 1.0)
+        hole = Part.makeCylinder(
+            0.5 * module.flange_bolt_hole_diameter_mm,
+            module.module_thickness_mm + 2.0,
+            hole_origin,
+            axis_u,
+        )
+        flange = flange.cut(hole)
+
+    if _end_module_has_groove(module.standard) and module.oring_groove_depth_mm > 0.0:
+        groove_origin = interface_face_center - scaled(axis_u, module.oring_groove_depth_mm)
+        groove_cut = tube_shape(
+            outer_diameter_mm=module.oring_groove_outer_diameter_mm,
+            inner_diameter_mm=module.oring_groove_inner_diameter_mm,
+            length_mm=module.oring_groove_depth_mm,
+            origin=groove_origin,
+            axis=axis_u,
+        )
+        flange = flange.cut(groove_cut)
+
+    return _MountedPortInterface(
+        shape=flange,
+        interface_face_center=interface_face_center,
+        axis=axis_u,
+    )
+
+
 def build_ports(cfg: GeometryConfig) -> dict[str, Part.Shape]:
     out: dict[str, Part.Shape] = {}
     for name, port in (
@@ -485,14 +733,23 @@ def build_ports(cfg: GeometryConfig) -> dict[str, Part.Shape]:
         ("RotaryFeedthroughPort", cfg.ports.rotary_feedthrough),
         ("SparePort", cfg.ports.spare),
     ):
+        if not port.enabled:
+            continue
         wall_point, axis = _port_pose(cfg, port)
-        out[name] = tube_shape(
-            outer_diameter_mm=port.outer_diameter_mm,
-            inner_diameter_mm=port.inner_diameter_mm,
-            length_mm=port.length_mm,
-            origin=wall_point,
-            axis=axis,
-        )
+        shape: Part.Shape | None = None
+        if port.length_mm > 0.0:
+            shape = tube_shape(
+                outer_diameter_mm=port.outer_diameter_mm,
+                inner_diameter_mm=port.inner_diameter_mm,
+                length_mm=port.length_mm,
+                origin=wall_point,
+                axis=axis,
+            )
+        mounted_interface = _build_port_interface(cfg, port)
+        if mounted_interface is not None:
+            shape = mounted_interface.shape if shape is None else shape.fuse(mounted_interface.shape)
+        if shape is not None:
+            out[name] = shape
     return out
 
 
@@ -562,6 +819,7 @@ def _rounded_slot_cut(
 def _build_plate_lugs_with_bolt_holes(plate: PlateConfig) -> Part.Shape:
     center, axis_t, axis_v, axis_w = _plate_axes(plate)
 
+    # [EN] Mirror lugs on both sides of the plate so fixture loads bypass the central LOS opening and enter the stand path symmetrically. / [CN] 在板两侧对称布置连接耳，使夹具载荷绕开中央 LOS 开口并对称地传入支撑路径。
     left_center = center - scaled(axis_v, 0.5 * (plate.width_mm + plate.lug_length_mm))
     right_center = center + scaled(axis_v, 0.5 * (plate.width_mm + plate.lug_length_mm))
 
@@ -687,6 +945,7 @@ def build_load_bearing_plate(
 def _chamber_plate_cutout(cfg: GeometryConfig) -> Part.Shape:
     core = cfg.chamber.core
     margin = cfg.clearance.plate_chamber_cutout_margin_mm
+    z_min, _ = chamber_z_bounds(core)
     return Part.makeBox(
         core.size_x_mm + 2.0 * margin,
         core.size_y_mm + 2.0 * margin,
@@ -694,7 +953,7 @@ def _chamber_plate_cutout(cfg: GeometryConfig) -> Part.Shape:
         App.Vector(
             -0.5 * core.size_x_mm - margin,
             -0.5 * core.size_y_mm - margin,
-            -0.5 * core.size_z_mm - margin,
+            z_min - margin,
         ),
     )
 
@@ -708,6 +967,7 @@ def _detector_mount_plate_holes(
     for placement in placements:
         layout = detector_fixture_geometry(cfg, placement)
         plate = _plate_cfg_from_sector(cfg, placement.sector_name)
+        # [EN] Plate drilling follows the resolved fixture geometry so the 4-hole rectangle is derived from the actual detector support pose, not from a plate-local template detached from assembly reality. / [CN] 板上钻孔跟随已解算的夹具几何，因此四孔矩形来自真实探测器支撑姿态，而不是脱离装配现实的板面模板。
         for center in layout.plate_hole_centers:
             hole = Part.makeCylinder(
                 0.5 * clamp_cfg.mount_bolt_hole_diameter_mm,
@@ -735,6 +995,7 @@ def _plate_rectangular_relief_cuts(
     package_band_half_mm = 0.5 * plate.thickness_mm + relief_margin_mm
     plate_band_min = center.y - package_band_half_mm
     plate_band_max = center.y + package_band_half_mm
+    cone_front_face_radius_mm = 0.5 * cfg.detector.clamp.detector_diameter_mm
 
     cuts: list[Part.Shape] = []
     for placement in placements:
@@ -744,6 +1005,7 @@ def _plate_rectangular_relief_cuts(
         local_min_v: float | None = None
         local_max_v = 0.0
 
+        # [EN] Relief windows are estimated from actual fixture bounding boxes intersecting the H-plate thickness band, which keeps the cut local to interfering service hardware. / [CN] 让位窗按实际夹具包围盒与 H 板厚度带的相交来估算，使切口局限在真正干涉的维护硬件附近。
         for contributor in (housing, clamp_a, clamp_b, adapter_block, mount_base):
             bbox = contributor.BoundBox
             if bbox.YMax < plate_band_min or bbox.YMin > plate_band_max:
@@ -765,25 +1027,45 @@ def _plate_rectangular_relief_cuts(
                 local_min_v = min(local_min_v, contributor_min_v)
                 local_max_v = max(local_max_v, contributor_max_v)
 
-        los_hit = plate_los_plane_hit_point(cfg, placement, plate)
-        if los_hit is not None:
-            hit_u, hit_v = _plate_local_uv_from_world(plate, los_hit)
-            if abs(hit_u) <= half_plate_width and abs(hit_v) <= half_plate_height:
-                los_radius_mm = plate_slot_half_width_mm(cfg)
-                los_min_u = hit_u - los_radius_mm
-                los_max_u = hit_u + los_radius_mm
-                los_min_v = hit_v - los_radius_mm
-                los_max_v = hit_v + los_radius_mm
-                if local_min_u is None or local_min_v is None:
-                    local_min_u = los_min_u
-                    local_max_u = los_max_u
-                    local_min_v = los_min_v
-                    local_max_v = los_max_v
-                else:
-                    local_min_u = min(local_min_u, los_min_u)
-                    local_max_u = max(local_max_u, los_max_u)
-                    local_min_v = min(local_min_v, los_min_v)
-                    local_max_v = max(local_max_v, los_max_v)
+        cone_bounds = _cone_band_local_uv_bounds(
+            cfg,
+            placement,
+            plate,
+            package_band_half_mm,
+            cone_front_face_radius_mm,
+        )
+        if cone_bounds is not None:
+            cone_min_u, cone_max_u, cone_min_v, cone_max_v = cone_bounds
+            if local_min_u is None or local_min_v is None:
+                local_min_u = cone_min_u
+                local_max_u = cone_max_u
+                local_min_v = cone_min_v
+                local_max_v = cone_max_v
+            else:
+                local_min_u = min(local_min_u, cone_min_u)
+                local_max_u = max(local_max_u, cone_max_u)
+                local_min_v = min(local_min_v, cone_min_v)
+                local_max_v = max(local_max_v, cone_max_v)
+        else:
+            los_hit = plate_los_plane_hit_point(cfg, placement, plate)
+            if los_hit is not None:
+                hit_u, hit_v = _plate_local_uv_from_world(plate, los_hit)
+                if abs(hit_u) <= half_plate_width and abs(hit_v) <= half_plate_height:
+                    los_radius_mm = plate_slot_half_width_mm(cfg)
+                    los_min_u = hit_u - los_radius_mm
+                    los_max_u = hit_u + los_radius_mm
+                    los_min_v = hit_v - los_radius_mm
+                    los_max_v = hit_v + los_radius_mm
+                    if local_min_u is None or local_min_v is None:
+                        local_min_u = los_min_u
+                        local_max_u = los_max_u
+                        local_min_v = los_min_v
+                        local_max_v = los_max_v
+                    else:
+                        local_min_u = min(local_min_u, los_min_u)
+                        local_max_u = max(local_max_u, los_max_u)
+                        local_min_v = min(local_min_v, los_min_v)
+                        local_max_v = max(local_max_v, los_max_v)
 
         if local_min_u is None or local_min_v is None:
             continue
@@ -1655,6 +1937,52 @@ def _single_target_holder_screws(holder, holder_name: str) -> dict[str, Part.Sha
     return out
 
 
+def rotary_port_interface_geometry(cfg: GeometryConfig) -> _MountedPortInterface | None:
+    rotary_port = cfg.ports.rotary_feedthrough
+    if not rotary_port.enabled:
+        return None
+    return _build_port_interface(cfg, rotary_port)
+
+
+def build_rotary_feedthrough_vendor_reference(cfg: GeometryConfig) -> dict[str, Part.Shape]:
+    rotary = cfg.target.rotary
+    if rotary is None or not rotary.vendor_reference_enabled:
+        return {}
+
+    mounted_interface = rotary_port_interface_geometry(cfg)
+    if mounted_interface is None or rotary.vendor_reference_model_code is None:
+        return {}
+
+    axis = mounted_interface.axis
+    mount_face_center = mounted_interface.interface_face_center
+    body = Part.makeCylinder(
+        0.5 * rotary.vendor_reference_body_diameter_mm,
+        rotary.vendor_reference_body_length_mm,
+        mount_face_center,
+        axis,
+    )
+    handwheel_origin = mount_face_center + scaled(axis, rotary.vendor_reference_body_length_mm)
+    handwheel = Part.makeCylinder(
+        0.5 * rotary.vendor_reference_handwheel_diameter_mm,
+        rotary.vendor_reference_handwheel_thickness_mm,
+        handwheel_origin,
+        axis,
+    )
+    shaft = Part.makeCylinder(
+        0.5 * rotary.feedthrough_shaft_diameter_mm,
+        rotary.vendor_reference_body_length_mm + rotary.vendor_reference_handwheel_thickness_mm,
+        mount_face_center,
+        axis,
+    )
+
+    # [EN] The supplier reference is modeled as an external envelope aligned to the flange mating face so the chamber-side interface stack and maintenance clearance can be reviewed even when the vendor login-gated native CAD is unavailable during automated runs. / [CN] 供应商参考件按法兰配合面对齐建成外部包络，使自动化运行期间即使拿不到供应商登录受限的原生 CAD，也能审查腔体接口堆栈与维护净空。
+    return {
+        f"TargetRotaryVendorBody_{rotary.vendor_reference_model_code}": body,
+        f"TargetRotaryVendorHandwheel_{rotary.vendor_reference_model_code}": handwheel,
+        f"TargetRotaryVendorShaft_{rotary.vendor_reference_model_code}": shaft,
+    }
+
+
 def build_single_rotary_target_shapes(
     cfg: GeometryConfig,
     angle_deg: float,
@@ -1667,18 +1995,13 @@ def build_single_rotary_target_shapes(
     pivot = _single_rotary_pivot_center(cfg)
     axis_y = App.Vector(0.0, 1.0, 0.0)
     half_y = 0.5 * cfg.chamber.core.size_y_mm
-    shaft_length = half_y + rotary.feedthrough_length_mm
+    mounted_interface = rotary_port_interface_geometry(cfg) if rotary.vendor_reference_enabled else None
+    shaft_length = half_y if mounted_interface is not None else (half_y + rotary.feedthrough_length_mm)
 
     shaft = Part.makeCylinder(
         0.5 * rotary.feedthrough_shaft_diameter_mm,
         shaft_length,
         pivot,
-        axis_y,
-    )
-    handwheel = Part.makeCylinder(
-        0.5 * rotary.handwheel_diameter_mm,
-        8.0,
-        pivot + App.Vector(0.0, shaft_length, 0.0),
         axis_y,
     )
     hub = Part.makeCylinder(
@@ -1697,55 +2020,6 @@ def build_single_rotary_target_shapes(
         height_mm=rotary.arm_thickness_mm,
     )
 
-    motor_mount = Part.makeBox(
-        rotary.motor_mount_width_mm,
-        rotary.motor_mount_thickness_mm,
-        rotary.motor_mount_height_mm,
-        App.Vector(
-            rotary.pivot_x_mm - 0.5 * rotary.motor_mount_width_mm,
-            half_y + 0.5 * rotary.feedthrough_length_mm,
-            -0.5 * rotary.motor_mount_height_mm,
-        ),
-    )
-    stop_y = half_y + rotary.feedthrough_length_mm - rotary.hard_stop_thickness_mm
-    hard_stop_a = Part.makeBox(
-        26.0,
-        rotary.hard_stop_thickness_mm,
-        rotary.hard_stop_thickness_mm,
-        App.Vector(
-            rotary.pivot_x_mm - 13.0,
-            stop_y,
-            -0.5 * rotary.hard_stop_span_mm,
-        ),
-    )
-    hard_stop_b = Part.makeBox(
-        26.0,
-        rotary.hard_stop_thickness_mm,
-        rotary.hard_stop_thickness_mm,
-        App.Vector(
-            rotary.pivot_x_mm - 13.0,
-            stop_y,
-            0.5 * rotary.hard_stop_span_mm - rotary.hard_stop_thickness_mm,
-        ),
-    )
-    index_disk = Part.makeCylinder(
-        0.5 * rotary.index_disk_diameter_mm,
-        rotary.index_disk_thickness_mm,
-        pivot + App.Vector(0.0, shaft_length - rotary.index_disk_thickness_mm, 0.0),
-        axis_y,
-    )
-    index_pin = Part.makeCylinder(
-        0.5 * rotary.index_pin_diameter_mm,
-        rotary.index_pin_length_mm,
-        pivot
-        + App.Vector(
-            0.5 * rotary.index_disk_diameter_mm,
-            shaft_length - rotary.index_disk_thickness_mm,
-            0.0,
-        ),
-        axis_y,
-    )
-
     holder_frame = _single_target_holder_frame(holder)
     inner_w = holder.frame_outer_width_mm - 2.0 * holder.clamp_block_width_mm
     inner_h = holder.frame_outer_height_mm - 2.0 * holder.clamp_block_height_mm
@@ -1758,15 +2032,74 @@ def build_single_rotary_target_shapes(
 
     drive_shapes = {
         "TargetRotaryFeedthroughShaft": shaft,
-        "TargetEmergencyHandwheel": handwheel,
-        "TargetDriveMotorMount": motor_mount,
-        "TargetDriveHardStop_A": hard_stop_a,
-        "TargetDriveHardStop_B": hard_stop_b,
-        "TargetDriveIndexDisk": index_disk,
-        "TargetDriveIndexPin": index_pin,
         "TargetRotaryPivotHub": _rotated_shape(hub, pivot, axis_y, angle_deg),
         "TargetRotaryArm": _rotated_shape(arm, pivot, axis_y, angle_deg),
     }
+    if mounted_interface is None:
+        handwheel = Part.makeCylinder(
+            0.5 * rotary.handwheel_diameter_mm,
+            8.0,
+            pivot + App.Vector(0.0, shaft_length, 0.0),
+            axis_y,
+        )
+        motor_mount = Part.makeBox(
+            rotary.motor_mount_width_mm,
+            rotary.motor_mount_thickness_mm,
+            rotary.motor_mount_height_mm,
+            App.Vector(
+                rotary.pivot_x_mm - 0.5 * rotary.motor_mount_width_mm,
+                half_y + 0.5 * rotary.feedthrough_length_mm,
+                -0.5 * rotary.motor_mount_height_mm,
+            ),
+        )
+        stop_y = half_y + rotary.feedthrough_length_mm - rotary.hard_stop_thickness_mm
+        hard_stop_a = Part.makeBox(
+            26.0,
+            rotary.hard_stop_thickness_mm,
+            rotary.hard_stop_thickness_mm,
+            App.Vector(
+                rotary.pivot_x_mm - 13.0,
+                stop_y,
+                -0.5 * rotary.hard_stop_span_mm,
+            ),
+        )
+        hard_stop_b = Part.makeBox(
+            26.0,
+            rotary.hard_stop_thickness_mm,
+            rotary.hard_stop_thickness_mm,
+            App.Vector(
+                rotary.pivot_x_mm - 13.0,
+                stop_y,
+                0.5 * rotary.hard_stop_span_mm - rotary.hard_stop_thickness_mm,
+            ),
+        )
+        index_disk = Part.makeCylinder(
+            0.5 * rotary.index_disk_diameter_mm,
+            rotary.index_disk_thickness_mm,
+            pivot + App.Vector(0.0, shaft_length - rotary.index_disk_thickness_mm, 0.0),
+            axis_y,
+        )
+        index_pin = Part.makeCylinder(
+            0.5 * rotary.index_pin_diameter_mm,
+            rotary.index_pin_length_mm,
+            pivot
+            + App.Vector(
+                0.5 * rotary.index_disk_diameter_mm,
+                shaft_length - rotary.index_disk_thickness_mm,
+                0.0,
+            ),
+            axis_y,
+        )
+        drive_shapes.update(
+            {
+                "TargetEmergencyHandwheel": handwheel,
+                "TargetDriveMotorMount": motor_mount,
+                "TargetDriveHardStop_A": hard_stop_a,
+                "TargetDriveHardStop_B": hard_stop_b,
+                "TargetDriveIndexDisk": index_disk,
+                "TargetDriveIndexPin": index_pin,
+            }
+        )
 
     holder_shapes = {
         "SingleTargetHolder": _rotated_shape(holder_frame, pivot, axis_y, angle_deg),
@@ -1798,17 +2131,12 @@ def build_stand(cfg: GeometryConfig) -> dict[str, Part.Shape]:
 
     chamber_bottom_y = -0.5 * core.size_y_mm
     base_bottom_y = chamber_bottom_y - stand.chamber_support_height_mm - stand.base_thickness_mm
-
-    foot_edge_margin = max(60.0, 0.5 * stand.support_foot_diameter_mm + 20.0)
-    # [EN] Side-exit detector corridors now run close to the chamber side walls, so stand posts are anchored from the wider base footprint instead of the chamber envelope corners. / [CN] 侧向出射后探测器走廊贴近腔体侧壁，因此支脚改按更宽的底座投影布置，而不是贴着腔体包络角点。
-    foot_x = 0.5 * stand.base_length_mm - foot_edge_margin
-    foot_z = 0.5 * stand.base_width_mm - foot_edge_margin
     foot_base_y = base_bottom_y + stand.base_thickness_mm
 
     feet: dict[str, Part.Shape] = {}
-    for idx, (sx, sz) in enumerate(((-1.0, -1.0), (-1.0, 1.0), (1.0, -1.0), (1.0, 1.0)), start=1):
-        x = sx * foot_x
-        z = sz * foot_z
+    for idx, center in enumerate(stand_support_centers(cfg), start=1):
+        x = center.x
+        z = center.z
         foot = Part.makeCylinder(
             0.5 * stand.support_foot_diameter_mm,
             stand.chamber_support_height_mm,
@@ -1841,22 +2169,21 @@ def build_stand(cfg: GeometryConfig) -> dict[str, Part.Shape]:
             App.Vector(-0.5 * stand.base_length_mm, base_bottom_y, -0.5 * stand.base_width_mm),
         )
 
-        for sx in (-1.0, 1.0):
-            for sz in (-1.0, 1.0):
-                slot_cut = slit_prism(
-                    center=App.Vector(
-                        sx * 0.35 * stand.base_length_mm,
-                        base_bottom_y + 0.5 * stand.base_thickness_mm,
-                        sz * 0.35 * stand.base_width_mm,
-                    ),
-                    axis_u=App.Vector(0.0, 1.0, 0.0),
-                    axis_v=App.Vector(1.0, 0.0, 0.0),
-                    axis_w=App.Vector(0.0, 0.0, 1.0),
-                    length_mm=stand.base_thickness_mm + 2.0,
-                    width_mm=stand.anchor_slot_length_mm,
-                    height_mm=stand.anchor_slot_width_mm,
-                )
-                base = base.cut(slot_cut)
+        for center in stand_support_centers(cfg):
+            slot_cut = slit_prism(
+                center=App.Vector(
+                    center.x,
+                    base_bottom_y + 0.5 * stand.base_thickness_mm,
+                    center.z,
+                ),
+                axis_u=App.Vector(0.0, 1.0, 0.0),
+                axis_v=App.Vector(1.0, 0.0, 0.0),
+                axis_w=App.Vector(0.0, 0.0, 1.0),
+                length_mm=stand.base_thickness_mm + 2.0,
+                width_mm=stand.anchor_slot_length_mm,
+                height_mm=stand.anchor_slot_width_mm,
+            )
+            base = base.cut(slot_cut)
 
         out["StandBasePlate"] = base
     out.update(feet)

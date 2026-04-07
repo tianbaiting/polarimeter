@@ -46,6 +46,7 @@ def sector_direction_from_theta(angle_deg: float, sector_name: str) -> App.Vecto
     s = math.sin(theta)
     c = math.cos(theta)
 
+    # [EN] The four sectors are frozen as side exits around the +z beam axis, so only one transverse component changes sign while the forward z component stays positive. / [CN] 四个扇区被冻结为围绕 +z 束轴的侧向出射，因此只改变一个横向分量的符号，而前向 z 分量始终保持为正。
     if sector_name == "left":
         return App.Vector(-s, 0.0, c)
     if sector_name == "right":
@@ -58,6 +59,7 @@ def sector_direction_from_theta(angle_deg: float, sector_name: str) -> App.Vecto
 
 
 def build_detector_placements(layout_cfg: LayoutConfig) -> list[DetectorPlacement]:
+    # [EN] BLP v1 layout is the Cartesian product of 3 channel radii/angles with 4 sectors, yielding the full 12-detector placement set used everywhere else. / [CN] BLP v1 布局是 3 条通道半径/角度与 4 个扇区的笛卡尔积，得到后续各处统一使用的 12 个探测器落位。
     placements: list[DetectorPlacement] = []
     for channel in layout_cfg.channels:
         for sector in layout_cfg.sectors:
@@ -77,6 +79,7 @@ def build_detector_placements(layout_cfg: LayoutConfig) -> list[DetectorPlacemen
 def local_basis_from_direction(direction: App.Vector) -> tuple[App.Vector, App.Vector, App.Vector]:
     u = normalize(direction)
     ref = App.Vector(0.0, 1.0, 0.0)
+    # [EN] Swap the reference axis near parallel cases so the local frame remains numerically stable for extrusions around shallow/steep detector directions. / [CN] 当方向几乎平行时切换参考轴，保证围绕浅角或陡角探测器方向建立的局部坐标系仍然数值稳定。
     if abs(dot(u, ref)) > 0.95:
         ref = App.Vector(1.0, 0.0, 0.0)
     v = normalize(ref.cross(u))
@@ -103,11 +106,16 @@ def plate_key_for_sector(sector_name: str) -> str:
     raise ValueError(f"unsupported sector_name: {sector_name}")
 
 
+def chamber_z_bounds(core: ChamberCoreConfig) -> tuple[float, float]:
+    half_z = 0.5 * core.size_z_mm
+    return (core.center_z_mm - half_z, core.center_z_mm + half_z)
+
+
 def ray_box_exit_distance(core: ChamberCoreConfig, direction: App.Vector) -> float:
     d = normalize(direction)
     half_x = 0.5 * core.size_x_mm
     half_y = 0.5 * core.size_y_mm
-    half_z = 0.5 * core.size_z_mm
+    z_min, z_max = chamber_z_bounds(core)
 
     candidates: list[float] = []
     if abs(d.x) > 1e-12:
@@ -115,11 +123,12 @@ def ray_box_exit_distance(core: ChamberCoreConfig, direction: App.Vector) -> flo
     if abs(d.y) > 1e-12:
         candidates.append(half_y / abs(d.y))
     if abs(d.z) > 1e-12:
-        candidates.append(half_z / abs(d.z))
+        candidates.append((z_max / d.z) if d.z > 0.0 else (z_min / d.z))
 
     if not candidates:
         raise ValueError("direction vector has no non-zero component")
 
+    # [EN] The first chamber wall hit is the minimum positive ray parameter among x/y/z slab crossings. / [CN] 射线首先撞到的腔体壁面，就是 x/y/z 三组平板相交参数里最小的正值。
     return min(candidates)
 
 
