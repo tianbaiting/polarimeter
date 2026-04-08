@@ -114,7 +114,7 @@ Ownership rules:
 - The authoritative build path for `infrontofSamuraiMag` remains the stateful pipeline; ad-hoc GUI drawing must not bypass target/config ownership rules.
 - Before producing review drawings or screenshots, first confirm the geometry source:
   - stateful pipeline output (`infrontofSamuraiMag`)
-  - or quick macro/reference preview (`infrontofSamuraiMag/build_polarimeter.py`)
+  - deprecated ad-hoc macro previews are removed; do not bypass the stateful target/config path for review geometry
 - Use beam-axis-consistent standard views when sharing geometry snapshots:
   - `Isometric`
   - `Front`

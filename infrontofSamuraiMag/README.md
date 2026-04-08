@@ -22,6 +22,8 @@ Stateful pipeline entry (required for module work):
 ./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml
 ```
 
+Legacy ad-hoc entry scripts have been removed. Use the stateful shell entry above instead of direct one-off Python or FreeCAD macro wrappers.
+
 Force rebuild (bypass hash-skip):
 
 ```bash
