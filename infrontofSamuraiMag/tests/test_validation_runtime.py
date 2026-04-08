@@ -72,15 +72,20 @@ def test_default_runtime_validation_passes_strict_gate() -> None:
     plate_tie_check = _check_by_name(report, "plates", "plate_to_stand_tie_hardware")
     assert plate_tie_check.passed
     assert "mode=disabled" in plate_tie_check.detail
-    assert _check_by_name(report, "detector", "clamp_fastening_and_key_features").passed
-    assert _check_by_name(report, "detector", "detector_mount_bridge_pose_fixed_relative_to_detector_body").passed
+    clamp_fastening = _check_by_name(report, "detector", "clamp_fastening_and_key_features")
+    assert clamp_fastening.passed
+    assert "layout=side_clamp" in clamp_fastening.detail
+    assert _check_by_name(report, "detector", "detector_fixture_rigid_local_pose_fixed_relative_to_detector_body").passed
     assert _check_by_name(report, "detector", "detector_mount_hole_pattern_derived_from_fixture_direction").passed
     assert _check_by_name(report, "detector", "detector_mount_plate_landing_within_envelope").passed
     assert _check_by_name(report, "detector", "detector_mount_bolt_pattern_4hole_rectangular").passed
     assert _check_by_name(report, "detector", "detector_mount_base_and_plate_hole_alignment").passed
+    assert _check_by_name(report, "detector", "detector_support_carrier_monolithic").passed
     assert _check_by_name(report, "detector", "detector_mount_fixture_structural_continuity").passed
+    assert _check_by_name(report, "detector", "detector_clamp_detachable_half_clear_of_support_carrier").passed
     assert _check_by_name(report, "detector", "detector_mount_sector_plate_assignment").passed
     assert _check_by_name(report, "detector", "detector_mount_bridge_length_within_limit").passed
+    assert _check_by_name(report, "detector", "clamp_side_bolt_axes_clear_detector_envelope").passed
     assert _check_by_name(report, "detector", "no_detector_package_interference_with_assembly").passed
     assert _check_by_name(report, "target", "single_rotary_target_mode").passed
     assert _check_by_name(report, "target", "single_target_holder_dual_screw_clamp").passed
@@ -355,7 +360,7 @@ def test_v2_los_scope_reports_fullpath_scope_string() -> None:
     assert "chamber_opening=cone_to_detector_front_face_circle" in los_scope.detail
 
 
-def test_detector_bridge_pose_and_drill_axes_are_fixture_driven() -> None:
+def test_detector_fixture_local_pose_and_drill_axes_are_rigid() -> None:
     pytest.importorskip("FreeCAD")
 
     from ifsm.components import detector_fixture_geometry
@@ -368,11 +373,24 @@ def test_detector_bridge_pose_and_drill_axes_are_fixture_driven() -> None:
     reference_signature = None
     for placement in placements:
         layout = detector_fixture_geometry(cfg.geometry, placement)
-        signature = (
-            (layout.bridge_center - layout.front_center).dot(layout.direction),
-            (layout.bridge_center - layout.front_center).dot(layout.mount_axis),
-            (layout.bridge_center - layout.front_center).dot(layout.mount_lateral_axis),
-        )
+        signature: list[float] = []
+        for point in (
+            layout.clamp_center,
+            layout.support_saddle_center,
+            layout.block_center,
+            layout.bridge_center,
+            layout.mount_base_center,
+            *layout.plate_hole_centers,
+            *layout.clamp_bolt_centers,
+        ):
+            delta = point - layout.front_center
+            signature.extend(
+                (
+                    delta.dot(layout.direction),
+                    delta.dot(layout.mount_axis),
+                    delta.dot(layout.mount_lateral_axis),
+                )
+            )
         if reference_signature is None:
             reference_signature = signature
         else:
@@ -382,3 +400,57 @@ def test_detector_bridge_pose_and_drill_axes_are_fixture_driven() -> None:
             layout.direction - scaled(layout.plate_normal, layout.direction.dot(layout.plate_normal))
         )
         assert projected_direction.dot(layout.base_u_axis) == pytest.approx(1.0)
+
+
+def test_detector_clamp_side_bolts_stay_outside_detector_bore() -> None:
+    pytest.importorskip("FreeCAD")
+
+    import Part
+
+    from ifsm.components import build_detector_fixture, detector_fixture_geometry
+    from ifsm.config import load_build_config
+    from ifsm.layout import build_detector_placements, scaled
+
+    cfg = load_build_config(ROOT / "config" / "default_infront.yaml")
+    placements = build_detector_placements(cfg.layout)
+
+    for placement in placements:
+        layout = detector_fixture_geometry(cfg.geometry, placement)
+        housing, _clamp_a, _support_carrier, _mount_base = build_detector_fixture(cfg.geometry, placement)
+        clamp_bore = Part.makeCylinder(
+            0.5 * cfg.geometry.detector.clamp.inner_diameter_mm,
+            cfg.geometry.detector.clamp.width_mm + 2.0,
+            layout.clamp_center - scaled(layout.direction, 0.5 * (cfg.geometry.detector.clamp.width_mm + 2.0)),
+            layout.direction,
+        )
+        for center in layout.clamp_bolt_centers:
+            bolt_hole = Part.makeCylinder(
+                0.5 * cfg.geometry.detector.clamp.clamp_bolt_diameter_mm,
+                layout.clamp_bolt_span_mm,
+                center - scaled(layout.clamp_bolt_axis, 0.5 * layout.clamp_bolt_span_mm),
+                layout.clamp_bolt_axis,
+            )
+            housing_common = housing.common(bolt_hole)
+            bore_common = clamp_bore.common(bolt_hole)
+            housing_volume = 0.0 if housing_common.isNull() else housing_common.Volume
+            bore_volume = 0.0 if bore_common.isNull() else bore_common.Volume
+            assert housing_volume == pytest.approx(0.0, abs=1e-3)
+            assert bore_volume == pytest.approx(0.0, abs=1e-3)
+
+
+def test_detector_support_carrier_is_monolithic_and_keeps_detachable_half_clear() -> None:
+    pytest.importorskip("FreeCAD")
+
+    from ifsm.components import build_detector_fixture, detector_support_clearance_mask
+    from ifsm.config import load_build_config
+    from ifsm.layout import build_detector_placements
+
+    cfg = load_build_config(ROOT / "config" / "default_infront.yaml")
+    placements = build_detector_placements(cfg.layout)
+
+    for placement in placements:
+        _housing, clamp_a, support_carrier, mount_base = build_detector_fixture(cfg.geometry, placement)
+        assert len(support_carrier.Solids) == 1
+        assert support_carrier.distToShape(mount_base)[0] == pytest.approx(0.0, abs=1e-3)
+        lower_support_region = support_carrier.common(detector_support_clearance_mask(cfg.geometry, placement))
+        assert clamp_a.distToShape(lower_support_region)[0] > 0.5

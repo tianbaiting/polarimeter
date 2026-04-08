@@ -22,6 +22,8 @@ from .components import (
     build_target_holders,
     build_target_ladder,
     chamber_support_centers,
+    detector_support_package_mask,
+    detector_support_clearance_mask,
     detector_fixture_geometry,
     h_plate_support_centers,
     plate_los_plane_hit_point,
@@ -244,14 +246,50 @@ def _detector_mount_bridge_length_mm(cfg: GeometryConfig, placement: DetectorPla
     return detector_fixture_geometry(cfg, placement).upright_length_mm
 
 
-def _detector_bridge_pose_signature(cfg: GeometryConfig, placement: DetectorPlacement) -> tuple[float, float, float]:
+def _detector_fixture_local_pose_signature(cfg: GeometryConfig, placement: DetectorPlacement) -> tuple[float, ...]:
     layout = detector_fixture_geometry(cfg, placement)
-    delta = layout.bridge_center - layout.front_center
-    return (
-        _dot(delta, layout.direction),
-        _dot(delta, layout.mount_axis),
-        _dot(delta, layout.mount_lateral_axis),
-    )
+    signature: list[float] = []
+
+    def _append_point_signature(point: App.Vector) -> None:
+        delta = point - layout.front_center
+        signature.extend(
+            (
+                _dot(delta, layout.direction),
+                _dot(delta, layout.mount_axis),
+                _dot(delta, layout.mount_lateral_axis),
+            )
+        )
+
+    # [EN] The rigid-fixture contract is stronger than a bridge-only check: clamp, adapter, bridge, base and both bolt patterns must stay at one invariant local pose relative to the detector body. / [CN] 刚体夹具合同比“只看桥接件”更强：抱箍、过渡块、桥接件、底座以及两类螺栓图样都必须相对探测器本体保持同一套不变的局部姿态。
+    for point in (
+        layout.clamp_center,
+        layout.support_saddle_center,
+        layout.block_center,
+        layout.bridge_center,
+        layout.mount_base_center,
+        layout.mount_base_top_center,
+        layout.bridge_plate_face_center,
+        *layout.plate_hole_centers,
+        *layout.clamp_bolt_centers,
+    ):
+        _append_point_signature(point)
+    return tuple(signature)
+
+
+def _detector_clamp_bolt_holes(cfg: GeometryConfig, placement: DetectorPlacement) -> tuple[Part.Shape, ...]:
+    layout = detector_fixture_geometry(cfg, placement)
+    clamp = cfg.detector.clamp
+    holes: list[Part.Shape] = []
+    for center in layout.clamp_bolt_centers:
+        holes.append(
+            Part.makeCylinder(
+                0.5 * clamp.clamp_bolt_diameter_mm,
+                layout.clamp_bolt_span_mm,
+                center - scaled(layout.clamp_bolt_axis, 0.5 * layout.clamp_bolt_span_mm),
+                layout.clamp_bolt_axis,
+            )
+        )
+    return tuple(holes)
 
 
 def _detector_mount_direction_alignment_deg(cfg: GeometryConfig, placement: DetectorPlacement) -> float:
@@ -1252,28 +1290,33 @@ def _validate_detector(
     mount_contact_failures: list[str] = []
     mount_continuity_failures: list[str] = []
     mount_assignment_failures: list[str] = []
-    bridge_pose_failures: list[str] = []
+    fixture_pose_failures: list[str] = []
     bridge_length_failures: list[str] = []
     bridge_lengths: list[float] = []
-    bridge_signatures: list[tuple[str, tuple[float, float, float]]] = []
+    fixture_signatures: list[tuple[str, tuple[float, ...]]] = []
+    clamp_bolt_clearance_failures: list[str] = []
+    support_carrier_monolithic_failures: list[str] = []
+    detachable_half_clearance_failures: list[str] = []
     mount_margin = cfg.clearance.los_margin_mm
     clamp = cfg.detector.clamp
     adapter = cfg.detector.adapter_block
+    support_saddle_thickness_mm = detector_fixture_geometry(cfg, placements[0]).support_saddle_thickness_mm if placements else 0.0
     bridge_length_limit_mm = (
         clamp.housing_length_mm
         + 0.5 * clamp.mount_base_u_mm
         + cfg.clearance.plate_auto_gap_mm
-        + adapter.radial_standoff_mm
+        + support_saddle_thickness_mm
         + 0.5 * adapter.width_mm
     )
     # [EN] The bridge-length limit is derived from the continuous load path stack-up, so excessive cantilevering is flagged in terms of actual support geometry rather than a magic number. / [CN] 桥接长度上限由连续承载路径的几何叠加推得，因此过长悬挑是按真实支撑几何判定，而不是用一个神秘常数。
     for placement in placements:
         layout = detector_fixture_geometry(cfg, placement)
-        housing, clamp_a, clamp_b, adapter_block, mount_base = build_detector_fixture(
+        housing, clamp_a, support_carrier, mount_base = build_detector_fixture(
             cfg,
             placement,
         )
-        fixtures[placement.tag] = [housing, clamp_a, clamp_b, adapter_block]
+        support_package = support_carrier.common(detector_support_package_mask(cfg, placement))
+        fixtures[placement.tag] = [housing, clamp_a, support_package]
         mount_bases[placement.tag] = mount_base
 
         plate_cfg = _plate_for_sector(cfg, placement.sector_name)
@@ -1300,10 +1343,22 @@ def _validate_detector(
         if mount_base.isNull() or mount_base.Volume <= 1e-6:
             mount_contact_failures.append(f"{placement.tag}: mount base solid is null/degenerate")
 
-        continuity_gap_mm = _shape_min_distance(adapter_block, mount_base)
-        if continuity_gap_mm > 0.5:
+        if support_carrier.isNull() or support_carrier.Volume <= 1e-6 or len(support_carrier.Solids) != 1:
+            support_carrier_monolithic_failures.append(
+                f"{placement.tag}: support_carrier solids={len(support_carrier.Solids)} volume={support_carrier.Volume:.3f}"
+            )
+
+        lower_support_region = support_carrier.common(detector_support_clearance_mask(cfg, placement))
+        detachable_gap_mm = _shape_min_distance(clamp_a, lower_support_region)
+        if detachable_gap_mm <= 0.5:
+            detachable_half_clearance_failures.append(
+                f"{placement.tag}: detachable_half_to_support_carrier_gap={detachable_gap_mm:.3f} mm is not > 0.500 mm"
+            )
+
+        carrier_mount_gap_mm = _shape_min_distance(support_carrier, mount_base)
+        if carrier_mount_gap_mm > 0.5:
             mount_continuity_failures.append(
-                f"{placement.tag}: adapter_to_mount_gap={continuity_gap_mm:.3f} mm exceeds 0.500 mm"
+                f"{placement.tag}: support_carrier_to_mount_gap={carrier_mount_gap_mm:.3f} mm exceeds 0.500 mm"
             )
 
         center = front_face_center(placement)
@@ -1330,16 +1385,33 @@ def _validate_detector(
             bridge_length_failures.append(
                 f"{placement.tag}: bridge_length={bridge_length_mm:.3f} mm outside (0, {bridge_length_limit_mm:.3f}]"
             )
-        bridge_signatures.append((placement.tag, _detector_bridge_pose_signature(cfg, placement)))
+        fixture_signatures.append((placement.tag, _detector_fixture_local_pose_signature(cfg, placement)))
 
-    if bridge_signatures:
-        ref_tag, ref_signature = bridge_signatures[0]
+        clamp_bore = Part.makeCylinder(
+            0.5 * clamp.inner_diameter_mm,
+            clamp.width_mm + 2.0,
+            layout.clamp_center - scaled(layout.direction, 0.5 * (clamp.width_mm + 2.0)),
+            layout.direction,
+        )
+        for bolt_idx, bolt_hole in enumerate(_detector_clamp_bolt_holes(cfg, placement), start=1):
+            housing_overlap = _shape_interference_volume(bolt_hole, housing)
+            bore_overlap = _shape_interference_volume(bolt_hole, clamp_bore)
+            if housing_overlap > 1e-3 or bore_overlap > 1e-3:
+                clamp_bolt_clearance_failures.append(
+                    f"{placement.tag}: clamp_bolt_{bolt_idx} intersects detector/bore "
+                    f"(housing={housing_overlap:.3f}, bore={bore_overlap:.3f})"
+                )
+                break
+
+    if fixture_signatures:
+        ref_tag, ref_signature = fixture_signatures[0]
         bridge_tol_mm = 1e-6
-        for tag, signature in bridge_signatures[1:]:
+        for tag, signature in fixture_signatures[1:]:
             deltas = tuple(abs(signature[i] - ref_signature[i]) for i in range(3))
-            if max(deltas) > bridge_tol_mm:
-                bridge_pose_failures.append(
-                    f"{tag}: bridge_pose_delta=({deltas[0]:.6f},{deltas[1]:.6f},{deltas[2]:.6f}) mm vs {ref_tag}"
+            if max(abs(signature[i] - ref_signature[i]) for i in range(len(ref_signature))) > bridge_tol_mm:
+                fixture_pose_failures.append(
+                    f"{tag}: rigid_fixture_pose_delta_max="
+                    f"{max(abs(signature[i] - ref_signature[i]) for i in range(len(ref_signature))):.6f} mm vs {ref_tag}"
                 )
 
     tags = sorted(fixtures.keys())
@@ -1416,12 +1488,12 @@ def _validate_detector(
 
     checks.append(
         SubsystemCheck(
-            name="detector_mount_bridge_pose_fixed_relative_to_detector_body",
-            passed=not bridge_pose_failures,
+            name="detector_fixture_rigid_local_pose_fixed_relative_to_detector_body",
+            passed=not fixture_pose_failures,
             detail=(
-                "bridge local pose is invariant across all detector placements"
-                if not bridge_pose_failures
-                else "; ".join(bridge_pose_failures)
+                "fixture local pose is invariant across all detector placements"
+                if not fixture_pose_failures
+                else "; ".join(fixture_pose_failures)
             ),
         )
     )
@@ -1431,7 +1503,7 @@ def _validate_detector(
             name="detector_mount_hole_pattern_derived_from_fixture_direction",
             passed=not mount_direction_failures,
             detail=(
-                "fixture in-plane drill axis follows detector direction for all placements"
+                "fixture in-plane drill axis rotates with the rigid detector frame for all placements"
                 if not mount_direction_failures
                 else "; ".join(mount_direction_failures)
             ),
@@ -1479,12 +1551,36 @@ def _validate_detector(
 
     checks.append(
         SubsystemCheck(
+            name="detector_support_carrier_monolithic",
+            passed=not support_carrier_monolithic_failures,
+            detail=(
+                "bearing clamp half, transition block, uprights, and top bridge are fused into one support carrier for all detectors"
+                if not support_carrier_monolithic_failures
+                else "; ".join(support_carrier_monolithic_failures)
+            ),
+        )
+    )
+
+    checks.append(
+        SubsystemCheck(
             name="detector_mount_fixture_structural_continuity",
             passed=not mount_continuity_failures,
             detail=(
-                "mount base + uprights + bridge remain in mechanical contact with adapter block for all detectors"
+                "monolithic support carrier remains in direct mechanical contact with the separate mount base for all detectors"
                 if not mount_continuity_failures
                 else "; ".join(mount_continuity_failures)
+            ),
+        )
+    )
+
+    checks.append(
+        SubsystemCheck(
+            name="detector_clamp_detachable_half_clear_of_support_carrier",
+            passed=not detachable_half_clearance_failures,
+            detail=(
+                "detachable clamp half stays clear of the monolithic lower support carrier for all detectors"
+                if not detachable_half_clearance_failures
+                else "; ".join(detachable_half_clearance_failures)
             ),
         )
     )
@@ -1512,6 +1608,19 @@ def _validate_detector(
                 )
                 if not bridge_length_failures
                 else "; ".join(bridge_length_failures)
+            ),
+        )
+    )
+
+    checks.append(
+        SubsystemCheck(
+            name="clamp_side_bolt_axes_clear_detector_envelope",
+            passed=not clamp_bolt_clearance_failures,
+            detail=(
+                f"side_bolts_per_detector={len(detector_fixture_geometry(cfg, placements[0]).clamp_bolt_centers) if placements else 0}, "
+                "bolt_axes stay outside detector envelope and clamp bore"
+                if not clamp_bolt_clearance_failures
+                else "; ".join(clamp_bolt_clearance_failures)
             ),
         )
     )
@@ -1549,7 +1658,7 @@ def _validate_detector(
             passed=clamp_fastening_ok,
             detail=(
                 f"ear=({clamp.clamp_ear_length_mm:.1f},{clamp.clamp_ear_width_mm:.1f},{clamp.clamp_ear_thickness_mm:.1f}), "
-                f"bolt_d={clamp.clamp_bolt_diameter_mm:.1f}, pitch={clamp.clamp_bolt_pitch_mm:.1f}, "
+                f"bolt_d={clamp.clamp_bolt_diameter_mm:.1f}, pitch={clamp.clamp_bolt_pitch_mm:.1f}, layout=side_clamp, "
                 f"key=({clamp.anti_rotation_key_width_mm:.1f},{clamp.anti_rotation_key_depth_mm:.1f},{clamp.anti_rotation_key_length_mm:.1f})"
             ),
         )

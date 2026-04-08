@@ -1075,7 +1075,6 @@ def _parse_detector(raw: dict[str, Any]) -> DetectorConfig:
             "geometry.detector.adapter_block.length_mm": adapter.length_mm,
             "geometry.detector.adapter_block.width_mm": adapter.width_mm,
             "geometry.detector.adapter_block.height_mm": adapter.height_mm,
-            "geometry.detector.adapter_block.radial_standoff_mm": adapter.radial_standoff_mm,
         }
     )
 
@@ -1083,8 +1082,8 @@ def _parse_detector(raw: dict[str, Any]) -> DetectorConfig:
         raise ValueError("geometry.detector.clamp.detector_diameter_mm must be < inner_diameter_mm")
     if clamp.inner_diameter_mm >= clamp.outer_diameter_mm:
         raise ValueError("geometry.detector.clamp.inner_diameter_mm must be < outer_diameter_mm")
-    if clamp.clamp_bolt_diameter_mm >= min(clamp.clamp_ear_width_mm, clamp.clamp_ear_thickness_mm):
-        raise ValueError("geometry.detector.clamp.clamp_bolt_diameter_mm must be < min(clamp_ear_width_mm, clamp_ear_thickness_mm)")
+    if clamp.clamp_bolt_diameter_mm >= min(clamp.clamp_ear_length_mm, clamp.clamp_ear_thickness_mm):
+        raise ValueError("geometry.detector.clamp.clamp_bolt_diameter_mm must be < min(clamp_ear_length_mm, clamp_ear_thickness_mm)")
     if clamp.clamp_bolt_pitch_mm > clamp.width_mm:
         raise ValueError("geometry.detector.clamp.clamp_bolt_pitch_mm must be <= width_mm")
     if clamp.clamp_ear_length_mm > clamp.width_mm:
@@ -1102,6 +1101,8 @@ def _parse_detector(raw: dict[str, Any]) -> DetectorConfig:
         raise ValueError("geometry.detector.clamp.mount_bolt_pitch_v_mm too large for mount_base_v_mm and hole diameter")
     if abs(adapter.tilt_deg) > 45.0:
         raise ValueError("geometry.detector.adapter_block.tilt_deg absolute value must be <= 45 deg")
+    if abs(adapter.radial_standoff_mm) > 1e-9:
+        raise ValueError("geometry.detector.adapter_block.radial_standoff_mm must be 0.0 for direct-contact saddle semantics")
 
     return DetectorConfig(clamp=clamp, adapter_block=adapter)
 
@@ -1845,8 +1846,8 @@ def _validate_geometry(cfg: GeometryConfig) -> None:
     clamp = cfg.detector.clamp
     if clamp.anti_rotation_key_width_mm >= clamp.inner_diameter_mm:
         raise ValueError("geometry.detector.clamp.anti_rotation_key_width_mm must be < inner_diameter_mm")
-    if clamp.clamp_ear_width_mm <= clamp.clamp_bolt_diameter_mm:
-        raise ValueError("geometry.detector.clamp.clamp_ear_width_mm must be > clamp_bolt_diameter_mm")
+    if clamp.clamp_ear_thickness_mm <= clamp.clamp_bolt_diameter_mm:
+        raise ValueError("geometry.detector.clamp.clamp_ear_thickness_mm must be > clamp_bolt_diameter_mm")
 
     for side_name, module in (("front", cfg.chamber.end_modules.front), ("rear", cfg.chamber.end_modules.rear)):
         if module.pipe_length_mm > 0.0 and module.pipe_inner_diameter_mm < cfg.beamline.inlet_diameter_mm:

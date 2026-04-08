@@ -43,6 +43,13 @@ class DetectorFixtureGeometry:
     upright_depth_mm: float
     plate_hole_centers: tuple[App.Vector, ...]
     base_hole_centers: tuple[App.Vector, ...]
+    clamp_bolt_axis: App.Vector
+    clamp_bolt_centers: tuple[App.Vector, ...]
+    clamp_bolt_span_mm: float
+    support_saddle_center: App.Vector
+    support_saddle_thickness_mm: float
+    support_saddle_length_mm: float
+    support_saddle_height_mm: float
 
 
 @dataclass(frozen=True)
@@ -999,14 +1006,14 @@ def _plate_rectangular_relief_cuts(
 
     cuts: list[Part.Shape] = []
     for placement in placements:
-        housing, clamp_a, clamp_b, adapter_block, mount_base = build_detector_fixture(cfg, placement)
+        housing, clamp_a, support_carrier, mount_base = build_detector_fixture(cfg, placement)
         local_min_u: float | None = None
         local_max_u = 0.0
         local_min_v: float | None = None
         local_max_v = 0.0
 
         # [EN] Relief windows are estimated from actual fixture bounding boxes intersecting the H-plate thickness band, which keeps the cut local to interfering service hardware. / [CN] 让位窗按实际夹具包围盒与 H 板厚度带的相交来估算，使切口局限在真正干涉的维护硬件附近。
-        for contributor in (housing, clamp_a, clamp_b, adapter_block, mount_base):
+        for contributor in (housing, clamp_a, support_carrier, mount_base):
             bbox = contributor.BoundBox
             if bbox.YMax < plate_band_min or bbox.YMin > plate_band_max:
                 continue
@@ -1181,12 +1188,12 @@ def _detector_mount_axes(
     fallback_lateral_axis: App.Vector,
 ) -> tuple[App.Vector, App.Vector, App.Vector]:
     plate_normal = _plate_outward_normal(plate)
-    inward_normal = scaled(plate_normal, -1.0)
-    projected = inward_normal - scaled(direction, _dot(inward_normal, direction))
-    if _vector_length(projected) <= 1e-9:
-        projected = inward_normal
-
-    mount_axis = _normalize_vector(projected)
+    # [EN] The detector fixture now owns a rigid local frame: its base-to-detector axis is the plate inward normal itself, only orthogonalized numerically if a future layout ever drifts off the frozen sector/plate mapping. / [CN] 夹具现拥有刚体局部坐标：底座到探测器的轴线直接取板件内法向，只有当未来布局偏离当前冻结扇区/板件映射时才做数值正交化。
+    mount_axis = scaled(plate_normal, -1.0)
+    residual = _dot(mount_axis, direction)
+    if abs(residual) > 1e-9:
+        mount_axis = mount_axis - scaled(direction, residual)
+    mount_axis = _normalize_vector(mount_axis)
     lateral_axis = direction.cross(mount_axis)
     if _vector_length(lateral_axis) <= 1e-9:
         lateral_axis = fallback_lateral_axis
@@ -1201,11 +1208,11 @@ def _detector_mount_base_axes(
     plate_normal: App.Vector,
     fallback_u_axis: App.Vector,
 ) -> tuple[App.Vector, App.Vector]:
-    in_plane_direction = direction - scaled(plate_normal, _dot(direction, plate_normal))
-    if _vector_length(in_plane_direction) <= 1e-9:
-        in_plane_direction = fallback_u_axis
-
-    base_u_axis = _normalize_vector(in_plane_direction)
+    # [EN] The bolted base is part of the same rigid fixture frame as the detector body, so the base rectangle rotates with the detector axis instead of being re-derived from a plate-local template. / [CN] 螺栓底座与探测器本体属于同一刚体夹具坐标，因此底座矩形随探测器轴整体旋转，而不是再从板局部模板重新推导。
+    base_u_axis = direction
+    if _vector_length(base_u_axis) <= 1e-9:
+        base_u_axis = fallback_u_axis
+    base_u_axis = _normalize_vector(base_u_axis)
     base_v_axis = plate_normal.cross(base_u_axis)
     if _vector_length(base_v_axis) <= 1e-9:
         base_v_axis = fallback_u_axis.cross(plate_normal)
@@ -1223,17 +1230,26 @@ def detector_fixture_geometry(
 
     front_center = front_face_center(placement)
     direction, _axis_v, axis_w = local_basis_from_direction(placement.direction)
-    _, _, plate_u_axis, _plate_v_axis = _plate_axes(plate)
     mount_axis, mount_lateral_axis, plate_normal = _detector_mount_axes(direction, plate, axis_w)
-    base_u_axis, base_v_axis = _detector_mount_base_axes(direction, plate_normal, plate_u_axis)
+    base_u_axis, base_v_axis = _detector_mount_base_axes(direction, plate_normal, axis_w)
+    carrier_fuse_overlap_mm = 0.5
 
     clamp_center = front_center + scaled(direction, clamp_cfg.support_overlap_mm)
-
-    effective_radial_standoff = adapter_cfg.radial_standoff_mm
-    if not cfg.stand.enable_plate_ties:
-        # [EN] Direct-mount mode keeps detector support compact to avoid visually long cantilever connectors. / [CN] 直连模式下缩短径向悬挑，避免出现过长悬臂连接件的观感。
-        effective_radial_standoff = max(4.0, min(adapter_cfg.radial_standoff_mm, 0.5 * adapter_cfg.radial_standoff_mm + 2.0))
-    support_to_block_center = 0.5 * clamp_cfg.outer_diameter_mm + effective_radial_standoff + 0.5 * adapter_cfg.width_mm
+    # [EN] The support-side clamp half now owns a flat saddle that directly carries the transition block; `radial_standoff_mm` stays in the schema for compatibility but no longer creates a visible gap in the strict geometry. / [CN] 承载侧半抱箍现自带平鞍座并直接承托过渡块；`radial_standoff_mm` 字段仅为兼容保留，不再在严格几何中制造可见缝隙。
+    support_saddle_thickness = max(6.0, min(10.0, 0.33 * adapter_cfg.width_mm))
+    support_saddle_length = max(clamp_cfg.width_mm, adapter_cfg.length_mm)
+    support_saddle_height = adapter_cfg.height_mm
+    support_saddle_center = clamp_center - scaled(
+        mount_axis,
+        0.5 * clamp_cfg.outer_diameter_mm + 0.5 * support_saddle_thickness - carrier_fuse_overlap_mm,
+    )
+    # [EN] A small geometric overlap is intentional so FreeCAD resolves the bearing clamp half, saddle, and transition block into one solid support carrier instead of several face-contacting solids. / [CN] 这里故意保留极小实体重叠，使 FreeCAD 把承载半抱箍、鞍座与过渡块解析成一个整体支撑实体，而不是几个仅面接触的独立 solid。
+    support_to_block_center = (
+        0.5 * clamp_cfg.outer_diameter_mm
+        + support_saddle_thickness
+        + 0.5 * adapter_cfg.width_mm
+        - carrier_fuse_overlap_mm
+    )
     block_center = clamp_center - scaled(mount_axis, support_to_block_center)
 
     bridge_thickness = max(8.0, min(16.0, 0.25 * adapter_cfg.height_mm))
@@ -1257,7 +1273,7 @@ def detector_fixture_geometry(
     else:
         upright_offsets = (-upright_offset, upright_offset)
 
-    upright_length = _axis_distance(bridge_plate_face_center, mount_base_top_center, mount_axis)
+    upright_length = _axis_distance(bridge_plate_face_center, mount_base_top_center, mount_axis) + carrier_fuse_overlap_mm
     bridge_span = max(upright_width + 6.0, 2.0 * abs(upright_offsets[0]) + upright_width - 6.0)
     bridge_depth = max(upright_depth, min(20.0, 1.1 * upright_depth))
 
@@ -1268,6 +1284,17 @@ def detector_fixture_geometry(
             in_plane_offset = scaled(base_u_axis, du) + scaled(base_v_axis, dv)
             plate_hole_centers.append(mount_projection + in_plane_offset)
             base_hole_centers.append(mount_base_center + in_plane_offset)
+
+    clamp_bolt_span = clamp_cfg.split_gap_mm + 2.0 * clamp_cfg.clamp_ear_width_mm + 2.0
+    clamp_bolt_side_offset = 0.5 * clamp_cfg.outer_diameter_mm + 0.5 * clamp_cfg.clamp_ear_thickness_mm
+    clamp_bolt_centers: list[App.Vector] = []
+    for du in (-0.5 * clamp_cfg.clamp_bolt_pitch_mm, 0.5 * clamp_cfg.clamp_bolt_pitch_mm):
+        for side_sign in (-1.0, 1.0):
+            clamp_bolt_centers.append(
+                clamp_center
+                + scaled(direction, du)
+                + scaled(mount_lateral_axis, side_sign * clamp_bolt_side_offset)
+            )
 
     return DetectorFixtureGeometry(
         front_center=front_center,
@@ -1293,6 +1320,63 @@ def detector_fixture_geometry(
         upright_depth_mm=upright_depth,
         plate_hole_centers=tuple(plate_hole_centers),
         base_hole_centers=tuple(base_hole_centers),
+        clamp_bolt_axis=mount_axis,
+        clamp_bolt_centers=tuple(clamp_bolt_centers),
+        clamp_bolt_span_mm=clamp_bolt_span,
+        support_saddle_center=support_saddle_center,
+        support_saddle_thickness_mm=support_saddle_thickness,
+        support_saddle_length_mm=support_saddle_length,
+        support_saddle_height_mm=support_saddle_height,
+    )
+
+
+def detector_support_clearance_mask(
+    cfg: GeometryConfig,
+    placement: DetectorPlacement,
+) -> Part.Shape:
+    layout = detector_fixture_geometry(cfg, placement)
+    clamp_cfg = cfg.detector.clamp
+    adapter_cfg = cfg.detector.adapter_block
+
+    # [EN] Clearance to the detachable half is checked only against the lower support volume below the clamp ring, not against the whole bearing-side half that is expected to touch the mating split surface. / [CN] 可拆半抱箍净空只针对抱箍下方的支撑体积检查，而不是针对必然与分型面相接的整块承载半抱箍。
+    return slit_prism(
+        center=layout.block_center,
+        axis_u=layout.direction,
+        axis_v=layout.mount_axis,
+        axis_w=layout.mount_lateral_axis,
+        length_mm=max(clamp_cfg.width_mm, adapter_cfg.length_mm, clamp_cfg.mount_base_u_mm),
+        width_mm=adapter_cfg.width_mm + layout.support_saddle_thickness_mm + layout.bridge_thickness_mm + 6.0,
+        height_mm=max(
+            clamp_cfg.outer_diameter_mm,
+            adapter_cfg.height_mm,
+            layout.bridge_depth_mm,
+            layout.upright_depth_mm,
+        ) + 6.0,
+    )
+
+
+def detector_support_package_mask(
+    cfg: GeometryConfig,
+    placement: DetectorPlacement,
+) -> Part.Shape:
+    layout = detector_fixture_geometry(cfg, placement)
+    clamp_cfg = cfg.detector.clamp
+    adapter_cfg = cfg.detector.adapter_block
+
+    package_top = layout.clamp_center + scaled(layout.mount_axis, 0.5 * clamp_cfg.outer_diameter_mm)
+    package_bottom = layout.block_center - scaled(layout.mount_axis, 0.5 * adapter_cfg.width_mm)
+    package_center = _midpoint(package_top, package_bottom)
+    package_width_mm = _axis_distance(package_top, package_bottom, layout.mount_axis)
+
+    # [EN] Detector-package collision checks should follow the exposed detector-side support envelope near the clamp and adapter, not the plate-side mounting spine that is intentionally part of the fixture attachment hardware. / [CN] 探测器包络碰撞检查应只覆盖靠近抱箍和过渡块的外露支撑包络，而不把有意属于安装硬件的贴板支撑腹板一并算进探测器包络。
+    return slit_prism(
+        center=package_center,
+        axis_u=layout.direction,
+        axis_v=layout.mount_axis,
+        axis_w=layout.mount_lateral_axis,
+        length_mm=max(clamp_cfg.width_mm, adapter_cfg.length_mm) + 4.0,
+        width_mm=package_width_mm + 4.0,
+        height_mm=max(clamp_cfg.outer_diameter_mm, adapter_cfg.height_mm) + 6.0,
     )
 
 
@@ -1404,12 +1488,15 @@ def build_plate_load_ties(cfg: GeometryConfig) -> dict[str, Part.Shape]:
 def build_detector_fixture(
     cfg: GeometryConfig,
     placement: DetectorPlacement,
-) -> tuple[Part.Shape, Part.Shape, Part.Shape, Part.Shape, Part.Shape]:
+) -> tuple[Part.Shape, Part.Shape, Part.Shape, Part.Shape]:
     clamp_cfg = cfg.detector.clamp
     adapter_cfg = cfg.detector.adapter_block
+    layout = detector_fixture_geometry(cfg, placement)
 
-    front_center = front_face_center(placement)
-    direction, axis_v, axis_w = local_basis_from_direction(placement.direction)
+    front_center = layout.front_center
+    direction = layout.direction
+    split_axis = layout.clamp_bolt_axis
+    side_axis = layout.mount_lateral_axis
 
     housing = Part.makeCylinder(
         0.5 * clamp_cfg.detector_diameter_mm,
@@ -1431,8 +1518,8 @@ def build_detector_fixture(
     split_cut = slit_prism(
         center=clamp_center,
         axis_u=direction,
-        axis_v=axis_v,
-        axis_w=axis_w,
+        axis_v=split_axis,
+        axis_w=side_axis,
         length_mm=clamp_cfg.width_mm + 2.0,
         width_mm=clamp_cfg.split_gap_mm,
         height_mm=2.2 * clamp_cfg.outer_diameter_mm,
@@ -1441,14 +1528,14 @@ def build_detector_fixture(
 
     key_center = (
         clamp_center
-        + scaled(axis_w, 0.5 * clamp_cfg.inner_diameter_mm - 0.5 * clamp_cfg.anti_rotation_key_depth_mm)
-        + scaled(axis_v, 0.25 * clamp_cfg.anti_rotation_key_width_mm)
+        + scaled(side_axis, 0.5 * clamp_cfg.inner_diameter_mm - 0.5 * clamp_cfg.anti_rotation_key_depth_mm)
+        + scaled(split_axis, 0.25 * clamp_cfg.anti_rotation_key_width_mm)
     )
     key_rib = slit_prism(
         center=key_center,
         axis_u=direction,
-        axis_v=axis_v,
-        axis_w=axis_w,
+        axis_v=split_axis,
+        axis_w=side_axis,
         length_mm=clamp_cfg.anti_rotation_key_length_mm,
         width_mm=clamp_cfg.anti_rotation_key_width_mm,
         height_mm=clamp_cfg.anti_rotation_key_depth_mm,
@@ -1458,19 +1545,19 @@ def build_detector_fixture(
 
     half_mask = 1.1 * clamp_cfg.outer_diameter_mm
     mask_a = slit_prism(
-        center=clamp_center + scaled(axis_v, 0.25 * clamp_cfg.outer_diameter_mm),
+        center=clamp_center + scaled(split_axis, 0.25 * clamp_cfg.outer_diameter_mm),
         axis_u=direction,
-        axis_v=axis_v,
-        axis_w=axis_w,
+        axis_v=split_axis,
+        axis_w=side_axis,
         length_mm=clamp_cfg.width_mm + 3.0,
         width_mm=half_mask,
         height_mm=2.4 * clamp_cfg.outer_diameter_mm,
     )
     mask_b = slit_prism(
-        center=clamp_center - scaled(axis_v, 0.25 * clamp_cfg.outer_diameter_mm),
+        center=clamp_center - scaled(split_axis, 0.25 * clamp_cfg.outer_diameter_mm),
         axis_u=direction,
-        axis_v=axis_v,
-        axis_w=axis_w,
+        axis_v=split_axis,
+        axis_w=side_axis,
         length_mm=clamp_cfg.width_mm + 3.0,
         width_mm=half_mask,
         height_mm=2.4 * clamp_cfg.outer_diameter_mm,
@@ -1493,43 +1580,66 @@ def build_detector_fixture(
     clamp_half_a = split_ring.common(mask_a).fuse(shoulder.common(mask_a)).fuse(end_stop.common(mask_a))
     clamp_half_b = split_ring.common(mask_b).fuse(shoulder.common(mask_b)).fuse(end_stop.common(mask_b))
 
-    ear_offsets_u = (
-        -0.5 * clamp_cfg.clamp_bolt_pitch_mm,
-        0.5 * clamp_cfg.clamp_bolt_pitch_mm,
+    support_saddle = slit_prism(
+        center=layout.support_saddle_center,
+        axis_u=direction,
+        axis_v=layout.mount_axis,
+        axis_w=layout.mount_lateral_axis,
+        length_mm=layout.support_saddle_length_mm,
+        width_mm=layout.support_saddle_thickness_mm,
+        height_mm=layout.support_saddle_height_mm,
     )
-    for side_sign in (1.0, -1.0):
-        for u_offset in ear_offsets_u:
-            ear_center = (
-                clamp_center
-                + scaled(direction, u_offset)
-                + scaled(axis_v, side_sign * (0.5 * clamp_cfg.outer_diameter_mm + 0.5 * clamp_cfg.clamp_ear_width_mm))
-            )
-            ear = slit_prism(
-                center=ear_center,
-                axis_u=direction,
-                axis_v=axis_v,
-                axis_w=axis_w,
-                length_mm=clamp_cfg.clamp_ear_length_mm,
-                width_mm=clamp_cfg.clamp_ear_width_mm,
-                height_mm=clamp_cfg.clamp_ear_thickness_mm,
-            )
-            if side_sign > 0.0:
-                clamp_half_a = clamp_half_a.fuse(ear)
-            else:
-                clamp_half_b = clamp_half_b.fuse(ear)
+    # [EN] Only the support-side clamp half receives the lower saddle so the non-bearing half stays detachable while the load path to the adapter remains visually and mechanically explicit. / [CN] 只有承载侧半抱箍带下部鞍座，使非承载半抱箍继续可拆，同时让通往过渡块的承载路径在视觉和机械上都明确。
+    clamp_half_b = clamp_half_b.fuse(support_saddle)
 
-    bolt_span = clamp_cfg.outer_diameter_mm + 2.0 * clamp_cfg.clamp_ear_width_mm + 2.0
-    for u_offset in ear_offsets_u:
+    ear_fuse_overlap_mm = 1.0
+    ear_split_offset = 0.5 * clamp_cfg.split_gap_mm + 0.5 * clamp_cfg.clamp_ear_width_mm - ear_fuse_overlap_mm
+    ear_side_offset = 0.5 * clamp_cfg.outer_diameter_mm + 0.5 * clamp_cfg.clamp_ear_thickness_mm - ear_fuse_overlap_mm
+    # [EN] Clamp ears intentionally bite slightly into the ring body so each clamp half remains a single machinable solid instead of leaving tangentially touching ear tabs as detached solids. / [CN] 抱箍耳板故意向圆环本体咬合少量实体，使每半抱箍保持为单个可加工 solid，而不是留下仅切触的独立耳板小块。
+    for u_offset in (-0.5 * clamp_cfg.clamp_bolt_pitch_mm, 0.5 * clamp_cfg.clamp_bolt_pitch_mm):
+        for side_sign in (-1.0, 1.0):
+            clamp_half_a = clamp_half_a.fuse(
+                slit_prism(
+                    center=(
+                        clamp_center
+                        + scaled(direction, u_offset)
+                        + scaled(split_axis, ear_split_offset)
+                        + scaled(side_axis, side_sign * ear_side_offset)
+                    ),
+                    axis_u=direction,
+                    axis_v=split_axis,
+                    axis_w=side_axis,
+                    length_mm=clamp_cfg.clamp_ear_length_mm,
+                    width_mm=clamp_cfg.clamp_ear_width_mm,
+                    height_mm=clamp_cfg.clamp_ear_thickness_mm,
+                )
+            )
+            clamp_half_b = clamp_half_b.fuse(
+                slit_prism(
+                    center=(
+                        clamp_center
+                        + scaled(direction, u_offset)
+                        - scaled(split_axis, ear_split_offset)
+                        + scaled(side_axis, side_sign * ear_side_offset)
+                    ),
+                    axis_u=direction,
+                    axis_v=split_axis,
+                    axis_w=side_axis,
+                    length_mm=clamp_cfg.clamp_ear_length_mm,
+                    width_mm=clamp_cfg.clamp_ear_width_mm,
+                    height_mm=clamp_cfg.clamp_ear_thickness_mm,
+                )
+            )
+
+    for bolt_center in layout.clamp_bolt_centers:
         bolt_hole = Part.makeCylinder(
             0.5 * clamp_cfg.clamp_bolt_diameter_mm,
-            bolt_span,
-            clamp_center + scaled(direction, u_offset) - scaled(axis_v, 0.5 * bolt_span),
-            axis_v,
+            layout.clamp_bolt_span_mm,
+            bolt_center - scaled(layout.clamp_bolt_axis, 0.5 * layout.clamp_bolt_span_mm),
+            layout.clamp_bolt_axis,
         )
         clamp_half_a = clamp_half_a.cut(bolt_hole)
         clamp_half_b = clamp_half_b.cut(bolt_hole)
-
-    layout = detector_fixture_geometry(cfg, placement)
     adapter_block = slit_prism(
         center=layout.block_center,
         axis_u=direction,
@@ -1574,6 +1684,17 @@ def build_detector_fixture(
         )
         uprights.append(upright)
 
+    support_spine = slit_prism(
+        center=layout.mount_base_top_center + scaled(layout.mount_axis, 0.5 * layout.upright_length_mm),
+        axis_u=layout.mount_axis,
+        axis_v=direction,
+        axis_w=layout.mount_lateral_axis,
+        length_mm=layout.upright_length_mm,
+        width_mm=max(16.0, min(adapter_cfg.length_mm - 4.0, 0.45 * adapter_cfg.length_mm)),
+        height_mm=max(layout.upright_depth_mm, min(adapter_cfg.height_mm, 0.65 * adapter_cfg.height_mm)),
+    )
+    # [EN] A central support spine makes the clamp-to-adapter-to-bridge load path explicitly one fabricated carrier instead of relying on multiple face-contacting prismatic pieces to be interpreted as a single part. / [CN] 中央支撑腹板把抱箍到过渡块再到桥/立板的承载路径明确做成一整件，避免只靠多个棱柱面接触去“猜测”它们属于同一零件。
+
     top_bridge = slit_prism(
         center=layout.bridge_center,
         axis_u=layout.mount_axis,
@@ -1584,12 +1705,17 @@ def build_detector_fixture(
         height_mm=layout.bridge_depth_mm,
     )
 
-    mount_base = mount_base_plate
+    support_carrier = clamp_half_b.fuse(adapter_block)
     for upright in uprights:
-        mount_base = mount_base.fuse(upright)
-    mount_base = mount_base.fuse(top_bridge)
+        support_carrier = support_carrier.fuse(upright)
+    support_carrier = support_carrier.fuse(support_spine)
+    support_carrier = support_carrier.fuse(top_bridge)
+    support_carrier = support_carrier.removeSplitter()
 
-    return housing, clamp_half_a, clamp_half_b, adapter_block, mount_base
+    # [EN] The load-bearing side is now exported as one monolithic support carrier so the lower clamp half, transition block, uprights, and top bridge read as a single fabricated part; only the bolted base plate remains separate for installation. / [CN] 承载侧现作为单件支撑承力体导出，使下半抱箍、过渡块、双立板和顶桥在几何上表现为同一加工件；只有与板连接的底座板继续独立保留。
+    mount_base = mount_base_plate
+
+    return housing, clamp_half_a, support_carrier, mount_base
 
 
 def _target_slot_positions_x(cfg: GeometryConfig) -> tuple[float, float, float]:

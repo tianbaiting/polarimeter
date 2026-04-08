@@ -231,7 +231,7 @@ geometry:
       width_mm: 34.0
       height_mm: 24.0
       tilt_deg: 4.0
-      radial_standoff_mm: 10.0
+      radial_standoff_mm: 0.0
 
   target:
     mode: single_rotary

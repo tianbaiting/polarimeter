@@ -582,3 +582,63 @@ Entry Template:
 - State Snapshot: run_id=`20260327T005942Z-8`, run.status=`skipped`, validation.status=`pass`, strict=`true`.
 - Artifacts: FCStd `sha256=97ecdc8a...`, STEP `sha256=ba21b4a6...`, report `sha256=01369ca4...` reused from the latest strict-pass build.
 - Next Action: hand off the new `afterSRC` module together with the shared-engine regression result.
+
+- Timestamp UTC: 2026-04-08T00:58:14Z
+- Timestamp Local: 2026-04-08 09:58:14 JST
+- Intent: Validate the detector-fixture rewrite after freezing side-mounted clamp bolts and rigid local-frame placement semantics.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: baseline/target updated so clamp screws must stay outside detector envelope/bore; `detector_fixture_geometry()` now treats detector + clamp + adapter + bridge + base as one rigid local coordinate system and only then rotates/lands the base on `H/V1/V2`.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260408T005814Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: report `sha256=3807c955...`; detector checks now include `detector_fixture_rigid_local_pose_fixed_relative_to_detector_body=pass` and `clamp_side_bolt_axes_clear_detector_envelope=pass`.
+- Next Action: force-rebuild FCStd/STEP so the updated clamp-hole layout and rigid-fixture orientation are written into the exported CAD artifacts.
+
+- Timestamp UTC: 2026-04-08T00:59:10Z
+- Timestamp Local: 2026-04-08 09:59:10 JST
+- Intent: Export FCStd/STEP after rebuilding the split clamp with side bolts and rigid-body detector fixture placement.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: clamp halves now split along the fixture mount axis, ear tabs are mirrored onto both side stations, and the four clamp bolt axes are offset to the outer sides so they no longer cross the detector bore; base drilling remains the same `4-hole rectangular` pattern.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260408T005910Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: FCStd `sha256=4bd5b523...`, STEP `sha256=45dc0c4e...`, report `sha256=5a1ed0b4...`.
+- Next Action: hand off the rebuilt model for visual confirmation that the clamp screws now sit on the sides and the full detector fixture rotates as one rigid body onto each assigned plate.
+
+- Timestamp UTC: 2026-04-08T02:09:03Z
+- Timestamp Local: 2026-04-08 11:09:03 JST
+- Intent: Re-run the strict gate after converting the lower support into a support-half-integrated flat saddle with direct clamp-to-adapter contact.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: `geometry.detector.adapter_block.radial_standoff_mm` frozen at `0.0`; the support-side half clamp now owns the lower saddle and directly touches the adapter block; validation adds `detector_clamp_support_half_direct_to_adapter` and `detector_clamp_detachable_half_clear_of_support_path`.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260408T020903Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: report `sha256=327b58d5...`; detector checks now report `detector_clamp_support_half_direct_to_adapter=pass`, `detector_clamp_detachable_half_clear_of_support_path=pass`, and `detector_mount_fixture_structural_continuity=pass`.
+- Next Action: force-rebuild FCStd/STEP so the new direct-contact saddle geometry is written into the exported CAD artifacts.
+
+- Timestamp UTC: 2026-04-08T02:10:37Z
+- Timestamp Local: 2026-04-08 11:10:37 JST
+- Intent: Export FCStd/STEP after rebuilding the clamp so the lower support is fused into the support-side half and no longer hangs below the clamp with a gap.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: the support-side half clamp carries a flat saddle fused into the half-ring and seated directly above the adapter block; the opposite half remains detachable and clear of the lower support path; side-mounted clamp bolts remain outside the detector envelope and clamp bore.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260408T021037Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: FCStd `sha256=1e7acb6a...`, STEP `sha256=83413f31...`, report `sha256=327b58d5...`.
+- Next Action: hand off the rebuilt model for visual confirmation that the lower support now reads as one continuous load path from clamp to adapter to base.
+
+- Timestamp UTC: 2026-04-08T02:54:39Z
+- Timestamp Local: 2026-04-08 11:54:39 JST
+- Intent: Re-run the strict gate after changing the bearing-side fixture from a touching multi-piece path into one monolithic support carrier plus a separate mount base plate.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: support-side clamp half, transition block, uprights, and top bridge now fuse into one carrier; a central support spine and ear/ring overlap were added so FreeCAD resolves the carrier as a single solid; detector-package interference checks now use only the exposed detector-side support envelope instead of the plate-side mounting spine.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260408T025439Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: report `sha256=6a419ab3...`; detector checks now report `detector_support_carrier_monolithic=pass`, `detector_mount_fixture_structural_continuity=pass`, and `detector_clamp_detachable_half_clear_of_support_carrier=pass`.
+- Next Action: force-rebuild FCStd/STEP so the monolithic bearing-side support carrier is written into the exported CAD artifacts.
+
+- Timestamp UTC: 2026-04-08T02:55:44Z
+- Timestamp Local: 2026-04-08 11:55:44 JST
+- Intent: Export FCStd/STEP after rebuilding the detector fixture as a one-piece bearing-side support carrier with a separate bolted base plate.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: bearing-side ear tabs now overlap the clamp ring so they remain part of the same half-clamp solid; the support carrier contains the support-side half clamp, lower saddle, transition block, central spine, uprights, and top bridge; the 4-hole mount base plate remains separate.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260408T025544Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: FCStd `sha256=19edbf0f...`, STEP `sha256=95545529...`, report `sha256=6a419ab3...`.
+- Next Action: hand off the rebuilt model for visual confirmation that the bearing-side detector fixture now reads as one fabricated part above the separate base plate.

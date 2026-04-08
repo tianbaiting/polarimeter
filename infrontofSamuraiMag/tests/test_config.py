@@ -71,6 +71,7 @@ def test_load_default_config() -> None:
     assert cfg.geometry.target.rotary.vendor_reference_enabled is False
     assert cfg.geometry.detector.clamp.clamp_bolt_diameter_mm > 0.0
     assert cfg.geometry.detector.clamp.anti_rotation_key_depth_mm > 0.0
+    assert cfg.geometry.detector.adapter_block.radial_standoff_mm == pytest.approx(0.0)
     assert cfg.geometry.target.single_holder.clamp_screw_diameter_mm > 0.0
     assert cfg.geometry.stand.enable_plate_ties is False
     assert cfg.geometry.stand.with_base_plate is False
@@ -114,6 +115,7 @@ def test_load_afterSRC_config_contract() -> None:
     assert cfg.geometry.target.rotary is not None
     assert cfg.geometry.target.rotary.vendor_reference_enabled is True
     assert cfg.geometry.target.rotary.vendor_reference_model_code == "ICF70MRMF50"
+    assert cfg.geometry.detector.adapter_block.radial_standoff_mm == pytest.approx(0.0)
     assert cfg.output.basename == "afterSRC"
 
 
@@ -325,6 +327,16 @@ def test_invalid_detector_clamp_bolt_pitch() -> None:
             ROOT / "config" / "default_infront.yaml",
             overrides=[
                 "geometry.detector.clamp.clamp_bolt_pitch_mm=80",
+            ],
+        )
+
+
+def test_detector_adapter_radial_standoff_must_stay_zero() -> None:
+    with pytest.raises(ValueError, match="radial_standoff_mm"):
+        load_build_config(
+            ROOT / "config" / "default_infront.yaml",
+            overrides=[
+                "geometry.detector.adapter_block.radial_standoff_mm=5.0",
             ],
         )
 

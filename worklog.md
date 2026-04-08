@@ -571,3 +571,57 @@ Entry Template:
 - Validation Result: pass (hash-skip path)
 - Artifacts/State: `state.json.run_id=20260327T005942Z-8`, `run.status=skipped`, `validation.status=pass`; FCStd `sha256=97ecdc8a...`, STEP `sha256=ba21b4a6...`, report `sha256=01369ca4...`
 - Next Action: hand off the new `afterSRC` module, updated tests, and the validated shared-engine changes.
+
+- Timestamp UTC: 2026-04-08T00:58:14Z
+- Timestamp Local: 2026-04-08 09:58:14 JST
+- Module/Scope: infrontofSamuraiMag (strict validate-only after rigid-fixture and side-clamp detector mount rewrite)
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: requirement baseline + target intent updated for `rigid local detector fixture frame` and `side-mounted clamp bolts`; detector fixture geometry now rotates as one rigid body onto the assigned HVV plate; clamp bolt axes moved outside detector envelope/bore.
+- Validation Result: pass
+- Artifacts/State: `state.json.run_id=20260408T005814Z-8`, `run.status=pass`, `validation.status=pass`; report `sha256=3807c955...`
+- Next Action: run full force-rebuild to export FCStd/STEP artifacts with the updated clamp geometry.
+
+- Timestamp UTC: 2026-04-08T00:59:10Z
+- Timestamp Local: 2026-04-08 09:59:10 JST
+- Module/Scope: infrontofSamuraiMag (full export after rigid-fixture and side-clamp detector mount rewrite)
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: detector clamp split/ear/bolt geometry rebuilt so four side bolts stay outside the detector bore; detector + clamp + adapter + bridge + base now share one rigid local frame before plate placement; validation report adds `detector_fixture_rigid_local_pose_fixed_relative_to_detector_body` and `clamp_side_bolt_axes_clear_detector_envelope`.
+- Validation Result: pass
+- Artifacts/State: `state.json.run_id=20260408T005910Z-8`, `run.status=pass`, `validation.status=pass`; FCStd `sha256=4bd5b523...`, STEP `sha256=45dc0c4e...`, report `sha256=5a1ed0b4...`
+- Next Action: hand off the updated detector fixture geometry for visual review of the side-bolt layout and rigid-body mounting direction.
+
+- Timestamp UTC: 2026-04-08T02:09:03Z
+- Timestamp Local: 2026-04-08 11:09:03 JST
+- Module/Scope: infrontofSamuraiMag (strict validate-only after lower saddle direct-contact clamp support rewrite)
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: requirement baseline + target intent updated for `support-side half clamp + flat lower saddle + direct-contact adapter`; `geometry.detector.adapter_block.radial_standoff_mm` frozen at `0.0`; validation now checks `detector_clamp_support_half_direct_to_adapter` and `detector_clamp_detachable_half_clear_of_support_path` in addition to the existing rigid-fixture and side-bolt-clear rules.
+- Validation Result: pass
+- Artifacts/State: `state.json.run_id=20260408T020903Z-8`, `run.status=pass`, `validation.status=pass`; report `sha256=327b58d5...`
+- Next Action: run a full force-rebuild so the direct-contact saddle geometry is exported into the latest FCStd/STEP artifacts.
+
+- Timestamp UTC: 2026-04-08T02:10:37Z
+- Timestamp Local: 2026-04-08 11:10:37 JST
+- Module/Scope: infrontofSamuraiMag (full export after lower saddle direct-contact clamp support rewrite)
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: only the support-side clamp half now carries an integrated flat lower saddle that directly contacts the adapter block; the detachable half stays clear of the lower support path; side-mounted clamp bolts and rigid whole-fixture placement are preserved.
+- Validation Result: pass
+- Artifacts/State: `state.json.run_id=20260408T021037Z-8`, `run.status=pass`, `validation.status=pass`; FCStd `sha256=1e7acb6a...`, STEP `sha256=83413f31...`, report `sha256=327b58d5...`
+- Next Action: hand off the rebuilt detector fixture for visual review of the now-continuous clamp-to-support connection.
+
+- Timestamp UTC: 2026-04-08T02:54:39Z
+- Timestamp Local: 2026-04-08 11:54:39 JST
+- Module/Scope: infrontofSamuraiMag (strict validate-only after converting the bearing-side fixture into a monolithic support carrier)
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: support-side clamp half + transition block + uprights + top bridge are now fused into one support carrier; the separate 4-hole mount base plate remains bolted to the assigned plate; detector-package collision scope was tightened back to the exposed detector-side support envelope instead of the plate-side mounting spine.
+- Validation Result: pass
+- Artifacts/State: `state.json.run_id=20260408T025439Z-8`, `run.status=pass`, `validation.status=pass`; report `sha256=6a419ab3...`
+- Next Action: run a full force-rebuild so the monolithic support-carrier geometry is exported into the latest FCStd/STEP artifacts.
+
+- Timestamp UTC: 2026-04-08T02:55:44Z
+- Timestamp Local: 2026-04-08 11:55:44 JST
+- Module/Scope: infrontofSamuraiMag (full export after monolithic support-carrier detector fixture rewrite)
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: clamp ears now overlap the ring body so each clamp half remains a single solid; the support carrier also includes a central support spine, while the detachable half still clears the lower support region and the mount base plate stays separate.
+- Validation Result: pass
+- Artifacts/State: `state.json.run_id=20260408T025544Z-8`, `run.status=pass`, `validation.status=pass`; FCStd `sha256=19edbf0f...`, STEP `sha256=95545529...`, report `sha256=6a419ab3...`
+- Next Action: hand off the rebuilt model for visual review of the new one-piece bearing-side detector fixture.

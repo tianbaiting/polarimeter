@@ -187,7 +187,7 @@ def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> B
 
     for placement in placements:
         tag = placement.tag
-        housing, clamp_a, clamp_b, adapter_block, mount_base = build_detector_fixture(
+        housing, clamp_a, support_carrier, mount_base = build_detector_fixture(
             cfg.geometry,
             placement,
         )
@@ -210,23 +210,14 @@ def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> B
             subsystem="detector",
             role="split clamp half A with anti-rotation shoulder/key and clamp-bolt ear",
         )
-        clamp_b_obj = _add_component(
+        support_carrier_obj = _add_component(
             doc,
             assembly,
             export_objects,
-            f"DetectorClampHalfB_{tag}",
-            clamp_b,
+            f"DetectorSupportCarrier_{tag}",
+            support_carrier,
             subsystem="detector",
-            role="split clamp half B with end-stop and clamp-bolt ear",
-        )
-        adapter_obj = _add_component(
-            doc,
-            assembly,
-            export_objects,
-            f"DetectorAdapterBlock_{tag}",
-            adapter_block,
-            subsystem="detector",
-            role="fixed-angle transition block",
+            role="integrated support-side clamp half + transition block + uprights + top bridge",
         )
         mount_obj = _add_component(
             doc,
@@ -235,11 +226,11 @@ def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> B
             f"DetectorMountBase_{tag}",
             mount_base,
             subsystem="detector",
-            role="direction-indexed detector mount base with rectangular 4-hole bolt pattern",
+            role="separate detector mount base plate with rectangular 4-hole bolt pattern",
         )
 
         # [EN] Attach the same channel metadata to every detector subpart so STEP review can trace a clamp or adapter back to the physical sector/channel it serves. / [CN] 给每个探测器子件附上统一通道元数据，使 STEP 审查时能把抱箍或过渡块追溯回其对应的物理扇区/通道。
-        for obj in (housing_obj, clamp_a_obj, clamp_b_obj, adapter_obj, mount_obj):
+        for obj in (housing_obj, clamp_a_obj, support_carrier_obj, mount_obj):
             _attach_layout_properties(obj, placement)
 
     target_drive_role = "3-position linear ladder drivetrain"
