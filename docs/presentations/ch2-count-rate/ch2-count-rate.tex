@@ -1,0 +1,195 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{Madrid}
+\usecolortheme{default}
+\setbeamertemplate{footline}[frame number]
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{array}
+\usepackage{siunitx}
+
+\title[CH2 Count Rate]{CH2 Polarimeter Count-Rate Estimate\\Maintained Default Geometry}
+\author{Tian}
+\date{2026-04-13}
+
+\begin{document}
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}{Scope and Maintained Inputs}
+\small
+\begin{itemize}
+  \item This note is restricted to the CH2 polarimeter count rate in the \texttt{polarimeter} repository.
+  \item Numerical inputs come from \texttt{polarimeter/code/config/beamtime\_ch2.ini}.
+  \item Beam and target inputs:
+  \begin{itemize}
+    \item deuteron kinetic energy: \SI{380}{MeV}
+    \item beam current: \SI{1.6e-12}{A} \(\approx\) \SI{1e7}{pps}
+    \item CH2 areal density: \SI{1000}{mg.cm^{-2}}
+    \item effective molar mass: \SI{14}{g.mol^{-1}}
+  \end{itemize}
+  \item Maintained default geometry:
+  \begin{itemize}
+    \item proton arm 1: \SI{53.4}{\degree} at \SI{620}{mm}
+    \item proton arm 2: \SI{11.2}{\degree} at \SI{620}{mm}
+    \item deuteron arm: \SI{20.9}{\degree} at \SI{400}{mm}
+  \end{itemize}
+  \item Time bases shown here: \SI{30}{min} and \SI{3}{h}.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Count-Rate Model}
+\small
+\[
+N_{\mathrm{target}}
+=
+\frac{\rho_A}{M_{\mathrm{CH_2}}} N_A \times 2
+=
+\frac{\num{10000}}{14} \times \num{6.02214076e23} \times 2
+=
+\num{8.6031e26}~\mathrm{m^{-2}}
+\]
+
+\[
+\Phi_{\mathrm{beam}}
+=
+\frac{I}{e}
+=
+\frac{\num{1.6e-12}}{\num{1.602176634e-19}}
+=
+\num{9.9864e6}~\mathrm{s^{-1}}
+\]
+
+\[
+R = N_{\mathrm{target}}\,\Phi_{\mathrm{beam}}
+\int_{\Omega}
+\frac{d\sigma}{d\Omega}(\theta)\,W(\theta; p_{zz})\,d\Omega
+\]
+
+\vspace{0.1cm}
+\centering
+\begin{tabular}{>{\raggedright\arraybackslash}p{3.9cm}ccc}
+\toprule
+Window & \(\theta_{\mathrm{cm}}\) begin & \(\theta_{\mathrm{cm}}\) end & \(\Delta\phi_{\mathrm{cm}}\) \\
+\midrule
+Forward overlap & \SI{65.0877}{\degree} & \SI{72.2818}{\degree} & \SI{4.6044}{\degree} \\
+Backward overlap & \SI{151.7167}{\degree} & \SI{159.6988}{\degree} & \SI{16.0610}{\degree} \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.2cm}
+\small
+Coincidence efficiencies relative to one proton single sector are constant in this geometry:
+\[
+\epsilon_{\mathrm{coin,fwd}} = 1.0000,
+\qquad
+\epsilon_{\mathrm{coin,bwd}} = 0.843934
+\]
+\end{frame}
+
+\begin{frame}{Channel Rates}
+\small
+\centering
+\begin{tabular}{>{\raggedright\arraybackslash}p{4.6cm}cc}
+\toprule
+Channel rate (Hz) & \(p_{zz}=0\) & \(p_{zz}=1\) \\
+\midrule
+Proton single, arm 1 & 16.821 & 18.532 \\
+Proton single, arm 2 & 46.801 & 35.192 \\
+Deuteron single, forward branch & 175.046 & 191.001 \\
+Deuteron single, backward branch & 46.489 & 34.787 \\
+Coincidence, forward overlap & 4.205 & 4.633 \\
+Coincidence, backward overlap & 9.874 & 7.425 \\
+Coincidence, total & 14.080 & 12.058 \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.25cm}
+\small
+\begin{itemize}
+  \item The rates are duration-independent; the same values describe both \SI{30}{min} and \SI{3}{h}.
+  \item The total coincidence rate decreases across the scan because the backward branch drops more strongly than the forward branch rises.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Accumulated Counts in 30 min}
+\small
+\centering
+\begin{tabular}{>{\raggedright\arraybackslash}p{4.7cm}cc}
+\toprule
+Channel counts in \SI{30}{min} & \(p_{zz}=0\) & \(p_{zz}=1\) \\
+\midrule
+Proton single, arm 1 & 30279 & 33358 \\
+Proton single, arm 2 & 84241 & 63345 \\
+Deuteron single, forward branch & 315082 & 343802 \\
+Deuteron single, backward branch & 83681 & 62616 \\
+Coincidence, forward overlap & 7570 & 8340 \\
+Coincidence, backward overlap & 17774 & 13365 \\
+Coincidence, total & 25343 & 21704 \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.25cm}
+\small
+Beam dose for \SI{30}{min}: \(N_{\mathrm{beam}} = \num{1.7976e10}\).
+\end{frame}
+
+\begin{frame}{Accumulated Counts in 3 h}
+\small
+\centering
+\begin{tabular}{>{\raggedright\arraybackslash}p{4.7cm}cc}
+\toprule
+Channel counts in \SI{3}{h} & \(p_{zz}=0\) & \(p_{zz}=1\) \\
+\midrule
+Proton single, arm 1 & 181672 & 200151 \\
+Proton single, arm 2 & 505448 & 380069 \\
+Deuteron single, forward branch & 1890493 & 2062815 \\
+Deuteron single, backward branch & 502085 & 375695 \\
+Coincidence, forward overlap & 45418 & 50038 \\
+Coincidence, backward overlap & 106641 & 80188 \\
+Coincidence, total & 152059 & 130226 \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.25cm}
+\small
+Beam dose for \SI{3}{h}: \(N_{\mathrm{beam}} = \num{1.0785e11}\), exactly \(6\times\) the \SI{30}{min} case.
+\end{frame}
+
+\begin{frame}{Total Coincidence Count Scan}
+\centering
+\includegraphics[height=0.66\textheight]{../../../code/output/beamtime_ch2/coincidence_total/3h/Coincidence_total_vs_pzz.png}
+
+\vspace{0.15cm}
+\small
+The maintained default geometry gives a total coincidence yield from \(1.52\times 10^5\) down to \(1.30\times 10^5\) over the \(p_{zz}=0 \rightarrow 1\) scan in \SI{3}{h}.
+\end{frame}
+
+\begin{frame}{Summary}
+\small
+\begin{itemize}
+  \item The CH2 polarimeter count-rate estimate is now isolated inside \texttt{polarimeter} through \texttt{beamtime\_ch2.ini}.
+  \item Under the maintained default geometry, the total coincidence rate is:
+  \[
+  R_{\mathrm{coin,tot}} = \SI{14.08}{Hz} \; (p_{zz}=0),
+  \qquad
+  \SI{12.06}{Hz} \; (p_{zz}=1)
+  \]
+  \item The corresponding accumulated coincidence totals are:
+  \begin{itemize}
+    \item \SI{30}{min}: \(2.53\times 10^4 \rightarrow 2.17\times 10^4\)
+    \item \SI{3}{h}: \(1.52\times 10^5 \rightarrow 1.30\times 10^5\)
+  \end{itemize}
+  \item Forward coincidence keeps a fixed 25\% efficiency relative to proton arm 1, while the backward branch stays at 21.1\% relative to proton arm 2.
+  \item The dominant count-rate asymmetry comes from the larger backward overlap rate at low \(p_{zz}\), which sets the total coincidence normalization.
+\end{itemize}
+\end{frame}
+
+\end{document}
