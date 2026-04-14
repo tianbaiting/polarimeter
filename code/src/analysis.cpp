@@ -571,7 +571,7 @@ std::vector<std::string> coincidenceDefinitionLines(
     lines.push_back("Ncoin = Ntarget x Nbeam x #int_{CM overlap} d#theta d#phi [d#sigma/d#Omega x (1 + #sqrt{2}/2 T20 pzz)]");
     lines.push_back(
         std::string("Efficiency = Ncoin / Np(single arm ") + (forward_branch ? "1" : "2") +
-        "); channels are not summed");
+        ", one sector)");
     lines.push_back(runContextLine(scenario, beam_particles));
     return lines;
 }
@@ -2226,6 +2226,10 @@ AnalysisArtifacts AnalysisSession::runCoincidenceScanSingleDuration(const std::f
                                              * scenario_.run.single_arm_sector_multiplier;
         const double proton_backward_single = counts_.countsFromIntegratedCrossSection(proton_backward_integral)
                                               * scenario_.run.single_arm_sector_multiplier;
+        const double proton_forward_single_one_sector =
+            counts_.countsFromIntegratedCrossSection(proton_forward_integral);
+        const double proton_backward_single_one_sector =
+            counts_.countsFromIntegratedCrossSection(proton_backward_integral);
         const double deuteron_forward_single = counts_.countsFromIntegratedCrossSection(deuteron_forward_integral)
                                                * scenario_.run.single_arm_sector_multiplier;
         const double deuteron_backward_single = counts_.countsFromIntegratedCrossSection(deuteron_backward_integral)
@@ -2237,8 +2241,8 @@ AnalysisArtifacts AnalysisSession::runCoincidenceScanSingleDuration(const std::f
         proton_single_backward_counts.push_back(proton_backward_single);
         deuteron_single_forward_counts.push_back(deuteron_forward_single);
         deuteron_single_backward_counts.push_back(deuteron_backward_single);
-        forward_efficiency.push_back(safeRatio(forward_coincidence_value, proton_forward_single));
-        backward_efficiency.push_back(safeRatio(backward_coincidence_value, proton_backward_single));
+        forward_efficiency.push_back(safeRatio(forward_coincidence_value, proton_forward_single_one_sector));
+        backward_efficiency.push_back(safeRatio(backward_coincidence_value, proton_backward_single_one_sector));
     }
 
     auto drawCountsCanvas = [&](const bool forward_branch, const std::filesystem::path& base_path) {
@@ -2265,7 +2269,7 @@ AnalysisArtifacts AnalysisSession::runCoincidenceScanSingleDuration(const std::f
             static_cast<int>(polarization_values.size()),
             polarization_values.data(),
             values.data());
-        graph.SetTitle(";#it{p}_{zz};Coincidence / proton single");
+        graph.SetTitle(";#it{p}_{zz};Coincidence / proton single (one sector)");
         graph.SetLineColor(forward_branch ? (kBlue + 1) : (kRed + 1));
         graph.SetLineWidth(2);
         graph.Draw("AL");
@@ -2288,8 +2292,8 @@ AnalysisArtifacts AnalysisSession::runCoincidenceScanSingleDuration(const std::f
     artifacts.summary.push_back({"proton_single_backward_at_max_pol", formatDouble(proton_single_backward_counts.back(), 6)});
     artifacts.summary.push_back({"deuteron_single_forward_at_max_pol", formatDouble(deuteron_single_forward_counts.back(), 6)});
     artifacts.summary.push_back({"deuteron_single_backward_at_max_pol", formatDouble(deuteron_single_backward_counts.back(), 6)});
-    artifacts.summary.push_back({"coincidence_forward_efficiency_at_max_pol", formatDouble(forward_efficiency.back(), 6)});
-    artifacts.summary.push_back({"coincidence_backward_efficiency_at_max_pol", formatDouble(backward_efficiency.back(), 6)});
+    artifacts.summary.push_back({"coincidence_forward_efficiency_one_sector_at_max_pol", formatDouble(forward_efficiency.back(), 6)});
+    artifacts.summary.push_back({"coincidence_backward_efficiency_one_sector_at_max_pol", formatDouble(backward_efficiency.back(), 6)});
     addDefinitionSummary(artifacts.summary, "forward_definition", coincidenceDefinitionLines(scenario_, true, beam_particles));
     addDefinitionSummary(artifacts.summary, "backward_definition", coincidenceDefinitionLines(scenario_, false, beam_particles));
 

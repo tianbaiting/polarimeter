@@ -407,6 +407,41 @@ int main() {
         dpolar::ScenarioConfig single_duration_scenario = scenario;
         single_duration_scenario.run.duration_s_list = {single_duration_scenario.run.duration_s};
         const dpolar::AnalysisSession single_duration_analysis(single_duration_scenario);
+        const dpolar::AnalysisArtifacts coincidence_scan_artifacts =
+            single_duration_analysis.runCoincidenceScan(overlay_root);
+        require(
+            std::filesystem::exists(coincidence_scan_artifacts.output_dir / "Coincidence_efficiency_forward_vs_pzz.pdf"),
+            "coincidence forward efficiency pdf was not generated");
+        require(
+            std::filesystem::exists(coincidence_scan_artifacts.output_dir / "Coincidence_efficiency_backward_vs_pzz.pdf"),
+            "coincidence backward efficiency pdf was not generated");
+        require(
+            std::filesystem::exists(coincidence_scan_artifacts.output_dir / "summary.json"),
+            "coincidence scan summary json was not generated");
+        const double max_pzz = scenario.scan.polarization_max;
+        const double expected_forward_efficiency_one_sector =
+            counts.countsFromIntegratedCrossSection(counts.integralForPzz(overlap_forward, max_pzz)) /
+            counts.countsFromIntegratedCrossSection(counts.integralForPzz(proton_forward, max_pzz));
+        const double expected_backward_efficiency_one_sector =
+            counts.countsFromIntegratedCrossSection(counts.integralForPzz(overlap_backward, max_pzz)) /
+            counts.countsFromIntegratedCrossSection(counts.integralForPzz(proton_backward, max_pzz));
+        require(
+            approx(
+                std::stod(findSummaryValue(
+                    coincidence_scan_artifacts.summary,
+                    "coincidence_forward_efficiency_one_sector_at_max_pol")),
+                expected_forward_efficiency_one_sector,
+                1.0e-6),
+            "forward coincidence efficiency must be normalized to one proton sector");
+        require(
+            approx(
+                std::stod(findSummaryValue(
+                    coincidence_scan_artifacts.summary,
+                    "coincidence_backward_efficiency_one_sector_at_max_pol")),
+                expected_backward_efficiency_one_sector,
+                1.0e-6),
+            "backward coincidence efficiency must be normalized to one proton sector");
+
         const dpolar::AnalysisArtifacts ratio_proton_artifacts =
             single_duration_analysis.runRatioScan(dpolar::RatioMode::Proton, overlay_root);
         require(
