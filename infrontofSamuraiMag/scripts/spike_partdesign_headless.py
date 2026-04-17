@@ -85,7 +85,8 @@ def spike_fillet(doc: App.Document, body: object) -> None:
     # Pick any non-degenerate edge; spike only verifies the API doesn't null-face.
     edge_names = [f"Edge{i+1}" for i in range(min(2, len(edges)))]
     fillet = body.newObject("PartDesign::Fillet", "SpikeFillet")
-    fillet.Base = (body.Shape, edge_names) if hasattr(fillet, "Base") else None
+    # FreeCAD 1.0 wants the DocumentObject, not its Shape.
+    fillet.Base = (body, edge_names) if hasattr(fillet, "Base") else None
     if hasattr(fillet, "Radius"):
         fillet.Radius = 1.0
     doc.recompute()
