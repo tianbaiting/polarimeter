@@ -71,8 +71,9 @@ def spike_hole(doc: App.Document, body: object) -> None:
     hole.Profile = hole_sketch
     hole.ThreadType = "ISOMetricProfile"
     hole.ThreadSize = "M3"
-    hole.Depth = "Dimension"
-    hole.DepthValue = 5.0
+    # FreeCAD 1.0: DepthType selects the enum; Depth is the length.
+    hole.DepthType = "Dimension"
+    hole.Depth = 5.0
     doc.recompute()
     ok = hasattr(hole, "ThreadSize") and hole.ThreadSize == "M3" and not hole.Shape.isNull()
     record("0.4", "PartDesign::Hole ISO threaded", ok,
@@ -109,9 +110,11 @@ def main() -> int:
         body = spike_body_creation(doc)
         sketch = spike_sketch_closed_profile(doc, body)
         spike_pad(doc, body, sketch)
-        spike_hole(doc, body)
+        # 0.5/0.6 run before 0.4 so a FreeCAD API drift in Hole doesn't
+        # short-circuit Fillet and STEP — they only need the Pad'd Body.
         spike_fillet(doc, body)
         spike_step_export(doc, body, out_dir)
+        spike_hole(doc, body)
     except Exception as exc:  # noqa: BLE001 — spike must capture everything
         RESULTS.append({
             "id": "exception",
