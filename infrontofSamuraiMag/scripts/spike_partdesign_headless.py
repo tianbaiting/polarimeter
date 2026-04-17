@@ -32,7 +32,12 @@ def spike_body_creation(doc: App.Document) -> object:
 
 def spike_sketch_closed_profile(doc: App.Document, body: object) -> object:
     sketch = body.newObject("Sketcher::SketchObject", "SpikeSketch")
-    sketch.Support = (doc.getObject("XY_Plane"), [""]) if doc.getObject("XY_Plane") else None
+    xy = doc.getObject("XY_Plane")
+    support_value = (xy, [""]) if xy else None
+    if hasattr(sketch, "AttachmentSupport"):
+        sketch.AttachmentSupport = support_value
+    elif hasattr(sketch, "Support"):
+        sketch.Support = support_value
     sketch.addGeometry(Part.LineSegment(App.Vector(0, 0, 0), App.Vector(20, 0, 0)), False)
     sketch.addGeometry(Part.LineSegment(App.Vector(20, 0, 0), App.Vector(20, 10, 0)), False)
     sketch.addGeometry(Part.LineSegment(App.Vector(20, 10, 0), App.Vector(0, 10, 0)), False)
@@ -122,5 +127,9 @@ def main() -> int:
     return 0 if not failed else 1
 
 
+# Run unconditionally — freecadcmd loads scripts as modules (not __main__)
+# on FreeCAD 1.0, so an if-guard would silently no-op. This is a throwaway
+# spike script, not a library; unconditional execution is correct here.
+_exit_code = main()
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(_exit_code)
