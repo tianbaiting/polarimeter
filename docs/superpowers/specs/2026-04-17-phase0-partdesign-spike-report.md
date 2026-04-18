@@ -3,7 +3,12 @@
 - **Date**: 2026-04-17
 - **Spike script**: `infrontofSamuraiMag/scripts/spike_partdesign_headless.py`
 - **Raw output**: `infrontofSamuraiMag/reports/phase0_spike/phase0_results.json`
-- **FreeCAD version**: FreeCAD 1.0.0 Revision: (reported by `freecadcmd --version`)
+- **FreeCAD version**: verbatim output of `freecadcmd --version`:
+
+  ```
+  FreeCAD 1.0.0 Revision:
+  ```
+- **Spike script commit**: `5ba2e39` (tip of Task 1 on main)
 
 ## Results
 
@@ -28,6 +33,8 @@
 ## Carve-outs
 
 - **Hole → Pocket + circular sketch**: The `PartDesign::Hole` feature is a silent no-op in headless `freecadcmd` on FreeCAD 1.0.0 (object creates, accepts `ThreadSize="M3"`, but recompute leaves body volume bit-exact — zero material removed). Task 5 (fastener primitives) and Task 6 (PartDesign helpers) must expose `add_hole` backed by `PartDesign::Pocket` fed by a circular `Sketcher` profile (not `PartDesign::Hole`). Thread specification (e.g., "M3×5") is recorded in the Body's Label/Description and/or BOM text instead of as a Hole feature property. Task 11's `detector_fixture_no_interpenetration` validator must verify volume actually decreased after a hole cut.
+
+  The failure mode is the material cut, not the threading metadata: `ThreadSize` round-trips correctly but the Hole feature's Pocket operation does nothing. Non-threaded `PartDesign::Hole` usages were not separately tested, but the carve-out applies to all `PartDesign::Hole` usage in the headless pipeline regardless of threading.
 - **FreeCAD 1.0 API drift absorbed into the spike**: `Sketcher.Support` → `AttachmentSupport` (with `Support` fallback), `Hole.Depth/DepthValue` → `DepthType/Depth` split, `Fillet.Base` takes `(body, [edge_names])` not `(body.Shape, …)`. Production code in `primitives.py` must use the FreeCAD 1.0 forms.
 - **`freecadcmd` script invocation**: On FreeCAD 1.0, `freecadcmd <script>` loads scripts as modules, not `__main__`. Production scripts that need `main()` to run must call it unconditionally. `sys.exit()` also does not propagate to the shell under `freecadcmd`; wrapping scripts / tests should read JSON artifacts for pass/fail signal.
 - **Fillet TopoNaming noise**: FreeCAD 1.0 emits `Invalid edge link` / `graph must be a DAG` warnings during Fillet recompute even when the Fillet operation succeeds and volume drops as expected. Downstream tests and the Task 11 validator should check volume delta and face count, not stderr cleanliness.
