@@ -72,6 +72,10 @@ def spike_pad(doc: App.Document, body: object, sketch: object) -> object:
 
 
 def spike_hole(doc: App.Document, body: object, pad: object) -> None:
+    # Capture volume BEFORE creating the Hole feature so `shrank` actually
+    # measures Hole's effect (not any prior Fillet reduction that was already
+    # baked into body.Shape.Volume).
+    pre_hole_volume = body.Shape.Volume if body.Shape.Solids else 0.0
     hole_sketch = body.newObject("Sketcher::SketchObject", "SpikeHoleSketch")
     hole_sketch.addGeometry(Part.Circle(App.Vector(10, 5, 10), App.Vector(0, 0, 1), 1.5), False)
     doc.recompute()
@@ -85,16 +89,15 @@ def spike_hole(doc: App.Document, body: object, pad: object) -> None:
     doc.recompute()
     solids = len(body.Shape.Solids)
     volume = body.Shape.Volume if solids else 0.0
-    base_volume = float(pad.SpikeBaseVolume) if hasattr(pad, "SpikeBaseVolume") else 0.0
-    # Real hole cut → body volume strictly decreases from the Pad baseline
-    # (allow for the Fillet having run first and already reducing it — we just
-    # need volume < base_volume, not a specific delta).
-    shrank = base_volume > 0.0 and volume < base_volume - 1e-6
+    # Real hole cut → volume strictly decreases from the IMMEDIATELY-prior
+    # state. Using pre_hole_volume (captured just above) instead of the Pad
+    # baseline prevents a prior Fillet's reduction from masking a no-op Hole.
+    shrank = pre_hole_volume > 0.0 and volume < pre_hole_volume - 1e-6
     ok = (hasattr(hole, "ThreadSize") and hole.ThreadSize == "M3"
           and not hole.Shape.isNull() and solids == 1 and shrank)
     record("0.4", "PartDesign::Hole ISO threaded AND cut through material", ok,
            f"ThreadSize={getattr(hole, 'ThreadSize', None)}, solids={solids}, "
-           f"volume={volume:.3f}, base_volume={base_volume:.3f}, shrank={shrank}")
+           f"volume={volume:.3f}, pre_hole_volume={pre_hole_volume:.3f}, shrank={shrank}")
 
 
 def spike_fillet(doc: App.Document, body: object, pad: object) -> None:
