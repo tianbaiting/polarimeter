@@ -642,3 +642,12 @@ Entry Template:
 - State Snapshot: run_id=`20260408T025544Z-8`, run.status=`pass`, validation.status=`pass`, strict=`true`.
 - Artifacts: FCStd `sha256=19edbf0f...`, STEP `sha256=95545529...`, report `sha256=6a419ab3...`.
 - Next Action: hand off the rebuilt model for visual confirmation that the bearing-side detector fixture now reads as one fabricated part above the separate base plate.
+
+- Timestamp UTC: 2026-04-18T04:13:31Z
+- Timestamp Local: 2026-04-18 13:13:31 JST
+- Module/Scope: Sub-2 Phase 0 — headless PartDesign feasibility
+- Command(s): `freecadcmd infrontofSamuraiMag/scripts/spike_partdesign_headless.py`
+- Key Parameters/Overrides: spike script at HEAD (`5ba2e39`); six capabilities 0.1–0.6
+- Validation Result: partial — 5/6 pass; 0.4 (Hole) fails as documented headless no-op
+- Artifacts/State: `infrontofSamuraiMag/reports/phase0_spike/phase0_results.json`; report at `docs/superpowers/specs/2026-04-17-phase0-partdesign-spike-report.md`
+- Next Action: proceed to Task 3 under Approach Y + Hole-→-Pocket carve-out

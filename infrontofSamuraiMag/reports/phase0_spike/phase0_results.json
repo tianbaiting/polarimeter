@@ -1,0 +1,40 @@
+{
+  "results": [
+    {
+      "id": "0.1",
+      "title": "PartDesign::Body creation",
+      "pass": true,
+      "detail": "name=SpikeBody"
+    },
+    {
+      "id": "0.2",
+      "title": "Sketcher closed profile valid",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "0.3",
+      "title": "PartDesign::Pad gives single-solid Body",
+      "pass": true,
+      "detail": "solids=1, volume=2000.000"
+    },
+    {
+      "id": "0.5",
+      "title": "PartDesign::Fillet stays single-solid AND rounded edges",
+      "pass": true,
+      "detail": "solids=1, volume=1995.708, base_volume=2000.000, shrank=True"
+    },
+    {
+      "id": "0.6",
+      "title": "Body \u2192 STEP export",
+      "pass": true,
+      "detail": "path=/home/tian/workspace/dpol/polarimeter/infrontofSamuraiMag/reports/phase0_spike/spike_body.step"
+    },
+    {
+      "id": "0.4",
+      "title": "PartDesign::Hole ISO threaded AND cut through material",
+      "pass": false,
+      "detail": "ThreadSize=M3, solids=1, volume=1995.708, pre_hole_volume=1995.708, shrank=False"
+    }
+  ]
+}

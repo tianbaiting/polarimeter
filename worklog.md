@@ -625,3 +625,39 @@ Entry Template:
 - Validation Result: pass
 - Artifacts/State: `state.json.run_id=20260408T025544Z-8`, `run.status=pass`, `validation.status=pass`; FCStd `sha256=19edbf0f...`, STEP `sha256=95545529...`, report `sha256=6a419ab3...`
 - Next Action: hand off the rebuilt model for visual review of the new one-piece bearing-side detector fixture.
+
+- Timestamp UTC: 2026-04-12T11:45:40Z
+- Timestamp Local: 2026-04-12 20:45:40 JST
+- Module/Scope: compactInVacuum (full stateful build/export)
+- Command(s): `./compactInVacuum/run_compactInVacuum.sh --pipeline-index codex_targets.yaml`
+- Key Parameters/Overrides: default target `compactInVacuum/target.yaml`; strict validation enabled; no overrides
+- Validation Result: pass
+- Artifacts/State: `compactInVacuum/state.json.run.status=pass`, `validation.status=pass`, artifacts regenerated at `compactInVacuum/compactInVacuum.FCStd`, `compactInVacuum/compactInVacuum.step`, `compactInVacuum/compactInVacuum.validation_report.json`
+- Next Action: hand off generated compact in-vacuum polarimeter artifacts for review or proceed with geometry tuning if requested.
+
+- Timestamp UTC: 2026-04-13T02:16:32Z
+- Timestamp Local: 2026-04-13 11:16:32 JST
+- Module/Scope: compactInVacuum (strict validate-only after square chamber + modular flange refactor)
+- Command(s): `./compactInVacuum/run_compactInVacuum.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+- Key Parameters/Overrides: `compactInVacuum/target.yaml` intent updated from cylindrical vessel to square-section chamber; default config now uses `vessel.cross_section=square`, `beam_bore_diameter_mm=63.0`, and front/rear `ICF114` welded pipe-stub flange modules with explicit contract fields.
+- Validation Result: pass
+- Artifacts/State: `compactInVacuum/state.json.run.status=pass`, `validation.status=pass`; report refreshed with the new cross-section, end-module, and vacuum-boundary checks.
+- Next Action: run full rebuild to regenerate compactInVacuum FCStd/STEP artifacts from the new geometry.
+
+- Timestamp UTC: 2026-04-13T02:17:04Z
+- Timestamp Local: 2026-04-13 11:17:04 JST
+- Module/Scope: compactInVacuum (full rebuild/export after square chamber + modular flange refactor)
+- Command(s): `./compactInVacuum/run_compactInVacuum.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: same square-body + `ICF114/ICF114` contract as the preceding validate-only run; added `compactInVacuum/config/example_jis_vf100.yaml` as the alternate JIS replacement profile.
+- Validation Result: pass
+- Artifacts/State: `compactInVacuum/state.json.run.status=pass`, `validation.status=pass`, artifacts regenerated at `compactInVacuum/compactInVacuum.FCStd`, `compactInVacuum/compactInVacuum.step`, and `compactInVacuum/compactInVacuum.validation_report.json`
+- Next Action: deliver the updated compact in-vacuum chamber artifacts and use the JIS example profile for future interface swaps if requested.
+
+- Timestamp UTC: 2026-04-18T04:13:31Z
+- Timestamp Local: 2026-04-18 13:13:31 JST
+- Module/Scope: Sub-2 Phase 0 — headless PartDesign feasibility
+- Command(s): `freecadcmd infrontofSamuraiMag/scripts/spike_partdesign_headless.py`
+- Key Parameters/Overrides: spike script at HEAD (`5ba2e39`); six capabilities 0.1–0.6
+- Validation Result: partial — 5/6 pass; 0.4 (Hole) fails as documented headless no-op
+- Artifacts/State: `infrontofSamuraiMag/reports/phase0_spike/phase0_results.json`; report at `docs/superpowers/specs/2026-04-17-phase0-partdesign-spike-report.md`
+- Next Action: proceed to Task 3 under Approach Y + Hole-→-Pocket carve-out
