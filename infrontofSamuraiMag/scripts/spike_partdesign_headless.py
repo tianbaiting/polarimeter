@@ -57,13 +57,21 @@ def spike_pad(doc: App.Document, body: object, sketch: object) -> object:
     pad.Profile = sketch
     pad.Length = 10.0
     doc.recompute()
-    ok = (not pad.Shape.isNull()) and len(body.Shape.Solids) == 1
+    solids = len(body.Shape.Solids)
+    volume = body.Shape.Volume if solids else 0.0
+    ok = (not pad.Shape.isNull()) and solids == 1 and volume > 0.0
     record("0.3", "PartDesign::Pad gives single-solid Body", ok,
-           f"solids={len(body.Shape.Solids)}")
+           f"solids={solids}, volume={volume:.3f}")
+    # Stash for downstream criteria via FreeCAD dynamic property
+    # (raw Python attrs aren't supported on C++-bound PartDesign::Pad).
+    if not hasattr(pad, "SpikeBaseVolume"):
+        pad.addProperty("App::PropertyFloat", "SpikeBaseVolume",
+                        "Spike", "Body volume after Pad feature")
+    pad.SpikeBaseVolume = volume
     return pad
 
 
-def spike_hole(doc: App.Document, body: object) -> None:
+def spike_hole(doc: App.Document, body: object, pad: object) -> None:
     hole_sketch = body.newObject("Sketcher::SketchObject", "SpikeHoleSketch")
     hole_sketch.addGeometry(Part.Circle(App.Vector(10, 5, 10), App.Vector(0, 0, 1), 1.5), False)
     doc.recompute()
@@ -75,12 +83,21 @@ def spike_hole(doc: App.Document, body: object) -> None:
     hole.DepthType = "Dimension"
     hole.Depth = 5.0
     doc.recompute()
-    ok = hasattr(hole, "ThreadSize") and hole.ThreadSize == "M3" and not hole.Shape.isNull()
-    record("0.4", "PartDesign::Hole ISO threaded", ok,
-           f"ThreadSize={getattr(hole, 'ThreadSize', None)}")
+    solids = len(body.Shape.Solids)
+    volume = body.Shape.Volume if solids else 0.0
+    base_volume = float(pad.SpikeBaseVolume) if hasattr(pad, "SpikeBaseVolume") else 0.0
+    # Real hole cut → body volume strictly decreases from the Pad baseline
+    # (allow for the Fillet having run first and already reducing it — we just
+    # need volume < base_volume, not a specific delta).
+    shrank = base_volume > 0.0 and volume < base_volume - 1e-6
+    ok = (hasattr(hole, "ThreadSize") and hole.ThreadSize == "M3"
+          and not hole.Shape.isNull() and solids == 1 and shrank)
+    record("0.4", "PartDesign::Hole ISO threaded AND cut through material", ok,
+           f"ThreadSize={getattr(hole, 'ThreadSize', None)}, solids={solids}, "
+           f"volume={volume:.3f}, base_volume={base_volume:.3f}, shrank={shrank}")
 
 
-def spike_fillet(doc: App.Document, body: object) -> None:
+def spike_fillet(doc: App.Document, body: object, pad: object) -> None:
     edges = body.Shape.Edges
     # Pick any non-degenerate edge; spike only verifies the API doesn't null-face.
     edge_names = [f"Edge{i+1}" for i in range(min(2, len(edges)))]
@@ -90,9 +107,14 @@ def spike_fillet(doc: App.Document, body: object) -> None:
     if hasattr(fillet, "Radius"):
         fillet.Radius = 1.0
     doc.recompute()
-    ok = (not fillet.Shape.isNull()) and len(body.Shape.Solids) == 1
-    record("0.5", "PartDesign::Fillet stays single-solid", ok,
-           f"solids={len(body.Shape.Solids)}")
+    solids = len(body.Shape.Solids)
+    volume = body.Shape.Volume if solids else 0.0
+    base_volume = float(pad.SpikeBaseVolume) if hasattr(pad, "SpikeBaseVolume") else 0.0
+    # A real fillet rounds sharp corners → body volume strictly decreases.
+    shrank = base_volume > 0.0 and volume < base_volume - 1e-6
+    ok = (not fillet.Shape.isNull()) and solids == 1 and shrank
+    record("0.5", "PartDesign::Fillet stays single-solid AND rounded edges", ok,
+           f"solids={solids}, volume={volume:.3f}, base_volume={base_volume:.3f}, shrank={shrank}")
 
 
 def spike_step_export(doc: App.Document, body: object, out_dir: Path) -> None:
@@ -110,12 +132,12 @@ def main() -> int:
     try:
         body = spike_body_creation(doc)
         sketch = spike_sketch_closed_profile(doc, body)
-        spike_pad(doc, body, sketch)
+        pad = spike_pad(doc, body, sketch)
         # 0.5/0.6 run before 0.4 so a FreeCAD API drift in Hole doesn't
         # short-circuit Fillet and STEP — they only need the Pad'd Body.
-        spike_fillet(doc, body)
+        spike_fillet(doc, body, pad)
         spike_step_export(doc, body, out_dir)
-        spike_hole(doc, body)
+        spike_hole(doc, body, pad)
     except Exception as exc:  # noqa: BLE001 — spike must capture everything
         RESULTS.append({
             "id": "exception",
