@@ -1745,6 +1745,31 @@ def build_weldment_load_bearing(
     return feat
 
 
+def build_upper_clamp_detachable(
+    doc,
+    cfg: GeometryConfig,
+    placement: DetectorPlacement,
+    name_suffix: str = "",
+):
+    """Detachable upper clamp half as a single-solid Part::Feature.
+
+    [EN] Wraps build_detector_fixture's `clamp_half_a` fused shape (upper half
+    of the split clamp ring) into a named Part::Feature. Same Path B pattern
+    as build_weldment_load_bearing — we publish the already-fused Part shape
+    rather than rebuild under a PartDesign::Body that would suffer the same
+    headless-freecadcmd carve-outs the Phase 0 spike exposed.
+    / [CN] 把 build_detector_fixture 的 clamp_half_a（分体抱箍的上半圈）包成
+    名为 Part::Feature 的单件。与 build_weldment_load_bearing 一致地采用
+    Path B：发布已融合好的 Part shape，避免 PartDesign::Body 在 headless
+    freecadcmd 下复现 Phase 0 已证实的坑。
+    """
+    _housing, clamp_half_a, _support_carrier, _mount_base = build_detector_fixture(cfg, placement)
+    feature_name = f"UpperClamp_Detachable_{placement.tag}{name_suffix}"
+    feat = doc.addObject("Part::Feature", feature_name)
+    feat.Shape = clamp_half_a
+    return feat
+
+
 def _target_slot_positions_x(cfg: GeometryConfig) -> tuple[float, float, float]:
     ladder = cfg.target.ladder
     if ladder is None:
