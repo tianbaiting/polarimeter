@@ -473,3 +473,14 @@ def test_clamp_config_backward_compat_defaults_when_absent(tmp_path) -> None:
     assert cfg.geometry.detector.clamp.chamfer_mm == pytest.approx(1.0)
     assert cfg.geometry.detector.clamp.bolt_head_type == "ISO4762_hex_socket"
     assert cfg.geometry.detector.clamp.draw_fasteners_as_solids is True
+
+
+def test_clamp_fillet_radius_guard_rejects_too_large(tmp_path) -> None:
+    import yaml
+    src = ROOT / "config" / "default_infront.yaml"
+    data = yaml.safe_load(src.read_text())
+    data["geometry"]["detector"]["clamp"]["fillet_radius_mm"] = 999.0
+    bad_path = tmp_path / "bad_fillet.yaml"
+    bad_path.write_text(yaml.safe_dump(data))
+    with pytest.raises(ValueError, match="fillet_radius_mm"):
+        load_build_config(bad_path)
