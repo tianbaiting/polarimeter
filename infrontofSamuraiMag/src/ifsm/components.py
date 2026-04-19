@@ -1718,6 +1718,33 @@ def build_detector_fixture(
     return housing, clamp_half_a, support_carrier, mount_base
 
 
+def build_weldment_load_bearing(
+    doc,
+    cfg: GeometryConfig,
+    placement: DetectorPlacement,
+    name_suffix: str = "",
+):
+    """Load-bearing weldment as a single-solid Part::Feature.
+
+    [EN] Wraps build_detector_fixture's `support_carrier` fused shape (lower
+    clamp half + saddle + adapter + uprights + spine + top bridge) into a
+    named Part::Feature. The Phase 0 spike showed that PartDesign::Body
+    multi-pad assemblies produce Null shapes and broken Fillet.Base links
+    in headless freecadcmd, so Sub-2 wraps Part shapes instead of PartDesign
+    Bodies. BLP_v1 topology is preserved via the shared primitive chain.
+    / [CN] 把 build_detector_fixture 得到的 support_carrier 单件（下半抱箍 +
+    鞍座 + 过渡块 + 立板 + 腹板 + 顶桥）包成命名的 Part::Feature。Phase 0
+    已证实多 pad 的 PartDesign::Body 在 headless freecadcmd 下会生成空 shape
+    且 Fillet.Base 链在 recompute 中断裂，因此 Sub-2 直接封装 Part 形状，
+    BLP_v1 拓扑通过共享 primitive 链保留不变。
+    """
+    _housing, _clamp_upper, support_carrier, _mount_base = build_detector_fixture(cfg, placement)
+    feature_name = f"Weldment_LoadBearing_{placement.tag}{name_suffix}"
+    feat = doc.addObject("Part::Feature", feature_name)
+    feat.Shape = support_carrier
+    return feat
+
+
 def _target_slot_positions_x(cfg: GeometryConfig) -> tuple[float, float, float]:
     ladder = cfg.target.ladder
     if ladder is None:
