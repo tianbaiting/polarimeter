@@ -447,3 +447,29 @@ def test_vv_gap_must_satisfy_detector_outer_diameter_rule() -> None:
                 "geometry.clearance.vv_min_gap_factor=12.0",
             ],
         )
+
+
+def test_clamp_config_has_new_manufacturing_fields() -> None:
+    cfg = load_build_config(ROOT / "config" / "default_infront.yaml")
+    clamp = cfg.geometry.detector.clamp
+    assert clamp.fillet_radius_mm == pytest.approx(3.0)
+    assert clamp.chamfer_mm == pytest.approx(1.0)
+    assert clamp.bolt_head_type == "ISO4762_hex_socket"
+    assert clamp.draw_fasteners_as_solids is True
+
+
+def test_clamp_config_backward_compat_defaults_when_absent(tmp_path) -> None:
+    """Old configs without the new fields still load, with defaults applied."""
+    import yaml
+    src = ROOT / "config" / "default_infront.yaml"
+    data = yaml.safe_load(src.read_text())
+    clamp = data["geometry"]["detector"]["clamp"]
+    for key in ("fillet_radius_mm", "chamfer_mm", "bolt_head_type", "draw_fasteners_as_solids"):
+        clamp.pop(key, None)
+    legacy_path = tmp_path / "legacy.yaml"
+    legacy_path.write_text(yaml.safe_dump(data))
+    cfg = load_build_config(legacy_path)
+    assert cfg.geometry.detector.clamp.fillet_radius_mm == pytest.approx(3.0)
+    assert cfg.geometry.detector.clamp.chamfer_mm == pytest.approx(1.0)
+    assert cfg.geometry.detector.clamp.bolt_head_type == "ISO4762_hex_socket"
+    assert cfg.geometry.detector.clamp.draw_fasteners_as_solids is True

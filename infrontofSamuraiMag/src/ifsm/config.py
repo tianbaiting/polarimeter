@@ -199,6 +199,10 @@ class DetectorClampConfig:
     mount_bolt_hole_diameter_mm: float
     mount_bolt_pitch_u_mm: float
     mount_bolt_pitch_v_mm: float
+    fillet_radius_mm: float = 3.0
+    chamfer_mm: float = 1.0
+    bolt_head_type: str = "ISO4762_hex_socket"
+    draw_fasteners_as_solids: bool = True
 
 
 @dataclass(frozen=True)
@@ -1034,6 +1038,10 @@ def _parse_detector(raw: dict[str, Any]) -> DetectorConfig:
             clamp_raw.get("mount_bolt_pitch_v_mm"),
             "geometry.detector.clamp.mount_bolt_pitch_v_mm",
         ),
+        fillet_radius_mm=float(clamp_raw.get("fillet_radius_mm", 3.0)),
+        chamfer_mm=float(clamp_raw.get("chamfer_mm", 1.0)),
+        bolt_head_type=str(clamp_raw.get("bolt_head_type", "ISO4762_hex_socket")),
+        draw_fasteners_as_solids=bool(clamp_raw.get("draw_fasteners_as_solids", True)),
     )
 
     adapter = DetectorAdapterBlockConfig(
