@@ -1055,15 +1055,13 @@ def _parse_detector(raw: dict[str, Any]) -> DetectorConfig:
         ),
     )
 
-    # [EN] Guard: fillet_radius_mm must be <= half of the smallest adjacent face
-    # span among saddle/adapter/upright/bridge interfaces. Uses the narrowest of
-    # the relevant pad widths as a conservative proxy. / [CN] 圆角半径不得超过相
-    # 邻最窄面跨距的一半，以免破坏过渡面。
-    min_span = min(
-        float(adapter_raw.get("width_mm", 1.0)),
-        float(adapter_raw.get("height_mm", 1.0)),
-        float(clamp_raw.get("width_mm", 1.0)),
-    )
+    # [EN] Guard: fillet_radius_mm must be <= half of the narrowest proxied span
+    #      (adapter width/height and clamp width). Conservative — tighter bounds
+    #      from saddle/upright/bridge may land with Tasks 7-10.
+    # [CN] 守卫：fillet_radius_mm 不得超过所代理最窄跨距（adapter 宽/高与
+    #      clamp 宽）的一半。此为保守界，更严格的 saddle/upright/bridge 边界
+    #      将在 Tasks 7-10 补充。
+    min_span = min(adapter.width_mm, adapter.height_mm, clamp.width_mm)
     if clamp.fillet_radius_mm > 0.5 * min_span:
         raise ValueError(
             f"fillet_radius_mm={clamp.fillet_radius_mm:.3f} exceeds half of "

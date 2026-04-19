@@ -484,3 +484,25 @@ def test_clamp_fillet_radius_guard_rejects_too_large(tmp_path) -> None:
     bad_path.write_text(yaml.safe_dump(data))
     with pytest.raises(ValueError, match="fillet_radius_mm"):
         load_build_config(bad_path)
+
+
+def test_clamp_fillet_radius_guard_accepts_exact_boundary(tmp_path) -> None:
+    """fillet = 0.5 * min_span must pass; fillet = 0.5 * min_span + epsilon must fail."""
+    import yaml
+    src = ROOT / "config" / "default_infront.yaml"
+    data = yaml.safe_load(src.read_text())
+    clamp = data["geometry"]["detector"]["clamp"]
+    adapter = data["geometry"]["detector"]["adapter_block"]
+    min_span = min(float(adapter["width_mm"]), float(adapter["height_mm"]), float(clamp["width_mm"]))
+    # exact boundary passes (guard uses strict >)
+    clamp["fillet_radius_mm"] = 0.5 * min_span
+    ok_path = tmp_path / "boundary_ok.yaml"
+    ok_path.write_text(yaml.safe_dump(data))
+    cfg = load_build_config(ok_path)
+    assert cfg.geometry.detector.clamp.fillet_radius_mm == pytest.approx(0.5 * min_span)
+    # just over boundary fails
+    clamp["fillet_radius_mm"] = 0.5 * min_span + 1e-6
+    bad_path = tmp_path / "boundary_bad.yaml"
+    bad_path.write_text(yaml.safe_dump(data))
+    with pytest.raises(ValueError, match="fillet_radius_mm"):
+        load_build_config(bad_path)
