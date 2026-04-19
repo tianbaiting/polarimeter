@@ -407,7 +407,7 @@ def test_detector_clamp_side_bolts_stay_outside_detector_bore() -> None:
 
     import Part
 
-    from ifsm.components import build_detector_fixture, detector_fixture_geometry
+    from ifsm.components import _build_detector_fixture_shapes, detector_fixture_geometry
     from ifsm.config import load_build_config
     from ifsm.layout import build_detector_placements, scaled
 
@@ -416,7 +416,7 @@ def test_detector_clamp_side_bolts_stay_outside_detector_bore() -> None:
 
     for placement in placements:
         layout = detector_fixture_geometry(cfg.geometry, placement)
-        housing, _clamp_a, _support_carrier, _mount_base = build_detector_fixture(cfg.geometry, placement)
+        housing, _clamp_a, _support_carrier, _mount_base = _build_detector_fixture_shapes(cfg.geometry, placement)
         clamp_bore = Part.makeCylinder(
             0.5 * cfg.geometry.detector.clamp.inner_diameter_mm,
             cfg.geometry.detector.clamp.width_mm + 2.0,
@@ -441,7 +441,7 @@ def test_detector_clamp_side_bolts_stay_outside_detector_bore() -> None:
 def test_detector_support_carrier_is_monolithic_and_keeps_detachable_half_clear() -> None:
     pytest.importorskip("FreeCAD")
 
-    from ifsm.components import build_detector_fixture, detector_support_clearance_mask
+    from ifsm.components import _build_detector_fixture_shapes, detector_support_clearance_mask
     from ifsm.config import load_build_config
     from ifsm.layout import build_detector_placements
 
@@ -449,7 +449,7 @@ def test_detector_support_carrier_is_monolithic_and_keeps_detachable_half_clear(
     placements = build_detector_placements(cfg.layout)
 
     for placement in placements:
-        _housing, clamp_a, support_carrier, mount_base = build_detector_fixture(cfg.geometry, placement)
+        _housing, clamp_a, support_carrier, mount_base = _build_detector_fixture_shapes(cfg.geometry, placement)
         assert len(support_carrier.Solids) == 1
         assert support_carrier.distToShape(mount_base)[0] == pytest.approx(0.0, abs=1e-3)
         lower_support_region = support_carrier.common(detector_support_clearance_mask(cfg.geometry, placement))

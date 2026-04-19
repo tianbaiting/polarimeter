@@ -15,7 +15,8 @@ from .layout import (
     plate_key_for_sector,
     scaled,
 )
-from .primitives import ring_shape, slit_prism, tube_shape
+from .primitives import add_feature, ring_shape, slit_prism, tube_shape
+from .primitives_fasteners import make_flat_washer, make_hex_nut, make_hex_socket_bolt
 
 
 @dataclass(frozen=True)
@@ -1006,7 +1007,7 @@ def _plate_rectangular_relief_cuts(
 
     cuts: list[Part.Shape] = []
     for placement in placements:
-        housing, clamp_a, support_carrier, mount_base = build_detector_fixture(cfg, placement)
+        housing, clamp_a, support_carrier, mount_base = _build_detector_fixture_shapes(cfg, placement)
         local_min_u: float | None = None
         local_max_u = 0.0
         local_min_v: float | None = None
@@ -1485,7 +1486,19 @@ def build_plate_load_ties(cfg: GeometryConfig) -> dict[str, Part.Shape]:
     return out
 
 
-def build_detector_fixture(
+_BOLT_DIAMETER_TO_THREAD = {
+    3.0: "M3", 4.0: "M4", 5.0: "M5", 6.0: "M6",
+    8.0: "M8", 10.0: "M10",
+}
+
+
+def _bolt_diameter_to_thread(diameter_mm: float) -> str:
+    """Map a through-hole or thread diameter to the nearest metric thread."""
+    best = min(_BOLT_DIAMETER_TO_THREAD.keys(), key=lambda d: abs(d - diameter_mm))
+    return _BOLT_DIAMETER_TO_THREAD[best]
+
+
+def _build_detector_fixture_shapes(
     cfg: GeometryConfig,
     placement: DetectorPlacement,
 ) -> tuple[Part.Shape, Part.Shape, Part.Shape, Part.Shape]:
@@ -1738,7 +1751,7 @@ def build_weldment_load_bearing(
     且 Fillet.Base 链在 recompute 中断裂，因此 Sub-2 直接封装 Part 形状，
     BLP_v1 拓扑通过共享 primitive 链保留不变。
     """
-    _housing, _clamp_upper, support_carrier, _mount_base = build_detector_fixture(cfg, placement)
+    _housing, _clamp_upper, support_carrier, _mount_base = _build_detector_fixture_shapes(cfg, placement)
     feature_name = f"Weldment_LoadBearing_{placement.tag}{name_suffix}"
     feat = doc.addObject("Part::Feature", feature_name)
     feat.Shape = support_carrier
@@ -1763,7 +1776,7 @@ def build_upper_clamp_detachable(
     Path B：发布已融合好的 Part shape，避免 PartDesign::Body 在 headless
     freecadcmd 下复现 Phase 0 已证实的坑。
     """
-    _housing, clamp_half_a, _support_carrier, _mount_base = build_detector_fixture(cfg, placement)
+    _housing, clamp_half_a, _support_carrier, _mount_base = _build_detector_fixture_shapes(cfg, placement)
     feature_name = f"UpperClamp_Detachable_{placement.tag}{name_suffix}"
     feat = doc.addObject("Part::Feature", feature_name)
     feat.Shape = clamp_half_a
@@ -1785,11 +1798,121 @@ def build_base_plate_bolted(
     / [CN] 把 build_detector_fixture 的 mount_base（独立于承力焊件的底座板）
     包成 Part::Feature，沿用 Path B 统一封装策略，保留 BLP_v1 拓扑。
     """
-    _housing, _clamp_upper, _support_carrier, mount_base = build_detector_fixture(cfg, placement)
+    _housing, _clamp_upper, _support_carrier, mount_base = _build_detector_fixture_shapes(cfg, placement)
     feature_name = f"BasePlate_Bolted_{placement.tag}{name_suffix}"
     feat = doc.addObject("Part::Feature", feature_name)
     feat.Shape = mount_base
     return feat
+
+
+def build_detector_fixture(
+    doc,
+    cfg: GeometryConfig,
+    placement: DetectorPlacement,
+    name_suffix: str = "",
+) -> dict:
+    """Build one detector fixture as three named Part::Feature bodies + fastener solids.
+
+    [EN] Path B composition contract: returns a dict with keys
+    ``housing``, ``weldment``, ``upper_clamp``, ``base_plate`` (each a
+    ``Part::Feature`` document object) plus a ``fasteners`` list whose
+    entries carry raw ``Part.Shape`` solids and metadata. Downstream callers
+    (assembly wiring, manifests, validators) own the responsibility of
+    attaching the returned document objects to an assembly group and
+    registering their metadata. The four bodies come from the same shared
+    ``_build_detector_fixture_shapes`` primitive chain so BLP_v1 topology is
+    preserved regardless of entry point.
+    / [CN] Path B 组合契约：返回的字典包含 ``housing``、``weldment``、
+    ``upper_clamp``、``base_plate`` 四个 ``Part::Feature`` 文档对象，以及
+    ``fasteners`` 列表（每个元素含原始 ``Part.Shape`` 和元数据）。后续调用方
+    负责把文档对象挂入装配组、注册元数据。四个主体均源自同一 ``_build_detector_fixture_shapes``
+    原始几何链，保证无论从哪个入口调用都保持 BLP_v1 拓扑一致。
+    """
+    housing_shape, _clamp_half_a, _support_carrier, _mount_base = _build_detector_fixture_shapes(
+        cfg, placement
+    )
+
+    tag = placement.tag
+    housing_feat = add_feature(doc, f"DetectorHousing_{tag}{name_suffix}", housing_shape)
+    weldment_feat = build_weldment_load_bearing(doc, cfg, placement, name_suffix=name_suffix)
+    upper_clamp_feat = build_upper_clamp_detachable(doc, cfg, placement, name_suffix=name_suffix)
+    base_plate_feat = build_base_plate_bolted(doc, cfg, placement, name_suffix=name_suffix)
+
+    fasteners: list[dict] = []
+    clamp_cfg = cfg.detector.clamp
+    if clamp_cfg.draw_fasteners_as_solids:
+        layout = detector_fixture_geometry(cfg, placement)
+        clamp_thread = _bolt_diameter_to_thread(clamp_cfg.clamp_bolt_diameter_mm)
+        plate_thread = _bolt_diameter_to_thread(clamp_cfg.mount_bolt_hole_diameter_mm)
+
+        for center in layout.clamp_bolt_centers:
+            bolt = make_hex_socket_bolt(
+                size=clamp_thread,
+                shank_length_mm=2.0 * clamp_cfg.clamp_ear_thickness_mm + clamp_cfg.outer_diameter_mm,
+                origin=center,
+                axis=layout.clamp_bolt_axis,
+            )
+            fasteners.append({
+                "kind": "bolt",
+                "size": clamp_thread,
+                "solid": bolt,
+                "placement": tag,
+                "subtype": "clamp",
+            })
+
+        for center in layout.plate_hole_centers:
+            bolt = make_hex_socket_bolt(
+                size=plate_thread,
+                shank_length_mm=clamp_cfg.mount_base_thickness_mm + 12.0,
+                origin=center,
+                axis=layout.mount_axis,
+            )
+            fasteners.append({
+                "kind": "bolt",
+                "size": plate_thread,
+                "solid": bolt,
+                "placement": tag,
+                "subtype": "plate_side",
+            })
+            washer = make_flat_washer(plate_thread, center, layout.mount_axis)
+            fasteners.append({
+                "kind": "washer",
+                "size": plate_thread,
+                "solid": washer,
+                "placement": tag,
+                "subtype": "plate_side",
+            })
+
+        for center in layout.base_hole_centers:
+            bolt = make_hex_socket_bolt(
+                size=plate_thread,
+                shank_length_mm=clamp_cfg.mount_base_thickness_mm + 18.0,
+                origin=center,
+                axis=layout.mount_axis,
+            )
+            fasteners.append({
+                "kind": "bolt",
+                "size": plate_thread,
+                "solid": bolt,
+                "placement": tag,
+                "subtype": "weldment_side",
+            })
+            nut = make_hex_nut(plate_thread, center, layout.mount_axis)
+            fasteners.append({
+                "kind": "nut",
+                "size": plate_thread,
+                "solid": nut,
+                "placement": tag,
+                "subtype": "weldment_side",
+            })
+
+    return {
+        "housing": housing_feat,
+        "weldment": weldment_feat,
+        "upper_clamp": upper_clamp_feat,
+        "base_plate": base_plate_feat,
+        "fasteners": fasteners,
+    }
 
 
 def _target_slot_positions_x(cfg: GeometryConfig) -> tuple[float, float, float]:

@@ -9,9 +9,9 @@ import FreeCAD as App
 import Part
 
 from .components import (
+    _build_detector_fixture_shapes,
     build_all_plates,
     build_chamber,
-    build_detector_fixture,
     build_end_module_fasteners,
     build_end_modules,
     build_plate_load_ties,
@@ -1311,7 +1311,7 @@ def _validate_detector(
     # [EN] The bridge-length limit is derived from the continuous load path stack-up, so excessive cantilevering is flagged in terms of actual support geometry rather than a magic number. / [CN] 桥接长度上限由连续承载路径的几何叠加推得，因此过长悬挑是按真实支撑几何判定，而不是用一个神秘常数。
     for placement in placements:
         layout = detector_fixture_geometry(cfg, placement)
-        housing, clamp_a, support_carrier, mount_base = build_detector_fixture(
+        housing, clamp_a, support_carrier, mount_base = _build_detector_fixture_shapes(
             cfg,
             placement,
         )

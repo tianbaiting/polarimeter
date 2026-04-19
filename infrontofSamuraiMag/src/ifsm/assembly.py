@@ -80,6 +80,28 @@ def _add_component(
     return obj
 
 
+def _register_existing_component(
+    assembly: App.DocumentObjectGroup,
+    export_objects: list[App.DocumentObject],
+    obj: App.DocumentObject,
+    subsystem: str,
+    role: str,
+) -> App.DocumentObject:
+    """Attach subsystem/role metadata to an existing Part::Feature and register it.
+
+    [EN] Used when the caller has already created a Part::Feature (e.g.,
+    build_detector_fixture returning named bodies) and we only need to tag
+    and enroll it, without re-wrapping the Shape into a second doc object.
+    / [CN] 当调用方已经创建了 Part::Feature（例如 build_detector_fixture
+    直接返回命名实体）时，仅需给它打元数据并注册到装配/导出集合，避免
+    再次包一层造成重复文档对象。
+    """
+    _set_string_property(obj, "Subsystem", "Design", subsystem)
+    _set_string_property(obj, "Role", "Design", role)
+    _register_object(assembly, export_objects, obj)
+    return obj
+
+
 def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> BuildResult:
     doc = App.newDocument(doc_name)
     assembly_name = "".join(ch if ch.isalnum() else "_" for ch in f"{doc_name}Assembly")
@@ -187,44 +209,37 @@ def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> B
 
     for placement in placements:
         tag = placement.tag
-        housing, clamp_a, support_carrier, mount_base = build_detector_fixture(
+        fixture = build_detector_fixture(
+            doc,
             cfg.geometry,
             placement,
         )
 
-        housing_obj = _add_component(
-            doc,
+        housing_obj = _register_existing_component(
             assembly,
             export_objects,
-            f"DetectorHousing_{tag}",
-            housing,
+            fixture["housing"],
             subsystem="detector",
             role="external detector body",
         )
-        clamp_a_obj = _add_component(
-            doc,
+        clamp_a_obj = _register_existing_component(
             assembly,
             export_objects,
-            f"DetectorClampHalfA_{tag}",
-            clamp_a,
+            fixture["upper_clamp"],
             subsystem="detector",
             role="split clamp half A with anti-rotation shoulder/key and clamp-bolt ear",
         )
-        support_carrier_obj = _add_component(
-            doc,
+        support_carrier_obj = _register_existing_component(
             assembly,
             export_objects,
-            f"DetectorSupportCarrier_{tag}",
-            support_carrier,
+            fixture["weldment"],
             subsystem="detector",
             role="integrated support-side clamp half + transition block + uprights + top bridge",
         )
-        mount_obj = _add_component(
-            doc,
+        mount_obj = _register_existing_component(
             assembly,
             export_objects,
-            f"DetectorMountBase_{tag}",
-            mount_base,
+            fixture["base_plate"],
             subsystem="detector",
             role="separate detector mount base plate with rectangular 4-hole bolt pattern",
         )
@@ -232,6 +247,23 @@ def build_document(cfg: BuildConfig, doc_name: str = "infrontofSamuraiMag") -> B
         # [EN] Attach the same channel metadata to every detector subpart so STEP review can trace a clamp or adapter back to the physical sector/channel it serves. / [CN] 给每个探测器子件附上统一通道元数据，使 STEP 审查时能把抱箍或过渡块追溯回其对应的物理扇区/通道。
         for obj in (housing_obj, clamp_a_obj, support_carrier_obj, mount_obj):
             _attach_layout_properties(obj, placement)
+
+        # [EN] Fastener solids are published as plain Part::Features so downstream STEP consumers can visualize the bolt/nut/washer hardware alongside the three structural bodies. / [CN] 紧固件实体以普通 Part::Feature 发布，下游 STEP 消费方可与三件结构实体一同显示螺栓/螺母/垫片。
+        for idx, entry in enumerate(fixture["fasteners"]):
+            kind = entry["kind"]
+            size = entry["size"]
+            subtype = entry["subtype"]
+            fastener_name = f"DetectorFastener_{tag}_{subtype}_{kind}_{size}_{idx}"
+            fastener_obj = _add_component(
+                doc,
+                assembly,
+                export_objects,
+                fastener_name,
+                entry["solid"],
+                subsystem="detector",
+                role=f"{subtype} {kind} ({size}) fastener visual",
+            )
+            _attach_layout_properties(fastener_obj, placement)
 
     target_drive_role = "3-position linear ladder drivetrain"
     if cfg.geometry.target.mode == "single_rotary":
