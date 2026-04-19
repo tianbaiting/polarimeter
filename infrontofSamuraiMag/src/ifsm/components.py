@@ -1770,6 +1770,28 @@ def build_upper_clamp_detachable(
     return feat
 
 
+def build_base_plate_bolted(
+    doc,
+    cfg: GeometryConfig,
+    placement: DetectorPlacement,
+    name_suffix: str = "",
+):
+    """Bolted base plate as a single-solid Part::Feature.
+
+    [EN] Wraps build_detector_fixture's `mount_base` (the plate-mounted base
+    board independent of the load-bearing weldment) into a named
+    Part::Feature. Path B keeps Sub-2's three detachable bodies on a uniform
+    Part::Feature-wrapping strategy and preserves BLP_v1 topology.
+    / [CN] 把 build_detector_fixture 的 mount_base（独立于承力焊件的底座板）
+    包成 Part::Feature，沿用 Path B 统一封装策略，保留 BLP_v1 拓扑。
+    """
+    _housing, _clamp_upper, _support_carrier, mount_base = build_detector_fixture(cfg, placement)
+    feature_name = f"BasePlate_Bolted_{placement.tag}{name_suffix}"
+    feat = doc.addObject("Part::Feature", feature_name)
+    feat.Shape = mount_base
+    return feat
+
+
 def _target_slot_positions_x(cfg: GeometryConfig) -> tuple[float, float, float]:
     ladder = cfg.target.ladder
     if ladder is None:
