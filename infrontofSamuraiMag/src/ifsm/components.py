@@ -15,18 +15,7 @@ from .layout import (
     plate_key_for_sector,
     scaled,
 )
-from .primitives import (
-    add_chamfer,
-    add_fillet,
-    add_hole,
-    new_partdesign_body,
-    pad_half_annulus,
-    pad_rectangle,
-    ring_shape,
-    select_edges_by_predicate,
-    slit_prism,
-    tube_shape,
-)
+from .primitives import ring_shape, slit_prism, tube_shape
 
 
 @dataclass(frozen=True)
@@ -1231,21 +1220,6 @@ def _detector_mount_base_axes(
     return base_u_axis, base_v_axis
 
 
-def _bolt_diameter_to_thread(diameter_mm: float) -> str:
-    """Map a shank diameter in mm to an ISO thread size string.
-
-    Raises KeyError if `diameter_mm` does not match a known thread size
-    (within 0.05 mm). Only M3-M10 are supported (matches primitives_fasteners).
-    """
-    _TABLE = {3.0: "M3", 4.0: "M4", 5.0: "M5", 6.0: "M6", 8.0: "M8", 10.0: "M10"}
-    for d, name in _TABLE.items():
-        if abs(diameter_mm - d) < 0.05:
-            return name
-    raise KeyError(
-        f"no thread size for diameter {diameter_mm:.3f} mm (known: {sorted(_TABLE)})"
-    )
-
-
 def detector_fixture_geometry(
     cfg: GeometryConfig,
     placement: DetectorPlacement,
@@ -2087,135 +2061,6 @@ def _single_target_holder_screws(holder, holder_name: str) -> dict[str, Part.Sha
         )
         out[f"{holder_name}ClampScrew_{label}"] = shank.fuse(head)
     return out
-
-
-def build_weldment_load_bearing(
-    doc,
-    cfg: GeometryConfig,
-    placement: DetectorPlacement,
-    name_suffix: str = "",
-):
-    """Load-bearing weldment as a single PartDesign::Body.
-
-    BLP_v1 topology (single-solid after recompute):
-      - lower half-annulus clamp ring
-      - lower saddle pad (supports the ring, bridges to adapter)
-      - adapter/transition block pad
-      - twin uprights pads
-      - top bridge pad
-      - fillets at saddle<->ring / uprights<->bridge junctions (heuristic edge select)
-      - chamfer on long external edges
-    """
-    clamp_cfg = cfg.detector.clamp
-    adapter_cfg = cfg.detector.adapter_block
-    layout = detector_fixture_geometry(cfg, placement)
-
-    body_name = f"Weldment_LoadBearing_{placement.tag}{name_suffix}"
-    body = new_partdesign_body(doc, body_name)
-
-    # (1) Lower half-annulus clamp ring.
-    #     Split-plane axis_v points from clamp_center toward saddle_center
-    #     (so the "positive v" half of the annulus is the lower/support half).
-    support_direction = layout.support_saddle_center - layout.clamp_center
-    if support_direction.Length > 1e-9:
-        support_direction = support_direction.normalize()
-    else:
-        support_direction = App.Vector(layout.mount_axis).normalize()
-    pad_half_annulus(
-        body,
-        origin=layout.clamp_center,
-        axis_u=layout.direction,
-        axis_v=support_direction,
-        axis_w=layout.clamp_bolt_axis,
-        outer_diameter_mm=clamp_cfg.outer_diameter_mm,
-        inner_diameter_mm=clamp_cfg.inner_diameter_mm,
-        pad_length_mm=clamp_cfg.width_mm,
-        name="HalfRing",
-    )
-
-    # (2) Lower saddle pad -- width along beam, height toward plate, thickness in lateral.
-    pad_rectangle(
-        body,
-        origin=layout.support_saddle_center,
-        axis_u=layout.direction,
-        axis_v=support_direction,
-        axis_w=layout.mount_lateral_axis,
-        width_mm=layout.support_saddle_length_mm,
-        height_mm=layout.support_saddle_height_mm,
-        pad_length_mm=layout.support_saddle_thickness_mm,
-        name="Saddle",
-    )
-
-    # (3) Adapter/transition block pad.
-    pad_rectangle(
-        body,
-        origin=layout.block_center,
-        axis_u=layout.direction,
-        axis_v=layout.mount_axis,
-        axis_w=layout.mount_lateral_axis,
-        width_mm=adapter_cfg.length_mm,
-        height_mm=adapter_cfg.height_mm,
-        pad_length_mm=adapter_cfg.width_mm,
-        name="AdapterBlock",
-    )
-
-    # (4) Twin uprights -- rectangular pads offset along layout.direction.
-    for idx, offset in enumerate(layout.upright_offsets, start=1):
-        upright_center = layout.bridge_plate_face_center + scaled(layout.direction, offset)
-        pad_rectangle(
-            body,
-            origin=upright_center,
-            axis_u=layout.direction,
-            axis_v=layout.mount_axis,
-            axis_w=layout.mount_lateral_axis,
-            width_mm=layout.upright_width_mm,
-            height_mm=layout.upright_depth_mm,
-            pad_length_mm=layout.upright_length_mm,
-            name=f"Upright{idx}",
-        )
-
-    # (5) Top bridge.
-    pad_rectangle(
-        body,
-        origin=layout.bridge_center,
-        axis_u=layout.direction,
-        axis_v=layout.mount_axis,
-        axis_w=layout.mount_lateral_axis,
-        width_mm=layout.bridge_span_mm,
-        height_mm=layout.bridge_depth_mm,
-        pad_length_mm=layout.bridge_thickness_mm,
-        name="Bridge",
-    )
-
-    # (6) At least one fillet -- pick the longest edges (heuristic).
-    all_edges = select_edges_by_predicate(body, lambda e: e.Length > 1.0)
-    if all_edges:
-        # Sort by length descending to pick the largest, typically perimeter seams.
-        ranked = sorted(
-            all_edges,
-            key=lambda n: body.Shape.Edges[int(n.removeprefix("Edge")) - 1].Length,
-            reverse=True,
-        )
-        fillet_edges = ranked[: min(4, len(ranked))]
-        add_fillet(body, clamp_cfg.fillet_radius_mm, fillet_edges, "WeldmentJunctions")
-
-    # (7) Chamfer long external edges (also heuristic).
-    chamfer_edges = select_edges_by_predicate(body, lambda e: e.Length > 5.0)
-    if chamfer_edges:
-        ranked_c = sorted(
-            chamfer_edges,
-            key=lambda n: body.Shape.Edges[int(n.removeprefix("Edge")) - 1].Length,
-            reverse=True,
-        )
-        add_chamfer(
-            body,
-            clamp_cfg.chamfer_mm,
-            ranked_c[: min(4, len(ranked_c))],
-            "ExternalEdges",
-        )
-
-    doc.recompute()
-    return body
 
 
 def rotary_port_interface_geometry(cfg: GeometryConfig) -> _MountedPortInterface | None:
