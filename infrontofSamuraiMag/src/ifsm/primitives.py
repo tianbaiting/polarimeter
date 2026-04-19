@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import math
+
 import FreeCAD as App
 import Part
 
@@ -116,3 +118,161 @@ def add_feature(doc: App.Document, name: str, shape: Part.Shape) -> App.Document
     obj = doc.addObject("Part::Feature", name)
     obj.Shape = shape
     return obj
+
+
+# --- PartDesign helpers (added for Sub-2 detector clamp weldment redesign) ---
+
+import Sketcher  # type: ignore  # noqa: E402
+
+
+def new_partdesign_body(doc: App.Document, name: str):
+    """Create a PartDesign::Body attached to the active document."""
+    return doc.addObject("PartDesign::Body", name)
+
+
+def pad_rectangle(
+    body,
+    origin: App.Vector,
+    axis_u: App.Vector,
+    axis_v: App.Vector,
+    axis_w: App.Vector,
+    width_mm: float,
+    height_mm: float,
+    pad_length_mm: float,
+    name: str,
+):
+    """Sketch an axis-aligned rectangle on the (u,v) plane at origin, pad along axis_w.
+
+    Rectangle is centered at origin in the sketch plane. Pad is symmetric
+    (Midplane=True) so the solid is centered on the sketch plane along `axis_w`.
+    """
+    sketch = body.newObject("Sketcher::SketchObject", f"Sketch_{name}")
+    placement = App.Placement()
+    placement.Base = App.Vector(origin)
+    rot = App.Rotation(App.Vector(0, 0, 1), App.Vector(axis_w))
+    placement.Rotation = rot
+    sketch.Placement = placement
+    half_w = 0.5 * width_mm
+    half_h = 0.5 * height_mm
+    p1 = App.Vector(-half_w, -half_h, 0)
+    p2 = App.Vector(half_w, -half_h, 0)
+    p3 = App.Vector(half_w, half_h, 0)
+    p4 = App.Vector(-half_w, half_h, 0)
+    sketch.addGeometry(Part.LineSegment(p1, p2), False)
+    sketch.addGeometry(Part.LineSegment(p2, p3), False)
+    sketch.addGeometry(Part.LineSegment(p3, p4), False)
+    sketch.addGeometry(Part.LineSegment(p4, p1), False)
+    for i in range(4):
+        sketch.addConstraint(Sketcher.Constraint("Coincident", i, 2, (i + 1) % 4, 1))
+    pad = body.newObject("PartDesign::Pad", f"Pad_{name}")
+    pad.Profile = sketch
+    pad.Length = pad_length_mm
+    pad.Midplane = True
+    body.Document.recompute()
+    return pad
+
+
+def pad_half_annulus(
+    body,
+    origin: App.Vector,
+    axis_u: App.Vector,
+    axis_v: App.Vector,
+    axis_w: App.Vector,
+    outer_diameter_mm: float,
+    inner_diameter_mm: float,
+    pad_length_mm: float,
+    name: str,
+):
+    """Sketch a half-annulus and pad symmetrically along `axis_u`."""
+    sketch = body.newObject("Sketcher::SketchObject", f"Sketch_{name}")
+    placement = App.Placement()
+    placement.Base = App.Vector(origin)
+    rot = App.Rotation(App.Vector(0, 0, 1), App.Vector(axis_u))
+    placement.Rotation = rot
+    sketch.Placement = placement
+    ro = 0.5 * outer_diameter_mm
+    ri = 0.5 * inner_diameter_mm
+    outer_arc = Part.ArcOfCircle(
+        Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), ro),
+        0.0, math.pi,
+    )
+    inner_arc = Part.ArcOfCircle(
+        Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), ri),
+        0.0, math.pi,
+    )
+    left_seg = Part.LineSegment(App.Vector(-ro, 0, 0), App.Vector(-ri, 0, 0))
+    right_seg = Part.LineSegment(App.Vector(ri, 0, 0), App.Vector(ro, 0, 0))
+    sketch.addGeometry(outer_arc, False)
+    sketch.addGeometry(left_seg, False)
+    sketch.addGeometry(inner_arc, False)
+    sketch.addGeometry(right_seg, False)
+    sketch.addConstraint(Sketcher.Constraint("Coincident", 0, 1, 1, 1))
+    sketch.addConstraint(Sketcher.Constraint("Coincident", 1, 2, 2, 2))
+    sketch.addConstraint(Sketcher.Constraint("Coincident", 2, 1, 3, 1))
+    sketch.addConstraint(Sketcher.Constraint("Coincident", 3, 2, 0, 2))
+    pad = body.newObject("PartDesign::Pad", f"Pad_{name}")
+    pad.Profile = sketch
+    pad.Length = pad_length_mm
+    pad.Midplane = True
+    body.Document.recompute()
+    return pad
+
+
+def add_fillet(body, radius_mm: float, edge_names: list[str], name: str):
+    """Add PartDesign::Fillet on specified edges. Base is (body, edges)."""
+    fillet = body.newObject("PartDesign::Fillet", f"Fillet_{name}")
+    fillet.Base = (body, edge_names)
+    fillet.Radius = radius_mm
+    body.Document.recompute()
+    return fillet
+
+
+def add_chamfer(body, size_mm: float, edge_names: list[str], name: str):
+    chamfer = body.newObject("PartDesign::Chamfer", f"Chamfer_{name}")
+    chamfer.Base = (body, edge_names)
+    chamfer.Size = size_mm
+    body.Document.recompute()
+    return chamfer
+
+
+def add_hole(
+    body,
+    center: App.Vector,
+    axis: App.Vector,
+    thread_size: str,
+    depth_mm: float,
+    name: str,
+):
+    """Cut a clearance hole at `center` normal to `axis`.
+
+    Implemented as PartDesign::Pocket on a circular sketch — PartDesign::Hole
+    is a headless no-op per Phase 0 spike. Thread metadata is NOT represented
+    in geometry; it belongs on drawings/BOM. Clearance diameter from a fixed
+    ISO-ish table keyed by `thread_size`.
+    """
+    sketch = body.newObject("Sketcher::SketchObject", f"Sketch_{name}")
+    placement = App.Placement()
+    placement.Base = App.Vector(center)
+    rot = App.Rotation(App.Vector(0, 0, 1), App.Vector(axis))
+    placement.Rotation = rot
+    sketch.Placement = placement
+    clearance_d = {"M3": 3.4, "M4": 4.5, "M5": 5.5, "M6": 6.6, "M8": 9.0, "M10": 11.0}[thread_size]
+    sketch.addGeometry(
+        Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), 0.5 * clearance_d),
+        False,
+    )
+    pocket = body.newObject("PartDesign::Pocket", f"Hole_{name}")
+    pocket.Profile = sketch
+    pocket.Length = depth_mm
+    pocket.Type = 0
+    body.Document.recompute()
+    return pocket
+
+
+def select_edges_by_predicate(body, predicate) -> list[str]:
+    """Return edge names ('Edge1', 'Edge2', ...) passing the predicate on edge shape."""
+    names: list[str] = []
+    for idx, edge in enumerate(body.Shape.Edges, start=1):
+        if predicate(edge):
+            names.append(f"Edge{idx}")
+    return names
