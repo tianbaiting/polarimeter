@@ -226,6 +226,10 @@ geometry:
       mount_bolt_hole_diameter_mm: 9.0
       mount_bolt_pitch_u_mm: 120.0
       mount_bolt_pitch_v_mm: 36.0
+      fillet_radius_mm: 3.0
+      chamfer_mm: 1.0
+      bolt_head_type: ISO4762_hex_socket
+      draw_fasteners_as_solids: true
     adapter_block:
       length_mm: 36.0
       width_mm: 34.0
