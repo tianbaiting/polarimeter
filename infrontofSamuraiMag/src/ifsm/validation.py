@@ -1243,6 +1243,171 @@ def _validate_plates(cfg: GeometryConfig, placements: list[DetectorPlacement]) -
     return _subsystem_status("plates", checks)
 
 
+def detector_fixture_no_interpenetration(
+    fixture: dict,
+    placement_tag: str,
+    strict_tolerance_mm3: float = 1e-6,
+    bolt_whitelist_tolerance_mm3: float = 1e-3,
+) -> tuple[str, str]:
+    """Return ("pass"|"fail", detail) for body-body and body-fastener overlap.
+
+    [EN] Body-vs-body pairs must be strictly disjoint (<=1e-6 mm^3). Bolts may
+    have up to 1e-3 mm^3 OCC-artefact overlap with the three named bodies
+    (mating/through-hole contact). Non-bolt fasteners (nuts/washers) use
+    strict tolerance. / [CN] 三个命名 body 两两不得实际相交（<=1e-6 mm^3）；
+    螺栓与 body 允许 <=1e-3 mm^3 OCC 接触噪声，以容忍穿孔配合；螺母/垫圈用严格阈值。
+    """
+    named = {
+        "weldment": fixture["weldment"],
+        "upper_clamp": fixture["upper_clamp"],
+        "base_plate": fixture["base_plate"],
+    }
+    fasteners = fixture.get("fasteners", [])
+    violations: list[str] = []
+
+    items = list(named.items())
+    for i in range(len(items)):
+        for j in range(i + 1, len(items)):
+            na, ba = items[i]
+            nb, bb = items[j]
+            vol = _shape_interference_volume(ba.Shape, bb.Shape)
+            if vol > strict_tolerance_mm3:
+                violations.append(f"{na}<->{nb} overlap={vol:.6f}mm^3")
+
+    for name, body in named.items():
+        for idx, fast in enumerate(fasteners):
+            vol = _shape_interference_volume(body.Shape, fast["solid"])
+            tol = bolt_whitelist_tolerance_mm3 if fast["kind"] == "bolt" else strict_tolerance_mm3
+            if vol > tol:
+                violations.append(
+                    f"{name}<->{fast['kind']}#{idx}[{fast['size']},{fast.get('subtype','')}] overlap={vol:.6f}mm^3"
+                )
+
+    for i in range(len(fasteners)):
+        for j in range(i + 1, len(fasteners)):
+            fa, fb = fasteners[i], fasteners[j]
+            vol = _shape_interference_volume(fa["solid"], fb["solid"])
+            if vol > strict_tolerance_mm3:
+                violations.append(
+                    f"{fa['kind']}#{i}<->{fb['kind']}#{j} overlap={vol:.6f}mm^3"
+                )
+
+    if violations:
+        return "fail", f"[placement={placement_tag}] " + "; ".join(violations)
+    return "pass", f"placement={placement_tag} all pairs within tolerance"
+
+
+def _build_detector_fixture_for_interpenetration_check(
+    cfg: GeometryConfig,
+    placement: DetectorPlacement,
+    housing: Part.Shape,
+    clamp_a: Part.Shape,
+    support_carrier: Part.Shape,
+    mount_base: Part.Shape,
+) -> dict:
+    """Assemble a doc-less fixture dict compatible with ``detector_fixture_no_interpenetration``.
+
+    [EN] Option B adapter: wrap shapes into ``SimpleNamespace`` objects carrying a
+    ``.Shape`` attribute so the validator's body/fastener contract can be satisfied
+    without touching the FreeCAD document lifecycle used by
+    ``build_detector_fixture``. / [CN] Option B 适配器：用 ``SimpleNamespace`` 包裹形状
+    以提供 ``.Shape`` 属性，使校验器无需介入
+    ``build_detector_fixture`` 的文档生命周期即可复用其主体/紧固件契约。
+    """
+    from types import SimpleNamespace
+
+    from .components import (
+        _bolt_diameter_to_thread,
+        detector_fixture_geometry,
+    )
+    from .layout import scaled
+    from .primitives_fasteners import make_flat_washer, make_hex_nut, make_hex_socket_bolt
+
+    clamp_cfg = cfg.detector.clamp
+    fasteners: list[dict] = []
+
+    # [EN] Fastener construction here must stay in lockstep with
+    # ``build_detector_fixture`` in components.py — seat origins / shank lengths
+    # are tuned so every bolt/nut/washer sits in air or in a published clearance
+    # hole. / [CN] 这里的紧固件生成与 components.py 中 ``build_detector_fixture``
+    # 必须保持一致：坐标/长度都调成让每个螺栓/螺母/垫圈要么处在空气中、要么落入
+    # 已发布的避让孔。
+    if clamp_cfg.draw_fasteners_as_solids:
+        layout = detector_fixture_geometry(cfg, placement)
+        clamp_thread = _bolt_diameter_to_thread(clamp_cfg.clamp_bolt_diameter_mm)
+        plate_thread = _bolt_diameter_to_thread(clamp_cfg.mount_bolt_hole_diameter_mm)
+        tag = placement.tag
+
+        clamp_seat_offset_mm = (
+            0.5 * clamp_cfg.split_gap_mm + clamp_cfg.clamp_ear_width_mm
+        )
+        for center in layout.clamp_bolt_centers:
+            bolt_origin = center - scaled(layout.clamp_bolt_axis, clamp_seat_offset_mm)
+            bolt = make_hex_socket_bolt(
+                size=clamp_thread,
+                shank_length_mm=layout.clamp_bolt_span_mm,
+                origin=bolt_origin,
+                axis=layout.clamp_bolt_axis,
+            )
+            fasteners.append({
+                "kind": "bolt",
+                "size": clamp_thread,
+                "solid": bolt,
+                "placement": tag,
+                "subtype": "clamp",
+            })
+
+        from .primitives_fasteners import _BOLT_TABLE as _VAL_BOLT_TABLE  # noqa: WPS433
+        plate_washer_t = _VAL_BOLT_TABLE[plate_thread]["washer_t"]
+        plate_head_offset = scaled(
+            layout.plate_normal,
+            0.5 * clamp_cfg.mount_base_thickness_mm + 0.1 + plate_washer_t,
+        )
+        nut_face_offset = scaled(
+            layout.plate_normal, 0.5 * clamp_cfg.mount_base_thickness_mm + 0.1
+        )
+        for base_center in layout.base_hole_centers:
+            bolt_origin = base_center + plate_head_offset
+            bolt = make_hex_socket_bolt(
+                size=plate_thread,
+                shank_length_mm=clamp_cfg.mount_base_thickness_mm + 18.0,
+                origin=bolt_origin,
+                axis=layout.mount_axis,
+            )
+            fasteners.append({
+                "kind": "bolt",
+                "size": plate_thread,
+                "solid": bolt,
+                "placement": tag,
+                "subtype": "plate_side",
+            })
+            washer = make_flat_washer(plate_thread, bolt_origin, layout.mount_axis)
+            fasteners.append({
+                "kind": "washer",
+                "size": plate_thread,
+                "solid": washer,
+                "placement": tag,
+                "subtype": "plate_side",
+            })
+            nut_origin = base_center - nut_face_offset
+            nut = make_hex_nut(plate_thread, nut_origin, layout.mount_axis)
+            fasteners.append({
+                "kind": "nut",
+                "size": plate_thread,
+                "solid": nut,
+                "placement": tag,
+                "subtype": "weldment_side",
+            })
+
+    return {
+        "housing": SimpleNamespace(Shape=housing),
+        "weldment": SimpleNamespace(Shape=support_carrier),
+        "upper_clamp": SimpleNamespace(Shape=clamp_a),
+        "base_plate": SimpleNamespace(Shape=mount_base),
+        "fasteners": fasteners,
+    }
+
+
 def _validate_detector(
     cfg: GeometryConfig,
     placements: list[DetectorPlacement],
@@ -1297,6 +1462,8 @@ def _validate_detector(
     clamp_bolt_clearance_failures: list[str] = []
     support_carrier_monolithic_failures: list[str] = []
     detachable_half_clearance_failures: list[str] = []
+    fixture_interpenetration_failures: list[str] = []
+    fixture_interpenetration_placements_checked = 0
     mount_margin = cfg.clearance.los_margin_mm
     clamp = cfg.detector.clamp
     adapter = cfg.detector.adapter_block
@@ -1386,6 +1553,20 @@ def _validate_detector(
                 f"{placement.tag}: bridge_length={bridge_length_mm:.3f} mm outside (0, {bridge_length_limit_mm:.3f}]"
             )
         fixture_signatures.append((placement.tag, _detector_fixture_local_pose_signature(cfg, placement)))
+
+        if not cfg.clearance.skip_overlap_checks:
+            fixture_for_check = _build_detector_fixture_for_interpenetration_check(
+                cfg,
+                placement,
+                housing=housing,
+                clamp_a=clamp_a,
+                support_carrier=support_carrier,
+                mount_base=mount_base,
+            )
+            status, detail = detector_fixture_no_interpenetration(fixture_for_check, placement.tag)
+            fixture_interpenetration_placements_checked += 1
+            if status != "pass":
+                fixture_interpenetration_failures.append(detail)
 
         clamp_bore = Part.makeCylinder(
             0.5 * clamp.inner_diameter_mm,
@@ -1641,6 +1822,30 @@ def _validate_detector(
             ),
         )
     )
+
+    if cfg.clearance.skip_overlap_checks:
+        checks.append(
+            SubsystemCheck(
+                name="detector_fixture_no_interpenetration",
+                passed=True,
+                detail="mode=skipped by geometry.clearance.skip_overlap_checks=true",
+            )
+        )
+    else:
+        checks.append(
+            SubsystemCheck(
+                name="detector_fixture_no_interpenetration",
+                passed=not fixture_interpenetration_failures,
+                detail=(
+                    (
+                        f"placements_checked={fixture_interpenetration_placements_checked}, "
+                        f"body_tol=1e-6 mm^3, bolt_body_tol=1e-3 mm^3"
+                    )
+                    if not fixture_interpenetration_failures
+                    else "; ".join(fixture_interpenetration_failures)
+                ),
+            )
+        )
 
     clamp_fastening_ok = (
         clamp.clamp_ear_length_mm > 0.0
