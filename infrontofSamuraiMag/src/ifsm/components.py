@@ -1556,9 +1556,10 @@ def _build_detector_fixture_shapes(
     # [EN] The anti-rotation key is fused before half-splitting so key and bore remain geometrically tied under all channel poses. / [CN] 防转键在分半前并入抱箍，确保各通道姿态下键位与内孔几何关系恒定。
     split_ring = split_ring.fuse(key_rib)
 
-    half_mask = 1.1 * clamp_cfg.outer_diameter_mm
+    # [EN] Mask each half-ring as a 2*OD-wide prism that meets its partner exactly at split_axis=0; the split_cut already carves the gap so the two halves are strictly disjoint solids. / [CN] 两个 mask 沿 split_axis 对称分布、在 split_axis=0 精确相接；split_cut 再开出缝隙，保证两半抱箍为严格不相交的实体。
+    half_mask = 2.0 * clamp_cfg.outer_diameter_mm
     mask_a = slit_prism(
-        center=clamp_center + scaled(split_axis, 0.25 * clamp_cfg.outer_diameter_mm),
+        center=clamp_center + scaled(split_axis, 0.5 * half_mask),
         axis_u=direction,
         axis_v=split_axis,
         axis_w=side_axis,
@@ -1567,7 +1568,7 @@ def _build_detector_fixture_shapes(
         height_mm=2.4 * clamp_cfg.outer_diameter_mm,
     )
     mask_b = slit_prism(
-        center=clamp_center - scaled(split_axis, 0.25 * clamp_cfg.outer_diameter_mm),
+        center=clamp_center - scaled(split_axis, 0.5 * half_mask),
         axis_u=direction,
         axis_v=split_axis,
         axis_w=side_axis,
@@ -1608,41 +1609,39 @@ def _build_detector_fixture_shapes(
     ear_fuse_overlap_mm = 1.0
     ear_split_offset = 0.5 * clamp_cfg.split_gap_mm + 0.5 * clamp_cfg.clamp_ear_width_mm - ear_fuse_overlap_mm
     ear_side_offset = 0.5 * clamp_cfg.outer_diameter_mm + 0.5 * clamp_cfg.clamp_ear_thickness_mm - ear_fuse_overlap_mm
-    # [EN] Clamp ears intentionally bite slightly into the ring body so each clamp half remains a single machinable solid instead of leaving tangentially touching ear tabs as detached solids. / [CN] 抱箍耳板故意向圆环本体咬合少量实体，使每半抱箍保持为单个可加工 solid，而不是留下仅切触的独立耳板小块。
+    # [EN] Clamp ears intentionally bite slightly into the ring body so each clamp half remains a single machinable solid; clip each ear by its half's mask before fusing so the bite only grows INTO its own ring side, never across the split plane. / [CN] 耳板故意咬入抱箍本体以保持每半为单一可加工实体；融合前用对应半边的 mask 裁剪耳板，使“咬入”只向各自半圈内部延展，不会越过分缝面。
     for u_offset in (-0.5 * clamp_cfg.clamp_bolt_pitch_mm, 0.5 * clamp_cfg.clamp_bolt_pitch_mm):
         for side_sign in (-1.0, 1.0):
-            clamp_half_a = clamp_half_a.fuse(
-                slit_prism(
-                    center=(
-                        clamp_center
-                        + scaled(direction, u_offset)
-                        + scaled(split_axis, ear_split_offset)
-                        + scaled(side_axis, side_sign * ear_side_offset)
-                    ),
-                    axis_u=direction,
-                    axis_v=split_axis,
-                    axis_w=side_axis,
-                    length_mm=clamp_cfg.clamp_ear_length_mm,
-                    width_mm=clamp_cfg.clamp_ear_width_mm,
-                    height_mm=clamp_cfg.clamp_ear_thickness_mm,
-                )
+            ear_a = slit_prism(
+                center=(
+                    clamp_center
+                    + scaled(direction, u_offset)
+                    + scaled(split_axis, ear_split_offset)
+                    + scaled(side_axis, side_sign * ear_side_offset)
+                ),
+                axis_u=direction,
+                axis_v=split_axis,
+                axis_w=side_axis,
+                length_mm=clamp_cfg.clamp_ear_length_mm,
+                width_mm=clamp_cfg.clamp_ear_width_mm,
+                height_mm=clamp_cfg.clamp_ear_thickness_mm,
             )
-            clamp_half_b = clamp_half_b.fuse(
-                slit_prism(
-                    center=(
-                        clamp_center
-                        + scaled(direction, u_offset)
-                        - scaled(split_axis, ear_split_offset)
-                        + scaled(side_axis, side_sign * ear_side_offset)
-                    ),
-                    axis_u=direction,
-                    axis_v=split_axis,
-                    axis_w=side_axis,
-                    length_mm=clamp_cfg.clamp_ear_length_mm,
-                    width_mm=clamp_cfg.clamp_ear_width_mm,
-                    height_mm=clamp_cfg.clamp_ear_thickness_mm,
-                )
+            clamp_half_a = clamp_half_a.fuse(ear_a.common(mask_a))
+            ear_b = slit_prism(
+                center=(
+                    clamp_center
+                    + scaled(direction, u_offset)
+                    - scaled(split_axis, ear_split_offset)
+                    + scaled(side_axis, side_sign * ear_side_offset)
+                ),
+                axis_u=direction,
+                axis_v=split_axis,
+                axis_w=side_axis,
+                length_mm=clamp_cfg.clamp_ear_length_mm,
+                width_mm=clamp_cfg.clamp_ear_width_mm,
+                height_mm=clamp_cfg.clamp_ear_thickness_mm,
             )
+            clamp_half_b = clamp_half_b.fuse(ear_b.common(mask_b))
 
     for bolt_center in layout.clamp_bolt_centers:
         bolt_hole = Part.makeCylinder(
@@ -1725,7 +1724,25 @@ def _build_detector_fixture_shapes(
     support_carrier = support_carrier.fuse(top_bridge)
     support_carrier = support_carrier.removeSplitter()
 
-    # [EN] The load-bearing side is now exported as one monolithic support carrier so the lower clamp half, transition block, uprights, and top bridge read as a single fabricated part; only the bolted base plate remains separate for installation. / [CN] 承载侧现作为单件支撑承力体导出，使下半抱箍、过渡块、双立板和顶桥在几何上表现为同一加工件；只有与板连接的底座板继续独立保留。
+    # [EN] Carve bolt-clearance holes in support_carrier for the through-bolts that fasten the mount_base plate to the weldment; without these the M-series shank geometrically pierces the upright/spine above the plate. Use a generously long cut (covers head + washer air gap, full plate, and into the weldment for the shank engagement length). / [CN] 在 support_carrier 上挖出穿栓的避让通孔；否则螺栓杆会在板上方穿进立板/腹板的实体。避让孔留足长度以覆盖螺栓头/垫圈空气层、整块底板以及伸入 weldment 的剩余螺杆段。
+    plate_bolt_clearance_length = (
+        clamp_cfg.mount_base_thickness_mm + 48.0
+    )
+    # [EN] Start the clearance cylinder well outside the mount_base external face (plate_normal side) and extend it past the far end of the longest shank so no shank material ever lives in a solid carrier region. / [CN] 避让圆柱从 mount_base 外侧起刀，一直延伸到最长螺杆末端之外，保证螺杆在承力体中始终处在空孔内。
+    clearance_start_offset = scaled(
+        layout.plate_normal, 0.5 * clamp_cfg.mount_base_thickness_mm + 4.0
+    )
+    for base_center in layout.base_hole_centers:
+        plate_bolt_hole = Part.makeCylinder(
+            0.5 * clamp_cfg.mount_bolt_hole_diameter_mm,
+            plate_bolt_clearance_length,
+            base_center + clearance_start_offset,
+            layout.mount_axis,
+        )
+        support_carrier = support_carrier.cut(plate_bolt_hole)
+
+    # [EN] The mount base plate is a separate part; cut the full weldment footprint out of it so the two published bodies are strictly disjoint while the weldment stays continuous through the clearance slot pattern. / [CN] 底座板是独立零件；在板上挖出整个 weldment 的通过截面，使两个发布主体在几何上严格不相交，同时 weldment 仍以整体穿过避让槽。
+    mount_base_plate = mount_base_plate.cut(support_carrier)
     mount_base = mount_base_plate
 
     return housing, clamp_half_a, support_carrier, mount_base
@@ -1845,11 +1862,16 @@ def build_detector_fixture(
         clamp_thread = _bolt_diameter_to_thread(clamp_cfg.clamp_bolt_diameter_mm)
         plate_thread = _bolt_diameter_to_thread(clamp_cfg.mount_bolt_hole_diameter_mm)
 
+        # [EN] Seat the clamp bolt head on the outer face of the -split_axis ear so the shank spans exactly the two ears + split gap; the earlier asymmetric placement drove the shank deep into the lower clamp ring body. / [CN] 让抱箍螺栓头坐在 -split_axis 侧耳板外表面，使螺杆刚好跨过两耳和分缝；原先对称坐在 clamp_center 的放法会让螺杆深入下半抱箍实体。
+        clamp_seat_offset_mm = (
+            0.5 * clamp_cfg.split_gap_mm + clamp_cfg.clamp_ear_width_mm
+        )
         for center in layout.clamp_bolt_centers:
+            bolt_origin = center - scaled(layout.clamp_bolt_axis, clamp_seat_offset_mm)
             bolt = make_hex_socket_bolt(
                 size=clamp_thread,
-                shank_length_mm=2.0 * clamp_cfg.clamp_ear_thickness_mm + clamp_cfg.outer_diameter_mm,
-                origin=center,
+                shank_length_mm=layout.clamp_bolt_span_mm,
+                origin=bolt_origin,
                 axis=layout.clamp_bolt_axis,
             )
             fasteners.append({
@@ -1860,11 +1882,33 @@ def build_detector_fixture(
                 "subtype": "clamp",
             })
 
-        for center in layout.plate_hole_centers:
+        # [EN] plate_hole_centers and base_hole_centers share the same (u,v) pattern by
+        # construction in layout.detector_fixture_geometry — they describe the same
+        # physical bolt holes seen from the HVV plate vs mount_base reference depths.
+        # Emit one set of through-bolts per hole: plate_side carries the bolt + washer
+        # (head outboard of mount_base external face), weldment_side carries the nut
+        # (on the target-side face of mount_base) so the bolt-nut chain is complete
+        # and fasteners stay strictly disjoint from each other.
+        # / [CN] plate_hole_centers 与 base_hole_centers 在 layout 里本就共用同一套 (u,v)
+        # 图案，只是分别用 HVV 板与 mount_base 参考面给出深度。每个孔只生成一根穿栓：
+        # plate_side 挂螺栓+垫圈（头落在 mount_base 外侧面上方），weldment_side 挂螺母
+        # （坐在 mount_base target 侧面）；这样一根螺栓、一个螺母、一个垫圈构成完整
+        # 连接链，紧固件彼此严格不相交。
+        from .primitives_fasteners import _BOLT_TABLE as _PLATE_BOLT_TABLE  # noqa: WPS433
+        plate_washer_t = _PLATE_BOLT_TABLE[plate_thread]["washer_t"]
+        plate_head_offset = scaled(
+            layout.plate_normal,
+            0.5 * clamp_cfg.mount_base_thickness_mm + 0.1 + plate_washer_t,
+        )
+        nut_face_offset = scaled(
+            layout.plate_normal, 0.5 * clamp_cfg.mount_base_thickness_mm + 0.1
+        )
+        for base_center in layout.base_hole_centers:
+            bolt_origin = base_center + plate_head_offset
             bolt = make_hex_socket_bolt(
                 size=plate_thread,
-                shank_length_mm=clamp_cfg.mount_base_thickness_mm + 12.0,
-                origin=center,
+                shank_length_mm=clamp_cfg.mount_base_thickness_mm + 18.0,
+                origin=bolt_origin,
                 axis=layout.mount_axis,
             )
             fasteners.append({
@@ -1874,7 +1918,7 @@ def build_detector_fixture(
                 "placement": tag,
                 "subtype": "plate_side",
             })
-            washer = make_flat_washer(plate_thread, center, layout.mount_axis)
+            washer = make_flat_washer(plate_thread, bolt_origin, layout.mount_axis)
             fasteners.append({
                 "kind": "washer",
                 "size": plate_thread,
@@ -1882,22 +1926,8 @@ def build_detector_fixture(
                 "placement": tag,
                 "subtype": "plate_side",
             })
-
-        for center in layout.base_hole_centers:
-            bolt = make_hex_socket_bolt(
-                size=plate_thread,
-                shank_length_mm=clamp_cfg.mount_base_thickness_mm + 18.0,
-                origin=center,
-                axis=layout.mount_axis,
-            )
-            fasteners.append({
-                "kind": "bolt",
-                "size": plate_thread,
-                "solid": bolt,
-                "placement": tag,
-                "subtype": "weldment_side",
-            })
-            nut = make_hex_nut(plate_thread, center, layout.mount_axis)
+            nut_origin = base_center - nut_face_offset
+            nut = make_hex_nut(plate_thread, nut_origin, layout.mount_axis)
             fasteners.append({
                 "kind": "nut",
                 "size": plate_thread,
