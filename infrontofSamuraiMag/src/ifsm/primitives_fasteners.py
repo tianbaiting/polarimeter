@@ -12,6 +12,7 @@ import Part
 
 
 _BOLT_TABLE: dict[str, dict[str, float]] = {
+    "M2.5": {"shank_d": 2.5, "head_d": 5.0, "head_h": 1.5, "nut_afs": 5.0, "washer_od": 6.0, "washer_id": 2.7, "washer_t": 0.5},
     "M3": {"shank_d": 3.0, "head_d": 5.5, "head_h": 3.0, "nut_afs": 5.5, "washer_od": 7.0, "washer_id": 3.2, "washer_t": 0.5},
     "M4": {"shank_d": 4.0, "head_d": 7.0, "head_h": 4.0, "nut_afs": 7.0, "washer_od": 9.0, "washer_id": 4.3, "washer_t": 0.8},
     "M5": {"shank_d": 5.0, "head_d": 8.5, "head_h": 5.0, "nut_afs": 8.0, "washer_od": 10.0, "washer_id": 5.3, "washer_t": 1.0},
@@ -90,3 +91,30 @@ def make_flat_washer(
     bore_origin = App.Vector(origin) - App.Vector(axis_n).multiply(0.2)
     bore = Part.makeCylinder(0.5 * spec["washer_id"], spec["washer_t"] + 0.4, bore_origin, axis_n)
     return outer.cut(bore)
+
+
+def make_csk_bolt(
+    size: str,
+    shank_length_mm: float,
+    origin: App.Vector,
+    axis: App.Vector,
+) -> Part.Shape:
+    """ISO 10642 countersunk hex-socket bolt.
+
+    Origin is the under-head seat face center (the plate's outer face after
+    countersinking); axis points from head toward tip. The countersunk head
+    is a cone whose top diameter equals the spec head diameter and whose tip
+    sits at the origin (head_h above the seat plane).
+    """
+    spec = _lookup(size)
+    axis_n = App.Vector(axis).normalize()
+    head_top_origin = App.Vector(origin) - App.Vector(axis_n).multiply(spec["head_h"])
+    head = Part.makeCone(
+        0.5 * spec["head_d"],   # top radius (large end)
+        0.5 * spec["shank_d"],  # bottom radius (joins shank)
+        spec["head_h"],
+        head_top_origin,
+        axis_n,
+    )
+    shank = Part.makeCylinder(0.5 * spec["shank_d"], shank_length_mm, App.Vector(origin), axis_n)
+    return head.fuse(shank)
