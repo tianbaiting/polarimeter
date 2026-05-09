@@ -47,7 +47,7 @@ def test_load_default_config() -> None:
     assert {channel.confidence for channel in cfg.layout.channels} <= {"high", "medium", "low"}
     assert cfg.geometry.plate.h.stiffener_count >= 1
     assert cfg.geometry.plate.h.bolt_hole_count >= 2
-    assert cfg.geometry.detector.clamp.mount_base_u_mm > 0.0
+    assert cfg.geometry.detector.clamp.plate_length_mm == pytest.approx(70.0)
     assert cfg.geometry.plate.h.orientation == "horizontal"
     assert cfg.geometry.plate.h.mount_plane == "xz"
     assert cfg.geometry.plate.h.offset_mode == "manual"
@@ -70,8 +70,9 @@ def test_load_default_config() -> None:
     assert cfg.geometry.target.rotary.motor_mount_width_mm > 0.0
     assert cfg.geometry.target.rotary.vendor_reference_enabled is False
     assert cfg.geometry.detector.clamp.clamp_bolt_diameter_mm > 0.0
-    assert cfg.geometry.detector.clamp.anti_rotation_key_depth_mm > 0.0
-    assert cfg.geometry.detector.adapter_block.radial_standoff_mm == pytest.approx(0.0)
+    assert cfg.geometry.detector.clamp.cradle_clearance_mm == pytest.approx(0.1)
+    assert cfg.geometry.detector.clamp.clamp_axial_position == "rear"
+    assert cfg.geometry.detector.clamp.mount_mode == "combined"
     assert cfg.geometry.target.single_holder.clamp_screw_diameter_mm > 0.0
     assert cfg.geometry.stand.enable_plate_ties is False
     assert cfg.geometry.stand.with_base_plate is False
@@ -115,7 +116,7 @@ def test_load_afterSRC_config_contract() -> None:
     assert cfg.geometry.target.rotary is not None
     assert cfg.geometry.target.rotary.vendor_reference_enabled is True
     assert cfg.geometry.target.rotary.vendor_reference_model_code == "ICF70MRMF50"
-    assert cfg.geometry.detector.adapter_block.radial_standoff_mm == pytest.approx(0.0)
+    assert cfg.geometry.detector.clamp.detector_diameter_mm == pytest.approx(50.0)
     assert cfg.output.basename == "afterSRC"
 
 
@@ -321,26 +322,6 @@ def test_stand_support_half_span_must_fit_supported_footprints() -> None:
         )
 
 
-def test_invalid_detector_clamp_bolt_pitch() -> None:
-    with pytest.raises(ValueError, match="clamp_bolt_pitch_mm"):
-        load_build_config(
-            ROOT / "config" / "default_infront.yaml",
-            overrides=[
-                "geometry.detector.clamp.clamp_bolt_pitch_mm=80",
-            ],
-        )
-
-
-def test_detector_adapter_radial_standoff_must_stay_zero() -> None:
-    with pytest.raises(ValueError, match="radial_standoff_mm"):
-        load_build_config(
-            ROOT / "config" / "default_infront.yaml",
-            overrides=[
-                "geometry.detector.adapter_block.radial_standoff_mm=5.0",
-            ],
-        )
-
-
 def test_invalid_holder_screw_diameter() -> None:
     with pytest.raises(ValueError, match="clamp_screw_diameter_mm"):
         load_build_config(
@@ -439,7 +420,7 @@ def test_invalid_plate_chamber_cutout_margin() -> None:
         )
 
 
-def test_vv_gap_must_satisfy_detector_outer_diameter_rule() -> None:
+def test_vv_gap_must_satisfy_detector_plate_width_rule() -> None:
     with pytest.raises(ValueError, match="v1/v2 clear gap"):
         load_build_config(
             ROOT / "config" / "default_infront.yaml",
@@ -449,60 +430,10 @@ def test_vv_gap_must_satisfy_detector_outer_diameter_rule() -> None:
         )
 
 
-def test_clamp_config_has_new_manufacturing_fields() -> None:
+def test_clamp_config_has_v133_fields() -> None:
     cfg = load_build_config(ROOT / "config" / "default_infront.yaml")
     clamp = cfg.geometry.detector.clamp
-    assert clamp.fillet_radius_mm == pytest.approx(3.0)
-    assert clamp.chamfer_mm == pytest.approx(1.0)
-    assert clamp.bolt_head_type == "ISO4762_hex_socket"
-    assert clamp.draw_fasteners_as_solids is True
-
-
-def test_clamp_config_backward_compat_defaults_when_absent(tmp_path) -> None:
-    """Old configs without the new fields still load, with defaults applied."""
-    import yaml
-    src = ROOT / "config" / "default_infront.yaml"
-    data = yaml.safe_load(src.read_text())
-    clamp = data["geometry"]["detector"]["clamp"]
-    for key in ("fillet_radius_mm", "chamfer_mm", "bolt_head_type", "draw_fasteners_as_solids"):
-        clamp.pop(key, None)
-    legacy_path = tmp_path / "legacy.yaml"
-    legacy_path.write_text(yaml.safe_dump(data))
-    cfg = load_build_config(legacy_path)
-    assert cfg.geometry.detector.clamp.fillet_radius_mm == pytest.approx(3.0)
-    assert cfg.geometry.detector.clamp.chamfer_mm == pytest.approx(1.0)
-    assert cfg.geometry.detector.clamp.bolt_head_type == "ISO4762_hex_socket"
-    assert cfg.geometry.detector.clamp.draw_fasteners_as_solids is True
-
-
-def test_clamp_fillet_radius_guard_rejects_too_large(tmp_path) -> None:
-    import yaml
-    src = ROOT / "config" / "default_infront.yaml"
-    data = yaml.safe_load(src.read_text())
-    data["geometry"]["detector"]["clamp"]["fillet_radius_mm"] = 999.0
-    bad_path = tmp_path / "bad_fillet.yaml"
-    bad_path.write_text(yaml.safe_dump(data))
-    with pytest.raises(ValueError, match="fillet_radius_mm"):
-        load_build_config(bad_path)
-
-
-def test_clamp_fillet_radius_guard_accepts_exact_boundary(tmp_path) -> None:
-    """fillet = 0.5 * min_span must pass; fillet = 0.5 * min_span + epsilon must fail."""
-    import yaml
-    src = ROOT / "config" / "default_infront.yaml"
-    data = yaml.safe_load(src.read_text())
-    clamp = data["geometry"]["detector"]["clamp"]
-    adapter = data["geometry"]["detector"]["adapter_block"]
-    min_span = min(float(adapter["width_mm"]), float(adapter["height_mm"]), float(clamp["width_mm"]))
-    # exact boundary passes (guard uses strict >)
-    clamp["fillet_radius_mm"] = 0.5 * min_span
-    ok_path = tmp_path / "boundary_ok.yaml"
-    ok_path.write_text(yaml.safe_dump(data))
-    cfg = load_build_config(ok_path)
-    assert cfg.geometry.detector.clamp.fillet_radius_mm == pytest.approx(0.5 * min_span)
-    # just over boundary fails
-    clamp["fillet_radius_mm"] = 0.5 * min_span + 1e-6
-    bad_path = tmp_path / "boundary_bad.yaml"
-    bad_path.write_text(yaml.safe_dump(data))
-    with pytest.raises(ValueError, match="fillet_radius_mm"):
-        load_build_config(bad_path)
+    assert clamp.plate_length_mm == pytest.approx(70.0)
+    assert clamp.cradle_clearance_mm == pytest.approx(0.1)
+    assert clamp.clamp_axial_position == "rear"
+    assert clamp.mount_mode == "combined"

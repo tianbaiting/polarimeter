@@ -26,6 +26,10 @@ _ALLOWED_LOS_SCOPES = {"v1_conceptual", "v2_fullpath"}
 _ALLOWED_TARGET_MODES = {"linear_ladder", "single_rotary"}
 
 
+class ConfigError(ValueError):
+    """Configuration error with a human-readable field path in the message."""
+
+
 @dataclass(frozen=True)
 class DetectorChannel:
     name: str
@@ -178,46 +182,60 @@ class PlateGroupConfig:
 class DetectorClampConfig:
     detector_diameter_mm: float
     housing_length_mm: float
-    outer_diameter_mm: float
-    inner_diameter_mm: float
-    width_mm: float
-    split_gap_mm: float
-    shoulder_height_mm: float
-    end_stop_length_mm: float
-    clamp_ear_length_mm: float
-    clamp_ear_width_mm: float
-    clamp_ear_thickness_mm: float
+    plate_length_mm: float
+    plate_width_mm: float
+    plate_thickness_mm: float
+    cradle_clearance_mm: float
+    clamp_axial_position: str  # "rear" | "center" | "front"
+    mount_mode: str            # "combined" | "split"
     clamp_bolt_diameter_mm: float
-    clamp_bolt_pitch_mm: float
-    anti_rotation_key_width_mm: float
-    anti_rotation_key_depth_mm: float
-    anti_rotation_key_length_mm: float
-    support_overlap_mm: float
-    mount_base_u_mm: float
-    mount_base_v_mm: float
-    mount_base_thickness_mm: float
-    mount_bolt_hole_diameter_mm: float
+    clamp_bolt_pitch_w_mm: float
+    mount_bolt_diameter_mm: float
     mount_bolt_pitch_u_mm: float
     mount_bolt_pitch_v_mm: float
-    fillet_radius_mm: float = 3.0
-    chamfer_mm: float = 1.0
-    bolt_head_type: str = "ISO4762_hex_socket"
+    countersink_head_factor: float = 2.0
+    chamfer_mm: float = 0.5
     draw_fasteners_as_solids: bool = True
 
+    def __post_init__(self) -> None:
+        if self.plate_thickness_mm < self.clamp_bolt_diameter_mm * 0.6:
+            raise ConfigError(
+                f"plate_thickness_mm={self.plate_thickness_mm} < "
+                f"0.6 * clamp_bolt_diameter_mm={self.clamp_bolt_diameter_mm * 0.6}; "
+                "countersink would be too shallow to seat the bolt head"
+            )
+        head_envelope = self.clamp_bolt_pitch_w_mm + self.clamp_bolt_diameter_mm * self.countersink_head_factor
+        if head_envelope > self.plate_width_mm:
+            raise ConfigError(
+                f"countersink head envelope {head_envelope} mm exceeds plate_width_mm "
+                f"{self.plate_width_mm}; reduce clamp_bolt_pitch_w_mm or widen the plate"
+            )
+        if not (0.05 <= self.cradle_clearance_mm <= 0.5):
+            raise ConfigError(
+                f"cradle_clearance_mm={self.cradle_clearance_mm} outside [0.05, 0.5] mm"
+            )
 
-@dataclass(frozen=True)
-class DetectorAdapterBlockConfig:
-    length_mm: float
-    width_mm: float
-    height_mm: float
-    tilt_deg: float
-    radial_standoff_mm: float
+
+_LEGACY_CLAMP_FIELDS: frozenset[str] = frozenset({
+    "outer_diameter_mm", "inner_diameter_mm", "width_mm", "split_gap_mm",
+    "shoulder_height_mm", "end_stop_length_mm",
+    "clamp_ear_length_mm", "clamp_ear_width_mm", "clamp_ear_thickness_mm",
+    "clamp_bolt_pitch_mm",
+    "anti_rotation_key_width_mm", "anti_rotation_key_depth_mm", "anti_rotation_key_length_mm",
+    "support_overlap_mm",
+    "mount_base_u_mm", "mount_base_v_mm", "mount_base_thickness_mm",
+    "mount_bolt_hole_diameter_mm",
+    "fillet_radius_mm", "bolt_head_type",
+})
+
+_VALID_AXIAL_POSITIONS = ("rear", "center", "front")
+_VALID_MOUNT_MODES = ("combined", "split")
+_ISO_BOLT_LENGTHS = (20.0, 25.0, 30.0, 35.0, 40.0)
 
 
 @dataclass(frozen=True)
 class DetectorConfig:
     clamp: DetectorClampConfig
-    adapter_block: DetectorAdapterBlockConfig
 
 
 @dataclass(frozen=True)
@@ -976,157 +994,63 @@ def _parse_plate(raw: dict[str, Any], prefix: str) -> PlateConfig:
 
 def _parse_detector(raw: dict[str, Any]) -> DetectorConfig:
     clamp_raw = _to_mapping(raw.get("clamp"), "geometry.detector.clamp")
-    adapter_raw = _to_mapping(raw.get("adapter_block"), "geometry.detector.adapter_block")
+
+    if "adapter_block" in raw:
+        raise ConfigError(
+            "geometry.detector.adapter_block: removed in BLP_v1.33; "
+            "delete the entire adapter_block subsection"
+        )
+    legacy = sorted(_LEGACY_CLAMP_FIELDS & clamp_raw.keys())
+    if legacy:
+        raise ConfigError(
+            f"geometry.detector.clamp carries v1.31-removed field(s) "
+            f"{legacy}; see BLP_v1.33 spec §5.1 / §5.2"
+        )
 
     clamp = DetectorClampConfig(
         detector_diameter_mm=_to_float(clamp_raw.get("detector_diameter_mm"), "geometry.detector.clamp.detector_diameter_mm"),
         housing_length_mm=_to_float(clamp_raw.get("housing_length_mm"), "geometry.detector.clamp.housing_length_mm"),
-        outer_diameter_mm=_to_float(clamp_raw.get("outer_diameter_mm"), "geometry.detector.clamp.outer_diameter_mm"),
-        inner_diameter_mm=_to_float(clamp_raw.get("inner_diameter_mm"), "geometry.detector.clamp.inner_diameter_mm"),
-        width_mm=_to_float(clamp_raw.get("width_mm"), "geometry.detector.clamp.width_mm"),
-        split_gap_mm=_to_float(clamp_raw.get("split_gap_mm"), "geometry.detector.clamp.split_gap_mm"),
-        shoulder_height_mm=_to_float(clamp_raw.get("shoulder_height_mm"), "geometry.detector.clamp.shoulder_height_mm"),
-        end_stop_length_mm=_to_float(clamp_raw.get("end_stop_length_mm"), "geometry.detector.clamp.end_stop_length_mm"),
-        clamp_ear_length_mm=_to_float(
-            clamp_raw.get("clamp_ear_length_mm"),
-            "geometry.detector.clamp.clamp_ear_length_mm",
-        ),
-        clamp_ear_width_mm=_to_float(
-            clamp_raw.get("clamp_ear_width_mm"),
-            "geometry.detector.clamp.clamp_ear_width_mm",
-        ),
-        clamp_ear_thickness_mm=_to_float(
-            clamp_raw.get("clamp_ear_thickness_mm"),
-            "geometry.detector.clamp.clamp_ear_thickness_mm",
-        ),
-        clamp_bolt_diameter_mm=_to_float(
-            clamp_raw.get("clamp_bolt_diameter_mm"),
-            "geometry.detector.clamp.clamp_bolt_diameter_mm",
-        ),
-        clamp_bolt_pitch_mm=_to_float(
-            clamp_raw.get("clamp_bolt_pitch_mm"),
-            "geometry.detector.clamp.clamp_bolt_pitch_mm",
-        ),
-        anti_rotation_key_width_mm=_to_float(
-            clamp_raw.get("anti_rotation_key_width_mm"),
-            "geometry.detector.clamp.anti_rotation_key_width_mm",
-        ),
-        anti_rotation_key_depth_mm=_to_float(
-            clamp_raw.get("anti_rotation_key_depth_mm"),
-            "geometry.detector.clamp.anti_rotation_key_depth_mm",
-        ),
-        anti_rotation_key_length_mm=_to_float(
-            clamp_raw.get("anti_rotation_key_length_mm"),
-            "geometry.detector.clamp.anti_rotation_key_length_mm",
-        ),
-        support_overlap_mm=_to_float(clamp_raw.get("support_overlap_mm"), "geometry.detector.clamp.support_overlap_mm"),
-        mount_base_u_mm=_to_float(clamp_raw.get("mount_base_u_mm"), "geometry.detector.clamp.mount_base_u_mm"),
-        mount_base_v_mm=_to_float(clamp_raw.get("mount_base_v_mm"), "geometry.detector.clamp.mount_base_v_mm"),
-        mount_base_thickness_mm=_to_float(
-            clamp_raw.get("mount_base_thickness_mm"),
-            "geometry.detector.clamp.mount_base_thickness_mm",
-        ),
-        mount_bolt_hole_diameter_mm=_to_float(
-            clamp_raw.get("mount_bolt_hole_diameter_mm"),
-            "geometry.detector.clamp.mount_bolt_hole_diameter_mm",
-        ),
-        mount_bolt_pitch_u_mm=_to_float(
-            clamp_raw.get("mount_bolt_pitch_u_mm"),
-            "geometry.detector.clamp.mount_bolt_pitch_u_mm",
-        ),
-        mount_bolt_pitch_v_mm=_to_float(
-            clamp_raw.get("mount_bolt_pitch_v_mm"),
-            "geometry.detector.clamp.mount_bolt_pitch_v_mm",
-        ),
-        fillet_radius_mm=float(clamp_raw.get("fillet_radius_mm", 3.0)),
-        chamfer_mm=float(clamp_raw.get("chamfer_mm", 1.0)),
-        bolt_head_type=str(clamp_raw.get("bolt_head_type", "ISO4762_hex_socket")),
+        plate_length_mm=_to_float(clamp_raw.get("plate_length_mm"), "geometry.detector.clamp.plate_length_mm"),
+        plate_width_mm=_to_float(clamp_raw.get("plate_width_mm"), "geometry.detector.clamp.plate_width_mm"),
+        plate_thickness_mm=_to_float(clamp_raw.get("plate_thickness_mm"), "geometry.detector.clamp.plate_thickness_mm"),
+        cradle_clearance_mm=_to_float(clamp_raw.get("cradle_clearance_mm"), "geometry.detector.clamp.cradle_clearance_mm"),
+        clamp_axial_position=str(clamp_raw.get("clamp_axial_position", "rear")),
+        mount_mode=str(clamp_raw.get("mount_mode", "combined")),
+        clamp_bolt_diameter_mm=_to_float(clamp_raw.get("clamp_bolt_diameter_mm"), "geometry.detector.clamp.clamp_bolt_diameter_mm"),
+        clamp_bolt_pitch_w_mm=_to_float(clamp_raw.get("clamp_bolt_pitch_w_mm"), "geometry.detector.clamp.clamp_bolt_pitch_w_mm"),
+        mount_bolt_diameter_mm=_to_float(clamp_raw.get("mount_bolt_diameter_mm"), "geometry.detector.clamp.mount_bolt_diameter_mm"),
+        mount_bolt_pitch_u_mm=_to_float(clamp_raw.get("mount_bolt_pitch_u_mm"), "geometry.detector.clamp.mount_bolt_pitch_u_mm"),
+        mount_bolt_pitch_v_mm=_to_float(clamp_raw.get("mount_bolt_pitch_v_mm"), "geometry.detector.clamp.mount_bolt_pitch_v_mm"),
+        countersink_head_factor=float(clamp_raw.get("countersink_head_factor", 2.0)),
+        chamfer_mm=float(clamp_raw.get("chamfer_mm", 0.5)),
         draw_fasteners_as_solids=bool(clamp_raw.get("draw_fasteners_as_solids", True)),
     )
 
-    adapter = DetectorAdapterBlockConfig(
-        length_mm=_to_float(adapter_raw.get("length_mm"), "geometry.detector.adapter_block.length_mm"),
-        width_mm=_to_float(adapter_raw.get("width_mm"), "geometry.detector.adapter_block.width_mm"),
-        height_mm=_to_float(adapter_raw.get("height_mm"), "geometry.detector.adapter_block.height_mm"),
-        tilt_deg=_to_float(adapter_raw.get("tilt_deg"), "geometry.detector.adapter_block.tilt_deg"),
-        radial_standoff_mm=_to_float(
-            adapter_raw.get("radial_standoff_mm"),
-            "geometry.detector.adapter_block.radial_standoff_mm",
-        ),
-    )
-
-    # [EN] Guard: fillet_radius_mm must be <= half of the narrowest proxied span
-    #      (adapter width/height and clamp width). Conservative — tighter bounds
-    #      from saddle/upright/bridge may land with Tasks 7-10.
-    # [CN] 守卫：fillet_radius_mm 不得超过所代理最窄跨距（adapter 宽/高与
-    #      clamp 宽）的一半。此为保守界，更严格的 saddle/upright/bridge 边界
-    #      将在 Tasks 7-10 补充。
-    min_span = min(adapter.width_mm, adapter.height_mm, clamp.width_mm)
-    if clamp.fillet_radius_mm > 0.5 * min_span:
-        raise ValueError(
-            f"fillet_radius_mm={clamp.fillet_radius_mm:.3f} exceeds half of "
-            f"the narrowest adjacent span={min_span:.3f} mm; reduce the radius "
-            f"or widen saddle/adapter/clamp widths."
+    if clamp.clamp_axial_position not in _VALID_AXIAL_POSITIONS:
+        raise ConfigError(
+            f"geometry.detector.clamp.clamp_axial_position={clamp.clamp_axial_position!r}; "
+            f"must be one of {_VALID_AXIAL_POSITIONS}"
+        )
+    if clamp.mount_mode not in _VALID_MOUNT_MODES:
+        raise ConfigError(
+            f"geometry.detector.clamp.mount_mode={clamp.mount_mode!r}; "
+            f"must be one of {_VALID_MOUNT_MODES}"
         )
 
-    _require_positive(
-        {
-            "geometry.detector.clamp.detector_diameter_mm": clamp.detector_diameter_mm,
-            "geometry.detector.clamp.housing_length_mm": clamp.housing_length_mm,
-            "geometry.detector.clamp.outer_diameter_mm": clamp.outer_diameter_mm,
-            "geometry.detector.clamp.inner_diameter_mm": clamp.inner_diameter_mm,
-            "geometry.detector.clamp.width_mm": clamp.width_mm,
-            "geometry.detector.clamp.split_gap_mm": clamp.split_gap_mm,
-            "geometry.detector.clamp.shoulder_height_mm": clamp.shoulder_height_mm,
-            "geometry.detector.clamp.end_stop_length_mm": clamp.end_stop_length_mm,
-            "geometry.detector.clamp.clamp_ear_length_mm": clamp.clamp_ear_length_mm,
-            "geometry.detector.clamp.clamp_ear_width_mm": clamp.clamp_ear_width_mm,
-            "geometry.detector.clamp.clamp_ear_thickness_mm": clamp.clamp_ear_thickness_mm,
-            "geometry.detector.clamp.clamp_bolt_diameter_mm": clamp.clamp_bolt_diameter_mm,
-            "geometry.detector.clamp.clamp_bolt_pitch_mm": clamp.clamp_bolt_pitch_mm,
-            "geometry.detector.clamp.anti_rotation_key_width_mm": clamp.anti_rotation_key_width_mm,
-            "geometry.detector.clamp.anti_rotation_key_depth_mm": clamp.anti_rotation_key_depth_mm,
-            "geometry.detector.clamp.anti_rotation_key_length_mm": clamp.anti_rotation_key_length_mm,
-            "geometry.detector.clamp.support_overlap_mm": clamp.support_overlap_mm,
-            "geometry.detector.clamp.mount_base_u_mm": clamp.mount_base_u_mm,
-            "geometry.detector.clamp.mount_base_v_mm": clamp.mount_base_v_mm,
-            "geometry.detector.clamp.mount_base_thickness_mm": clamp.mount_base_thickness_mm,
-            "geometry.detector.clamp.mount_bolt_hole_diameter_mm": clamp.mount_bolt_hole_diameter_mm,
-            "geometry.detector.clamp.mount_bolt_pitch_u_mm": clamp.mount_bolt_pitch_u_mm,
-            "geometry.detector.clamp.mount_bolt_pitch_v_mm": clamp.mount_bolt_pitch_v_mm,
-            "geometry.detector.adapter_block.length_mm": adapter.length_mm,
-            "geometry.detector.adapter_block.width_mm": adapter.width_mm,
-            "geometry.detector.adapter_block.height_mm": adapter.height_mm,
-        }
-    )
+    return DetectorConfig(clamp=clamp)
 
-    if clamp.detector_diameter_mm >= clamp.inner_diameter_mm:
-        raise ValueError("geometry.detector.clamp.detector_diameter_mm must be < inner_diameter_mm")
-    if clamp.inner_diameter_mm >= clamp.outer_diameter_mm:
-        raise ValueError("geometry.detector.clamp.inner_diameter_mm must be < outer_diameter_mm")
-    if clamp.clamp_bolt_diameter_mm >= min(clamp.clamp_ear_length_mm, clamp.clamp_ear_thickness_mm):
-        raise ValueError("geometry.detector.clamp.clamp_bolt_diameter_mm must be < min(clamp_ear_length_mm, clamp_ear_thickness_mm)")
-    if clamp.clamp_bolt_pitch_mm > clamp.width_mm:
-        raise ValueError("geometry.detector.clamp.clamp_bolt_pitch_mm must be <= width_mm")
-    if clamp.clamp_ear_length_mm > clamp.width_mm:
-        raise ValueError("geometry.detector.clamp.clamp_ear_length_mm must be <= width_mm")
-    key_radial_budget = 0.5 * (clamp.inner_diameter_mm - clamp.detector_diameter_mm)
-    if clamp.anti_rotation_key_depth_mm >= key_radial_budget:
-        raise ValueError("geometry.detector.clamp.anti_rotation_key_depth_mm is too large for clamp radial clearance")
-    if clamp.anti_rotation_key_length_mm > clamp.width_mm:
-        raise ValueError("geometry.detector.clamp.anti_rotation_key_length_mm must be <= width_mm")
-    if clamp.mount_bolt_hole_diameter_mm >= min(clamp.mount_base_u_mm, clamp.mount_base_v_mm):
-        raise ValueError("geometry.detector.clamp.mount_bolt_hole_diameter_mm must be < min(mount_base_u_mm, mount_base_v_mm)")
-    if clamp.mount_bolt_pitch_u_mm >= (clamp.mount_base_u_mm - clamp.mount_bolt_hole_diameter_mm):
-        raise ValueError("geometry.detector.clamp.mount_bolt_pitch_u_mm too large for mount_base_u_mm and hole diameter")
-    if clamp.mount_bolt_pitch_v_mm >= (clamp.mount_base_v_mm - clamp.mount_bolt_hole_diameter_mm):
-        raise ValueError("geometry.detector.clamp.mount_bolt_pitch_v_mm too large for mount_base_v_mm and hole diameter")
-    if abs(adapter.tilt_deg) > 45.0:
-        raise ValueError("geometry.detector.adapter_block.tilt_deg absolute value must be <= 45 deg")
-    if abs(adapter.radial_standoff_mm) > 1e-9:
-        raise ValueError("geometry.detector.adapter_block.radial_standoff_mm must be 0.0 for direct-contact saddle semantics")
 
-    return DetectorConfig(clamp=clamp, adapter_block=adapter)
+def _validate_clamp_bolt_length(clamp: DetectorClampConfig, hv_plate_thickness_mm: float) -> None:
+    """Cross-cutting guard: required clamp-bolt length must match an ISO standard length."""
+    if clamp.mount_mode == "combined":
+        required = hv_plate_thickness_mm + 2 * clamp.plate_thickness_mm + 5.0
+    else:
+        required = 2 * clamp.plate_thickness_mm + 5.0
+    if not any(abs(required - L) <= 1e-6 or required < L for L in _ISO_BOLT_LENGTHS):
+        raise ConfigError(
+            f"required clamp-bolt length {required} mm exceeds the largest ISO standard "
+            f"length {_ISO_BOLT_LENGTHS[-1]} mm; choose a thinner plate or 'split' mount_mode"
+        )
 
 
 def _parse_target_ladder(raw: dict[str, Any]) -> TargetLadderConfig:
@@ -1740,6 +1664,9 @@ def _parse_geometry(raw: dict[str, Any]) -> GeometryConfig:
     clearance = _parse_clearance(_to_mapping(raw.get("clearance"), "geometry.clearance"))
     plate = _resolve_auto_plate_group(plate, core=chamber.core, clearance=clearance)
 
+    # [EN] Cross-cutting guard: clamp bolt length depends on H/V plate thickness, available after both are parsed. / [CN] 跨域守卫：夹具螺栓长度依赖 H/V 板厚度，在二者均解析完毕后校验。
+    _validate_clamp_bolt_length(detector.clamp, plate.h.thickness_mm)
+
     cfg = GeometryConfig(
         beamline=beamline,
         chamber=chamber,
@@ -1865,12 +1792,6 @@ def _validate_geometry(cfg: GeometryConfig) -> None:
                 "geometry.chamber.contract.rotary_mount_standard"
             )
 
-    clamp = cfg.detector.clamp
-    if clamp.anti_rotation_key_width_mm >= clamp.inner_diameter_mm:
-        raise ValueError("geometry.detector.clamp.anti_rotation_key_width_mm must be < inner_diameter_mm")
-    if clamp.clamp_ear_thickness_mm <= clamp.clamp_bolt_diameter_mm:
-        raise ValueError("geometry.detector.clamp.clamp_ear_thickness_mm must be > clamp_bolt_diameter_mm")
-
     for side_name, module in (("front", cfg.chamber.end_modules.front), ("rear", cfg.chamber.end_modules.rear)):
         if module.pipe_length_mm > 0.0 and module.pipe_inner_diameter_mm < cfg.beamline.inlet_diameter_mm:
             raise ValueError(
@@ -1949,11 +1870,11 @@ def _validate_geometry(cfg: GeometryConfig) -> None:
     vv_clear_gap = abs(cfg.plate.v2.offset_x_mm - cfg.plate.v1.offset_x_mm) - 0.5 * (
         cfg.plate.v1.thickness_mm + cfg.plate.v2.thickness_mm
     )
-    vv_required_gap = cfg.clearance.vv_min_gap_factor * cfg.detector.clamp.outer_diameter_mm
+    vv_required_gap = cfg.clearance.vv_min_gap_factor * cfg.detector.clamp.plate_width_mm
     if vv_clear_gap < vv_required_gap:
         raise ValueError(
             "geometry.plate.v1/v2 clear gap must satisfy "
-            f"gap >= vv_min_gap_factor*detector.clamp.outer_diameter_mm "
+            f"gap >= vv_min_gap_factor*detector.clamp.plate_width_mm "
             f"(gap={vv_clear_gap:.3f}, required={vv_required_gap:.3f})"
         )
 
@@ -2046,6 +1967,10 @@ def load_build_config(config_path: str | Path, overrides: list[str] | None = Non
     layout = _parse_layout(_to_mapping(raw.get("layout"), "layout"))
     output = _parse_output(_to_mapping(raw.get("output"), "output"), path)
     return BuildConfig(geometry=geometry, layout=layout, output=output)
+
+
+#: Alias for test code that imports ``load_target`` from this module.
+load_target = load_build_config
 
 
 def _dataclass_to_dict(obj: Any) -> Any:
