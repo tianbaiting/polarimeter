@@ -29,12 +29,16 @@ def test_csk_bolt_m4_solid_count(freecad) -> None:
 
     bolt = make_csk_bolt("M4", 30.0, App.Vector(0, 0, 0), App.Vector(0, 0, 1))
     assert len(bolt.Solids) == 1
-    # bbox: head sinks above origin (cone going up), shank hangs below 30 mm
+    # Convention (matches make_hex_socket_bolt): origin = under-head seat face,
+    # axis = head→tip. Shank extrudes from origin in +axis (z=0..+30); head
+    # extrudes from origin in -axis (z=-head_h..0). For M4, head_h = 4 mm.
     bbox = bolt.BoundBox
-    assert bbox.ZMin == pytest.approx(-30.0, abs=1e-4), "shank length 30 below origin"
-    # head OD ≈ 8.0 mm for M4 ISO 10642
-    expected_head_od = 4.0 * 2.0
-    assert bbox.XLength == pytest.approx(expected_head_od, abs=0.01)
+    assert bbox.ZMin == pytest.approx(-4.0, abs=1e-4), "head height 4 mm above seat plane"
+    assert bbox.ZMax == pytest.approx(30.0, abs=1e-4), "shank length 30 mm below seat plane"
+    # Head OD comes from _BOLT_TABLE; for M4 it is 7.0 mm (matches make_hex_socket_bolt).
+    # Detector clamp Sketch uses the separate countersink_head_factor cfg field,
+    # not this primitive's head_d, to size the plate counterbore.
+    assert bbox.XLength == pytest.approx(7.0, abs=0.01)
 
 
 def test_csk_bolt_m25_solid_count(freecad) -> None:
@@ -44,7 +48,8 @@ def test_csk_bolt_m25_solid_count(freecad) -> None:
     bolt = make_csk_bolt("M2.5", 8.0, App.Vector(0, 0, 0), App.Vector(0, 0, 1))
     assert len(bolt.Solids) == 1
     bbox = bolt.BoundBox
-    assert bbox.ZMin == pytest.approx(-8.0, abs=1e-4)
+    assert bbox.ZMin == pytest.approx(-1.5, abs=1e-4), "M2.5 head_h = 1.5 mm"
+    assert bbox.ZMax == pytest.approx(8.0, abs=1e-4)
 
 
 def test_csk_bolt_volume_less_than_cylinder_head_equivalent(freecad) -> None:
