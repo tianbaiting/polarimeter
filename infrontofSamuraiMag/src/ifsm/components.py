@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import FreeCAD as App
 import Part
 
-from .config import GeometryConfig, PlateConfig, PortConfig
+from .config import DetectorClampConfig, GeometryConfig, PlateConfig, PortConfig
 from .layout import (
     DetectorPlacement,
     chamber_z_bounds,
@@ -15,7 +15,18 @@ from .layout import (
     plate_key_for_sector,
     scaled,
 )
-from .primitives import add_feature, ring_shape, slit_prism, tube_shape
+from .primitives import (
+    add_csk_hole,
+    add_chamfer,
+    add_feature,
+    new_partdesign_body,
+    pad_rectangle,
+    pocket_cradle_through_axis,
+    ring_shape,
+    select_edges_by_predicate,
+    slit_prism,
+    tube_shape,
+)
 from .primitives_fasteners import make_flat_washer, make_hex_nut, make_hex_socket_bolt
 
 
@@ -2541,3 +2552,188 @@ def build_stand(cfg: GeometryConfig) -> dict[str, Part.Shape]:
         out["StandBasePlate"] = base
     out.update(feet)
     return out
+
+
+# ---------------------------------------------------------------------------
+# v1.33 twin half-plate clamp bodies
+# ---------------------------------------------------------------------------
+
+
+def _half_plate_with_cradle(
+    doc,
+    cfg: DetectorClampConfig,
+    *,
+    is_lower: bool,
+    body_label: str,
+):
+    """Shared core for LowerHalfClamp and UpperHalfClamp PartDesign::Body.
+
+    [EN] Local frame: plate length along X, width along Y, thickness along Z.
+    Origin at plate centroid (Midplane pad). Top face (mating face) of the lower
+    plate is at z = +plate_t/2; for the upper plate the mating face is the
+    bottom face at z = -plate_t/2 (same code path, the cradle arc direction is
+    the same because the pocket sketches from the outer face inward — for Task 4
+    the upper body should flip the mating face; this is the lower-only
+    implementation so the cradle always opens toward +Z).
+    / [CN] 局部坐标系：板长沿 X，板宽沿 Y，厚度沿 Z；原点在板体几何中心
+    （Midplane 拉伸）。下半板配合面在 z=+plate_t/2；此函数目前仅实现下半板。
+    Task 4 (UpperHalfClamp) 将调用同一核心并翻转配合面方向。
+    """
+    plate_l = cfg.plate_length_mm
+    plate_w = cfg.plate_width_mm
+    plate_t = cfg.plate_thickness_mm
+    cradle_r = cfg.detector_diameter_mm / 2.0 + cfg.cradle_clearance_mm
+    cradle_depth = plate_t / 2.0
+
+    body = new_partdesign_body(doc, body_label)
+
+    # 1. Plate pad (centroid at origin, extends ±plate_l/2 in X, ±plate_w/2 in Y,
+    #    ±plate_t/2 in Z)
+    pad_rectangle(
+        body,
+        origin=App.Vector(0, 0, 0),
+        axis_u=App.Vector(1, 0, 0),
+        axis_v=App.Vector(0, 1, 0),
+        axis_w=App.Vector(0, 0, 1),
+        width_mm=plate_l,
+        height_mm=plate_w,
+        pad_length_mm=plate_t,
+        name="Plate",
+    )
+
+    # 2. Cradle pocket: circular-arc-segment trough along X, opening through top face
+    #    (at z = +plate_t/2 for lower plate). The sketch is placed at the detector
+    #    axis / mating face intersection.
+    mating_face_z = plate_t / 2.0 if is_lower else -plate_t / 2.0
+    pocket_cradle_through_axis(
+        body,
+        center=App.Vector(0, 0, mating_face_z),
+        axis_along=App.Vector(1, 0, 0),
+        cradle_radius_mm=cradle_r,
+        cradle_depth_mm=cradle_depth,
+        plate_length_mm=plate_l,
+        name="Cradle",
+    )
+
+    # 3. Clamp bolt CSK through-holes (4 × M_clamp, head on the bottom face for lower)
+    pitch_l = plate_l - 2.0 * (
+        cfg.clamp_bolt_diameter_mm * cfg.countersink_head_factor / 2.0 + 4.0
+    )
+    pitch_w = cfg.clamp_bolt_pitch_w_mm
+    csk_head_od = cfg.clamp_bolt_diameter_mm * cfg.countersink_head_factor
+    csk_head_depth = cfg.clamp_bolt_diameter_mm * 0.6
+    thread_clamp = f"M{int(cfg.clamp_bolt_diameter_mm)}" if cfg.clamp_bolt_diameter_mm == int(cfg.clamp_bolt_diameter_mm) else f"M{cfg.clamp_bolt_diameter_mm}"
+
+    # PartDesign Pocket cuts in the direction OPPOSITE the sketch normal.
+    # So axis must point AWAY from the solid at the entry face.
+    # Lower body: head on bottom face (z=-plate_t/2). Entry from below → axis = (0,0,-1).
+    # The shank pocket cuts upward (+Z) through the full plate.
+    # The CSK head pocket also uses the same axis / entry.
+    clamp_entry_z = -plate_t / 2.0 if is_lower else plate_t / 2.0
+    clamp_axis = App.Vector(0, 0, -1) if is_lower else App.Vector(0, 0, 1)
+
+    for sx in (-1, +1):
+        for sy in (-1, +1):
+            hole_x = sx * pitch_l / 2.0
+            hole_y = sy * pitch_w / 2.0
+            hole_label = f"ClampBolt_x{sx:+d}_y{sy:+d}"
+            add_csk_hole(
+                body,
+                center=App.Vector(hole_x, hole_y, clamp_entry_z),
+                axis=clamp_axis,
+                thread_size=thread_clamp,
+                head_diameter_mm=csk_head_od,
+                head_depth_mm=csk_head_depth,
+                depth_mm=plate_t,
+                name=hole_label,
+            )
+
+    # 4. Mount bolt CSK through-holes (split mode only, lower plate only)
+    # Mount bolts also enter from the bottom face with axis = (0,0,-1).
+    if cfg.mount_mode == "split" and is_lower:
+        pitch_mu = cfg.mount_bolt_pitch_u_mm
+        pitch_mv = cfg.mount_bolt_pitch_v_mm
+        thread_mount = f"M{cfg.mount_bolt_diameter_mm}" if cfg.mount_bolt_diameter_mm != int(cfg.mount_bolt_diameter_mm) else f"M{int(cfg.mount_bolt_diameter_mm)}"
+        mount_csk_head_od = cfg.mount_bolt_diameter_mm * cfg.countersink_head_factor
+        mount_csk_head_depth = cfg.mount_bolt_diameter_mm * 0.6
+        for sx in (-1, +1):
+            for sy in (-1, +1):
+                hole_x = sx * pitch_mu / 2.0
+                hole_y = sy * pitch_mv / 2.0
+                hole_label = f"MountBolt_x{sx:+d}_y{sy:+d}"
+                add_csk_hole(
+                    body,
+                    center=App.Vector(hole_x, hole_y, -plate_t / 2.0),
+                    axis=App.Vector(0, 0, -1),
+                    thread_size=thread_mount,
+                    head_diameter_mm=mount_csk_head_od,
+                    head_depth_mm=mount_csk_head_depth,
+                    depth_mm=plate_t,
+                    name=hole_label,
+                )
+
+    # 5. External chamfer on the plate's outer rectangular edges (C0.5).
+    #    Select only straight edges whose BOTH endpoints share the same bounding-box
+    #    face (ensuring we pick actual perimeter edges of the plate outer faces and
+    #    not internal cut edges like the cradle chord lines).
+    chamfer_mm = cfg.chamfer_mm
+    import Part as _Part
+
+    def _is_outer_perimeter_edge(edge) -> bool:
+        # Only chamfer straight line edges (skip arcs, circles, etc.)
+        if not isinstance(edge.Curve, _Part.Line):
+            return False
+        bbox_x = plate_l / 2.0
+        bbox_y = plate_w / 2.0
+        bbox_z = plate_t / 2.0
+        tol = 0.1
+        verts = edge.Vertexes
+        if len(verts) != 2:
+            return False
+        v0, v1 = verts
+        # Both vertices must be on the CORNER of the plate (satisfy ≥2 face conditions).
+        # Interior cut edges (like cradle chord lines) have vertices that lie in the
+        # interior of a face (satisfying only 1 condition: the face they're on).
+        def _on_faces(v) -> set:
+            faces: set[str] = set()
+            if abs(abs(v.X) - bbox_x) < tol:
+                faces.add(f"X{'+' if v.X > 0 else '-'}")
+            if abs(abs(v.Y) - bbox_y) < tol:
+                faces.add(f"Y{'+' if v.Y > 0 else '-'}")
+            if abs(abs(v.Z) - bbox_z) < tol:
+                faces.add(f"Z{'+' if v.Z > 0 else '-'}")
+            return faces
+        # Each vertex must be on exactly 3 face planes (= at a plate corner vertex).
+        # Interior cut edges like cradle chord ends lie on only 2 face planes (the
+        # X-face and the top Z-face but not a Y-face), so they are excluded.
+        if len(_on_faces(v0)) < 3 or len(_on_faces(v1)) < 3:
+            return False
+        # Both vertices must share at least one face plane (= same outer face)
+        shared = _on_faces(v0) & _on_faces(v1)
+        return len(shared) > 0
+
+    outer_edges = select_edges_by_predicate(body, _is_outer_perimeter_edge)
+    if outer_edges:
+        add_chamfer(body, chamfer_mm, outer_edges, "ExternalEdges")
+
+    return body
+
+
+def build_lower_half_clamp(
+    doc,
+    cfg: DetectorClampConfig,
+    *,
+    placement_tag: str,
+) -> object:
+    """Build the LowerHalfClamp PartDesign::Body for one detector position.
+
+    [EN] The lower half-plate carries the cradle pocket on its top face (mating
+    face), 4 × M4 ISO 10642 CSK through-holes with heads sinking into the
+    bottom face, and — in split mode — 4 × M2.5 mount holes. External edges are
+    chamfered C0.5. Returns the PartDesign::Body object.
+    / [CN] 下半板在配合面（顶面）带有 R(det_od/2 + clearance) 弧形槽，底面沉头
+    4×M4 ISO 10642 CSK 通孔，split 模式下额外增加 4×M2.5 安装孔。外部棱边倒 C0.5。
+    返回 PartDesign::Body 对象。
+    """
+    body_label = f"LowerHalfClamp_{placement_tag}"
+    return _half_plate_with_cradle(doc, cfg, is_lower=True, body_label=body_label)

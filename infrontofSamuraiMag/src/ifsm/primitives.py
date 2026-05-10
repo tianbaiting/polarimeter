@@ -125,8 +125,32 @@ def add_feature(doc: App.Document, name: str, shape: Part.Shape) -> App.Document
 import Sketcher  # type: ignore  # noqa: E402
 
 
+def _ensure_partdesign() -> None:
+    """Ensure the PartDesign workbench C++ extension is loaded.
+
+    FreeCAD ships PartDesign in /usr/share/freecad/Mod/PartDesign (a Python
+    package that loads the _PartDesign.so extension). When running headless
+    (e.g. under pytest with PYTHONPATH=/usr/lib/freecad-python3/lib only), that
+    directory is not automatically on sys.path. This function adds it once so
+    that `doc.addObject('PartDesign::Body', ...)` succeeds without requiring
+    callers to extend PYTHONPATH manually.
+    """
+    import importlib
+    import sys
+    if importlib.util.find_spec("PartDesign") is None:
+        _freecad_share_mod = "/usr/share/freecad/Mod"
+        if _freecad_share_mod not in sys.path:
+            sys.path.insert(0, _freecad_share_mod)
+    # Trigger the import so the C++ extension registers PartDesign::Body
+    try:
+        import PartDesign  # type: ignore  # noqa: F401
+    except ImportError:
+        pass  # Best-effort — let the caller surface the error naturally
+
+
 def new_partdesign_body(doc: App.Document, name: str):
     """Create a PartDesign::Body attached to the active document."""
+    _ensure_partdesign()
     return doc.addObject("PartDesign::Body", name)
 
 
@@ -235,6 +259,17 @@ def add_chamfer(body, size_mm: float, edge_names: list[str], name: str):
     return chamfer
 
 
+_CLEARANCE_D: dict[str, float] = {
+    "M2.5": 2.9,
+    "M3": 3.4,
+    "M4": 4.5,
+    "M5": 5.5,
+    "M6": 6.6,
+    "M8": 9.0,
+    "M10": 11.0,
+}
+
+
 def add_hole(
     body,
     center: App.Vector,
@@ -256,7 +291,7 @@ def add_hole(
     rot = App.Rotation(App.Vector(0, 0, 1), App.Vector(axis))
     placement.Rotation = rot
     sketch.Placement = placement
-    clearance_d = {"M3": 3.4, "M4": 4.5, "M5": 5.5, "M6": 6.6, "M8": 9.0, "M10": 11.0}[thread_size]
+    clearance_d = _CLEARANCE_D[thread_size]
     sketch.addGeometry(
         Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), 0.5 * clearance_d),
         False,
@@ -267,6 +302,131 @@ def add_hole(
     pocket.Type = 0
     body.Document.recompute()
     return pocket
+
+
+def pocket_cradle_through_axis(
+    body,
+    center: App.Vector,
+    axis_along: App.Vector,
+    cradle_radius_mm: float,
+    cradle_depth_mm: float,
+    plate_length_mm: float,
+    name: str,
+):
+    """Shallow cradle (circular-segment) trough pocket running the full plate length.
+
+    Sketches a circular arc segment profile on the plane perpendicular to
+    `axis_along` at `center`. The flat chord lies on the mating face (top face
+    of the lower half-clamp); the arc bulges into the plate by `cradle_depth_mm`.
+    The pocket extrudes symmetrically in both ±axis_along directions
+    (Midplane=True, total length = plate_length_mm) producing a U-shaped trough
+    open at both ends.
+
+    `center` should be placed at the detector-axis / mating-face intersection.
+
+    Sketch local frame after rotation taking local-Z → axis_along = X (global):
+      - local X → global -Z  (moving in +local_X = going INTO the plate)
+      - local Y → global  Y  (plate width direction)
+      - local Z → global  X  (extrusion / axis_along direction)
+
+    Circle center is at local (-(R-depth), 0) so the deepest arc point sits
+    at local (+depth, 0) = depth below the mating face (into the plate).
+    The arc spans the SHORT path from local (0, -a) → (+depth, 0) → (0, +a),
+    i.e., ArcOfCircle from angle -half_angle to +half_angle (CCW through 0).
+    a = sqrt(R^2 - (R-depth)^2) is the chord half-width.
+    """
+    R = cradle_radius_mm
+    d = cradle_depth_mm
+    a = math.sqrt(R * R - (R - d) * (R - d))  # chord half-width
+    half_angle = math.acos((R - d) / R)        # arc half-angle from 0
+
+    # Circle center: local (-(R-d), 0) so arc's rightmost (deepest into plate) point
+    # is at local (-(R-d)+R, 0) = (+d, 0). Chord endpoints: local (0, ±a).
+    cx = -(R - d)  # e.g. -20.1 for R=25.1, d=5
+
+    sketch = body.newObject("Sketcher::SketchObject", f"Sketch_{name}")
+    placement = App.Placement()
+    placement.Base = App.Vector(center)
+    rot = App.Rotation(App.Vector(0, 0, 1), App.Vector(axis_along))
+    placement.Rotation = rot
+    sketch.Placement = placement
+
+    # Arc CCW from -half_angle to +half_angle, passing through 0 (deepest point).
+    # StartPoint at angle -half_angle: center + R*(cos(-α), sin(-α)) = (0, -a)
+    # EndPoint at angle +half_angle:   center + R*(cos(+α), sin(+α)) = (0, +a)
+    arc = Part.ArcOfCircle(
+        Part.Circle(App.Vector(cx, 0, 0), App.Vector(0, 0, 1), R),
+        -half_angle,   # start: (0, -a)
+        +half_angle,   # end:   (0, +a)
+    )
+    # Chord closes the profile: from arc.EndPoint (0, +a) back to arc.StartPoint (0, -a)
+    chord = Part.LineSegment(App.Vector(0, a, 0), App.Vector(0, -a, 0))
+    sketch.addGeometry(arc, False)
+    sketch.addGeometry(chord, False)
+    sketch.addConstraint(Sketcher.Constraint("Coincident", 0, 2, 1, 1))  # arc end → chord start
+    sketch.addConstraint(Sketcher.Constraint("Coincident", 1, 2, 0, 1))  # chord end → arc start
+
+    pocket = body.newObject("PartDesign::Pocket", f"Pocket_{name}")
+    pocket.Profile = sketch
+    pocket.Length = plate_length_mm
+    pocket.Midplane = True
+    body.Document.recompute()
+    return pocket
+
+
+def add_csk_hole(
+    body,
+    center: App.Vector,
+    axis: App.Vector,
+    thread_size: str,
+    head_diameter_mm: float,
+    head_depth_mm: float,
+    depth_mm: float,
+    name: str,
+):
+    """Countersunk through-hole: clearance shank + conical/cylindrical countersink.
+
+    Implemented as two chained PartDesign::Pocket features:
+    1. Full-depth clearance hole (diameter = _CLEARANCE_D[thread_size])
+    2. Countersink pocket (diameter = head_diameter_mm, depth = head_depth_mm)
+       on the entry face (center).
+
+    Both pockets share the same sketch placement (axis normal at `center`).
+    The countersink pocket is cut second so it widens the entry end only.
+    """
+    clearance_d = _CLEARANCE_D[thread_size]
+
+    # 1. Full-depth clearance hole
+    sk_shank = body.newObject("Sketcher::SketchObject", f"Sketch_{name}_shank")
+    placement = App.Placement()
+    placement.Base = App.Vector(center)
+    rot = App.Rotation(App.Vector(0, 0, 1), App.Vector(axis))
+    placement.Rotation = rot
+    sk_shank.Placement = placement
+    sk_shank.addGeometry(
+        Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), 0.5 * clearance_d),
+        False,
+    )
+    pocket_shank = body.newObject("PartDesign::Pocket", f"Hole_{name}_shank")
+    pocket_shank.Profile = sk_shank
+    pocket_shank.Length = depth_mm
+    pocket_shank.Type = 0
+    body.Document.recompute()
+
+    # 2. Countersink (entry-face widening)
+    sk_csk = body.newObject("Sketcher::SketchObject", f"Sketch_{name}_csk")
+    sk_csk.Placement = placement  # same placement — entry face
+    sk_csk.addGeometry(
+        Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), 0.5 * head_diameter_mm),
+        False,
+    )
+    pocket_csk = body.newObject("PartDesign::Pocket", f"Hole_{name}_csk")
+    pocket_csk.Profile = sk_csk
+    pocket_csk.Length = head_depth_mm
+    pocket_csk.Type = 0
+    body.Document.recompute()
+
+    return pocket_csk
 
 
 def select_edges_by_predicate(body, predicate) -> list[str]:
