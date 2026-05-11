@@ -312,6 +312,8 @@ def pocket_cradle_through_axis(
     cradle_depth_mm: float,
     plate_length_mm: float,
     name: str,
+    *,
+    reversed: bool = False,
 ):
     """Shallow cradle (circular-segment) trough pocket running the full plate length.
 
@@ -347,7 +349,10 @@ def pocket_cradle_through_axis(
     sketch = body.newObject("Sketcher::SketchObject", f"Sketch_{name}")
     placement = App.Placement()
     placement.Base = App.Vector(center)
-    rot = App.Rotation(App.Vector(0, 0, 1), App.Vector(axis_along))
+    # For reversed pockets, flip the sketch normal by reversing the rotation axis.
+    # This ensures the pocket cuts inward in both cases.
+    rotation_axis = App.Vector(axis_along) if not reversed else App.Vector(axis_along) * -1
+    rot = App.Rotation(App.Vector(0, 0, 1), rotation_axis)
     placement.Rotation = rot
     sketch.Placement = placement
 
@@ -370,6 +375,7 @@ def pocket_cradle_through_axis(
     pocket.Profile = sketch
     pocket.Length = plate_length_mm
     pocket.Midplane = True
+    pocket.Reversed = reversed
     body.Document.recompute()
     return pocket
 

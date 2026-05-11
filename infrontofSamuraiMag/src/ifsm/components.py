@@ -2613,6 +2613,7 @@ def _half_plate_with_cradle(
         cradle_depth_mm=cradle_depth,
         plate_length_mm=plate_l,
         name="Cradle",
+        reversed=not is_lower,
     )
 
     # 3. Clamp bolt CSK through-holes (4 × M_clamp, head on the bottom face for lower)
@@ -2737,3 +2738,22 @@ def build_lower_half_clamp(
     """
     body_label = f"LowerHalfClamp_{placement_tag}"
     return _half_plate_with_cradle(doc, cfg, is_lower=True, body_label=body_label)
+
+
+def build_upper_half_clamp(
+    doc,
+    cfg: DetectorClampConfig,
+    *,
+    placement_tag: str,
+) -> object:
+    """Build the UpperHalfClamp Body. Mating face (cradle opens to bottom).
+
+    The Body is constructed in the same local frame as LowerHalfClamp; the
+    caller flips it about the X axis (180° rotation about plate-length axis)
+    when placing it so the cradle opens downward to mate with the lower body.
+    Inside _half_plate_with_cradle, `is_lower=False` ensures the csk head
+    side defaults to the upper face (bolts insert from above).
+    """
+    return _half_plate_with_cradle(
+        doc, cfg, is_lower=False, body_label=f"UpperHalfClamp_{placement_tag}"
+    )
