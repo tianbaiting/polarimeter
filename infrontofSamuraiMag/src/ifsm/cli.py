@@ -24,7 +24,7 @@ from .stateflow import (
     utc_now_iso,
     write_state_json_atomic,
 )
-from .validation import ValidationThresholds, write_report_json
+from .validation import ValidationThresholds, build_clamp_parts_manifest, write_report_json
 
 
 MODULE_NAME = os.environ.get("IFSM_MODULE_NAME", "infrontofSamuraiMag").strip() or "infrontofSamuraiMag"
@@ -280,7 +280,13 @@ def _run_build_pipeline(
     report = adapter.validate_constraints(cfg, placements, thresholds)
 
     artifacts = {fmt: str(path) for fmt, path in sorted(exported_paths.items())}
-    report_path = write_report_json(report, report_path, artifacts=artifacts)
+    parts_manifest = build_clamp_parts_manifest(cfg.geometry, placements)
+    report_path = write_report_json(
+        report,
+        report_path,
+        artifacts=artifacts,
+        parts_manifest=parts_manifest,
+    )
 
     report_dict = {
         "status": report.status,

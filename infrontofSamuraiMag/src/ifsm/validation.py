@@ -2231,11 +2231,79 @@ def validate_constraints(
     )
 
 
+def build_clamp_parts_manifest(
+    cfg: GeometryConfig,
+    placements: list[DetectorPlacement],
+) -> list[dict[str, object]]:
+    from .components import _bolt_diameter_to_thread  # noqa: WPS433
+
+    clamp_cfg = cfg.detector.clamp
+    clamp_thread = _bolt_diameter_to_thread(clamp_cfg.clamp_bolt_diameter_mm)
+    plate_thread = _bolt_diameter_to_thread(clamp_cfg.mount_bolt_hole_diameter_mm)
+    manifest: list[dict[str, object]] = []
+    for placement in placements:
+        manifest.append(
+            {
+                "placement": placement.tag,
+                "parts": [
+                    {
+                        "name": "Weldment_LoadBearing",
+                        "make_or_buy": "make",
+                        "material": "SUS304",
+                        "process": "weldment",
+                        "notes": "lower half-clamp + saddle + adapter + twin uprights + top bridge",
+                        "qty_per_fixture": 1,
+                    },
+                    {
+                        "name": "UpperClamp_Detachable",
+                        "make_or_buy": "make",
+                        "material": "SUS304",
+                        "process": "machined",
+                        "qty_per_fixture": 1,
+                    },
+                    {
+                        "name": "BasePlate_Bolted",
+                        "make_or_buy": "make",
+                        "material": "A5052",
+                        "process": "plate",
+                        "qty_per_fixture": 1,
+                    },
+                    {
+                        "name": "Bolt_clamp",
+                        "make_or_buy": "buy",
+                        "spec": f"ISO 4762 {clamp_thread} SUS304",
+                        "qty_per_fixture": 4,
+                    },
+                    {
+                        "name": "Bolt_plate_side",
+                        "make_or_buy": "buy",
+                        "spec": f"ISO 4762 {plate_thread} SUS304",
+                        "qty_per_fixture": 4,
+                    },
+                    {
+                        "name": "Washer_plate_side",
+                        "make_or_buy": "buy",
+                        "spec": f"ISO 7089 {plate_thread} SUS304",
+                        "qty_per_fixture": 4,
+                    },
+                    {
+                        "name": "Nut_weldment_side",
+                        "make_or_buy": "buy",
+                        "spec": f"ISO 4032 {plate_thread} SUS304",
+                        "qty_per_fixture": 4,
+                    },
+                ],
+            }
+        )
+    return manifest
+
+
 def report_to_dict(
     report: ValidationReport,
     artifacts: dict[str, str] | None = None,
+    parts_manifest: list[dict[str, object]] | None = None,
 ) -> dict[str, object]:
-    return {
+    payload: dict[str, object] = {
         "status": report.status,
         "thresholds": {
             "angle_tolerance_deg": report.thresholds.angle_tolerance_deg,
@@ -2270,15 +2338,19 @@ def report_to_dict(
         },
         "artifacts": artifacts or {},
     }
+    if parts_manifest is not None:
+        payload["parts_manifest"] = parts_manifest
+    return payload
 
 
 def write_report_json(
     report: ValidationReport,
     report_path: Path,
     artifacts: dict[str, str] | None = None,
+    parts_manifest: list[dict[str, object]] | None = None,
 ) -> Path:
     report_path = report_path.expanduser().resolve()
     report_path.parent.mkdir(parents=True, exist_ok=True)
-    payload = report_to_dict(report, artifacts=artifacts)
+    payload = report_to_dict(report, artifacts=artifacts, parts_manifest=parts_manifest)
     report_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     return report_path
