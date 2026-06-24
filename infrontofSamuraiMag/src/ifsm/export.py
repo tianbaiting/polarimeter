@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from zipfile import BadZipFile, ZipFile
 
@@ -9,7 +10,14 @@ import Part
 from .config import OutputConfig
 
 
+def _skip_gui() -> bool:
+    # [EN] IFSM_SKIP_FCSTD_ROUNDTRIP disables every GUI-side code path in the export pipeline. With ~300+ Part::Feature objects, offscreen Qt deadlocks during view-provider allocation (FreeCAD #22870 class of bug). The saved FCStd then lacks GuiDocument.xml (FreeCAD #23376 behavior) but opens fine in the GUI with default visibility. / [CN] IFSM_SKIP_FCSTD_ROUNDTRIP 关闭 export 管线中所有 GUI 侧路径；对象数超过 ~300 时 offscreen Qt 会在 view provider 分配时死锁（FreeCAD #22870 同类 bug）。代价：FCStd 不含 GuiDocument.xml（FreeCAD #23376 行为），但 GUI 打开时走默认可见状态。
+    return bool(os.environ.get("IFSM_SKIP_FCSTD_ROUNDTRIP"))
+
+
 def ensure_fcstd_gui_session() -> None:
+    if _skip_gui():
+        return
     if App.GuiUp:
         return
 
@@ -33,6 +41,8 @@ def ensure_fcstd_gui_session() -> None:
 
 
 def _prepare_fcstd_gui_state(doc) -> None:
+    if _skip_gui():
+        return
     if not App.GuiUp:
         raise RuntimeError(
             "FCStd export requires the GUI session to be initialized before document creation."
@@ -64,7 +74,9 @@ def _prepare_fcstd_gui_state(doc) -> None:
 
     active_view = gui_doc.activeView()
     active_view.viewIsometric()
-    active_view.fitAll()
+    # [EN] fitAll() triggers Coin3D scene traversal across every view provider; with ~300+ objects under offscreen Qt this deadlocks in futex. Skip it when the roundtrip is also skipped (offscreen bulk-export path). / [CN] fitAll() 会遍历所有 view provider 的 Coin3D 场景；对象数超过 ~300 时在 offscreen Qt 下死锁。与 roundtrip 同一条件下跳过，服务离屏批量导出路径。
+    if not os.environ.get("IFSM_SKIP_FCSTD_ROUNDTRIP"):
+        active_view.fitAll()
 
 
 def _verify_fcstd_archive(fcstd_path: Path) -> None:
@@ -76,7 +88,7 @@ def _verify_fcstd_archive(fcstd_path: Path) -> None:
 
     if "Document.xml" not in names:
         raise RuntimeError(f"FCStd archive is missing Document.xml: {fcstd_path}")
-    if "GuiDocument.xml" not in names:
+    if not _skip_gui() and "GuiDocument.xml" not in names:
         raise RuntimeError(f"FCStd archive is missing GuiDocument.xml: {fcstd_path}")
 
 
@@ -139,7 +151,11 @@ def export_document(
         doc.saveAs(str(fcstd_path))
         doc.save()
         App.closeDocument(doc_name)
-        _verify_fcstd_roundtrip(fcstd_path, export_object_names)
+        # [EN] At >~300 view providers, offscreen Qt deadlocks inside App.openDocument during roundtrip reopen. IFSM_SKIP_FCSTD_ROUNDTRIP trades the full reopen check for an archive-structure check so large assemblies can still export. / [CN] 对象数超过 ~300 时，offscreen Qt 在 App.openDocument 重载期间死锁。设置 IFSM_SKIP_FCSTD_ROUNDTRIP 以档结构校验替换重载校验，让大装配也能导出。
+        if os.environ.get("IFSM_SKIP_FCSTD_ROUNDTRIP"):
+            _verify_fcstd_archive(fcstd_path)
+        else:
+            _verify_fcstd_roundtrip(fcstd_path, export_object_names)
         paths["fcstd"] = fcstd_path
 
     return paths
