@@ -1,0 +1,80 @@
+vessel:
+  cross_section: square
+  inner_size_x_mm: 440.0
+  inner_size_y_mm: 440.0
+  wall_thickness_mm: 10.0
+  length_mm: 360.0
+  center_z_mm: 130.0
+  beam_bore_diameter_mm: 63.0
+  end_modules:
+    front:
+      standard: ICF114
+      module_outer_diameter_mm: 113.5
+      module_inner_diameter_mm: 63.6
+      pipe_outer_diameter_mm: 63.6
+      pipe_inner_diameter_mm: 63.0
+      pipe_length_mm: 80.0
+      module_thickness_mm: 17.5
+      seal_face_width_mm: 10.0
+      bolt_circle_diameter_mm: 92.2
+      bolt_count: 8
+      flange_bolt_hole_diameter_mm: 8.4
+      oring_groove_inner_diameter_mm: 0.0
+      oring_groove_outer_diameter_mm: 0.0
+      oring_groove_depth_mm: 0.0
+      interface_bolt_diameter_mm: 8.0
+      interface_bolt_length_mm: 35.0
+      interface_nut_outer_diameter_mm: 13.0
+      interface_nut_thickness_mm: 6.5
+      interface_washer_outer_diameter_mm: 16.0
+      interface_washer_thickness_mm: 1.5
+    rear:
+      standard: ICF114
+      module_outer_diameter_mm: 113.5
+      module_inner_diameter_mm: 63.6
+      pipe_outer_diameter_mm: 63.6
+      pipe_inner_diameter_mm: 63.0
+      pipe_length_mm: 80.0
+      module_thickness_mm: 17.5
+      seal_face_width_mm: 10.0
+      bolt_circle_diameter_mm: 92.2
+      bolt_count: 8
+      flange_bolt_hole_diameter_mm: 8.4
+      oring_groove_inner_diameter_mm: 0.0
+      oring_groove_outer_diameter_mm: 0.0
+      oring_groove_depth_mm: 0.0
+      interface_bolt_diameter_mm: 8.0
+      interface_bolt_length_mm: 35.0
+      interface_nut_outer_diameter_mm: 13.0
+      interface_nut_thickness_mm: 6.5
+      interface_washer_outer_diameter_mm: 16.0
+      interface_washer_thickness_mm: 1.5
+  contract:
+    front_standard: ICF114
+    rear_standard: ICF114
+channels:
+  - name: deuteron
+    angle_deg: 20.9
+    radius_mm: 140.0
+    confidence: high
+  - name: proton_small
+    angle_deg: 11.2
+    radius_mm: 190.0
+    confidence: medium
+  - name: proton_large
+    angle_deg: 53.4
+    radius_mm: 205.0
+    confidence: medium
+sectors: [left, right, up, down]
+detector:
+  diameter_mm: 25.0
+  length_mm: 50.0
+  clamp_outer_diameter_mm: 32.0
+  clamp_width_mm: 12.0
+inner_frame:
+  spine_diameter_mm: 30.0
+  arm_cross_width_mm: 20.0
+  arm_cross_thickness_mm: 10.0
+validation:
+  angle_tolerance_deg: 0.05
+  radius_tolerance_mm: 0.2

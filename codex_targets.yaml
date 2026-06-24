@@ -6,3 +6,6 @@ active_modules:
   - name: afterSRC
     target: afterSRC/target.yaml
     state: afterSRC/state.json
+  - name: compactInVacuum
+    target: compactInVacuum/target.yaml
+    state: compactInVacuum/state.json

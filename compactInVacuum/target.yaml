@@ -1,0 +1,19 @@
+schema_version: 1
+module: compactInVacuum
+intent:
+  description: 'Compact in-vacuum polarimeter: detectors inside a square-section vacuum chamber at 140/190/205 mm radii, same angles as BLP-v1 (11.2/20.9/53.4 deg), 3x4=12 plastic scintillator placeholders on internal frame arms, no external support plates, and modular front/rear beamline interfaces defaulting to ICF114 welded pipe-stub flange modules that can be replaced by JIS-standard alternatives.'
+build:
+  config: config/default_compactInVacuum.yaml
+  overrides: []
+  doc_name: compactInVacuum
+  mode: build
+validation:
+  strict: true
+  angle_tolerance_deg: 0.05
+  radius_tolerance_mm: 0.2
+output:
+  output_dir: .
+  basename: compactInVacuum
+  formats: [fcstd, step]
+artifacts:
+  report_json: compactInVacuum.validation_report.json
