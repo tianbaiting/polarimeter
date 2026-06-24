@@ -54,3 +54,23 @@ Entry Template:
 - State Snapshot: run_id=`20260327T005842Z-9`, run.status=`pass`, validation.status=`pass`.
 - Artifacts: FCStd `sha256=cceae38d...`, STEP `sha256=6abdf878...`, report `sha256=d2e61348...`.
 - Next Action: run `infrontofSamuraiMag` regression validation and hand off the new `afterSRC` module.
+
+- Timestamp UTC: 2026-04-24T00:44:16Z
+- Timestamp Local: 2026-04-24 09:44:16 JST
+- Module/Scope: Sub-2 Task 13 — strict-validate regression + force-rebuild after detector-clamp weldment redesign
+- Command(s): `IFSM_SKIP_FCSTD_ROUNDTRIP=1 ./afterSRC/run_afterSRC.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: `draw_fasteners_as_solids=true`; 330 viewprovider-bearing objects. Env-var `IFSM_SKIP_FCSTD_ROUNDTRIP=1` required because offscreen Qt + ~300+ Part::Feature VPs deadlocks during GUI init (FreeCAD #22870 class; our symptom was futex_wait_queue in 64/65 threads with frozen CPU). With the env var set, `ensure_fcstd_gui_session`, `_prepare_fcstd_gui_state`, and the `_verify_fcstd_roundtrip` reopen are all bypassed; FCStd is written without `GuiDocument.xml` (FreeCAD #23376 behavior) but opens fine in GUI with default visibility; archive-structure check replaces the reopen check.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260424T004036Z-1670861`, run.status=`pass`, validation.status=`pass`, strict=`true`, git_head=`90a1e35`.
+- Artifacts: FCStd `sha256=90768383...` (828 KB, no GuiDocument.xml), STEP `sha256=ddd25406...` (4.5 MB, 96142 entities), report `sha256=23dd465d...`.
+- Next Action: proceed to Sub-2 Task 14 visual review (before/after screenshots) and Task 15 parts manifest + DoD sign-off.
+
+- Timestamp UTC: 2026-04-24T09:51:10Z
+- Timestamp Local: 2026-04-24 18:51:10 JST
+- Module/Scope: Sub-2 Task 15 — emit `parts_manifest` in validation report and regenerate artifacts
+- Command(s): `IFSM_SKIP_FCSTD_ROUNDTRIP=1 ./afterSRC/run_afterSRC.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: added `build_clamp_parts_manifest(cfg, placements)` in `validation.py`; thread sizes derived via shared `_bolt_diameter_to_thread` helper (6 mm → M6, 9 mm clearance hole → M8). `report_to_dict` / `write_report_json` now forward the manifest; CLI builds it from the validated placements. Same env-var guard (`IFSM_SKIP_FCSTD_ROUNDTRIP=1`) still required for the 330-VP offscreen-Qt path.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260424T094228Z-1761888`, run.status=`pass`, validation.status=`pass`, strict=`true`, git_head=`90a1e35`.
+- Artifacts: FCStd `sha256=b2eb26b0...` (828 KB), STEP `sha256=5ae88a05...` (4.5 MB, 96142 entities), report `sha256=21fd18aa...` (now carries `parts_manifest` with 12 × 7 line items).
+- Next Action: Sub-2 DoD sign-off doc at `docs/superpowers/specs/2026-04-17-sub2-dod-signoff.md`; await user approval for commit/cleanup of Phase 0 spike script.
