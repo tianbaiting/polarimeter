@@ -96,7 +96,7 @@ sector_cartridge:
   rail_width_mm: 12.0
   rail_thickness_mm: 6.0
   mount_pad_mm: [34.0, 34.0, 4.0]
-  service_lane_offset_mm: 12.0
+  service_lane_offset_mm: 24.0
   thermal_bus_thickness_mm: 2.0
   thermal_bus_width_mm: 18.0
 

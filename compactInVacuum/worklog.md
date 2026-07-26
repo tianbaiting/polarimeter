@@ -130,3 +130,12 @@ Entry Template:
 - Validation Result: pass; 12 placements, 193 physical components, 19 target-motion poses, zero inter-sector overlap, zero target-sweep collision, zero support intrusion into beam stay-clear, and zero full active-acceptance obstruction.
 - Artifacts/State: four-sector internal assembly/document builder and target pose/system builders added. A closed target frame failed the 30–50 degree beam-clearance sweep; it remains a rejected reference concept and the provisional open C-frame candidate now clears the complete sampled path. Acceptance geometry now lofts the real beam-normal target disc to each tilted detector face instead of using a false coaxial cone.
 - Next Action: implement the bought-out feedthrough/service manifold, all 12 coax routes, housekeeping harness, grounding, and feedthrough-capacity gates.
+
+- Timestamp UTC: 2026-07-26T16:29:21Z
+- Timestamp Local: 2026-07-27 01:29:21 JST
+- Module/Scope: CompactOne Phase F detector services and thermal audit
+- Command(s): `./compactInVacuum/run_freecad_tests.sh`; CompactOne pure-Python regression suite; Python compile checks
+- Key Parameters/Overrides: four provisional 4-channel ICF70 signal interfaces, one 32-pin housekeeping interface, 12 independent 50-ohm coax keep-outs, 4 sector temperature harnesses carrying 24 required wires, four protective grounding straps, and a high peripheral service lane respecting the configured 25 mm bend-space contract.
+- Validation Result: pass; signal capacity 16 for 12 required, housekeeping capacity 32 for 24 required, zero route-to-physical collision, zero cable/housekeeping obstruction of any active acceptance loft, and all 12 declared thermal paths connected with maximum numerical contact gap 3.18e-14 mm.
+- Artifacts/State: purchased feedthrough envelopes are separate from project weld collars; cable centerlines, connector keep-outs, clear bores, external manifold envelope, grounding datum, and thermal path report are generated. Direct point-to-port routing was rejected after it intersected cartridges; the accepted candidate uses a peripheral high service lane.
+- Next Action: replace legacy validation with categorized CompactOne gates, material-path inventory, strict/non-strict semantics, and intentional failure regressions.

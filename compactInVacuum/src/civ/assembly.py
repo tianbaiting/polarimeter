@@ -20,6 +20,7 @@ from .config import CIVConfig
 from .cassette import build_detector_cassette
 from .cartridge import build_sector_cartridge
 from .internal import build_internal_assembly
+from .services import build_services
 from .layout import build_detector_placements
 
 
@@ -127,6 +128,31 @@ def build_internal_document(cfg: CIVConfig) -> App.Document:
     for name, shape in geometry.keepouts.items():
         _add_feature(doc, name, shape, engineering_role="keepout")
     for name, shape in geometry.datums.items():
+        _add_feature(doc, name, shape, engineering_role="datum")
+    doc.recompute()
+    return doc
+
+
+def build_serviced_internal_document(cfg: CIVConfig) -> App.Document:
+    doc = build_internal_document(cfg)
+    internal = build_internal_assembly(cfg)
+    services = build_services(cfg, internal)
+    for name, shape in services.physical.items():
+        obj = _add_feature(doc, name, shape)
+        obj.addProperty("App::PropertyString", "MaterialName", "CompactOne")
+        obj.MaterialName = services.materials.get(name, "unresolved")
+    for name, shape in services.purchased_interfaces.items():
+        _add_feature(
+            doc,
+            name,
+            shape,
+            engineering_role="purchased_part_interface",
+        )
+    for name, shape in services.keepouts.items():
+        _add_feature(doc, name, shape, engineering_role="keepout")
+    for name, shape in services.centerlines.items():
+        _add_feature(doc, name, shape, engineering_role="service_centerline")
+    for name, shape in services.datums.items():
         _add_feature(doc, name, shape, engineering_role="datum")
     doc.recompute()
     return doc

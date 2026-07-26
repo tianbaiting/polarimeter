@@ -780,3 +780,12 @@ Entry Template:
 - Validation Result: pass; all 12 full acceptance lofts clear, target motion clears every cartridge, support material clears beam stay-clear, and all six inter-sector overlap pairs are zero.
 - Artifacts/State: target and four-sector internal-machine builders added. The rejected closed holder-frame sweep was replaced with an explicitly provisional open C-frame candidate.
 - Next Action: add detector services, feedthrough manifold, and service-capacity validation.
+
+- Timestamp UTC: 2026-07-26T16:29:21Z
+- Timestamp Local: 2026-07-27 01:29:21 JST
+- Module/Scope: CompactOne Phase F services and thermal continuity
+- Command(s): CompactOne pure-Python suite and FreeCAD runtime suite
+- Key Parameters/Overrides: 12 fast coax routes, four sector temperature harnesses, purchased-interface envelopes, project weld collars, connector/bend keep-outs, protective grounding, and explicit thermal graph.
+- Validation Result: pass; all service capacity, collision, acceptance, and thermal-continuity checks pass.
+- Artifacts/State: service/feedthrough/thermal modules and serviced-internal document builder added. An initially direct routing concept was rejected because it crossed cartridge and cassette material; the retained route follows a high peripheral lane.
+- Next Action: implement categorized strict CompactOne validation and material inventory.

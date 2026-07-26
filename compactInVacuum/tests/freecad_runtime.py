@@ -18,6 +18,8 @@ from civ.config import load_config
 from civ.detector import build_active_acceptance_cone
 from civ.internal import build_internal_assembly, internal_compound
 from civ.layout import build_detector_placements
+from civ.services import build_services
+from civ.thermal import evaluate_thermal_paths
 
 
 def _distance_mm(shape_a: Part.Shape, shape_b: Part.Shape) -> float:
@@ -169,6 +171,22 @@ def test_sector_runtime() -> dict[str, object]:
         name for name in geometry.keepouts if name.endswith("SectorCableRoute")
     )
     assert len(cable_routes) == 3
+    cable_collisions: list[dict[str, object]] = []
+    for route_name in cable_routes:
+        route = geometry.keepouts[route_name]
+        for component, shape in geometry.physical.items():
+            if not _bounding_boxes_overlap(route, shape):
+                continue
+            intersection_mm3 = float(route.common(shape).Volume)
+            if intersection_mm3 > 1.0e-6:
+                cable_collisions.append(
+                    {
+                        "route": route_name,
+                        "component": component,
+                        "intersection_volume_mm3": intersection_mm3,
+                    }
+                )
+    assert not cable_collisions, cable_collisions
     assert "left_CartridgeRemovalEnvelope" in geometry.keepouts
 
     return {
@@ -186,6 +204,7 @@ def test_sector_runtime() -> dict[str, object]:
         "acceptance_cone_obstructions": los_obstructions,
         "thermal_contact_distances_mm": thermal_distances,
         "cable_route_count": len(cable_routes),
+        "cable_physical_collisions": cable_collisions,
     }
 
 
@@ -226,7 +245,16 @@ def test_internal_runtime() -> dict[str, object]:
     }
     for pose in geometry.target.motion_samples:
         for moving_name, moving_shape in pose.physical.items():
-            for obstacle_name, obstacle_shape in cartridge_physical.items():
+            motion_obstacles = {
+                **cartridge_physical,
+                **{
+                    name: shape
+                    for cartridge in geometry.cartridges.values()
+                    for name, shape in cartridge.keepouts.items()
+                    if name.endswith(("SectorCableRoute", "ConnectorKeepout"))
+                },
+            }
+            for obstacle_name, obstacle_shape in motion_obstacles.items():
                 if not _bounding_boxes_overlap(moving_shape, obstacle_shape):
                     continue
                 intersection_mm3 = float(moving_shape.common(obstacle_shape).Volume)
@@ -248,7 +276,16 @@ def test_internal_runtime() -> dict[str, object]:
             f"{placement.tag}_ActivePlastic",
             "TargetWork_TargetFoil",
         }
-        for component, shape in geometry.physical.items():
+        los_obstacles = {
+            **geometry.physical,
+            **{
+                name: shape
+                for cartridge in geometry.cartridges.values()
+                for name, shape in cartridge.keepouts.items()
+                if name.endswith(("SectorCableRoute", "ConnectorKeepout"))
+            },
+        }
+        for component, shape in los_obstacles.items():
             if component in excluded or not _bounding_boxes_overlap(cone, shape):
                 continue
             intersection_mm3 = float(cone.common(shape).Volume)
@@ -302,6 +339,101 @@ def test_internal_runtime() -> dict[str, object]:
     }
 
 
+def test_services_runtime() -> dict[str, object]:
+    cfg = load_config(str(MODULE_ROOT / "config" / "afterSRC_compact.yaml"))
+    internal = build_internal_assembly(cfg)
+    services = build_services(cfg, internal)
+    assert len(services.fast_signal_paths) == 12
+    assert len(services.temperature_harnesses) == 4
+    assert len(services.grounding_connections) == 4
+    assert all(
+        not shape.isNull() and shape.isValid()
+        for shape in (
+            *services.physical.values(),
+            *services.purchased_interfaces.values(),
+            *services.keepouts.values(),
+            *services.centerlines.values(),
+        )
+    )
+    signal_capacity = (
+        cfg.compact_one.services.signal_feedthrough_count
+        * cfg.compact_one.services.channels_per_signal_feedthrough
+    )
+    housekeeping_required = (
+        cfg.compact_one.services.temperature_channels
+        * cfg.compact_one.services.wires_per_temperature_channel
+    )
+    assert signal_capacity >= cfg.compact_one.services.fast_signal_channels
+    assert cfg.compact_one.services.housekeeping_pin_capacity >= housekeeping_required
+
+    route_los_obstructions: list[dict[str, object]] = []
+    route_physical_collisions: list[dict[str, object]] = []
+    route_names = (
+        *services.fast_signal_paths,
+        *services.temperature_harnesses,
+    )
+    service_obstacles = {
+        **internal.physical,
+        **services.physical,
+    }
+    for route_name in route_names:
+        route = services.keepouts[route_name]
+        for component, shape in service_obstacles.items():
+            if not _bounding_boxes_overlap(route, shape):
+                continue
+            intersection_mm3 = float(route.common(shape).Volume)
+            if intersection_mm3 > 1.0e-6:
+                route_physical_collisions.append(
+                    {
+                        "service": route_name,
+                        "component": component,
+                        "intersection_volume_mm3": intersection_mm3,
+                    }
+                )
+    assert not route_physical_collisions, route_physical_collisions
+
+    for placement in internal.placements:
+        cone = build_active_acceptance_cone(cfg, placement)
+        for route_name in route_names:
+            route = services.keepouts[route_name]
+            if not _bounding_boxes_overlap(cone, route):
+                continue
+            intersection_mm3 = float(cone.common(route).Volume)
+            if intersection_mm3 > 1.0e-6:
+                route_los_obstructions.append(
+                    {
+                        "channel": placement.tag,
+                        "service": route_name,
+                        "intersection_volume_mm3": intersection_mm3,
+                    }
+                )
+    assert not route_los_obstructions, route_los_obstructions
+
+    thermal = evaluate_thermal_paths(cfg, internal)
+    assert thermal.status == "pass"
+    assert len(thermal.channels) == 12
+    assert all(item.connected for item in thermal.channels)
+
+    return {
+        "status": "pass",
+        "port_count": len(services.ports),
+        "fast_signal_path_count": len(services.fast_signal_paths),
+        "signal_capacity": signal_capacity,
+        "temperature_harness_count": len(services.temperature_harnesses),
+        "housekeeping_required_pins": housekeeping_required,
+        "housekeeping_capacity_pins": cfg.compact_one.services.housekeeping_pin_capacity,
+        "grounding_connection_count": len(services.grounding_connections),
+        "route_physical_collisions": route_physical_collisions,
+        "route_acceptance_obstructions": route_los_obstructions,
+        "thermal_connected_channel_count": sum(
+            item.connected for item in thermal.channels
+        ),
+        "maximum_thermal_gap_mm": max(
+            item.maximum_contact_gap_mm for item in thermal.channels
+        ),
+    }
+
+
 def main() -> int:
     print(
         json.dumps(
@@ -309,6 +441,7 @@ def main() -> int:
                 "cassette": test_cassette_runtime(),
                 "sector": test_sector_runtime(),
                 "internal": test_internal_runtime(),
+                "services": test_services_runtime(),
             },
             indent=2,
         )

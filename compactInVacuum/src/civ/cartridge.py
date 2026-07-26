@@ -24,6 +24,7 @@ from .layout import (
 class SectorCartridgeGeometry:
     sector: str
     placements: tuple[DetectorPlacement, ...]
+    service_junction: App.Vector
     physical: dict[str, Part.Shape]
     interfaces: dict[str, Part.Shape]
     keepouts: dict[str, Part.Shape]
@@ -102,6 +103,15 @@ def _sector_tangent(sector: str) -> App.Vector:
         if sector in {"left", "right"}
         else App.Vector(1.0, 0.0, 0.0)
     )
+
+
+def _sector_inward(sector: str) -> App.Vector:
+    return {
+        "left": App.Vector(1.0, 0.0, 0.0),
+        "right": App.Vector(-1.0, 0.0, 0.0),
+        "up": App.Vector(0.0, -1.0, 0.0),
+        "down": App.Vector(0.0, 1.0, 0.0),
+    }[sector]
 
 
 def _sector_wall_anchor(
@@ -330,15 +340,25 @@ def build_sector_cartridge(
         thermal_connections.append((strap_name, f"{sector}_SectorThermalBus"))
 
     tangent = _sector_tangent(sector)
+    service_inset_mm = (
+        cartridge.thermal_bus_thickness_mm
+        + 0.5 * routing.cable_keepout_diameter_mm
+        + 2.0
+    )
     junction = (
         anchors[-1]
         + scaled(tangent, cartridge.service_lane_offset_mm)
+        + scaled(_sector_inward(sector), service_inset_mm)
         + App.Vector(0.0, 0.0, cartridge.backbone_margin_mm)
     )
     cable_radius_mm = 0.5 * routing.cable_keepout_diameter_mm
     for placement, anchor in zip(placements, anchors):
         start = route_starts[placement.tag]
-        lane_anchor = anchor + scaled(tangent, cartridge.service_lane_offset_mm)
+        lane_anchor = (
+            anchor
+            + scaled(tangent, cartridge.service_lane_offset_mm)
+            + scaled(_sector_inward(sector), service_inset_mm)
+        )
         route = Part.makeCompound(
             [
                 _segment_keepout(start, lane_anchor, cable_radius_mm),
@@ -397,6 +417,7 @@ def build_sector_cartridge(
     return SectorCartridgeGeometry(
         sector=sector,
         placements=placements,
+        service_junction=junction,
         physical=physical,
         interfaces=interfaces,
         keepouts=keepouts,
