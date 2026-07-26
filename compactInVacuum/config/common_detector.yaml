@@ -140,6 +140,7 @@ target:
     thickness_status: provisional
   holder:
     status: provisional
+    architecture: open_c_frame
     outer_width_mm: 58.0
     outer_height_mm: 58.0
     frame_width_mm: 8.0

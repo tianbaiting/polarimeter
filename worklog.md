@@ -771,3 +771,12 @@ Entry Template:
 - Validation Result: pass; full active acceptance cones are unobstructed, cassette overlaps are zero, and the complete thermal contact graph is geometrically continuous.
 - Artifacts/State: new sector cartridge abstraction and independent FreeCAD document builder. Acceptance-cone validation forced a physically meaningful narrow cassette nose rather than a change to detector angles.
 - Next Action: add the rotary target mechanism and four-sector internal assembly.
+
+- Timestamp UTC: 2026-07-26T16:21:07Z
+- Timestamp Local: 2026-07-27 01:21:07 JST
+- Module/Scope: CompactOne Phase E internal assembly and rotary target
+- Command(s): CompactOne pure-Python suite and FreeCAD runtime suite
+- Key Parameters/Overrides: four three-channel cartridges plus work/park target and a 19-pose motion sweep.
+- Validation Result: pass; all 12 full acceptance lofts clear, target motion clears every cartridge, support material clears beam stay-clear, and all six inter-sector overlap pairs are zero.
+- Artifacts/State: target and four-sector internal-machine builders added. The rejected closed holder-frame sweep was replaced with an explicitly provisional open C-frame candidate.
+- Next Action: add detector services, feedthrough manifold, and service-capacity validation.

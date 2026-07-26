@@ -192,6 +192,8 @@ def build_active_acceptance_cone(
         raise ValueError("acceptance cone requires a CompactOne schema-v2 configuration")
     active = cfg.compact_one.detector.active
     target = cfg.compact_one.target.foil
+    if cfg.physics is None:
+        raise ValueError("acceptance cone requires the physics beam-axis contract")
     face_center = target_facing_active_face_center(
         placement,
         active.thickness_mm,
@@ -199,11 +201,29 @@ def build_active_acceptance_cone(
     length_mm = face_center.Length
     if length_mm <= 0.0:
         raise ValueError("detector active face must lie downstream of the target")
-    # [EN] The source disc is conservatively represented normal to each channel axis; this encloses the configured target region without claiming a detector-response simulation. / [CN] 源圆盘按各通道轴线法向作保守表示，包络已配置靶区但不冒充探测器响应模拟。
-    return Part.makeCone(
-        0.5 * target.diameter_mm,
-        0.5 * active.diameter_mm,
-        length_mm,
-        App.Vector(0.0, 0.0, 0.0),
-        scaled(face_center, 1.0 / length_mm),
+    source_center = App.Vector(*cfg.physics.target.position_mm)
+    source_normal = App.Vector(*cfg.physics.beam.axis)
+    source_wire = Part.Wire(
+        [
+            Part.makeCircle(
+                0.5 * target.diameter_mm,
+                source_center,
+                source_normal,
+            )
+        ]
+    )
+    detector_wire = Part.Wire(
+        [
+            Part.makeCircle(
+                0.5 * active.diameter_mm,
+                face_center,
+                scaled(face_center, 1.0 / length_mm),
+            )
+        ]
+    )
+    # [EN] The ruled solid connects the real target-foil plane to the tilted active disc, avoiding the false large-angle obstruction created by a coaxial-cone approximation. / [CN] 该直纹实体连接真实靶箔平面与倾斜灵敏圆面，避免同轴圆锥近似在大角度通道产生虚假遮挡。
+    return Part.makeLoft(
+        [source_wire, detector_wire],
+        True,
+        True,
     )

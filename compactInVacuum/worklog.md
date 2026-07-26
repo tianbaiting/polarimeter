@@ -121,3 +121,12 @@ Entry Template:
 - Validation Result: pass; 3 cassettes, 47 physical components, zero cassette-to-cassette overlap, zero material in any full active acceptance cone, three service routes, and zero geometric gaps in every declared SiPM-to-chamber thermal connection.
 - Artifacts/State: independent sector builder/document builder and runtime metrics added. The first full-cone check exposed D-shell obstruction of the P-small cone; the cassette nose and anti-rotation-key orientation were deliberately refactored instead of changing the physics angles.
 - Next Action: assemble four cartridges with the target work/park mechanism and validate the complete target sweep plus inter-sector clearance.
+
+- Timestamp UTC: 2026-07-26T16:21:07Z
+- Timestamp Local: 2026-07-27 01:21:07 JST
+- Module/Scope: CompactOne Phase E four-sector internal machine and target kinematics
+- Command(s): `./compactInVacuum/run_freecad_tests.sh`; CompactOne pure-Python regression suite
+- Key Parameters/Overrides: 4 cartridges x 3 channels; rotary target with ICF70-axis contract, work angle 0 degrees, park angle 90 degrees, 5-degree sweep sampling, 30 mm foil, open C-frame holder, and external hard-stop interfaces.
+- Validation Result: pass; 12 placements, 193 physical components, 19 target-motion poses, zero inter-sector overlap, zero target-sweep collision, zero support intrusion into beam stay-clear, and zero full active-acceptance obstruction.
+- Artifacts/State: four-sector internal assembly/document builder and target pose/system builders added. A closed target frame failed the 30–50 degree beam-clearance sweep; it remains a rejected reference concept and the provisional open C-frame candidate now clears the complete sampled path. Acceptance geometry now lofts the real beam-normal target disc to each tilted detector face instead of using a false coaxial cone.
+- Next Action: implement the bought-out feedthrough/service manifold, all 12 coax routes, housekeeping harness, grounding, and feedthrough-capacity gates.

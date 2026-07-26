@@ -19,6 +19,7 @@ from .components import (
 from .config import CIVConfig
 from .cassette import build_detector_cassette
 from .cartridge import build_sector_cartridge
+from .internal import build_internal_assembly
 from .layout import build_detector_placements
 
 
@@ -97,6 +98,26 @@ def build_sector_document(cfg: CIVConfig, sector: str = "left") -> App.Document:
         App.closeDocument(doc_name)
     doc = App.newDocument(doc_name)
     geometry = build_sector_cartridge(cfg, sector)
+    for name, shape in geometry.physical.items():
+        obj = _add_feature(doc, name, shape)
+        obj.addProperty("App::PropertyString", "MaterialName", "CompactOne")
+        obj.MaterialName = geometry.materials.get(name, "unresolved")
+    for name, shape in geometry.interfaces.items():
+        _add_feature(doc, name, shape, engineering_role="interface_envelope")
+    for name, shape in geometry.keepouts.items():
+        _add_feature(doc, name, shape, engineering_role="keepout")
+    for name, shape in geometry.datums.items():
+        _add_feature(doc, name, shape, engineering_role="datum")
+    doc.recompute()
+    return doc
+
+
+def build_internal_document(cfg: CIVConfig) -> App.Document:
+    doc_name = f"{cfg.doc_name}_FourSectorInternal"
+    if doc_name in App.listDocuments():
+        App.closeDocument(doc_name)
+    doc = App.newDocument(doc_name)
+    geometry = build_internal_assembly(cfg)
     for name, shape in geometry.physical.items():
         obj = _add_feature(doc, name, shape)
         obj.addProperty("App::PropertyString", "MaterialName", "CompactOne")

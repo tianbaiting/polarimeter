@@ -16,11 +16,25 @@ from civ.cassette import build_detector_cassette, cassette_compound
 from civ.cartridge import build_sector_cartridge, cartridge_compound
 from civ.config import load_config
 from civ.detector import build_active_acceptance_cone
+from civ.internal import build_internal_assembly, internal_compound
 from civ.layout import build_detector_placements
 
 
 def _distance_mm(shape_a: Part.Shape, shape_b: Part.Shape) -> float:
     return float(shape_a.distToShape(shape_b)[0])
+
+
+def _bounding_boxes_overlap(shape_a: Part.Shape, shape_b: Part.Shape) -> bool:
+    a = shape_a.BoundBox
+    b = shape_b.BoundBox
+    return not (
+        a.XMax < b.XMin
+        or b.XMax < a.XMin
+        or a.YMax < b.YMin
+        or b.YMax < a.YMin
+        or a.ZMax < b.ZMin
+        or b.ZMax < a.ZMin
+    )
 
 
 def test_cassette_runtime() -> dict[str, object]:
@@ -175,12 +189,126 @@ def test_sector_runtime() -> dict[str, object]:
     }
 
 
+def test_internal_runtime() -> dict[str, object]:
+    cfg = load_config(str(MODULE_ROOT / "config" / "afterSRC_compact.yaml"))
+    geometry = build_internal_assembly(cfg)
+    compound = internal_compound(geometry)
+    assert compound.isValid()
+    assert len(geometry.placements) == 12
+    assert set(geometry.cartridges) == {"left", "right", "up", "down"}
+    assert len(geometry.target.motion_samples) == 19
+    assert geometry.target.work.target_center.Length <= 1.0e-9
+    assert (
+        geometry.target.park.target_center - App.Vector(70.0, 0.0, 70.0)
+    ).Length <= 1.0e-9
+
+    cartridge_compounds = {
+        sector: Part.makeCompound(list(cartridge.physical.values()))
+        for sector, cartridge in geometry.cartridges.items()
+    }
+    intersector_overlap_mm3: dict[str, float] = {}
+    sectors = tuple(cartridge_compounds)
+    for index, sector_a in enumerate(sectors):
+        for sector_b in sectors[index + 1 :]:
+            key = f"{sector_a}<->{sector_b}"
+            intersector_overlap_mm3[key] = float(
+                cartridge_compounds[sector_a]
+                .common(cartridge_compounds[sector_b])
+                .Volume
+            )
+    assert all(volume <= 1.0e-6 for volume in intersector_overlap_mm3.values())
+
+    target_motion_collisions: list[dict[str, object]] = []
+    cartridge_physical = {
+        name: shape
+        for cartridge in geometry.cartridges.values()
+        for name, shape in cartridge.physical.items()
+    }
+    for pose in geometry.target.motion_samples:
+        for moving_name, moving_shape in pose.physical.items():
+            for obstacle_name, obstacle_shape in cartridge_physical.items():
+                if not _bounding_boxes_overlap(moving_shape, obstacle_shape):
+                    continue
+                intersection_mm3 = float(moving_shape.common(obstacle_shape).Volume)
+                if intersection_mm3 > 1.0e-6:
+                    target_motion_collisions.append(
+                        {
+                            "angle_deg": pose.angle_deg,
+                            "moving_component": moving_name,
+                            "obstacle": obstacle_name,
+                            "intersection_volume_mm3": intersection_mm3,
+                        }
+                    )
+    assert not target_motion_collisions, target_motion_collisions
+
+    los_obstructions: list[dict[str, object]] = []
+    for placement in geometry.placements:
+        cone = build_active_acceptance_cone(cfg, placement)
+        excluded = {
+            f"{placement.tag}_ActivePlastic",
+            "TargetWork_TargetFoil",
+        }
+        for component, shape in geometry.physical.items():
+            if component in excluded or not _bounding_boxes_overlap(cone, shape):
+                continue
+            intersection_mm3 = float(cone.common(shape).Volume)
+            if intersection_mm3 > 1.0e-6:
+                los_obstructions.append(
+                    {
+                        "channel": placement.channel_name,
+                        "sector": placement.sector_name,
+                        "component": component,
+                        "intersection_volume_mm3": intersection_mm3,
+                    }
+                )
+    assert not los_obstructions, los_obstructions
+
+    beam_radius_mm = 0.5 * cfg.compact_one.deployment.beam_stay_clear_diameter_mm
+    beam_z_min_mm = cfg.vessel.center_z_mm - 0.5 * cfg.vessel.length_mm
+    beam = Part.makeCylinder(
+        beam_radius_mm,
+        cfg.vessel.length_mm,
+        App.Vector(0.0, 0.0, beam_z_min_mm),
+    )
+    target_support_beam_collisions: list[dict[str, object]] = []
+    for pose in geometry.target.motion_samples:
+        for name, shape in pose.physical.items():
+            if name == "TargetFoil" or not _bounding_boxes_overlap(beam, shape):
+                continue
+            intersection_mm3 = float(beam.common(shape).Volume)
+            if intersection_mm3 > 1.0e-6:
+                target_support_beam_collisions.append(
+                    {
+                        "angle_deg": pose.angle_deg,
+                        "component": name,
+                        "intersection_volume_mm3": intersection_mm3,
+                    }
+                )
+    assert not target_support_beam_collisions, target_support_beam_collisions
+
+    return {
+        "status": "pass",
+        "detector_count": len(geometry.placements),
+        "sector_count": len(geometry.cartridges),
+        "physical_component_count": len(geometry.physical),
+        "solid_count": len(compound.Solids),
+        "motion_sample_count": len(geometry.target.motion_samples),
+        "target_work_center_mm": list(geometry.target.work.target_center),
+        "target_park_center_mm": list(geometry.target.park.target_center),
+        "intersector_overlap_mm3": intersector_overlap_mm3,
+        "target_motion_collisions": target_motion_collisions,
+        "acceptance_cone_obstructions": los_obstructions,
+        "target_support_beam_collisions": target_support_beam_collisions,
+    }
+
+
 def main() -> int:
     print(
         json.dumps(
             {
                 "cassette": test_cassette_runtime(),
                 "sector": test_sector_runtime(),
+                "internal": test_internal_runtime(),
             },
             indent=2,
         )

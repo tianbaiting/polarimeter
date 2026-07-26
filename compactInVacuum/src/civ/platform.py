@@ -119,6 +119,7 @@ class TargetFoilSpec:
 @dataclass(frozen=True)
 class TargetHolderSpec:
     status: str
+    architecture: str
     outer_width_mm: float
     outer_height_mm: float
     frame_width_mm: float
@@ -679,6 +680,10 @@ def _parse_target(raw: Mapping[str, Any]) -> TargetSystemSpec:
         ),
         holder=TargetHolderSpec(
             status=_state(holder_raw.get("status"), "target.holder.status"),
+            architecture=_text(
+                holder_raw.get("architecture"),
+                "target.holder.architecture",
+            ),
             outer_width_mm=_positive(
                 _number(holder_raw.get("outer_width_mm"), "target.holder.outer_width_mm"),
                 "target.holder.outer_width_mm",
