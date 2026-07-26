@@ -7,7 +7,13 @@ import FreeCAD as App
 import Part
 
 from .config import CIVConfig, EndModuleSideConfig, end_module_has_groove
-from .layout import DetectorPlacement, detector_center, detector_outer_face_center, dot, normalize, scaled
+from .layout import (
+    DetectorPlacement,
+    detector_center,
+    detector_outer_face_center,
+    placement_from_direction,
+    scaled,
+)
 
 
 def _cylinder(radius_mm: float, length_mm: float, origin: App.Vector, axis: App.Vector | None = None) -> Part.Shape:
@@ -421,22 +427,6 @@ def build_top_service_equipment_envelopes(cfg: CIVConfig) -> dict[str, Part.Shap
     return out
 
 
-def make_placement_from_direction(origin: App.Vector, direction: App.Vector) -> App.Placement:
-    axis_z = App.Vector(0.0, 0.0, 1.0)
-    unit_direction = normalize(direction)
-    cos_angle = max(-1.0, min(1.0, dot(axis_z, unit_direction)))
-    rotation_axis = axis_z.cross(unit_direction)
-
-    if rotation_axis.Length <= 1e-12:
-        if cos_angle >= 0.0:
-            rotation = App.Rotation()
-        else:
-            rotation = App.Rotation(App.Vector(1.0, 0.0, 0.0), 180.0)
-    else:
-        rotation = App.Rotation(rotation_axis, math.degrees(math.acos(cos_angle)))
-    return App.Placement(origin, rotation)
-
-
 def build_inner_frame(cfg: CIVConfig, placements: list[DetectorPlacement]) -> Part.Shape:
     wall_clearance_mm = (
         cfg.top_services.electrical.routing.wall_clearance_mm
@@ -476,7 +466,7 @@ def build_inner_frame(cfg: CIVConfig, placements: list[DetectorPlacement]) -> Pa
                 0.0,
             ),
         )
-        arm.Placement = make_placement_from_direction(start, placement.direction)
+        arm.Placement = placement_from_direction(start, placement.direction)
         support_shapes.append(arm)
 
         anchor_depth_mm = min(6.0, arm_length_mm)
@@ -517,7 +507,7 @@ def build_compact_detector(cfg: CIVConfig, placement: DetectorPlacement) -> Part
     clamp = clamp_outer.cut(clamp_inner)
 
     origin = detector_center(placement)
-    placement_transform = make_placement_from_direction(origin, placement.direction)
+    placement_transform = placement_from_direction(origin, placement.direction)
     detector.Placement = placement_transform
     clamp.Placement = placement_transform
 

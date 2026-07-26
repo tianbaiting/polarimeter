@@ -6,7 +6,7 @@ The module directory and stateful runner retain the `compactInVacuum` name for c
 |---|---|---|
 | `detector.diameter_mm` | `detector.active.diameter_mm` | compatibility scalar generated from schema v2 |
 | `detector.length_mm` | `detector.active.thickness_mm` | compatibility scalar generated from schema v2 |
-| one detector cylinder | active plastic + optics + SiPM + cassette components | preferred geometry required |
+| one detector cylinder | active plastic + optics + SiPM + cassette components | preferred golden-cassette geometry implemented |
 | annular clamp | cassette shell, insertion stop, key, mount datum | legacy reference only |
 | twelve independent support arms | four three-channel sector cartridges | legacy selectable until artifact migration closes |
 | `inner_frame` | sector cartridge rails/backbone/thermal bus | compatibility values generated from schema v2 |
@@ -29,4 +29,3 @@ Configuration migration:
 - Legacy scaffold: `config/default_compactInVacuum.yaml`
 
 The old default remains available during staged geometry migration. It shall not be described as the preferred CompactOne design.
-

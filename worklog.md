@@ -753,3 +753,12 @@ Entry Template:
 - Validation Result: pass, 20 tests.
 - Artifacts/State: common detector/cassette/cartridge/target/services/thermal/material configuration, two chamber-candidate sets, bought-out interface contracts, dependency-aware config hash, and migration map.
 - Next Action: build the independent golden detector cassette and its geometry validation artifact.
+
+- Timestamp UTC: 2026-07-26T15:59:35Z
+- Timestamp Local: 2026-07-27 00:59:35 JST
+- Module/Scope: CompactOne Phase C golden cassette
+- Command(s): `./compactInVacuum/run_freecad_tests.sh`; CompactOne pure-Python regression suite
+- Key Parameters/Overrides: active detector and 12-part cassette mechanical/optical/thermal envelope separated; no microscopic electronics modeled.
+- Validation Result: pass; active volume and front-path clearance verified, complete declared SiPM-to-cassette thermal contact chain has zero geometric gaps.
+- Artifacts/State: independent cassette and document builders plus FreeCAD runtime test harness.
+- Next Action: build the three-channel golden sector cartridge.

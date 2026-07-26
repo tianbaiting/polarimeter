@@ -43,6 +43,26 @@ def normalize(v: App.Vector) -> App.Vector:
     return scaled(v, 1.0 / length)
 
 
+def placement_from_direction(origin: App.Vector, direction: App.Vector) -> App.Placement:
+    axis_z = App.Vector(0.0, 0.0, 1.0)
+    unit_direction = normalize(direction)
+    cos_angle = max(-1.0, min(1.0, dot(axis_z, unit_direction)))
+    rotation_axis = axis_z.cross(unit_direction)
+
+    if rotation_axis.Length <= 1.0e-12:
+        rotation = (
+            App.Rotation()
+            if cos_angle >= 0.0
+            else App.Rotation(App.Vector(1.0, 0.0, 0.0), 180.0)
+        )
+    else:
+        rotation = App.Rotation(
+            rotation_axis,
+            math.degrees(math.acos(cos_angle)),
+        )
+    return App.Placement(origin, rotation)
+
+
 def sector_direction_from_theta(angle_deg: float, sector_name: str) -> App.Vector:
     theta = math.radians(angle_deg)
     transverse_basis = {
@@ -108,3 +128,13 @@ def detector_outer_face_center(
     detector_length_mm: float,
 ) -> App.Vector:
     return scaled(placement.direction, placement.radius_mm + (0.5 * detector_length_mm))
+
+
+def cassette_axis_position(
+    placement: DetectorPlacement,
+    offset_from_active_center_mm: float,
+) -> App.Vector:
+    return scaled(
+        placement.direction,
+        placement.radius_mm + offset_from_active_center_mm,
+    )

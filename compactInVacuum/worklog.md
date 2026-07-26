@@ -103,3 +103,12 @@ Entry Template:
 - Validation Result: pass, 20 tests; both deployment profiles and the legacy scaffold load; inherited common YAML participates in the state hash.
 - Artifacts/State: added schema-v2 parser, common detector config, two deployment configs/aliases, migration note, and purchased-interface/project-transition metadata.
 - Next Action: implement and independently validate the detector cassette geometry.
+
+- Timestamp UTC: 2026-07-26T15:59:35Z
+- Timestamp Local: 2026-07-27 00:59:35 JST
+- Module/Scope: CompactOne Phase C golden detector cassette
+- Command(s): `./compactInVacuum/run_freecad_tests.sh`; `micromamba run -n anaroot-env python -m pytest -q compactInVacuum/tests/test_platform_config.py compactInVacuum/tests/test_geometry.py`
+- Key Parameters/Overrides: 20 mm diameter x 5.5 mm active plastic; 32 x 32 x 44 mm cassette body; explicit coupling, reflector, EQR15 envelope, copper carrier/spreader/bridge, shell, stop, key, strain relief, connector keep-out, temperature sensor, and datums.
+- Validation Result: pass; 12 valid physical shapes, active volume 1727.875959 mm3, zero shell overlap with active/entrance path, and zero-distance contacts through the declared thermal chain.
+- Artifacts/State: independent cassette builder/document builder and FreeCAD runtime regression entry added; no deployment assembly switched yet.
+- Next Action: place D/P-small/P-large cassettes on one removable golden sector and validate shared structure/services/thermal semantics.

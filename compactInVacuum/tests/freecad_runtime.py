@@ -1,0 +1,101 @@
+from __future__ import annotations
+
+import json
+import math
+from pathlib import Path
+import sys
+
+import FreeCAD as App
+import Part
+
+
+MODULE_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(MODULE_ROOT / "src"))
+
+from civ.cassette import build_detector_cassette, cassette_compound
+from civ.config import load_config
+from civ.layout import build_detector_placements
+
+
+def _distance_mm(shape_a: Part.Shape, shape_b: Part.Shape) -> float:
+    return float(shape_a.distToShape(shape_b)[0])
+
+
+def test_cassette_runtime() -> dict[str, object]:
+    cfg = load_config(str(MODULE_ROOT / "config" / "afterSRC_compact.yaml"))
+    geometry = build_detector_cassette(cfg)
+    compound = cassette_compound(geometry)
+    active = cfg.compact_one.detector.active
+    expected_active_volume_mm3 = (
+        math.pi
+        * (0.5 * active.diameter_mm) ** 2
+        * active.thickness_mm
+    )
+    active_shape = geometry.physical["ActivePlastic"]
+    shell = geometry.physical["LightTightShell"]
+    entrance_probe = Part.makeCylinder(
+        0.5 * active.diameter_mm,
+        30.0,
+        App.Vector(0.0, 0.0, -0.5 * active.thickness_mm - 30.0),
+    )
+
+    assert compound.isValid()
+    assert all(not shape.isNull() and shape.isValid() for shape in geometry.physical.values())
+    assert len(geometry.physical) == 12
+    assert math.isclose(
+        active_shape.Volume,
+        expected_active_volume_mm3,
+        rel_tol=0.0,
+        abs_tol=1.0e-6,
+    )
+    assert shell.common(active_shape).Volume <= 1.0e-9
+    assert shell.common(entrance_probe).Volume <= 1.0e-9
+
+    thermal_pairs = (
+        ("SiPM", "SensorCarrier"),
+        ("SensorCarrier", "ThermalSpreader"),
+        ("ThermalSpreader", "CassetteThermalBridge"),
+        ("CassetteThermalBridge", "LightTightShell"),
+        ("LightTightShell", "InsertionStop"),
+    )
+    thermal_distances = {
+        f"{name_a}->{name_b}": _distance_mm(
+            geometry.physical[name_a],
+            geometry.physical[name_b],
+        )
+        for name_a, name_b in thermal_pairs
+    }
+    assert all(distance <= 1.0e-6 for distance in thermal_distances.values())
+
+    placements = build_detector_placements(cfg)
+    placed = build_detector_cassette(cfg, placements[0])
+    placed_active = placed.physical["ActivePlastic"]
+    center = placed_active.CenterOfMass
+    expected = placements[0].direction * placements[0].radius_mm
+    assert (center - expected).Length <= 1.0e-6
+
+    return {
+        "status": "pass",
+        "freecad_version": ".".join(App.Version()[:3]),
+        "physical_component_count": len(geometry.physical),
+        "interface_count": len(geometry.interfaces),
+        "keepout_count": len(geometry.keepouts),
+        "solid_count": len(compound.Solids),
+        "bounding_box_mm": [
+            float(compound.BoundBox.XLength),
+            float(compound.BoundBox.YLength),
+            float(compound.BoundBox.ZLength),
+        ],
+        "active_volume_mm3": float(active_shape.Volume),
+        "thermal_contact_distances_mm": thermal_distances,
+    }
+
+
+def main() -> int:
+    print(json.dumps({"cassette": test_cassette_runtime()}, indent=2))
+    sys.stdout.flush()
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

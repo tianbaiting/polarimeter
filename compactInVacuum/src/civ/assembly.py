@@ -17,6 +17,7 @@ from .components import (
     build_vessel_body,
 )
 from .config import CIVConfig
+from .cassette import build_detector_cassette
 from .layout import build_detector_placements
 
 
@@ -65,5 +66,25 @@ def build_assembly(cfg: CIVConfig) -> App.Document:
     for name, shape in build_grounding_envelopes(cfg).items():
         _add_feature(doc, name, shape, engineering_role="interface_envelope")
 
+    doc.recompute()
+    return doc
+
+
+def build_cassette_document(cfg: CIVConfig) -> App.Document:
+    doc_name = f"{cfg.doc_name}_GoldenCassette"
+    if doc_name in App.listDocuments():
+        App.closeDocument(doc_name)
+    doc = App.newDocument(doc_name)
+    geometry = build_detector_cassette(cfg)
+    for name, shape in geometry.physical.items():
+        obj = _add_feature(doc, name, shape)
+        obj.addProperty("App::PropertyString", "MaterialName", "CompactOne")
+        obj.MaterialName = geometry.materials.get(name, "unresolved")
+    for name, shape in geometry.interfaces.items():
+        _add_feature(doc, name, shape, engineering_role="interface_envelope")
+    for name, shape in geometry.keepouts.items():
+        _add_feature(doc, name, shape, engineering_role="keepout")
+    for name, shape in geometry.datums.items():
+        _add_feature(doc, name, shape, engineering_role="datum")
     doc.recompute()
     return doc
