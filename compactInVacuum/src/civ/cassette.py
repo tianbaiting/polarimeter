@@ -7,7 +7,13 @@ import Part
 
 from .config import CIVConfig
 from .detector import DetectorCoreGeometry, build_detector_core
-from .layout import DetectorPlacement, detector_center, placement_from_direction
+from .layout import (
+    DetectorPlacement,
+    cassette_axis_position,
+    detector_center,
+    placement_from_direction,
+    scaled,
+)
 
 
 @dataclass(frozen=True)
@@ -41,25 +47,45 @@ def _cassette_shell(cfg: CIVConfig) -> Part.Shape:
     optics = detector.optics
     cassette = detector.cassette
     width_mm, height_mm, length_mm = cassette.outer_envelope_mm
+    nose_width_mm, nose_height_mm, nose_length_mm = (
+        cassette.front_nose_envelope_mm
+    )
     front_z_mm = cassette.front_offset_from_active_center_mm
     wall_mm = cassette.shell_wall_mm
-    outer = Part.makeBox(
+    rear_start_z_mm = front_z_mm + nose_length_mm
+    rear_length_mm = length_mm - nose_length_mm
+    if rear_length_mm <= wall_mm:
+        raise ValueError("cassette front nose must be shorter than the outer envelope")
+    if abs(nose_width_mm - nose_height_mm) > 1.0e-9:
+        raise ValueError("cassette front nose must be circular in the current design")
+    nose_outer = Part.makeCylinder(
+        0.5 * nose_width_mm,
+        nose_length_mm,
+        App.Vector(0.0, 0.0, front_z_mm),
+    )
+    rear_outer = Part.makeBox(
         width_mm,
         height_mm,
-        length_mm,
-        App.Vector(-0.5 * width_mm, -0.5 * height_mm, front_z_mm),
+        rear_length_mm,
+        App.Vector(-0.5 * width_mm, -0.5 * height_mm, rear_start_z_mm),
     )
-    cavity = Part.makeBox(
+    outer = nose_outer.fuse(rear_outer)
+    nose_cavity = Part.makeCylinder(
+        0.5 * nose_width_mm - wall_mm,
+        nose_length_mm,
+        App.Vector(0.0, 0.0, front_z_mm + wall_mm),
+    )
+    rear_cavity = Part.makeBox(
         width_mm - 2.0 * wall_mm,
         height_mm - 2.0 * wall_mm,
-        length_mm - 2.0 * wall_mm,
+        rear_length_mm,
         App.Vector(
             -0.5 * width_mm + wall_mm,
             -0.5 * height_mm + wall_mm,
-            front_z_mm + wall_mm,
+            rear_start_z_mm - wall_mm,
         ),
     )
-    shell = outer.cut(cavity)
+    shell = outer.cut(nose_cavity.fuse(rear_cavity))
 
     aperture_radius_mm = (
         0.5 * active.diameter_mm
@@ -78,6 +104,26 @@ def _cassette_shell(cfg: CIVConfig) -> Part.Shape:
         App.Vector(0.0, 0.0, rear_z_mm - wall_mm - 0.2),
     )
     return shell.cut(front_aperture).cut(cable_hole)
+
+
+def cassette_connector_segment(
+    cfg: CIVConfig,
+    placement: DetectorPlacement,
+) -> tuple[App.Vector, App.Vector]:
+    cassette = cfg.compact_one.detector.cassette
+    rear_offset_mm = (
+        cassette.front_offset_from_active_center_mm
+        + cassette.outer_envelope_mm[2]
+        + cassette.strain_relief_length_mm
+    )
+    start = cassette_axis_position(placement, rear_offset_mm)
+    tangent = (
+        App.Vector(0.0, 1.0, 0.0)
+        if placement.sector_name in {"left", "right"}
+        else App.Vector(1.0, 0.0, 0.0)
+    )
+    end = start + scaled(tangent, cassette.connector_keepout_length_mm)
+    return start, end
 
 
 def build_detector_cassette(
@@ -101,7 +147,7 @@ def build_detector_cassette(
         App.Vector(
             -0.5 * stop_width_mm,
             -0.5 * stop_height_mm,
-            cassette.mounting_datum_offset_mm - 0.5 * stop_thickness_mm,
+            cassette.insertion_stop_offset_mm - 0.5 * stop_thickness_mm,
         ),
     )
     stop_inner = Part.makeBox(
@@ -111,21 +157,29 @@ def build_detector_cassette(
         App.Vector(
             -0.5 * cassette.outer_envelope_mm[0] + 0.1,
             -0.5 * cassette.outer_envelope_mm[1] + 0.1,
-            cassette.mounting_datum_offset_mm - 0.5 * stop_thickness_mm - 0.2,
+            cassette.insertion_stop_offset_mm - 0.5 * stop_thickness_mm - 0.2,
         ),
     )
     insertion_stop = stop_outer.cut(stop_inner)
 
     key_width_mm, key_height_mm, key_length_mm = cassette.anti_rotation_key_mm
+    if placement is not None and placement.sector_name in {"left", "right"}:
+        key_origin = App.Vector(
+            -0.5 * key_width_mm,
+            0.5 * cassette.outer_envelope_mm[1],
+            cassette.insertion_stop_offset_mm - 0.5 * key_length_mm,
+        )
+    else:
+        key_origin = App.Vector(
+            0.5 * cassette.outer_envelope_mm[0],
+            -0.5 * key_height_mm,
+            cassette.insertion_stop_offset_mm - 0.5 * key_length_mm,
+        )
     anti_rotation_key = Part.makeBox(
         key_width_mm,
         key_height_mm,
         key_length_mm,
-        App.Vector(
-            0.5 * cassette.outer_envelope_mm[0],
-            -0.5 * key_height_mm,
-            cassette.mounting_datum_offset_mm - 0.5 * key_length_mm,
-        ),
+        key_origin,
     )
     strain_relief = Part.makeCylinder(
         0.5 * cassette.cable_exit_diameter_mm + 1.5,
@@ -192,13 +246,22 @@ def build_detector_cassette(
     thermal_connections = (
         *core.thermal_connections,
         ("CassetteThermalBridge", "LightTightShell"),
-        ("LightTightShell", "InsertionStop"),
-        ("InsertionStop", "CassetteMountingInterface"),
+        ("LightTightShell", "CassetteMountingInterface"),
     )
+    placed_keepouts = _place_shapes(keepouts, placement)
+    if placement is not None:
+        connector_start, connector_end = cassette_connector_segment(cfg, placement)
+        connector_delta = connector_end - connector_start
+        placed_keepouts["ConnectorKeepout"] = Part.makeCylinder(
+            0.5 * cassette.connector_keepout_diameter_mm,
+            connector_delta.Length,
+            connector_start,
+            connector_delta,
+        )
     return CassetteGeometry(
         physical=_place_shapes(physical, placement),
         interfaces=_place_shapes(interfaces, placement),
-        keepouts=_place_shapes(keepouts, placement),
+        keepouts=placed_keepouts,
         datums=_place_shapes(datums, placement),
         materials=materials,
         thermal_connections=thermal_connections,

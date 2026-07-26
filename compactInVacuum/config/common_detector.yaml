@@ -57,16 +57,18 @@ detector:
   cassette:
     status: provisional
     outer_envelope_mm: [32.0, 32.0, 44.0]
+    front_nose_envelope_mm: [23.4, 23.4, 35.0]
     front_offset_from_active_center_mm: -4.0
-    shell_wall_mm: 1.5
+    shell_wall_mm: 1.4
     shell_material: black_anodized_aluminum_screening
     light_tight: true
     removable: true
     mounting_datum: rear_stop_face_and_key
-    mounting_datum_offset_mm: 31.0
+    mounting_datum_offset_mm: 40.0
     anti_rotation_feature: rectangular_key
     anti_rotation_key_mm: [4.0, 3.0, 12.0]
     insertion_stop_mm: [34.0, 34.0, 3.0]
+    insertion_stop_offset_mm: 31.0
     sensor_carrier_mm: [14.0, 14.0, 2.0]
     sensor_carrier_material: oxygen_free_copper
     thermal_spreader_mm: [20.0, 20.0, 1.0]
@@ -268,4 +270,3 @@ materials:
 validation:
   angle_tolerance_deg: 0.05
   radius_tolerance_mm: 0.2
-

@@ -13,7 +13,9 @@ MODULE_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(MODULE_ROOT / "src"))
 
 from civ.cassette import build_detector_cassette, cassette_compound
+from civ.cartridge import build_sector_cartridge, cartridge_compound
 from civ.config import load_config
+from civ.detector import build_active_acceptance_cone
 from civ.layout import build_detector_placements
 
 
@@ -56,12 +58,13 @@ def test_cassette_runtime() -> dict[str, object]:
         ("SensorCarrier", "ThermalSpreader"),
         ("ThermalSpreader", "CassetteThermalBridge"),
         ("CassetteThermalBridge", "LightTightShell"),
-        ("LightTightShell", "InsertionStop"),
+        ("LightTightShell", "CassetteMountingInterface"),
     )
+    cassette_shapes = {**geometry.physical, **geometry.interfaces}
     thermal_distances = {
         f"{name_a}->{name_b}": _distance_mm(
-            geometry.physical[name_a],
-            geometry.physical[name_b],
+            cassette_shapes[name_a],
+            cassette_shapes[name_b],
         )
         for name_a, name_b in thermal_pairs
     }
@@ -91,8 +94,97 @@ def test_cassette_runtime() -> dict[str, object]:
     }
 
 
+def test_sector_runtime() -> dict[str, object]:
+    cfg = load_config(str(MODULE_ROOT / "config" / "afterSRC_compact.yaml"))
+    geometry = build_sector_cartridge(cfg, "left")
+    compound = cartridge_compound(geometry)
+    assert tuple(item.channel_name for item in geometry.placements) == (
+        "deuteron",
+        "proton_small",
+        "proton_large",
+    )
+    assert compound.isValid()
+    assert all(not shape.isNull() and shape.isValid() for shape in geometry.physical.values())
+
+    cassette_shapes: dict[str, Part.Shape] = {}
+    for placement in geometry.placements:
+        prefix = f"{placement.tag}_"
+        cassette_shapes[placement.tag] = Part.makeCompound(
+            [
+                shape
+                for name, shape in geometry.physical.items()
+                if name.startswith(prefix)
+                and not name.endswith(("CartridgeMountPad", "StructuralRail", "ThermalStrap"))
+            ]
+        )
+    overlap_mm3: dict[str, float] = {}
+    tags = tuple(cassette_shapes)
+    for index, tag_a in enumerate(tags):
+        for tag_b in tags[index + 1 :]:
+            key = f"{tag_a}<->{tag_b}"
+            overlap_mm3[key] = float(
+                cassette_shapes[tag_a].common(cassette_shapes[tag_b]).Volume
+            )
+    assert all(volume <= 1.0e-6 for volume in overlap_mm3.values())
+
+    los_obstructions: list[dict[str, object]] = []
+    for placement in geometry.placements:
+        cone = build_active_acceptance_cone(cfg, placement)
+        own_active = f"{placement.tag}_ActivePlastic"
+        for component, shape in geometry.physical.items():
+            if component == own_active:
+                continue
+            intersection_mm3 = float(cone.common(shape).Volume)
+            if intersection_mm3 > 1.0e-6:
+                los_obstructions.append(
+                    {
+                        "channel": placement.channel_name,
+                        "component": component,
+                        "intersection_volume_mm3": intersection_mm3,
+                    }
+                )
+    assert not los_obstructions, los_obstructions
+
+    all_shapes = {**geometry.physical, **geometry.interfaces}
+    thermal_distances = {
+        f"{name_a}->{name_b}": _distance_mm(all_shapes[name_a], all_shapes[name_b])
+        for name_a, name_b in geometry.thermal_connections
+    }
+    assert all(distance <= 1.0e-6 for distance in thermal_distances.values()), thermal_distances
+    cable_routes = tuple(
+        name for name in geometry.keepouts if name.endswith("SectorCableRoute")
+    )
+    assert len(cable_routes) == 3
+    assert "left_CartridgeRemovalEnvelope" in geometry.keepouts
+
+    return {
+        "status": "pass",
+        "sector": geometry.sector,
+        "detector_count": len(geometry.placements),
+        "physical_component_count": len(geometry.physical),
+        "solid_count": len(compound.Solids),
+        "bounding_box_mm": [
+            float(compound.BoundBox.XLength),
+            float(compound.BoundBox.YLength),
+            float(compound.BoundBox.ZLength),
+        ],
+        "cassette_overlap_mm3": overlap_mm3,
+        "acceptance_cone_obstructions": los_obstructions,
+        "thermal_contact_distances_mm": thermal_distances,
+        "cable_route_count": len(cable_routes),
+    }
+
+
 def main() -> int:
-    print(json.dumps({"cassette": test_cassette_runtime()}, indent=2))
+    print(
+        json.dumps(
+            {
+                "cassette": test_cassette_runtime(),
+                "sector": test_sector_runtime(),
+            },
+            indent=2,
+        )
+    )
     sys.stdout.flush()
     return 0
 

@@ -51,6 +51,7 @@ class SiPMSpec:
 class CassetteSpec:
     status: str
     outer_envelope_mm: tuple[float, float, float]
+    front_nose_envelope_mm: tuple[float, float, float]
     front_offset_from_active_center_mm: float
     shell_wall_mm: float
     shell_material: str
@@ -61,6 +62,7 @@ class CassetteSpec:
     anti_rotation_feature: str
     anti_rotation_key_mm: tuple[float, float, float]
     insertion_stop_mm: tuple[float, float, float]
+    insertion_stop_offset_mm: float
     sensor_carrier_mm: tuple[float, float, float]
     sensor_carrier_material: str
     thermal_spreader_mm: tuple[float, float, float]
@@ -478,6 +480,11 @@ def _parse_sipm(raw: Mapping[str, Any]) -> SiPMSpec:
 
 def _parse_cassette(raw: Mapping[str, Any]) -> CassetteSpec:
     outer = _vector(raw.get("outer_envelope_mm"), "detector.cassette.outer_envelope_mm", 3)
+    front_nose = _vector(
+        raw.get("front_nose_envelope_mm"),
+        "detector.cassette.front_nose_envelope_mm",
+        3,
+    )
     anti_rotation = _vector(
         raw.get("anti_rotation_key_mm"),
         "detector.cassette.anti_rotation_key_mm",
@@ -493,6 +500,11 @@ def _parse_cassette(raw: Mapping[str, Any]) -> CassetteSpec:
     return CassetteSpec(
         status=_state(raw.get("status"), "detector.cassette.status"),
         outer_envelope_mm=(outer[0], outer[1], outer[2]),
+        front_nose_envelope_mm=(
+            front_nose[0],
+            front_nose[1],
+            front_nose[2],
+        ),
         front_offset_from_active_center_mm=_number(
             raw.get("front_offset_from_active_center_mm"),
             "detector.cassette.front_offset_from_active_center_mm",
@@ -515,6 +527,10 @@ def _parse_cassette(raw: Mapping[str, Any]) -> CassetteSpec:
         ),
         anti_rotation_key_mm=(anti_rotation[0], anti_rotation[1], anti_rotation[2]),
         insertion_stop_mm=(insertion_stop[0], insertion_stop[1], insertion_stop[2]),
+        insertion_stop_offset_mm=_number(
+            raw.get("insertion_stop_offset_mm"),
+            "detector.cassette.insertion_stop_offset_mm",
+        ),
         sensor_carrier_mm=(carrier[0], carrier[1], carrier[2]),
         sensor_carrier_material=_text(
             raw.get("sensor_carrier_material"),

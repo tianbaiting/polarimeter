@@ -112,3 +112,12 @@ Entry Template:
 - Validation Result: pass; 12 valid physical shapes, active volume 1727.875959 mm3, zero shell overlap with active/entrance path, and zero-distance contacts through the declared thermal chain.
 - Artifacts/State: independent cassette builder/document builder and FreeCAD runtime regression entry added; no deployment assembly switched yet.
 - Next Action: place D/P-small/P-large cassettes on one removable golden sector and validate shared structure/services/thermal semantics.
+
+- Timestamp UTC: 2026-07-26T16:13:36Z
+- Timestamp Local: 2026-07-27 01:13:36 JST
+- Module/Scope: CompactOne Phase D three-channel golden sector
+- Command(s): `./compactInVacuum/run_freecad_tests.sh`; `micromamba run -n anaroot-env python -m pytest -q compactInVacuum/tests/test_platform_config.py compactInVacuum/tests/test_geometry.py`
+- Key Parameters/Overrides: D, P-small, and P-large cassettes on a removable wall-backed cartridge; narrow 23.4 mm diameter cassette nose retained through the insertion stop; tangential connector exits; three shared cable lanes; copper thermal straps and sector bus.
+- Validation Result: pass; 3 cassettes, 47 physical components, zero cassette-to-cassette overlap, zero material in any full active acceptance cone, three service routes, and zero geometric gaps in every declared SiPM-to-chamber thermal connection.
+- Artifacts/State: independent sector builder/document builder and runtime metrics added. The first full-cone check exposed D-shell obstruction of the P-small cone; the cassette nose and anti-rotation-key orientation were deliberately refactored instead of changing the physics angles.
+- Next Action: assemble four cartridges with the target work/park mechanism and validate the complete target sweep plus inter-sector clearance.
