@@ -148,3 +148,12 @@ Entry Template:
 - Validation Result: afterSRC non-strict PASS with 29 passes, 9 warnings, 0 failures; in-front-of-SAMURAI non-strict PASS with the same counts. afterSRC strict engineering mode intentionally FAILS 9 unresolved evidence gates: optics/sensor freeze, four purchased-interface contracts, vacuum material evidence, pressure-vessel wall gate, site envelopes, and cartridge shell-access closure.
 - Artifacts/State: categorized JSON contains physics, beamline, detector, sector cartridge, target, LOS, services, vacuum, mechanical, and thermal results; 12 active-acceptance metrics, 8 coincidence geometry entries, 12 material inventories, and square/cylindrical mass/clearance screening. Intentional blocked-LOS, target-collision, cassette-overlap, 0.30 mm wall, feedthrough-capacity, and aperture failures are detected. `compactOne_afterSRC.state.json` records validate-only pass.
 - Next Action: generate and inspect complete FCStd/STEP artifacts for both deployment profiles, then rerun preserved external-route regressions.
+
+- Timestamp UTC: 2026-07-26T16:50:25Z
+- Timestamp Local: 2026-07-27 01:50:25 JST
+- Module/Scope: CompactOne deployment/prototype artifact generation
+- Command(s): full forced builds through `run_compactOne_afterSRC.sh` and `run_compactOne_infrontSamurai.sh`; strict afterSRC validate-only rejection check; `run_compactOne_prototypes.sh`
+- Key Parameters/Overrides: afterSRC selected cylindrical 440 mm internal-diameter candidate; SAMURAI selected provisional 450 x 450 mm square candidate after the earlier 450 x 430 mm screen produced only 1.474 mm minimum clearance; strict supplier/site/FEA inputs remain unresolved.
+- Validation Result: both deployment builds PASS non-strict geometry validation; afterSRC strict validate-only exits nonzero as designed. SAMURAI selected-square minimum cartridge clearance is now 10.0 mm and target-motion clearance is 26.0 mm.
+- Artifacts/State: generated FCStd/STEP/JSON for golden cassette, golden sector, serviced four-sector internal assembly, CompactOne-afterSRC, and CompactOne-infrontSamurai. afterSRC STEP has 64,115 entities and SAMURAI STEP has 63,073 entities; deployment FCStd files are 540 KiB and 466 KiB respectively.
+- Next Action: rerun afterSRC once after the strict rejection check to restore final non-strict pass state, then regress both preserved external routes.

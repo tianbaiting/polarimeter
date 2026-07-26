@@ -798,3 +798,12 @@ Entry Template:
 - Validation Result: both deployment profiles PASS non-strict geometry validation; strict correctly FAILS nine unresolved engineering-release contracts. Deliberate 0.30 mm wall, LOS blocker, target sweep blocker, cassette overlap, low service capacity, and invalid aperture regressions all fail.
 - Artifacts/State: categorized validation JSON, material-path inventory, detector/acceptance/coincidence metrics, chamber volume/mass/clearance screening, and profile-specific state entry.
 - Next Action: export both full CompactOne deployment assemblies and regress the two external routes.
+
+- Timestamp UTC: 2026-07-26T16:50:25Z
+- Timestamp Local: 2026-07-27 01:50:25 JST
+- Module/Scope: CompactOne profile targets and reproducible artifacts
+- Command(s): forced full generation for both CompactOne deployments and the three prototype hierarchy artifacts; explicit strict rejection run
+- Key Parameters/Overrides: profile-specific chamber selection with a shared detector/cassette/cartridge/target/service platform.
+- Validation Result: both non-strict deployment builds pass; strict correctly exits nonzero. The initial SAMURAI 450 x 430 mm square screen was rejected for 1.474 mm clearance and revised to a clearly provisional 450 x 450 mm internal design candidate with 10.0 mm clearance; the unresolved site envelope remains a strict failure.
+- Artifacts/State: five required artifact sets now exist locally as FCStd/STEP/JSON, with stateful deployment targets registered independently from the legacy CompactInVacuum scaffold.
+- Next Action: restore final afterSRC pass state and run external afterSRC/SAMURAI regression tests.
