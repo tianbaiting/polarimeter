@@ -672,3 +672,13 @@ Entry Template:
 - State Snapshot: run_id=`20260424T094618Z-1762465`, run.status=`pass`, validation.status=`pass`, strict=`true`, git_head=`90a1e35`.
 - Artifacts: FCStd `sha256=2cb0b052...` (821 KB), STEP `sha256=bb80ad27...` (4.5 MB, 95634 entities), report `sha256=423205f6...` (now carries `parts_manifest` with 12 × 7 line items).
 - Next Action: Sub-2 DoD sign-off at `docs/superpowers/specs/2026-04-17-sub2-dod-signoff.md`; await user approval for commit/cleanup of Phase 0 spike script.
+
+- Timestamp UTC: 2026-07-26T17:07:33Z
+- Timestamp Local: 2026-07-27 02:07:33 JST
+- Intent: Strictly regress the preserved in-front-of-SAMURAI external route after isolating the incomplete v1.33 twin-plate prototype.
+- Command(s): `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation --force-rebuild`
+- Key Parameters/Overrides: `geometry.detector.active_fixture=external_reference_v1_31`; reference geometry parameters live under `external_reference_fixture`; the v1.33 schema and independent upper/lower prototype builders remain present but inactive.
+- Validation Result: pass; all five external-route subsystems and every strict check pass.
+- State Snapshot: run_id=`20260726T170500Z-3940391`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: validation report refreshed; validate-only intentionally did not replace FCStd/STEP.
+- Next Action: run final test suites/full generation and keep v1.33 activation blocked until its load path, placement, fasteners, interference, and strict gates are complete.

@@ -216,6 +216,53 @@ class DetectorClampConfig:
             )
 
 
+@dataclass(frozen=True)
+class ExternalReferenceClampConfig:
+    detector_diameter_mm: float
+    housing_length_mm: float
+    outer_diameter_mm: float
+    inner_diameter_mm: float
+    width_mm: float
+    split_gap_mm: float
+    shoulder_height_mm: float
+    end_stop_length_mm: float
+    clamp_ear_length_mm: float
+    clamp_ear_width_mm: float
+    clamp_ear_thickness_mm: float
+    clamp_bolt_diameter_mm: float
+    clamp_bolt_pitch_mm: float
+    anti_rotation_key_width_mm: float
+    anti_rotation_key_depth_mm: float
+    anti_rotation_key_length_mm: float
+    support_overlap_mm: float
+    mount_base_u_mm: float
+    mount_base_v_mm: float
+    mount_base_thickness_mm: float
+    mount_bolt_hole_diameter_mm: float
+    mount_bolt_pitch_u_mm: float
+    mount_bolt_pitch_v_mm: float
+    fillet_radius_mm: float = 3.0
+    chamfer_mm: float = 1.0
+    bolt_head_type: str = "ISO4762_hex_socket"
+    draw_fasteners_as_solids: bool = True
+
+
+@dataclass(frozen=True)
+class ExternalReferenceAdapterConfig:
+    length_mm: float
+    width_mm: float
+    height_mm: float
+    tilt_deg: float
+    radial_standoff_mm: float
+
+
+@dataclass(frozen=True)
+class ExternalReferenceFixtureConfig:
+    status: str
+    clamp: ExternalReferenceClampConfig
+    adapter_block: ExternalReferenceAdapterConfig
+
+
 _LEGACY_CLAMP_FIELDS: frozenset[str] = frozenset({
     "outer_diameter_mm", "inner_diameter_mm", "width_mm", "split_gap_mm",
     "shoulder_height_mm", "end_stop_length_mm",
@@ -235,7 +282,9 @@ _ISO_BOLT_LENGTHS = (20.0, 25.0, 30.0, 35.0, 40.0)
 
 @dataclass(frozen=True)
 class DetectorConfig:
+    active_fixture: str
     clamp: DetectorClampConfig
+    external_reference_fixture: ExternalReferenceFixtureConfig
 
 
 @dataclass(frozen=True)
@@ -992,6 +1041,96 @@ def _parse_plate(raw: dict[str, Any], prefix: str) -> PlateConfig:
     return cfg
 
 
+def _parse_external_reference_fixture(raw: dict[str, Any]) -> ExternalReferenceFixtureConfig:
+    prefix = "geometry.detector.external_reference_fixture"
+    clamp_raw = _to_mapping(raw.get("clamp"), f"{prefix}.clamp")
+    adapter_raw = _to_mapping(raw.get("adapter_block"), f"{prefix}.adapter_block")
+
+    clamp = ExternalReferenceClampConfig(
+        detector_diameter_mm=_to_float(clamp_raw.get("detector_diameter_mm"), f"{prefix}.clamp.detector_diameter_mm"),
+        housing_length_mm=_to_float(clamp_raw.get("housing_length_mm"), f"{prefix}.clamp.housing_length_mm"),
+        outer_diameter_mm=_to_float(clamp_raw.get("outer_diameter_mm"), f"{prefix}.clamp.outer_diameter_mm"),
+        inner_diameter_mm=_to_float(clamp_raw.get("inner_diameter_mm"), f"{prefix}.clamp.inner_diameter_mm"),
+        width_mm=_to_float(clamp_raw.get("width_mm"), f"{prefix}.clamp.width_mm"),
+        split_gap_mm=_to_float(clamp_raw.get("split_gap_mm"), f"{prefix}.clamp.split_gap_mm"),
+        shoulder_height_mm=_to_float(clamp_raw.get("shoulder_height_mm"), f"{prefix}.clamp.shoulder_height_mm"),
+        end_stop_length_mm=_to_float(clamp_raw.get("end_stop_length_mm"), f"{prefix}.clamp.end_stop_length_mm"),
+        clamp_ear_length_mm=_to_float(clamp_raw.get("clamp_ear_length_mm"), f"{prefix}.clamp.clamp_ear_length_mm"),
+        clamp_ear_width_mm=_to_float(clamp_raw.get("clamp_ear_width_mm"), f"{prefix}.clamp.clamp_ear_width_mm"),
+        clamp_ear_thickness_mm=_to_float(clamp_raw.get("clamp_ear_thickness_mm"), f"{prefix}.clamp.clamp_ear_thickness_mm"),
+        clamp_bolt_diameter_mm=_to_float(clamp_raw.get("clamp_bolt_diameter_mm"), f"{prefix}.clamp.clamp_bolt_diameter_mm"),
+        clamp_bolt_pitch_mm=_to_float(clamp_raw.get("clamp_bolt_pitch_mm"), f"{prefix}.clamp.clamp_bolt_pitch_mm"),
+        anti_rotation_key_width_mm=_to_float(clamp_raw.get("anti_rotation_key_width_mm"), f"{prefix}.clamp.anti_rotation_key_width_mm"),
+        anti_rotation_key_depth_mm=_to_float(clamp_raw.get("anti_rotation_key_depth_mm"), f"{prefix}.clamp.anti_rotation_key_depth_mm"),
+        anti_rotation_key_length_mm=_to_float(clamp_raw.get("anti_rotation_key_length_mm"), f"{prefix}.clamp.anti_rotation_key_length_mm"),
+        support_overlap_mm=_to_float(clamp_raw.get("support_overlap_mm"), f"{prefix}.clamp.support_overlap_mm"),
+        mount_base_u_mm=_to_float(clamp_raw.get("mount_base_u_mm"), f"{prefix}.clamp.mount_base_u_mm"),
+        mount_base_v_mm=_to_float(clamp_raw.get("mount_base_v_mm"), f"{prefix}.clamp.mount_base_v_mm"),
+        mount_base_thickness_mm=_to_float(clamp_raw.get("mount_base_thickness_mm"), f"{prefix}.clamp.mount_base_thickness_mm"),
+        mount_bolt_hole_diameter_mm=_to_float(clamp_raw.get("mount_bolt_hole_diameter_mm"), f"{prefix}.clamp.mount_bolt_hole_diameter_mm"),
+        mount_bolt_pitch_u_mm=_to_float(clamp_raw.get("mount_bolt_pitch_u_mm"), f"{prefix}.clamp.mount_bolt_pitch_u_mm"),
+        mount_bolt_pitch_v_mm=_to_float(clamp_raw.get("mount_bolt_pitch_v_mm"), f"{prefix}.clamp.mount_bolt_pitch_v_mm"),
+        fillet_radius_mm=float(clamp_raw.get("fillet_radius_mm", 3.0)),
+        chamfer_mm=float(clamp_raw.get("chamfer_mm", 1.0)),
+        bolt_head_type=str(clamp_raw.get("bolt_head_type", "ISO4762_hex_socket")),
+        draw_fasteners_as_solids=bool(clamp_raw.get("draw_fasteners_as_solids", True)),
+    )
+    adapter = ExternalReferenceAdapterConfig(
+        length_mm=_to_float(adapter_raw.get("length_mm"), f"{prefix}.adapter_block.length_mm"),
+        width_mm=_to_float(adapter_raw.get("width_mm"), f"{prefix}.adapter_block.width_mm"),
+        height_mm=_to_float(adapter_raw.get("height_mm"), f"{prefix}.adapter_block.height_mm"),
+        tilt_deg=_to_float(adapter_raw.get("tilt_deg"), f"{prefix}.adapter_block.tilt_deg"),
+        radial_standoff_mm=_to_float(adapter_raw.get("radial_standoff_mm"), f"{prefix}.adapter_block.radial_standoff_mm"),
+    )
+
+    # [EN] Keep the last strict-validated external fixture explicit while the v1.33 twin-plate prototype lacks assembly integration; this does not re-admit removed fields into the new clamp schema. / [CN] 在 v1.33 双板原型尚未完成装配集成时，显式保留最后一个严格验证通过的外置夹具；这不会把已删除字段重新塞回新夹具 schema。
+    _require_positive(
+        {
+            f"{prefix}.clamp.detector_diameter_mm": clamp.detector_diameter_mm,
+            f"{prefix}.clamp.housing_length_mm": clamp.housing_length_mm,
+            f"{prefix}.clamp.outer_diameter_mm": clamp.outer_diameter_mm,
+            f"{prefix}.clamp.inner_diameter_mm": clamp.inner_diameter_mm,
+            f"{prefix}.clamp.width_mm": clamp.width_mm,
+            f"{prefix}.clamp.split_gap_mm": clamp.split_gap_mm,
+            f"{prefix}.clamp.shoulder_height_mm": clamp.shoulder_height_mm,
+            f"{prefix}.clamp.end_stop_length_mm": clamp.end_stop_length_mm,
+            f"{prefix}.clamp.clamp_ear_length_mm": clamp.clamp_ear_length_mm,
+            f"{prefix}.clamp.clamp_ear_width_mm": clamp.clamp_ear_width_mm,
+            f"{prefix}.clamp.clamp_ear_thickness_mm": clamp.clamp_ear_thickness_mm,
+            f"{prefix}.clamp.clamp_bolt_diameter_mm": clamp.clamp_bolt_diameter_mm,
+            f"{prefix}.clamp.clamp_bolt_pitch_mm": clamp.clamp_bolt_pitch_mm,
+            f"{prefix}.clamp.support_overlap_mm": clamp.support_overlap_mm,
+            f"{prefix}.clamp.mount_base_u_mm": clamp.mount_base_u_mm,
+            f"{prefix}.clamp.mount_base_v_mm": clamp.mount_base_v_mm,
+            f"{prefix}.clamp.mount_base_thickness_mm": clamp.mount_base_thickness_mm,
+            f"{prefix}.clamp.mount_bolt_hole_diameter_mm": clamp.mount_bolt_hole_diameter_mm,
+            f"{prefix}.clamp.mount_bolt_pitch_u_mm": clamp.mount_bolt_pitch_u_mm,
+            f"{prefix}.clamp.mount_bolt_pitch_v_mm": clamp.mount_bolt_pitch_v_mm,
+            f"{prefix}.adapter_block.length_mm": adapter.length_mm,
+            f"{prefix}.adapter_block.width_mm": adapter.width_mm,
+            f"{prefix}.adapter_block.height_mm": adapter.height_mm,
+        }
+    )
+    if not (clamp.detector_diameter_mm < clamp.inner_diameter_mm < clamp.outer_diameter_mm):
+        raise ConfigError(
+            f"{prefix}.clamp requires detector_diameter_mm < inner_diameter_mm < outer_diameter_mm"
+        )
+    if clamp.clamp_bolt_pitch_mm > clamp.width_mm:
+        raise ConfigError(f"{prefix}.clamp.clamp_bolt_pitch_mm must be <= width_mm")
+    if adapter.radial_standoff_mm != 0.0:
+        raise ConfigError(f"{prefix}.adapter_block.radial_standoff_mm must remain 0.0")
+
+    status = str(raw.get("status", "LEGACY_REFERENCE_ONLY"))
+    if status != "LEGACY_REFERENCE_ONLY":
+        raise ConfigError(f"{prefix}.status must be LEGACY_REFERENCE_ONLY")
+
+    return ExternalReferenceFixtureConfig(
+        status=status,
+        clamp=clamp,
+        adapter_block=adapter,
+    )
+
+
 def _parse_detector(raw: dict[str, Any]) -> DetectorConfig:
     clamp_raw = _to_mapping(raw.get("clamp"), "geometry.detector.clamp")
 
@@ -1037,7 +1176,24 @@ def _parse_detector(raw: dict[str, Any]) -> DetectorConfig:
             f"must be one of {_VALID_MOUNT_MODES}"
         )
 
-    return DetectorConfig(clamp=clamp)
+    active_fixture = str(raw.get("active_fixture", "external_reference_v1_31"))
+    if active_fixture != "external_reference_v1_31":
+        raise ConfigError(
+            "geometry.detector.active_fixture must remain 'external_reference_v1_31' "
+            "until the v1.33 twin-plate clamp has assembly and strict-validation coverage"
+        )
+    external_reference_fixture = _parse_external_reference_fixture(
+        _to_mapping(
+            raw.get("external_reference_fixture"),
+            "geometry.detector.external_reference_fixture",
+        )
+    )
+
+    return DetectorConfig(
+        active_fixture=active_fixture,
+        clamp=clamp,
+        external_reference_fixture=external_reference_fixture,
+    )
 
 
 def _validate_clamp_bolt_length(clamp: DetectorClampConfig, hv_plate_thickness_mm: float) -> None:
@@ -1870,11 +2026,14 @@ def _validate_geometry(cfg: GeometryConfig) -> None:
     vv_clear_gap = abs(cfg.plate.v2.offset_x_mm - cfg.plate.v1.offset_x_mm) - 0.5 * (
         cfg.plate.v1.thickness_mm + cfg.plate.v2.thickness_mm
     )
-    vv_required_gap = cfg.clearance.vv_min_gap_factor * cfg.detector.clamp.plate_width_mm
+    vv_required_gap = (
+        cfg.clearance.vv_min_gap_factor
+        * cfg.detector.external_reference_fixture.clamp.outer_diameter_mm
+    )
     if vv_clear_gap < vv_required_gap:
         raise ValueError(
             "geometry.plate.v1/v2 clear gap must satisfy "
-            f"gap >= vv_min_gap_factor*detector.clamp.plate_width_mm "
+            "gap >= vv_min_gap_factor*detector.external_reference_fixture.clamp.outer_diameter_mm "
             f"(gap={vv_clear_gap:.3f}, required={vv_required_gap:.3f})"
         )
 

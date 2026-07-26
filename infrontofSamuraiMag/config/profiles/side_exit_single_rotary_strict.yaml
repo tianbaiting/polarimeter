@@ -180,6 +180,43 @@ geometry:
       stiffener_length_mm: 180.0
 
   detector:
+    active_fixture: external_reference_v1_31
+    external_reference_fixture:
+      status: LEGACY_REFERENCE_ONLY
+      clamp:
+        detector_diameter_mm: 58.0
+        housing_length_mm: 190.0
+        outer_diameter_mm: 74.0
+        inner_diameter_mm: 62.0
+        width_mm: 30.0
+        split_gap_mm: 1.5
+        shoulder_height_mm: 4.0
+        end_stop_length_mm: 12.0
+        clamp_ear_length_mm: 18.0
+        clamp_ear_width_mm: 14.0
+        clamp_ear_thickness_mm: 16.0
+        clamp_bolt_diameter_mm: 6.0
+        clamp_bolt_pitch_mm: 18.0
+        anti_rotation_key_width_mm: 8.0
+        anti_rotation_key_depth_mm: 1.5
+        anti_rotation_key_length_mm: 12.0
+        support_overlap_mm: 20.0
+        mount_base_u_mm: 170.0
+        mount_base_v_mm: 60.0
+        mount_base_thickness_mm: 15.0
+        mount_bolt_hole_diameter_mm: 9.0
+        mount_bolt_pitch_u_mm: 120.0
+        mount_bolt_pitch_v_mm: 36.0
+        fillet_radius_mm: 3.0
+        chamfer_mm: 1.0
+        bolt_head_type: ISO4762_hex_socket
+        draw_fasteners_as_solids: true
+      adapter_block:
+        length_mm: 36.0
+        width_mm: 34.0
+        height_mm: 24.0
+        tilt_deg: 4.0
+        radial_standoff_mm: 0.0
     clamp:
       detector_diameter_mm: 50.0
       housing_length_mm: 190.0

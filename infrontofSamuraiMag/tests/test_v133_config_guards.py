@@ -83,3 +83,14 @@ def test_guard_split_mode_bolt_length_within_iso_lengths(tmp_path: Path) -> None
     # split: 2 * plate_t + 5 = 25 -> exact ISO length 25, passes
     target = _mutate_clamp(tmp_path, plate_thickness_mm=10.0, mount_mode="split")
     load_target(target)
+
+
+def test_incomplete_v133_fixture_cannot_be_activated(tmp_path: Path) -> None:
+    src = Path("infrontofSamuraiMag/config/default_infront.yaml")
+    dst = tmp_path / "target.yaml"
+    raw = yaml.safe_load(src.read_text())
+    raw["geometry"]["detector"]["active_fixture"] = "v1_33_twin_plate"
+    dst.write_text(yaml.safe_dump(raw))
+
+    with pytest.raises(ConfigError, match="assembly and strict-validation coverage"):
+        load_target(dst)

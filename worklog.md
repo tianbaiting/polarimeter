@@ -807,3 +807,12 @@ Entry Template:
 - Validation Result: both non-strict deployment builds pass; strict correctly exits nonzero. The initial SAMURAI 450 x 430 mm square screen was rejected for 1.474 mm clearance and revised to a clearly provisional 450 x 450 mm internal design candidate with 10.0 mm clearance; the unresolved site envelope remains a strict failure.
 - Artifacts/State: five required artifact sets now exist locally as FCStd/STEP/JSON, with stateful deployment targets registered independently from the legacy CompactInVacuum scaffold.
 - Next Action: restore final afterSRC pass state and run external afterSRC/SAMURAI regression tests.
+
+- Timestamp UTC: 2026-07-26T17:07:33Z
+- Timestamp Local: 2026-07-27 02:07:33 JST
+- Module/Scope: External-route regression and v1.33 migration isolation
+- Command(s): initial `afterSRC` strict validate-only diagnostic; then strict validate-only reruns for `afterSRC` and `infrontofSamuraiMag`
+- Key Parameters/Overrides: retained the v1.33 twin-plate schema/builders as an inactive prototype and restored the last validated external fixture under an explicit `external_reference_fixture` contract selected by `active_fixture=external_reference_v1_31`.
+- Validation Result: initial afterSRC diagnostic errored on a removed v1.31 field; after isolation, external afterSRC PASS and external in-front-of-SAMURAI PASS under strict validation.
+- Artifacts/State: afterSRC run_id=`20260726T170350Z-3938883`; SAMURAI run_id=`20260726T170500Z-3940391`; both validation reports refreshed with status `pass`.
+- Next Action: run final full builds/test matrices, restore the two CompactOne non-strict release-candidate reports, and complete the engineering handoff.

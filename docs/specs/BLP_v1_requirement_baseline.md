@@ -15,6 +15,7 @@ CompactOne 真空内探测器平台由 `docs/specs/compact_one_requirement_basel
 - 探测器夹具安装拓扑冻结为“底座 + 双立板 + 顶部桥接件 + 过渡块”，其中整套夹具相对探测体圆柱保持刚性参考关系，底座必须与夹具形成连续承载路径。
 - 探测器夹具下部承载语义冻结为“仅支撑侧半抱箍带下侧平鞍座”，该平鞍座必须与过渡块直接贴合形成连续实体承载路径；非承载半抱箍仅负责压紧，不得长出下部承载实体；`detector.adapter_block.radial_standoff_mm` 字段保留但严格口径固定为 `0.0`。
 - 探测器夹具承载件语义进一步冻结为“支撑侧半抱箍 + 过渡块 + 双立板 + 顶桥”为一体承力件；与板件连接的四孔底座板保持独立螺接件，不再把承载侧主路径拆成多个彼此贴合的分体件。
+- 外置路线当前可生成、可严格验证的夹具继续由 `geometry.detector.active_fixture=external_reference_v1_31` 明确选择，并由 `external_reference_fixture` 保存最后一次 strict-pass 参数。v1.33 双半板夹具保留为独立原型 schema/零件生成器；在完成整机落位、承载路径、紧固件、干涉和 strict gate 集成前，不得替换当前外置路线，也不得被描述为已验证工程夹具。
 - 板件支撑语义冻结为“无 plate-tie 拉杆”：探测器夹具底座直接固定到板件，不引入板-底座间附加拉杆件。
 - 当前照片式支撑方案不使用整体大底板；stand 只保留独立支撑脚、调平螺钉与垫片，不再保留覆盖三板下方的 monolithic stand base plate。
 - 防转/防滑：机械限位肩 + 端面止挡。
@@ -103,6 +104,9 @@ LOS scope definition (frozen contract):
 - 本文件为 v1 基线，修改必须追加版本记录，不覆盖历史决策。
 
 ## 8. Version History
+- 2026-07-27 v1.34:
+  - 记录并隔离未完成的 v1.33 双半板夹具迁移：新 schema 与上下半板独立原型继续保留，但不再让它们破坏 `afterSRC` / `infrontofSamuraiMag` 已验证外置路线。
+  - 新增显式 `active_fixture` 与 `external_reference_fixture` 合同；当前 active 值冻结为 `external_reference_v1_31`，直到 v1.33 完成整机集成和严格验证后再走受控切换。
 - 2026-07-26 v1.32:
   - 将原有“探测器全部位于 chamber 外部”的范围明确限定为 `infrontofSamuraiMag/afterSRC` 外置家族，并登记 `CompactInVacuum` 为 12 路真空内 SiPM 主要开发版本。
   - 冻结 `CompactInVacuum` 前后 `ICF114` 和顶部靶旋转 `ICF70` 安装接口；供应商旋转馈通的载荷、扭矩、寿命及详细外形继续保持待 RFQ。

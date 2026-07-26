@@ -73,6 +73,9 @@ def test_load_default_config() -> None:
     assert cfg.geometry.detector.clamp.cradle_clearance_mm == pytest.approx(0.1)
     assert cfg.geometry.detector.clamp.clamp_axial_position == "rear"
     assert cfg.geometry.detector.clamp.mount_mode == "combined"
+    assert cfg.geometry.detector.active_fixture == "external_reference_v1_31"
+    assert cfg.geometry.detector.external_reference_fixture.status == "LEGACY_REFERENCE_ONLY"
+    assert cfg.geometry.detector.external_reference_fixture.clamp.outer_diameter_mm == pytest.approx(74.0)
     assert cfg.geometry.target.single_holder.clamp_screw_diameter_mm > 0.0
     assert cfg.geometry.stand.enable_plate_ties is False
     assert cfg.geometry.stand.with_base_plate is False

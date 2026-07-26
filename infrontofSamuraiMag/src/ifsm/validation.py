@@ -278,7 +278,7 @@ def _detector_fixture_local_pose_signature(cfg: GeometryConfig, placement: Detec
 
 def _detector_clamp_bolt_holes(cfg: GeometryConfig, placement: DetectorPlacement) -> tuple[Part.Shape, ...]:
     layout = detector_fixture_geometry(cfg, placement)
-    clamp = cfg.detector.clamp
+    clamp = cfg.detector.external_reference_fixture.clamp
     holes: list[Part.Shape] = []
     for center in layout.clamp_bolt_centers:
         holes.append(
@@ -872,14 +872,19 @@ def _validate_plates(cfg: GeometryConfig, placements: list[DetectorPlacement]) -
     vv_clear_gap = abs(cfg.plate.v2.offset_x_mm - cfg.plate.v1.offset_x_mm) - 0.5 * (
         cfg.plate.v1.thickness_mm + cfg.plate.v2.thickness_mm
     )
-    vv_required_gap = cfg.clearance.vv_min_gap_factor * cfg.detector.clamp.outer_diameter_mm
+    vv_required_gap = (
+        cfg.clearance.vv_min_gap_factor
+        * cfg.detector.external_reference_fixture.clamp.outer_diameter_mm
+    )
     checks.append(
         SubsystemCheck(
             name="vv_clear_gap_vs_detector_outer_diameter",
             passed=vv_clear_gap >= vv_required_gap,
             detail=(
                 f"gap={vv_clear_gap:.3f}, required={vv_required_gap:.3f}, "
-                f"factor={cfg.clearance.vv_min_gap_factor:.3f}, detector_outer={cfg.detector.clamp.outer_diameter_mm:.3f}"
+                "factor="
+                f"{cfg.clearance.vv_min_gap_factor:.3f}, detector_outer="
+                f"{cfg.detector.external_reference_fixture.clamp.outer_diameter_mm:.3f}"
             ),
         )
     )
@@ -976,7 +981,9 @@ def _validate_plates(cfg: GeometryConfig, placements: list[DetectorPlacement]) -
     h_plate_cone_clear_ok = True
     h_plate_cone_clear_parts: list[str] = []
     h_plate_shape = build_all_plates(cfg, placements=placements)["HPlate"]
-    cone_front_face_radius_mm = 0.5 * cfg.detector.clamp.detector_diameter_mm
+    cone_front_face_radius_mm = (
+        0.5 * cfg.detector.external_reference_fixture.clamp.detector_diameter_mm
+    )
     for placement in placements:
         if plate_key_for_sector(placement.sector_name) == "h":
             continue
@@ -1323,7 +1330,7 @@ def _build_detector_fixture_for_interpenetration_check(
     from .layout import scaled
     from .primitives_fasteners import make_flat_washer, make_hex_nut, make_hex_socket_bolt
 
-    clamp_cfg = cfg.detector.clamp
+    clamp_cfg = cfg.detector.external_reference_fixture.clamp
     fasteners: list[dict] = []
 
     # [EN] Fastener construction here must stay in lockstep with
@@ -1332,7 +1339,7 @@ def _build_detector_fixture_for_interpenetration_check(
     # hole. / [CN] 这里的紧固件生成与 components.py 中 ``build_detector_fixture``
     # 必须保持一致：坐标/长度都调成让每个螺栓/螺母/垫圈要么处在空气中、要么落入
     # 已发布的避让孔。
-    if clamp_cfg.draw_fasteners_as_solids:
+    if clamp_cfg.draw_fasteners_as_solids and cfg.detector.clamp.draw_fasteners_as_solids:
         layout = detector_fixture_geometry(cfg, placement)
         clamp_thread = _bolt_diameter_to_thread(clamp_cfg.clamp_bolt_diameter_mm)
         plate_thread = _bolt_diameter_to_thread(clamp_cfg.mount_bolt_hole_diameter_mm)
@@ -1465,8 +1472,8 @@ def _validate_detector(
     fixture_interpenetration_failures: list[str] = []
     fixture_interpenetration_placements_checked = 0
     mount_margin = cfg.clearance.los_margin_mm
-    clamp = cfg.detector.clamp
-    adapter = cfg.detector.adapter_block
+    clamp = cfg.detector.external_reference_fixture.clamp
+    adapter = cfg.detector.external_reference_fixture.adapter_block
     support_saddle_thickness_mm = detector_fixture_geometry(cfg, placements[0]).support_saddle_thickness_mm if placements else 0.0
     bridge_length_limit_mm = (
         clamp.housing_length_mm
@@ -2237,7 +2244,7 @@ def build_clamp_parts_manifest(
 ) -> list[dict[str, object]]:
     from .components import _bolt_diameter_to_thread  # noqa: WPS433
 
-    clamp_cfg = cfg.detector.clamp
+    clamp_cfg = cfg.detector.external_reference_fixture.clamp
     clamp_thread = _bolt_diameter_to_thread(clamp_cfg.clamp_bolt_diameter_mm)
     plate_thread = _bolt_diameter_to_thread(clamp_cfg.mount_bolt_hole_diameter_mm)
     manifest: list[dict[str, object]] = []

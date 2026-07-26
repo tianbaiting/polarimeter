@@ -232,7 +232,10 @@ def test_default_runtime_h_plate_reliefs_clear_crossing_detector_cones() -> None
     cfg = load_build_config(ROOT / "config" / "default_infront.yaml")
     placements = build_detector_placements(cfg.layout)
     h_plate = build_all_plates(cfg.geometry, placements=placements)["HPlate"]
-    cone_front_face_radius_mm = 0.5 * cfg.geometry.detector.clamp.detector_diameter_mm
+    cone_front_face_radius_mm = (
+        0.5
+        * cfg.geometry.detector.external_reference_fixture.clamp.detector_diameter_mm
+    )
 
     overlaps = []
     for placement in placements:
@@ -418,14 +421,24 @@ def test_detector_clamp_side_bolts_stay_outside_detector_bore() -> None:
         layout = detector_fixture_geometry(cfg.geometry, placement)
         housing, _clamp_a, _support_carrier, _mount_base = _build_detector_fixture_shapes(cfg.geometry, placement)
         clamp_bore = Part.makeCylinder(
-            0.5 * cfg.geometry.detector.clamp.inner_diameter_mm,
-            cfg.geometry.detector.clamp.width_mm + 2.0,
-            layout.clamp_center - scaled(layout.direction, 0.5 * (cfg.geometry.detector.clamp.width_mm + 2.0)),
+            0.5
+            * cfg.geometry.detector.external_reference_fixture.clamp.inner_diameter_mm,
+            cfg.geometry.detector.external_reference_fixture.clamp.width_mm + 2.0,
+            layout.clamp_center
+            - scaled(
+                layout.direction,
+                0.5
+                * (
+                    cfg.geometry.detector.external_reference_fixture.clamp.width_mm
+                    + 2.0
+                ),
+            ),
             layout.direction,
         )
         for center in layout.clamp_bolt_centers:
             bolt_hole = Part.makeCylinder(
-                0.5 * cfg.geometry.detector.clamp.clamp_bolt_diameter_mm,
+                0.5
+                * cfg.geometry.detector.external_reference_fixture.clamp.clamp_bolt_diameter_mm,
                 layout.clamp_bolt_span_mm,
                 center - scaled(layout.clamp_bolt_axis, 0.5 * layout.clamp_bolt_span_mm),
                 layout.clamp_bolt_axis,

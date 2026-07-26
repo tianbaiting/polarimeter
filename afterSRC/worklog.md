@@ -74,3 +74,22 @@ Entry Template:
 - State Snapshot: run_id=`20260424T094228Z-1761888`, run.status=`pass`, validation.status=`pass`, strict=`true`, git_head=`90a1e35`.
 - Artifacts: FCStd `sha256=b2eb26b0...` (828 KB), STEP `sha256=5ae88a05...` (4.5 MB, 96142 entities), report `sha256=21fd18aa...` (now carries `parts_manifest` with 12 × 7 line items).
 - Next Action: Sub-2 DoD sign-off doc at `docs/superpowers/specs/2026-04-17-sub2-dod-signoff.md`; await user approval for commit/cleanup of Phase 0 spike script.
+
+- Timestamp UTC: 2026-07-26T17:07:33Z
+- Timestamp Local: 2026-07-27 02:07:33 JST
+- Intent: Regress the preserved external afterSRC route after CompactOne development and diagnose the incomplete v1.33 clamp migration.
+- Command(s): `./afterSRC/run_afterSRC.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation --force-rebuild`
+- Key Parameters/Overrides: first diagnostic run used the then-current v1.33 clamp schema directly; no geometry overrides.
+- Validation Result: error before validation (`DetectorClampConfig.outer_diameter_mm` missing), proving the v1.33 schema had replaced fields still required by the validated external assembly.
+- State Snapshot: the diagnostic error state was superseded by the successful rerun below; no generated CAD artifact was accepted from the failed run.
+- Next Action: isolate the unfinished v1.33 prototype from the active external fixture contract and rerun strict validation.
+
+- Timestamp UTC: 2026-07-26T17:07:33Z
+- Timestamp Local: 2026-07-27 02:07:33 JST
+- Intent: Strictly revalidate afterSRC with the last validated external fixture explicitly preserved alongside the unfinished v1.33 prototype.
+- Command(s): `./afterSRC/run_afterSRC.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation --force-rebuild`
+- Key Parameters/Overrides: `geometry.detector.active_fixture=external_reference_v1_31`; reference geometry parameters restored under the isolated `external_reference_fixture` namespace; v1.33 prototype schema retained unchanged.
+- Validation Result: pass.
+- State Snapshot: run_id=`20260726T170350Z-3938883`, run.status=`pass`, validation.status=`pass`, strict=`true`.
+- Artifacts: validation report refreshed; validate-only intentionally did not replace FCStd/STEP.
+- Next Action: execute the full final external-route regression and retain v1.33 as inactive until its assembly integration is complete.

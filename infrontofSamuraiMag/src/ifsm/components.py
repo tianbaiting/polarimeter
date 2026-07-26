@@ -411,7 +411,9 @@ def _los_channel_cuts(
 
     # [EN] v2 full-path validation models chamber corridors from the active target point to each detector entrance circle, so chamber and rear-interface cuts match the actual side-exit acceptance cone instead of a fixed-radius proxy. / [CN] v2 全路径校验按“有效靶点到各探测器入射圆面”的通道建模，因此腔体与后端接口的切口跟随真实侧向接受圆锥，而不是固定半径近似。
     cuts: list[Part.Shape] = []
-    front_face_radius_mm = 0.5 * cfg.detector.clamp.detector_diameter_mm
+    front_face_radius_mm = (
+        0.5 * cfg.detector.external_reference_fixture.clamp.detector_diameter_mm
+    )
     for placement in placements:
         cone = target_detector_front_face_cone(cfg, placement, front_face_radius_mm)
         if cone is not None:
@@ -982,7 +984,7 @@ def _detector_mount_plate_holes(
     placements: list[DetectorPlacement],
 ) -> dict[str, list[Part.Shape]]:
     holes: dict[str, list[Part.Shape]] = {"h": [], "v1": [], "v2": []}
-    clamp_cfg = cfg.detector.clamp
+    clamp_cfg = cfg.detector.external_reference_fixture.clamp
     for placement in placements:
         layout = detector_fixture_geometry(cfg, placement)
         plate = _plate_cfg_from_sector(cfg, placement.sector_name)
@@ -1014,7 +1016,9 @@ def _plate_rectangular_relief_cuts(
     package_band_half_mm = 0.5 * plate.thickness_mm + relief_margin_mm
     plate_band_min = center.y - package_band_half_mm
     plate_band_max = center.y + package_band_half_mm
-    cone_front_face_radius_mm = 0.5 * cfg.detector.clamp.detector_diameter_mm
+    cone_front_face_radius_mm = (
+        0.5 * cfg.detector.external_reference_fixture.clamp.detector_diameter_mm
+    )
 
     cuts: list[Part.Shape] = []
     for placement in placements:
@@ -1236,8 +1240,8 @@ def detector_fixture_geometry(
     cfg: GeometryConfig,
     placement: DetectorPlacement,
 ) -> DetectorFixtureGeometry:
-    clamp_cfg = cfg.detector.clamp
-    adapter_cfg = cfg.detector.adapter_block
+    clamp_cfg = cfg.detector.external_reference_fixture.clamp
+    adapter_cfg = cfg.detector.external_reference_fixture.adapter_block
     plate = _plate_cfg_from_sector(cfg, placement.sector_name)
 
     front_center = front_face_center(placement)
@@ -1347,8 +1351,8 @@ def detector_support_clearance_mask(
     placement: DetectorPlacement,
 ) -> Part.Shape:
     layout = detector_fixture_geometry(cfg, placement)
-    clamp_cfg = cfg.detector.clamp
-    adapter_cfg = cfg.detector.adapter_block
+    clamp_cfg = cfg.detector.external_reference_fixture.clamp
+    adapter_cfg = cfg.detector.external_reference_fixture.adapter_block
 
     # [EN] Clearance to the detachable half is checked only against the lower support volume below the clamp ring, not against the whole bearing-side half that is expected to touch the mating split surface. / [CN] 可拆半抱箍净空只针对抱箍下方的支撑体积检查，而不是针对必然与分型面相接的整块承载半抱箍。
     return slit_prism(
@@ -1372,8 +1376,8 @@ def detector_support_package_mask(
     placement: DetectorPlacement,
 ) -> Part.Shape:
     layout = detector_fixture_geometry(cfg, placement)
-    clamp_cfg = cfg.detector.clamp
-    adapter_cfg = cfg.detector.adapter_block
+    clamp_cfg = cfg.detector.external_reference_fixture.clamp
+    adapter_cfg = cfg.detector.external_reference_fixture.adapter_block
 
     package_top = layout.clamp_center + scaled(layout.mount_axis, 0.5 * clamp_cfg.outer_diameter_mm)
     package_bottom = layout.block_center - scaled(layout.mount_axis, 0.5 * adapter_cfg.width_mm)
@@ -1513,8 +1517,8 @@ def _build_detector_fixture_shapes(
     cfg: GeometryConfig,
     placement: DetectorPlacement,
 ) -> tuple[Part.Shape, Part.Shape, Part.Shape, Part.Shape]:
-    clamp_cfg = cfg.detector.clamp
-    adapter_cfg = cfg.detector.adapter_block
+    clamp_cfg = cfg.detector.external_reference_fixture.clamp
+    adapter_cfg = cfg.detector.external_reference_fixture.adapter_block
     layout = detector_fixture_geometry(cfg, placement)
 
     front_center = layout.front_center
@@ -1867,8 +1871,9 @@ def build_detector_fixture(
     base_plate_feat = build_base_plate_bolted(doc, cfg, placement, name_suffix=name_suffix)
 
     fasteners: list[dict] = []
-    clamp_cfg = cfg.detector.clamp
-    if clamp_cfg.draw_fasteners_as_solids:
+    clamp_cfg = cfg.detector.external_reference_fixture.clamp
+    # [EN] The prototype-level visibility switch remains authoritative for callers while the reference fixture retains its own fabrication metadata. / [CN] 在沿用参考夹具加工元数据的同时，原型层的紧固件显示开关仍对调用方保持权威。
+    if clamp_cfg.draw_fasteners_as_solids and cfg.detector.clamp.draw_fasteners_as_solids:
         layout = detector_fixture_geometry(cfg, placement)
         clamp_thread = _bolt_diameter_to_thread(clamp_cfg.clamp_bolt_diameter_mm)
         plate_thread = _bolt_diameter_to_thread(clamp_cfg.mount_bolt_hole_diameter_mm)
