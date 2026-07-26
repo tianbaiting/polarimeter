@@ -1,0 +1,20 @@
+schema_version: 1
+module: compactOneInfrontSamurai
+intent:
+  description: CompactOne in-vacuum engineering prototype in front of SAMURAI; external infrontofSamuraiMag remains a separate route.
+build:
+  config: config/infrontSamurai_compact.yaml
+  overrides: []
+  doc_name: CompactOne_infrontSamurai
+  mode: build
+validation:
+  strict: false
+  angle_tolerance_deg: 0.05
+  radius_tolerance_mm: 0.2
+output:
+  output_dir: artifacts/infrontSamurai
+  basename: CompactOne_infrontSamurai
+  formats: [fcstd, step]
+artifacts:
+  report_json: artifacts/infrontSamurai/CompactOne_infrontSamurai.validation_report.json
+  channel_manifest_json: artifacts/infrontSamurai/CompactOne_infrontSamurai.channel_manifest.json

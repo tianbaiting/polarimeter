@@ -19,6 +19,8 @@ from .components import (
 from .config import CIVConfig
 from .cassette import build_detector_cassette
 from .cartridge import build_sector_cartridge
+from .chamber import build_chamber
+from .detector import build_active_acceptance_cone
 from .internal import build_internal_assembly
 from .services import build_services
 from .layout import build_detector_placements
@@ -154,5 +156,71 @@ def build_serviced_internal_document(cfg: CIVConfig) -> App.Document:
         _add_feature(doc, name, shape, engineering_role="service_centerline")
     for name, shape in services.datums.items():
         _add_feature(doc, name, shape, engineering_role="datum")
+    doc.recompute()
+    return doc
+
+
+def build_compact_one_document(cfg: CIVConfig) -> App.Document:
+    if cfg.compact_one is None:
+        raise ValueError("CompactOne document requires a schema-v2 configuration")
+    if cfg.doc_name in App.listDocuments():
+        App.closeDocument(cfg.doc_name)
+    doc = App.newDocument(cfg.doc_name)
+    internal = build_internal_assembly(cfg)
+    services = build_services(cfg, internal)
+    chamber = build_chamber(cfg)
+
+    for name, shape in chamber.physical.items():
+        obj = _add_feature(doc, name, shape)
+        obj.addProperty("App::PropertyString", "MaterialName", "CompactOne")
+        obj.MaterialName = chamber.materials.get(name, "unresolved")
+    for name, shape in chamber.purchased_interfaces.items():
+        _add_feature(
+            doc,
+            name,
+            shape,
+            engineering_role="purchased_part_interface",
+        )
+    for name, shape in chamber.keepouts.items():
+        _add_feature(doc, name, shape, engineering_role="keepout")
+    for name, shape in chamber.datums.items():
+        _add_feature(doc, name, shape, engineering_role="datum")
+
+    for name, shape in internal.physical.items():
+        obj = _add_feature(doc, name, shape)
+        obj.addProperty("App::PropertyString", "MaterialName", "CompactOne")
+        obj.MaterialName = internal.materials.get(name, "unresolved")
+    for name, shape in internal.interfaces.items():
+        _add_feature(doc, name, shape, engineering_role="interface_envelope")
+    for name, shape in internal.keepouts.items():
+        _add_feature(doc, name, shape, engineering_role="keepout")
+    for name, shape in internal.datums.items():
+        _add_feature(doc, name, shape, engineering_role="datum")
+
+    for name, shape in services.physical.items():
+        obj = _add_feature(doc, name, shape)
+        obj.addProperty("App::PropertyString", "MaterialName", "CompactOne")
+        obj.MaterialName = services.materials.get(name, "unresolved")
+    for name, shape in services.purchased_interfaces.items():
+        _add_feature(
+            doc,
+            name,
+            shape,
+            engineering_role="purchased_part_interface",
+        )
+    for name, shape in services.keepouts.items():
+        _add_feature(doc, name, shape, engineering_role="keepout")
+    for name, shape in services.centerlines.items():
+        _add_feature(doc, name, shape, engineering_role="service_centerline")
+    for name, shape in services.datums.items():
+        _add_feature(doc, name, shape, engineering_role="datum")
+
+    for placement in internal.placements:
+        _add_feature(
+            doc,
+            f"{placement.tag}_FullActiveAcceptance",
+            build_active_acceptance_cone(cfg, placement),
+            engineering_role="physics_acceptance",
+        )
     doc.recompute()
     return doc

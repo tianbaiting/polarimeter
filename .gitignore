@@ -49,6 +49,8 @@ compactInVacuum/state.lock
 compactInVacuum/*.validation_report.json
 compactInVacuum/*.channel_manifest.json
 compactInVacuum/reports/archive/
+compactInVacuum/*.state.json
+compactInVacuum/artifacts/
 
 # Local superpowers brainstorm scratch (server logs/pids, transient HTML).
 .superpowers/

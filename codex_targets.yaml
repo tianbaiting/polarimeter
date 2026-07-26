@@ -9,3 +9,9 @@ active_modules:
   - name: compactInVacuum
     target: compactInVacuum/target.yaml
     state: compactInVacuum/state.json
+  - name: compactOneAfterSRC
+    target: compactInVacuum/target_compact_one_afterSRC.yaml
+    state: compactInVacuum/compactOne_afterSRC.state.json
+  - name: compactOneInfrontSamurai
+    target: compactInVacuum/target_compact_one_infrontSamurai.yaml
+    state: compactInVacuum/compactOne_infrontSamurai.state.json

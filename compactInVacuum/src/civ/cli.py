@@ -179,9 +179,8 @@ def _channel_manifest_path(
 
 
 def _status_exit_code(status: str, strict: bool) -> int:
-    if status == "pass":
-        return 0
-    return 1 if strict else 0
+    _ = strict
+    return 0 if status == "pass" else 1
 
 
 def _utc_now() -> str:
@@ -213,7 +212,12 @@ def main(argv: list[str] | None = None) -> int:
     formats = _formats(target)
     report_path = _report_path(target, target_path, output_dir, basename)
     channel_manifest_path = _channel_manifest_path(target, target_path, output_dir, basename)
-    current_hash = compute_config_hash(str(config_path), overrides)
+    hash_inputs = {
+        **overrides,
+        "__validation.strict__": strict,
+        "__target.module__": MODULE_NAME,
+    }
+    current_hash = compute_config_hash(str(config_path), hash_inputs)
     previous_state = load_state(str(state_path))
     if should_skip(previous_state, current_hash) and not args.force_rebuild:
         print("skipped")
@@ -236,11 +240,15 @@ def main(argv: list[str] | None = None) -> int:
         )
 
         validate_only = args.validate_only or str(build_cfg.get("mode", "build")).lower() == "validate_only"
-        if not validate_only:
-            from .assembly import build_assembly
+        if not validate_only and report["status"] == "pass":
+            from .assembly import build_assembly, build_compact_one_document
             from .export import export_fcstd, export_step
 
-            doc = build_assembly(cfg)
+            doc = (
+                build_compact_one_document(cfg)
+                if cfg.compact_one is not None
+                else build_assembly(cfg)
+            )
             output_dir.mkdir(parents=True, exist_ok=True)
             if "fcstd" in formats:
                 artifacts["fcstd"] = export_fcstd(doc, str(output_dir), basename)

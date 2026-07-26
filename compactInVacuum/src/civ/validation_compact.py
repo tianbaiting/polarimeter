@@ -810,6 +810,22 @@ def validate_compact_one(
             failures=outside_components,
         )
     )
+    selected_clearance_mm = _candidate_clearance_mm(
+        chamber.candidate,
+        list(cartridge_compounds.values()),
+    )
+    checks.append(
+        _geometry_check(
+            "mechanical",
+            "minimum_internal_assembly_clearance",
+            selected_clearance_mm >= 3.0,
+            (
+                f"minimum_clearance_mm={selected_clearance_mm:.6f}, "
+                "prototype_screening_minimum_mm=3.000"
+            ),
+            minimum_clearance_mm=selected_clearance_mm,
+        )
+    )
 
     checks.append(
         _geometry_check(

@@ -48,11 +48,15 @@ Main entries:
 ./afterSRC/run_afterSRC.sh --pipeline-index codex_targets.yaml
 ./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml
 ./compactInVacuum/run_compactInVacuum.sh --pipeline-index codex_targets.yaml
+./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml
+./compactInVacuum/run_compactOne_infrontSamurai.sh --pipeline-index codex_targets.yaml
 ```
 
 `target.yaml` and configuration files are human-owned. Runtime state, locks, generated CAD, and validation reports are machine-written.
 
-Strict validation is the engineering acceptance gate. Non-strict CompactOne validation may retain explicit unresolved/prototype warnings; strict mode must reject placeholder engineering that would be unsafe or physically incoherent.
+`run_compactInVacuum.sh` preserves the legacy scaffold entry. The two `run_compactOne_*` commands generate the preferred shared internal machine with deployment-specific chambers.
+
+Strict validation is the engineering acceptance gate. Non-strict CompactOne validation may retain explicit unresolved/prototype warnings, but it still rejects geometry, LOS, motion, service-capacity, aperture, and vacuum-boundary failures. Strict mode additionally rejects missing supplier, material, access, site-envelope, and structural-release evidence.
 
 ## Cross-machine reproducibility
 

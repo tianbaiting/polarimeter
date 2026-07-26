@@ -1,0 +1,20 @@
+schema_version: 1
+module: compactOneAfterSRC
+intent:
+  description: CompactOne in-vacuum engineering prototype deployed after SRC; external afterSRC remains a separate route.
+build:
+  config: config/afterSRC_compact.yaml
+  overrides: []
+  doc_name: CompactOne_afterSRC
+  mode: build
+validation:
+  strict: false
+  angle_tolerance_deg: 0.05
+  radius_tolerance_mm: 0.2
+output:
+  output_dir: artifacts/afterSRC
+  basename: CompactOne_afterSRC
+  formats: [fcstd, step]
+artifacts:
+  report_json: artifacts/afterSRC/CompactOne_afterSRC.validation_report.json
+  channel_manifest_json: artifacts/afterSRC/CompactOne_afterSRC.channel_manifest.json

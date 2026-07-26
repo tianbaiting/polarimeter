@@ -12,7 +12,7 @@ deployment:
       cross_section: square
       status: provisional
       inner_size_x_mm: 450.0
-      inner_size_y_mm: 430.0
+      inner_size_y_mm: 450.0
       length_mm: 380.0
       center_z_mm: 140.0
       wall_thickness_mm: 8.0
