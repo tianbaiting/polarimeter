@@ -94,3 +94,12 @@ Entry Template:
 - Validation Result: architecture audit complete; confirmed strict flag is currently ignored, 0.30 mm radial-wall beam stubs pass, detector active/housing geometry is conflated, square-only validator contradicts cylindrical builder, and target/LOS/service/thermal abstractions are incomplete.
 - Artifacts/State: added CompactOne audit, CompactOne requirement baseline, module README, and corrected root project matrix; no runtime state or generated CAD changed.
 - Next Action: implement common configuration domains and two deployment profiles before replacing preferred geometry.
+
+- Timestamp UTC: 2026-07-26T15:52:58Z
+- Timestamp Local: 2026-07-27 00:52:58 JST
+- Module/Scope: CompactOne Phase B schema-v2 configuration and deployment separation
+- Command(s): `micromamba run -n anaroot-env python -m pytest -q compactInVacuum/tests/test_platform_config.py compactInVacuum/tests/test_geometry.py`; Python compile checks
+- Key Parameters/Overrides: common active plastic `20 x 5.5 mm` with 5/5.5/6 mm candidates; EQR15 recommended baseline; separate 32 x 32 x 44 mm cassette; four 3-channel cartridges; 12 x 50-ohm services; afterSRC cylindrical candidate selected; SAMURAI square candidate selected; both profiles retain square and cylindrical candidates.
+- Validation Result: pass, 20 tests; both deployment profiles and the legacy scaffold load; inherited common YAML participates in the state hash.
+- Artifacts/State: added schema-v2 parser, common detector config, two deployment configs/aliases, migration note, and purchased-interface/project-transition metadata.
+- Next Action: implement and independently validate the detector cassette geometry.

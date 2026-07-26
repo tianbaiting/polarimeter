@@ -31,6 +31,13 @@ Configuration values carry explicit status:
 
 The common detector platform and the two deployment profiles are kept separate. Missing site or supplier facts stay unresolved rather than receiving invented dimensions.
 
+- Common detector/mechanics: `config/common_detector.yaml`
+- afterSRC deployment: `config/afterSRC_compact.yaml`
+- in-front-of-SAMURAI deployment: `config/infrontSamurai_compact.yaml`
+- old scaffold: `config/default_compactInVacuum.yaml`
+
+See `MIGRATION.md` for old-to-new field and geometry mappings.
+
 ## Validation
 
 Validation is organized by physics, beamline, detector, sector cartridge, target, LOS, services, vacuum, mechanical, and thermal categories.
@@ -62,4 +69,3 @@ The current work still requires signed beamline and purchased-component drawings
 - CompactOne: `docs/specs/compact_one_requirement_baseline.md`
 - External detector mechanics: `docs/specs/BLP_v1_requirement_baseline.md`
 - Architecture migration audit: `docs/specs/compact_one_architecture_audit.md`
-

@@ -1,0 +1,142 @@
+extends: common_detector.yaml
+doc_name: CompactOne_infrontSamurai
+
+deployment:
+  name: CompactOne-infrontSamurai
+  location: in-front-of-SAMURAI
+  status: provisional
+  external_route_module: infrontofSamuraiMag
+  selected_chamber_candidate: samurai_square_service_plate
+  chamber_candidates:
+    - name: samurai_square_service_plate
+      cross_section: square
+      status: provisional
+      inner_size_x_mm: 450.0
+      inner_size_y_mm: 430.0
+      length_mm: 380.0
+      center_z_mm: 140.0
+      wall_thickness_mm: 8.0
+      wall_thickness_status: provisional
+      material: stainless_304L
+      service_accessibility: removable_top_service_manifold
+      service_plate_concept: flat_top_wall_with_removable_bought_out_feedthroughs
+    - name: samurai_cylindrical_service_plate
+      cross_section: cylindrical
+      status: recommended
+      inner_size_x_mm: 450.0
+      inner_size_y_mm: 450.0
+      length_mm: 380.0
+      center_z_mm: 140.0
+      wall_thickness_mm: 8.0
+      wall_thickness_status: provisional
+      material: stainless_304L
+      service_accessibility: removable_top_service_manifold
+      service_plate_concept: welded_port_strip_with_removable_bought_out_feedthroughs
+  beam_stay_clear_diameter_mm: 20.0
+  beam_stay_clear_status: provisional
+  available_envelope_mm:
+  available_envelope_status: placeholder
+  front_interface:
+    side: front
+    standard: VF100
+    status: purchased-part-contract
+    supplier: unresolved
+    part_number: unresolved
+    certified_drawing_reference: unresolved
+    dimensions_status: provisional
+    nominal_clear_bore_mm: 80.0
+    module_outer_diameter_mm: 185.0
+    module_inner_diameter_mm: 114.3
+    module_thickness_mm: 12.0
+    seal_face_width_mm: 12.0
+    bolt_circle_diameter_mm: 160.0
+    bolt_count: 8
+    bolt_hole_diameter_mm: 12.0
+    oring_groove_inner_diameter_mm: 0.0
+    oring_groove_outer_diameter_mm: 0.0
+    oring_groove_depth_mm: 0.0
+    knife_edge_protected_zone_mm: 12.0
+    weld_interface: project_designed_welded_jis_transition
+    transition_outer_diameter_mm: 114.3
+    transition_inner_diameter_mm: 80.0
+    transition_length_mm: 100.0
+    transition_status: provisional
+  rear_interface:
+    side: rear
+    standard: VG80
+    status: purchased-part-contract
+    supplier: unresolved
+    part_number: unresolved
+    certified_drawing_reference: unresolved
+    dimensions_status: provisional
+    nominal_clear_bore_mm: 80.0
+    module_outer_diameter_mm: 160.0
+    module_inner_diameter_mm: 89.1
+    module_thickness_mm: 12.0
+    seal_face_width_mm: 12.0
+    bolt_circle_diameter_mm: 135.0
+    bolt_count: 4
+    bolt_hole_diameter_mm: 12.0
+    oring_groove_inner_diameter_mm: 100.0
+    oring_groove_outer_diameter_mm: 110.0
+    oring_groove_depth_mm: 3.0
+    knife_edge_protected_zone_mm: 12.0
+    weld_interface: project_designed_welded_jis_transition
+    transition_outer_diameter_mm: 89.1
+    transition_inner_diameter_mm: 80.0
+    transition_length_mm: 20.0
+    transition_status: provisional
+  target_feedthrough_standard: ICF70
+  target_feedthrough_status: provisional
+  pump_gauge_requirements:
+    - unresolved_compactone_pump_connection
+    - unresolved_compactone_gauge_and_safety_connection
+  support_alignment_status: placeholder
+  external_service_envelope_status: placeholder
+  service_ports:
+    - name: rotary_target
+      role: rotary
+      center_x_mm: 70.0
+      center_z_mm: 0.0
+      bore_diameter_mm: 22.0
+      collar_outer_diameter_mm: 42.0
+      collar_length_mm: 8.0
+    - name: sector_left
+      role: signal
+      sector: left
+      center_x_mm: -155.0
+      center_z_mm: 140.0
+      bore_diameter_mm: 38.0
+      collar_outer_diameter_mm: 42.0
+      collar_length_mm: 8.0
+    - name: sector_right
+      role: signal
+      sector: right
+      center_x_mm: 155.0
+      center_z_mm: 140.0
+      bore_diameter_mm: 38.0
+      collar_outer_diameter_mm: 42.0
+      collar_length_mm: 8.0
+    - name: sector_up
+      role: signal
+      sector: up
+      center_x_mm: -70.0
+      center_z_mm: 255.0
+      bore_diameter_mm: 38.0
+      collar_outer_diameter_mm: 42.0
+      collar_length_mm: 8.0
+    - name: sector_down
+      role: signal
+      sector: down
+      center_x_mm: 70.0
+      center_z_mm: 255.0
+      bore_diameter_mm: 38.0
+      collar_outer_diameter_mm: 42.0
+      collar_length_mm: 8.0
+    - name: sipm_temperature
+      role: housekeeping
+      center_x_mm: -70.0
+      center_z_mm: 0.0
+      bore_diameter_mm: 38.0
+      collar_outer_diameter_mm: 42.0
+      collar_length_mm: 8.0

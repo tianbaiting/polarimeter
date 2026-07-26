@@ -20,10 +20,19 @@ def compute_config_hash(cfg_path: str, overrides: dict) -> str:
     path = Path(cfg_path).expanduser().resolve()
     if not path.exists():
         raise FileNotFoundError(f"Config file does not exist: {path}")
+    from .config import config_dependency_paths
+
+    dependencies = config_dependency_paths(path)
     payload = {
         "module": MODULE_NAME,
         "config_path": str(path),
-        "config_sha256": _sha256_bytes(path.read_bytes()),
+        "config_sources": [
+            {
+                "path": str(source),
+                "sha256": _sha256_bytes(source.read_bytes()),
+            }
+            for source in dependencies
+        ],
         "overrides": {key: overrides[key] for key in sorted(overrides)},
     }
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")

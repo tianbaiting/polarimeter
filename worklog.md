@@ -744,3 +744,12 @@ Entry Template:
 - Validation Result: audit complete; Phase A documents internally separate frozen, provisional, recommended, placeholder, and purchased-part-contract values.
 - Artifacts/State: `docs/specs/compact_one_architecture_audit.md`, `docs/specs/compact_one_requirement_baseline.md`, `compactInVacuum/README.md`, and revised `readme.md`.
 - Next Action: refactor CompactOne configuration and add `afterSRC` plus `infrontSamurai` deployment profiles.
+
+- Timestamp UTC: 2026-07-26T15:52:58Z
+- Timestamp Local: 2026-07-27 00:52:58 JST
+- Module/Scope: CompactOne Phase B configuration refactor
+- Command(s): `micromamba run -n anaroot-env python -m pytest -q compactInVacuum/tests/test_platform_config.py compactInVacuum/tests/test_geometry.py`
+- Key Parameters/Overrides: schema-v2 common platform with explicit decision states; afterSRC and in-front-of-SAMURAI deployment overlays; old default retained as legacy scaffold.
+- Validation Result: pass, 20 tests.
+- Artifacts/State: common detector/cassette/cartridge/target/services/thermal/material configuration, two chamber-candidate sets, bought-out interface contracts, dependency-aware config hash, and migration map.
+- Next Action: build the independent golden detector cassette and its geometry validation artifact.

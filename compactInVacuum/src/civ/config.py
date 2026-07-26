@@ -7,6 +7,15 @@ import os
 from pathlib import Path
 from typing import Any, Mapping
 
+from .platform import (
+    CompactOnePlatformConfig,
+    compact_one_detector_mapping,
+    compact_one_inner_frame_mapping,
+    compact_one_top_services_mapping,
+    compact_one_vessel_mapping,
+    parse_compact_one_config,
+)
+
 try:
     import yaml
 except ImportError as exc:  # pragma: no cover - import guard
@@ -258,6 +267,7 @@ class CIVConfig:
     top_services: TopServicesConfig | None
     inner_frame: InnerFrameConfig
     validation: ValidationConfig
+    compact_one: CompactOnePlatformConfig | None = None
     doc_name: str = "compactInVacuum"
 
 
@@ -276,16 +286,84 @@ def _default_config_path() -> Path:
     return Path(__file__).resolve().parents[2] / "config" / "default_compactInVacuum.yaml"
 
 
-def _load_yaml_file(path: Path) -> dict[str, Any]:
+def _deep_merge(base: dict[str, Any], overlay: dict[str, Any]) -> dict[str, Any]:
+    merged = deepcopy(base)
+    for key, value in overlay.items():
+        if key in merged and isinstance(merged[key], dict) and isinstance(value, dict):
+            merged[key] = _deep_merge(merged[key], value)
+        else:
+            merged[key] = deepcopy(value)
+    return merged
+
+
+def _load_yaml_file(
+    path: Path,
+    stack: tuple[Path, ...] = (),
+) -> dict[str, Any]:
     _assert_yaml_available()
     if not path.exists():
         raise FileNotFoundError(f"Config file does not exist: {path}")
+    resolved = path.resolve()
+    if resolved in stack:
+        cycle = " -> ".join(str(item) for item in (*stack, resolved))
+        raise ValueError(f"Config extends cycle detected: {cycle}")
     loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
     if loaded is None:
         return {}
     if not isinstance(loaded, dict):
         raise ValueError(f"Config root must be a mapping: {path}")
-    return loaded
+
+    extends_raw = loaded.pop("extends", None)
+    if extends_raw is None:
+        return loaded
+    if isinstance(extends_raw, str):
+        extends = [extends_raw]
+    elif isinstance(extends_raw, list) and all(isinstance(item, str) for item in extends_raw):
+        extends = extends_raw
+    else:
+        raise ValueError(f"Config extends must be a path or list of paths: {path}")
+
+    # [EN] Base files are merged in declaration order and the deployment overlay wins, keeping common detector truth in one file without duplicating site data. / [CN] 基础文件按声明顺序合并且部署覆盖层优先，从而在不复制现场数据的情况下保持公共探测器真值唯一。
+    merged: dict[str, Any] = {}
+    for raw_base in extends:
+        base_path = (path.parent / raw_base).resolve()
+        merged = _deep_merge(merged, _load_yaml_file(base_path, (*stack, resolved)))
+    return _deep_merge(merged, loaded)
+
+
+def config_dependency_paths(path: str | Path) -> tuple[Path, ...]:
+    _assert_yaml_available()
+    root = Path(path).expanduser().resolve()
+    ordered: list[Path] = []
+    visiting: set[Path] = set()
+
+    def visit(current: Path) -> None:
+        if current in visiting:
+            raise ValueError(f"Config extends cycle detected at {current}")
+        if current in ordered:
+            return
+        visiting.add(current)
+        loaded = yaml.safe_load(current.read_text(encoding="utf-8")) or {}
+        if not isinstance(loaded, dict):
+            raise ValueError(f"Config root must be a mapping: {current}")
+        extends_raw = loaded.get("extends")
+        if isinstance(extends_raw, str):
+            bases = [extends_raw]
+        elif isinstance(extends_raw, list):
+            bases = extends_raw
+        elif extends_raw is None:
+            bases = []
+        else:
+            raise ValueError(f"Config extends must be a path or list of paths: {current}")
+        for raw_base in bases:
+            if not isinstance(raw_base, str):
+                raise ValueError(f"Config extends entries must be paths: {current}")
+            visit((current.parent / raw_base).resolve())
+        visiting.remove(current)
+        ordered.append(current)
+
+    visit(root)
+    return tuple(ordered)
 
 
 def _to_mapping(value: Any, field_name: str) -> dict[str, Any]:
@@ -1326,8 +1404,20 @@ def load_config(path: str | None, overrides: Mapping[str, Any] | None = None) ->
         channels,
         sectors,
     )
-    vessel = _parse_vessel(_to_mapping(raw.get("vessel"), "vessel"))
-    top_services_raw = raw.get("top_services")
+    compact_one: CompactOnePlatformConfig | None = None
+    if int(raw.get("schema_version", 1)) == 2:
+        compact_one = parse_compact_one_config(raw)
+        vessel_raw = compact_one_vessel_mapping(compact_one)
+        detector_raw = compact_one_detector_mapping(compact_one)
+        inner_frame_raw = compact_one_inner_frame_mapping(compact_one)
+        top_services_raw = compact_one_top_services_mapping(compact_one)
+    else:
+        vessel_raw = _to_mapping(raw.get("vessel"), "vessel")
+        detector_raw = _to_mapping(raw.get("detector"), "detector")
+        inner_frame_raw = _to_mapping(raw.get("inner_frame"), "inner_frame")
+        top_services_raw = raw.get("top_services")
+
+    vessel = _parse_vessel(vessel_raw)
     top_services = _parse_top_services(
         _to_mapping(top_services_raw, "top_services") if top_services_raw is not None else None,
         vessel,
@@ -1339,11 +1429,12 @@ def load_config(path: str | None, overrides: Mapping[str, Any] | None = None) ->
         vessel=vessel,
         channels=channels,
         sectors=sectors,
-        detector=_parse_detector(_to_mapping(raw.get("detector"), "detector")),
+        detector=_parse_detector(detector_raw),
         physics=physics,
         top_services=top_services,
-        inner_frame=_parse_inner_frame(_to_mapping(raw.get("inner_frame"), "inner_frame")),
+        inner_frame=_parse_inner_frame(inner_frame_raw),
         validation=_parse_validation(_to_mapping(raw.get("validation", {}), "validation")),
+        compact_one=compact_one,
         doc_name=_to_str(raw.get("doc_name", "compactInVacuum"), "doc_name"),
     )
 
