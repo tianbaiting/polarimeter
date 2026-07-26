@@ -54,23 +54,165 @@ vessel:
     rear_standard: VF100
 channels:
   - name: deuteron
+    particle: deuteron
+    cm_branches: [forward, backward]
     angle_deg: 20.9
     radius_mm: 140.0
     confidence: high
   - name: proton_small
+    particle: proton
+    cm_branches: [backward]
     angle_deg: 11.2
     radius_mm: 190.0
     confidence: medium
   - name: proton_large
+    particle: proton
+    cm_branches: [forward]
     angle_deg: 53.4
     radius_mm: 205.0
     confidence: medium
 sectors: [left, right, up, down]
 detector:
+  radius_reference: active_center
   diameter_mm: 25.0
   length_mm: 50.0
   clamp_outer_diameter_mm: 32.0
   clamp_width_mm: 12.0
+  active_medium_status: undecided
+  active_medium: placeholder
+  photosensor_status: selected
+  photosensor: SiPM_device_model_provisional
+physics:
+  status: provisional
+  scope: tensor_polarimetry_pzz_pyy
+  reaction: H1(d,d)p_elastic
+  beam:
+    particle: deuteron
+    kinetic_energy_mev: 380.0
+    axis: [0.0, 0.0, 1.0]
+  target:
+    material: CH2
+    areal_density_g_per_m2: 10000.0
+    position_mm: [0.0, 0.0, 0.0]
+    status: provisional
+  coincidence:
+    azimuth_relation: opposite
+    pairs:
+      - name: forward
+        deuteron_channel: deuteron
+        proton_channel: proton_large
+        deuteron_cm_branch: forward
+      - name: backward
+        deuteron_channel: deuteron
+        proton_channel: proton_small
+        deuteron_cm_branch: backward
+  observables:
+    pzz_numerator_pair: forward
+    pzz_denominator_pair: backward
+    pyy_pair: forward
+top_services:
+  status: interface_envelope
+  icf70_interface:
+    standard: ICF70
+    module_outer_diameter_mm: 70.0
+    module_inner_diameter_mm: 38.0
+    pipe_outer_diameter_mm: 38.0
+    pipe_inner_diameter_mm: 22.0
+    pipe_length_mm: 0.0
+    module_thickness_mm: 15.0
+    seal_face_width_mm: 8.0
+    bolt_circle_diameter_mm: 58.7
+    bolt_count: 6
+    flange_bolt_hole_diameter_mm: 6.6
+    oring_groove_inner_diameter_mm: 0.0
+    oring_groove_outer_diameter_mm: 0.0
+    oring_groove_depth_mm: 0.0
+    interface_bolt_diameter_mm: 6.0
+    interface_bolt_length_mm: 25.0
+    interface_nut_outer_diameter_mm: 10.0
+    interface_nut_thickness_mm: 5.0
+    interface_washer_outer_diameter_mm: 12.0
+    interface_washer_thickness_mm: 1.0
+  rotary:
+    mount_standard: ICF70
+    pivot_x_mm: 70.0
+    pivot_z_mm: 0.0
+    port_inner_diameter_mm: 22.0
+    port_outer_diameter_mm: 42.0
+    port_collar_length_mm: 8.0
+    shaft_diameter_mm: 18.0
+    work_angle_deg: 0.0
+    park_angle_deg: 90.0
+    arm_length_mm: 70.0
+    arm_width_mm: 18.0
+    arm_thickness_mm: 8.0
+    hub_diameter_mm: 32.0
+    hub_thickness_mm: 10.0
+    holder_outer_width_mm: 58.0
+    holder_outer_height_mm: 58.0
+    holder_frame_width_mm: 8.0
+    holder_thickness_mm: 4.0
+    target_diameter_mm: 30.0
+    target_thickness_mm: 0.20
+    beam_stay_clear_diameter_mm: 20.0
+    supplier_model_status: unfrozen
+    supplier_reference_code: ICF70_interface_envelope
+    external_body_diameter_mm: 38.0
+    external_body_length_mm: 107.5
+    handwheel_diameter_mm: 70.0
+    handwheel_thickness_mm: 12.0
+  electrical:
+    architecture_status: provisional
+    impedance_ohm: 50.0
+    detector_channel_count: 12
+    bias_on_signal_coax: true
+    active_electronics_in_vacuum: false
+    channels_per_signal_port: 4
+    signal_ports:
+      - name: sector_left
+        sector: left
+        center_x_mm: -155.0
+        center_z_mm: 140.0
+      - name: sector_right
+        sector: right
+        center_x_mm: 155.0
+        center_z_mm: 140.0
+      - name: sector_up
+        sector: up
+        center_x_mm: -70.0
+        center_z_mm: 255.0
+      - name: sector_down
+        sector: down
+        center_x_mm: 70.0
+        center_z_mm: 255.0
+    signal_port_inner_diameter_mm: 38.0
+    signal_port_outer_diameter_mm: 42.0
+    signal_port_collar_length_mm: 8.0
+    signal_equipment_envelope_diameter_mm: 50.0
+    signal_equipment_envelope_length_mm: 55.0
+    housekeeping:
+      name: sipm_temperature
+      center_x_mm: -70.0
+      center_z_mm: 0.0
+      sensor_count: 12
+      wires_per_sensor: 2
+      feedthrough_pin_count: 32
+      port_inner_diameter_mm: 38.0
+      port_outer_diameter_mm: 42.0
+      port_collar_length_mm: 8.0
+      equipment_envelope_diameter_mm: 50.0
+      equipment_envelope_length_mm: 55.0
+    routing:
+      cable_keepout_diameter_mm: 8.0
+      minimum_static_bend_radius_mm: 25.0
+      wall_clearance_mm: 20.0
+      strain_relief_length_mm: 24.0
+      strain_relief_width_mm: 18.0
+      strain_relief_thickness_mm: 6.0
+    grounding:
+      protective_bond_required: true
+      coax_shield_bond_at_feedthrough: true
+      signal_shield_is_only_protective_earth: false
 inner_frame:
   spine_diameter_mm: 30.0
   arm_cross_width_mm: 20.0

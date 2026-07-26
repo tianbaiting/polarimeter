@@ -1,0 +1,5 @@
+key,device,microcells,pde_fraction,gain,normal_nonlinearity_2pct,normal_nonlinearity_5pct,normal_charge_5pct_nc,carbon_nonlinearity_5pct,ten_percent_limit_5pct_mev
+eqr15,NDL EQR15 11-6060D-S,167537,0.45,4.0e5,0.373337,0.929863,0.199057,11.894911,159.760112
+eqr20,NDL EQR20 11-6060D-S,97344,0.478,8.0e5,0.681117,1.691228,0.419636,20.332358,87.387925
+hamamatsu,Hamamatsu S13360-6025CS,57600,0.25,7.0e5,0.602352,1.496831,0.192420,18.279665,98.867286
+rayquant,Ray-Quant JSP-TP6050,13852,0.35,2.1e6,3.439564,8.307382,0.752288,62.531069,16.983006

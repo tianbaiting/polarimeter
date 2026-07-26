@@ -1,0 +1,125 @@
+schema_version: 1
+
+report:
+  title: CompactInVacuum Polarimeter
+  subtitle: SiPM Detector, Vacuum Chamber, and China Procurement Engineering Report
+  issue_date: 2026-07-26
+  status: Preliminary Design Review / Procurement Planning
+  procurement_region: People's Republic of China preferred
+
+source_files:
+  compact_config: compactInVacuum/config/default_compactInVacuum.yaml
+  compact_target: compactInVacuum/target.yaml
+  channel_manifest: compactInVacuum/compactInVacuum.channel_manifest.json
+  validation_report: compactInVacuum/compactInVacuum.validation_report.json
+  analysis_scenario: code/config/compact_in_vacuum.ini
+  energy_model: code/data/energy_lise/dp_dc_kinematics.py
+  lise_range_model: code/data/energy_lise/lise_range.py
+  mechanical_baseline: docs/specs/BLP_v1_requirement_baseline.md
+
+calculation:
+  scintillation_yield_photons_per_mev_ee: 10000.0
+  optical_collection_efficiencies: [0.02, 0.05]
+  saturation_curve_efficiency: 0.05
+  saturation_curve_energy_max_mev: 210.0
+  saturation_curve_points: 421
+  legacy_10mm_normal_dp_upper_deposit_mev: 39.5
+  conservative_carbon_upper_deposit_mev: 192.75
+  scintillator_candidate_thickness_mm: 5.0
+  legacy_reference_thickness_mm: 10.0
+  thickness_scan_mm: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0]
+  lise_primary_range_model: atima_1_2_ls
+  lise_range_envelope_models:
+    - hubert_1990
+    - ziegler_low_energy
+    - atima_1_2_ls
+    - atima_1_2_no_ls
+    - atima_1_4_mean_charge
+  minimum_candidate_deposit_mev: 1.5
+  maximum_candidate_eqr15_nonlinearity_percent: 2.0
+  scintillator_reference_material: C8H8
+  scintillator_density_g_per_cm3: 1.023
+  stainless_density_g_per_cm3: 7.90
+  effective_charge_window_ns: 20.0
+  termination_ohm: 50.0
+  minimum_low_gain_charge_range_nc: 1.5
+  compact_v2_geometric_scale: 0.8
+
+icf_screening:
+  icf114_reference_clear_bore_mm: 60.2
+  after_src_front_interface: ICF114
+  after_src_rear_interface: ICF114
+  rotary_feedthrough_interface: ICF70
+  compact_front_interface: ICF114
+  compact_rear_interface: ICF114
+  compact_rotary_feedthrough_interface: ICF70
+  compact_signal_feedthrough_ports: 4
+  compact_signal_channels_per_port: 4
+  compact_signal_channels_used: 12
+  compact_signal_channels_spare: 4
+  compact_housekeeping_pin_capacity: 32
+  compact_housekeeping_pins_used: 24
+  assembly_helium_leak_rate_max_pa_m3_s: 1.0e-10
+  primary_seal: OFHC copper gasket on ICF knife edge
+  adapters_and_bellows_allowed: true
+  rotary_shaft_diameter_mm: 18.0
+  rotary_work_positions_deg: [0.0, 90.0]
+
+sipm_devices:
+  - key: eqr15
+    name: NDL EQR15 11-6060D-S
+    active_area_mm: [6.14, 6.14]
+    pitch_um: 15.0
+    microcells: 167537
+    pde_fraction: 0.45
+    gain: 4.0e5
+    role: Recommended baseline
+    evidence: centao_eqr15
+  - key: eqr20
+    name: NDL EQR20 11-6060D-S
+    active_area_mm: [6.24, 6.24]
+    pitch_um: 20.0
+    microcells: 97344
+    pde_fraction: 0.478
+    gain: 8.0e5
+    role: Higher-gain backup
+    evidence: centao_eqr20
+  - key: hamamatsu
+    name: Hamamatsu S13360-6025CS
+    active_area_mm: [6.0, 6.0]
+    pitch_um: 25.0
+    microcells: 57600
+    pde_fraction: 0.25
+    gain: 7.0e5
+    role: Imported reference
+    evidence: hamamatsu_s13360
+  - key: rayquant
+    name: Ray-Quant JSP-TP6050
+    active_area_mm: [6.0, 6.0]
+    pitch_um: 50.0
+    microcells: 13852
+    pde_fraction: 0.35
+    gain: 2.1e6
+    role: Comparison only
+    evidence: rayquant_jsp
+
+acceptance_labels:
+  forward_dp:
+    deuteron_channel: deuteron
+    proton_channel: proton_large
+    deuteron_branch: branch1
+  backward_dp:
+    deuteron_channel: deuteron
+    proton_channel: proton_small
+    deuteron_branch: branch2
+
+verification_tolerances:
+  geometry_angle_deg: 0.05
+  geometry_radius_mm: 0.2
+  energy_range_mev: 0.15
+  saturation_percent: 0.05
+  charge_nc: 0.005
+
+report_reference_values:
+  eqr15_carbon_nonlinearity_5pct: 11.9
+  carbon_upper_deposit_mev: 192.8

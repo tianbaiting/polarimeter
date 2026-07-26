@@ -1,0 +1,1159 @@
+\documentclass[10pt,letterpaper]{article}
+
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Termes}
+\setsansfont{TeX Gyre Heros}
+\setmonofont{DejaVu Sans Mono}[Scale=0.82]
+
+\usepackage[margin=0.82in,headheight=15pt]{geometry}
+\usepackage{microtype}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{adjustbox}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{siunitx}
+\usepackage{pgfplots}
+\usepackage{fancyvrb}
+\usepackage{csquotes}
+\usepackage[
+  backend=biber,
+  style=numeric,
+  sorting=none,
+  maxbibnames=9,
+  url=true,
+  doi=true
+]{biblatex}
+\usepackage[
+  colorlinks=true,
+  linkcolor=blue!45!black,
+  citecolor=blue!45!black,
+  urlcolor=blue!55!black,
+  pdfauthor={CompactInVacuum Polarimeter Project},
+  pdftitle={CompactInVacuum SiPM Detector, Vacuum Chamber, and China Procurement Engineering Report}
+]{hyperref}
+\usepackage{bookmark}
+\usepackage[nameinlink,noabbrev]{cleveref}
+
+\addbibresource{references.bib}
+\pgfplotsset{compat=1.18}
+\sisetup{
+  detect-all,
+  group-separator={,},
+  group-minimum-digits=4,
+  range-phrase={--},
+  range-units=single
+}
+
+\definecolor{ReportBlue}{HTML}{2E74B5}
+\definecolor{ReportDarkBlue}{HTML}{1F4D78}
+\definecolor{ReportText}{HTML}{202124}
+\definecolor{ReportMuted}{HTML}{5F6368}
+\definecolor{ReportGreen}{HTML}{E8F3EC}
+\definecolor{ReportAmber}{HTML}{FFF4D6}
+\definecolor{ReportRed}{HTML}{FCE8E6}
+\definecolor{ReportLight}{HTML}{F2F4F7}
+
+\titleformat{\section}
+  {\sffamily\bfseries\Large\color{ReportBlue}}
+  {\thesection.}{0.55em}{}
+\titleformat{\subsection}
+  {\sffamily\bfseries\large\color{ReportBlue}}
+  {\thesubsection}{0.55em}{}
+\titleformat{\subsubsection}
+  {\sffamily\bfseries\normalsize\color{ReportDarkBlue}}
+  {\thesubsubsection}{0.55em}{}
+\titlespacing*{\section}{0pt}{1.6em}{0.7em}
+\titlespacing*{\subsection}{0pt}{1.25em}{0.45em}
+\titlespacing*{\subsubsection}{0pt}{1.0em}{0.35em}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\setlist[itemize]{leftmargin=1.35em,itemsep=0.25em,topsep=0.25em}
+\setlist[enumerate]{leftmargin=1.55em,itemsep=0.3em,topsep=0.3em}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\sffamily\scriptsize COMPACTINVACUUM POLARIMETER}
+\fancyhead[R]{\sffamily\scriptsize PRELIMINARY ENGINEERING REPORT}
+\fancyfoot[L]{\sffamily\scriptsize Not for fabrication or purchase-order release}
+\fancyfoot[R]{\sffamily\scriptsize Page \thepage}
+\renewcommand{\headrulewidth}{0.25pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\newtcolorbox{decisionbox}[1]{
+  enhanced,
+  breakable,
+  colback=ReportGreen,
+  colframe=ReportBlue!45,
+  boxrule=0.55pt,
+  arc=1.2mm,
+  left=2.2mm,
+  right=2.2mm,
+  top=1.8mm,
+  bottom=1.8mm,
+  title={#1},
+  fonttitle=\sffamily\bfseries,
+  coltitle=ReportDarkBlue
+}
+
+\newtcolorbox{warningbox}[1]{
+  enhanced,
+  breakable,
+  colback=ReportRed,
+  colframe=red!45!black,
+  boxrule=0.55pt,
+  arc=1.2mm,
+  left=2.2mm,
+  right=2.2mm,
+  top=1.8mm,
+  bottom=1.8mm,
+  title={#1},
+  fonttitle=\sffamily\bfseries,
+  coltitle=red!45!black
+}
+
+\newtcolorbox{notebox}[1]{
+  enhanced,
+  breakable,
+  colback=ReportAmber,
+  colframe=orange!55!black,
+  boxrule=0.5pt,
+  arc=1.2mm,
+  left=2.2mm,
+  right=2.2mm,
+  top=1.6mm,
+  bottom=1.6mm,
+  title={#1},
+  fonttitle=\sffamily\bfseries,
+  coltitle=orange!45!black
+}
+
+\newcommand{\datatag}[1]{%
+  \par{\sffamily\scriptsize\color{ReportMuted}Data origin: \path{#1}}\par
+}
+\newcommand{\proposal}{\textsc{Proposed}}
+\newcommand{\derived}{\textsc{Derived}}
+\newcommand{\sourcevalue}{\textsc{Source}}
+\newcommand{\provisional}{\textsc{Provisional}}
+
+\input{generated/macros.tex}
+
+\begin{document}
+\hypersetup{pageanchor=false}
+
+\begin{titlepage}
+  \thispagestyle{empty}
+  \vspace*{0.62in}
+
+  {\sffamily\bfseries\fontsize{25}{29}\selectfont\color{ReportText}
+  CompactInVacuum Polarimeter\par}
+  \vspace{0.25em}
+  {\sffamily\fontsize{14}{18}\selectfont\color{ReportMuted}
+  SiPM Detector, Vacuum Chamber, and China Procurement Engineering Report\par}
+
+  \vspace{0.55in}
+  \renewcommand{\arraystretch}{1.35}
+  \begin{tabularx}{\textwidth}{>{\sffamily\bfseries}L{0.23\textwidth}Y}
+    \toprule
+    Status & Preliminary Design Review / Procurement Planning \\
+    Issue date & 26 July 2026 \\
+    CAD reference & Polarimeter commit \texttt{\ReportGitCommit} \\
+    Configuration & \path{compactInVacuum/config/default_compactInVacuum.yaml} \\
+    Source validation & \SourceValidationStatus \\
+    Procurement region & People's Republic of China preferred \\
+    Primary integration candidate & Shanghai PrMat Precision Instrument Technology Co., Ltd. (conditional qualification) \\
+    \bottomrule
+  \end{tabularx}
+
+  \vfill
+  \begin{warningbox}{PRELIMINARY -- NOT FOR FABRICATION OR PURCHASE-ORDER RELEASE}
+    This report converts the current physics and CAD state into a proposed engineering baseline.
+    Open dimensions, vacuum requirements, interface drawings, material certificates, and supplier
+    capabilities must be closed at the stated development gates.
+  \end{warningbox}
+
+  \vspace{0.22in}
+  {\small\color{ReportMuted}
+  The numerical tables in this LaTeX report are generated from version-controlled source files.
+  The complete reproduction command is \texttt{make verify}; see \cref{sec:verification}.}
+\end{titlepage}
+
+\hypersetup{pageanchor=true}
+\pagenumbering{roman}
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+
+\section{Executive decision}
+
+\begin{decisionbox}{Recommended first-prototype baseline}
+  \begin{itemize}
+    \item Use a fast blue plastic scintillator, not a high-light-yield inorganic crystal.
+    \item Use a \SI{\CompactScaledActiveDiameter}{\milli\meter} diameter by
+      \SI{\ActiveThicknessMm}{\milli\meter} active element as the first 0.8-scale candidate,
+      and test \SIrange{5}{6}{\milli\meter} before freezing production thickness.
+      If the present radii are retained, keep the current \SI{\ActiveDiameterMm}{\milli\meter}
+      diameter and use the same active thickness.
+    \item Use the NDL EQR15 11-6060D-S as the baseline SiPM. Keep the NDL EQR20 as a
+      higher-gain backup and a Hamamatsu S13360-6025CS as an imported reference.
+    \item Design and measure the total optical collection into the SiPM active area in the
+      2--5\% range. Do not treat this efficiency as a vendor specification.
+    \item Keep active electronics outside vacuum. Carry each fast signal through one shielded
+      \SI{50}{\ohm} coaxial feedthrough, with SiPM bias supplied through an external bias tee.
+  \end{itemize}
+\end{decisionbox}
+
+At the \SI{\ActiveThicknessMm}{\milli\meter} candidate's maximum calculated normal elastic
+d--p deposit of \SI{\CandidateMaximumDepositMeV}{\mega\electronvolt}, the EQR15 short-pulse microcell
+nonlinearity is \EqrNormalNonlinearityTwo\% at 2\% optical collection and
+\EqrNormalNonlinearityFive\% at 5\%. At 5\%, the associated primary-avalanche charge is
+\SI{\EqrNormalCharge}{\nano\coulomb}. The SiPM is therefore viable, but the front-end can
+still clip before the microcells become unacceptable. The first prototype must provide a
+timing path, a protected low-gain charge path, and a calibrated light-injection scan.
+For comparison, the legacy \SI{\LegacyThicknessMm}{\milli\meter} calculation reaches
+\SI{\LegacyMaximumDepositMeV}{\mega\electronvolt}, \EqrLegacyNormalNonlinearityFive\%
+nonlinearity, and \SI{\EqrLegacyNormalCharge}{\nano\coulomb} at the same optical efficiency.
+
+The calculated carbon background point is deliberately conservative: it applies the
+electron-equivalent reference light yield without Birks quenching. Its EQR15 microcell
+nonlinearity is \EqrCarbonNonlinearity\% at 5\% optical collection. Heavy-ion quenching
+will reduce the real occupancy, but the correction must be measured rather than assumed.
+
+Shanghai PrMat is a reasonable candidate for vacuum-chamber integration because it publicly
+describes custom vacuum-component design and manufacturing capability
+\cite{prmat_about,prmat_kcell}. This is candidate evidence, not prequalification. The
+purchase route must require a formal RFQ, design-for-manufacture review, weld and inspection
+plans, dimensional inspection, cleaning records, and helium-leak acceptance.
+
+\begin{warningbox}{Fixed ICF114 contract; CAD bore still requires correction}
+  Two polarimeters are planned. The afterSRC external-detector instrument has fixed
+  ICF114 front and rear beam interfaces and a top ICF70 rotary-feedthrough interface.
+  The CompactInVacuum beam interfaces are also ICF114, and its rotary-feedthrough mounting
+  interface is now fixed as ICF70. The purchased rotary unit remains unfrozen. Adapters and
+  bellows are permitted, but they must preserve the specified metal-seal vacuum class.
+
+  The current CAD configuration uses a \SI{63.6}{\milli\meter} pipe outside diameter and a
+  \SI{63.0}{\milli\meter} inside diameter. The calculated radial wall is only
+  \SI{\PipeRadialWallMm}{\milli\meter}. A reference ICF114 half nipple has approximately
+  \SI{60.2}{\milli\meter} clear bore, so the present \SI{63}{\milli\meter} stay-clear exceeds
+  that reference by \SI{\IcfOneOneFourDeficitMm}{\milli\meter}
+  \cite{cosmotec_icf}. ICF114 is not an open selection item. Freeze the usable beam aperture
+  from the certified ICF114 flange, nipple, adapter, and bellows drawings, then correct the
+  internal pipe and stay-clear geometry before releasing fabrication.
+\end{warningbox}
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{Decision summary and release conditions.}
+  \begin{tabularx}{\textwidth}{L{0.18\textwidth}Y Y}
+    \toprule
+    Item & Recommended decision & Release condition \\
+    \midrule
+    Scintillator & Fast blue plastic; \SIrange{5}{6}{\milli\meter} first-prototype study band &
+      Source/beam timing, threshold, light-output, and thickness-comparison data \\
+    SiPM & EQR15 baseline; EQR20 backup; Hamamatsu reference &
+      Bench linearity, gain, dark rate, temperature coefficient, and lot screening \\
+    Chamber & Short cylindrical pressure shell plus removable flat service plate or
+      faceted detector cartridge & Port map, external-pressure FEA, handling mass, and access review \\
+    ICF interfaces & ICF114 front/rear beam interfaces; afterSRC top rotary interface ICF70 &
+      Purchased-component drawings, metal-seal assembly, and ICF-class leak acceptance \\
+    PrMat workshare & Chamber, rotary-feedthrough integration, metal cassettes, final
+      dimensional and leak acceptance & Accepted capability questionnaire and quality plan \\
+    Detector workshare & Scintillator supplier plus project electronics team &
+      A golden cassette passes optical, vacuum, electrical, and coincidence tests \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{Scope, reference configuration, and decision state}
+
+The project contains two distinct polarimeters. The afterSRC instrument places its detectors
+outside a dedicated target chamber and retains the validated H+V+V mechanical family. Its
+front and rear beam interfaces are fixed as ICF114, its top rotary-feedthrough interface is
+ICF70, and it has no additional side vacuum ports. CompactInVacuum is the second instrument
+and the main future-development line; its detectors operate inside vacuum and its current
+front/rear beam-interface configuration is also ICF114. Its top rotary mounting interface is
+ICF70; four sector-grouped ICF70 four-channel coax service interfaces and one ICF70
+32-pin housekeeping interface are the current concept baseline. This report focuses on
+CompactInVacuum detector technology while preserving the afterSRC interface contract.
+
+The reference physics case is a \SI{\BeamEnergyMeV}{\mega\electronvolt} deuteron beam on a
+CH2 target with elastic d--p coincidence in four azimuthal sectors.
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{Detector geometry read from the active CompactInVacuum configuration and
+  checked against the generated channel manifest.}
+  \begin{tabular}{L{0.10\textwidth}L{0.13\textwidth}C{0.12\textwidth}C{0.20\textwidth}L{0.24\textwidth}}
+    \toprule
+    Station & Particle & Angle (\si{\degree}) & Active-center radius (\si{\milli\meter}) &
+      Lab acceptance (\si{\degree}) \\
+    \midrule
+    \input{generated/geometry_table.tex}
+  \end{tabular}
+  \datatag{generated/geometry_table.tex; generated/provenance.json}
+\end{table}
+
+The current CAD detector envelope is \SI{\ActiveDiameterMm}{\milli\meter} diameter by
+\SI{\ActiveLengthMm}{\milli\meter}. Its configuration still records both active medium and
+photosensor as \enquote{undecided/placeholder}. The SiPM and plastic-scintillator choices in
+this report are therefore a \proposal{} prototype baseline. They should be promoted into
+the authoritative CompactInVacuum target/configuration only after the first optical coupon
+and packaging decisions are accepted.
+
+\subsection{Current chamber envelope}
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{Current square-vessel screening metrics. The closed-shell mass estimate ignores
+  ports, weld preparations, local reinforcements, and removed material.}
+  \begin{tabularx}{\textwidth}{L{0.26\textwidth}L{0.23\textwidth}Y}
+    \toprule
+    Parameter & Current model / calculation & Engineering interpretation \\
+    \midrule
+    Inner cross-section & \SI{440}{\milli\meter} by \SI{440}{\milli\meter} &
+      Larger than expected for a compact detector cartridge; drives transport volume \\
+    Nominal wall thickness & \SI{10}{\milli\meter} &
+      Must not be frozen without external-pressure buckling analysis and weld details \\
+    Body length & \SI{360}{\milli\meter} &
+      A short body, but detector services and target access still dominate packaging \\
+    Closed-shell material volume & \SI{\ChamberMaterialVolumeL}{\liter} &
+      Arithmetic screening value before subtracting ports \\
+    Stainless screening mass & \SI{\ChamberScreeningMassKg}{\kilogram} &
+      Confirms that the current square body is inconvenient for manual transport \\
+    Detector count & 12 operating channels &
+      Three stations in each of four sectors; purchase plan must include spares \\
+    \bottomrule
+  \end{tabularx}
+  \datatag{compactInVacuum/config/default_compactInVacuum.yaml; generated/derived_results.json}
+\end{table}
+
+\subsection{Compact v2 direction}
+
+\begin{itemize}
+  \item Evaluate a 0.8 geometric scale first: D, P-small, and P-large active-center radii
+    near \SI{\CompactScaledDeuteronRadius}{\milli\meter},
+    \SI{\CompactScaledProtonSmallRadius}{\milli\meter}, and
+    \SI{\CompactScaledProtonLargeRadius}{\milli\meter}, with a
+    \SI{\CompactScaledActiveDiameter}{\milli\meter} active diameter.
+  \item Evaluate a short cylindrical pressure shell around a removable flat or faceted
+    detector/service cartridge. A cylinder remains structurally efficient under external
+    pressure; the flat service element simplifies ICF bosses, feedthroughs, datums, and maintenance.
+  \item Group electrical services on one removable plate or top/rear manifold. Avoid
+    distributing twelve signal feedthroughs around the curved shell unless routing and weld
+    distortion analyses justify it.
+  \item Use removable beamline spools, knife-edge covers, lifting points, and a stated
+    maximum manually handled subassembly mass.
+\end{itemize}
+
+\begin{notebox}{Provisional inputs that still require closure}
+  Beam energy and d--p reaction are source-controlled. The \SIrange{5}{6}{\milli\meter}
+  prototype thickness band, 2--5\% total optical collection,
+  \SI{10000}{photons/MeV} electron-equivalent light yield, populated-detector bake regime,
+  and rotary-feedthrough load case remain engineering assumptions. The ICF114/ICF70 interface
+  family and ICF-class metal-seal boundary are fixed; the operating pressure and gas-load
+  budget still require beamline-owner approval.
+\end{notebox}
+
+\section{Detector physics and active thickness}
+
+The elastic coincidence acceptance is recalculated from the current detector diameter,
+active-center radii, and laboratory angles. The forward and backward common center-of-mass
+windows are \ForwardCmLow--\ForwardCmHigh\si{\degree} and
+\BackwardCmLow--\BackwardCmHigh\si{\degree}, respectively. Energy deposition is then
+calculated with the repository's relativistic two-body kinematics and C8H8 range tables.
+The primary values use \LisePrimaryRangeModel; the complete CSV includes five LISE++ range
+models so interpolation-model spread is visible.
+
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \caption{Calculated energy deposition in a \SI{\ActiveThicknessMm}{\milli\meter}
+  C8H8 active layer. Carbon values are energy deposits, not electron-equivalent light output.}
+  \begin{tabular}{L{0.22\textwidth}C{0.08\textwidth}C{0.17\textwidth}C{0.20\textwidth}L{0.17\textwidth}}
+    \toprule
+    Reaction / particle & Station & Lab range (\si{\degree}) &
+      Deposit in \SI{\ActiveThicknessMm}{\milli\meter} plastic
+      (\si{\mega\electronvolt}) & Trace status \\
+    \midrule
+    \input{generated/energy_table.tex}
+  \end{tabular}
+  \datatag{generated/energy_deposition.csv; code/data/energy_lise/dp_dc_kinematics.py}
+\end{table}
+
+\subsection{Active-thickness recommendation}
+
+The detector acts as a $\Delta E$ counter, not a stopping calorimeter. Accepted d--p
+particles have calculated ranges up to approximately \SI{\WorstCaseNormalRangeMm}{\milli\meter};
+none of the scanned \SIrange{1}{10}{\milli\meter} options stops every branch. Thickness must
+therefore be chosen from timing/threshold margin, optical uniformity, saturation, mechanics,
+and coincidence separation rather than from a false full-stopping criterion.
+
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \caption{LISE++ thickness scan. Each cell gives the deposited-energy range in
+  \si{\mega\electronvolt} for the accepted coincidence branch using
+  \LisePrimaryRangeModel. The accompanying generated CSV preserves the full five-model result.}
+  \begin{tabular}{C{0.08\textwidth}C{0.16\textwidth}C{0.16\textwidth}
+                  C{0.16\textwidth}C{0.16\textwidth}L{0.10\textwidth}}
+    \toprule
+    Thickness (\si{\milli\meter}) & Forward d & Forward p &
+      Backward d & Backward p & Role \\
+    \midrule
+    \input{generated/thickness_table.tex}
+  \end{tabular}
+  \datatag{generated/thickness_summary.csv; generated/thickness_scan.csv;
+  code/data/energy_lise/lise_range.py}
+\end{table}
+
+The \SI{\ActiveThicknessMm}{\milli\meter} candidate gives
+\SIrange{\CandidateMinimumDepositMeV}{\CandidateMaximumDepositMeV}{\mega\electronvolt}
+over the normal accepted branches and reduces the maximum deposited energy by approximately
+\MaximumDepositReductionPercent\% relative to \SI{\LegacyThicknessMm}{\milli\meter}.
+It is the compactness/low-saturation starting point, not a frozen optimum. Build at least
+\SI{5}{\milli\meter} and \SI{6}{\milli\meter} otherwise-identical cassettes; retain
+\SI{4}{\milli\meter}, \SI{8}{\milli\meter}, and \SI{10}{\milli\meter} coupons for threshold,
+timing, quenching, and dynamic-range comparison. Freeze production thickness only after a
+source or beam test and a version-controlled Geant4 response study.
+
+\subsection{Light-yield quenching}
+
+The saturation model deliberately uses the electron-equivalent light yield as an upper bound.
+For heavy charged particles, Birks' law gives the first-order relation
+\begin{equation}
+  \frac{\mathrm{d}L}{\mathrm{d}x}
+  =
+  S\,\frac{\mathrm{d}E/\mathrm{d}x}
+  {1 + k_B\,\mathrm{d}E/\mathrm{d}x}.
+\end{equation}
+The supplier batch and the final surface treatment can change the effective light collection,
+while the Birks constant depends on material and measurement conditions. No assumed Birks
+constant is applied in the saturation numbers. Carbon values are therefore intentionally
+conservative for SiPM occupancy but still valuable for defining the calibration range.
+
+\section{Scintillator and detector cassette}
+
+\subsection{Material choice}
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{Qualitative scintillator trade study for the first compact detector.}
+  \begin{tabularx}{\textwidth}{L{0.15\textwidth}Y Y L{0.17\textwidth}}
+    \toprule
+    Material & Main advantage & Main concern & Disposition \\
+    \midrule
+    Fast blue plastic & Fast coincidence timing; easy machining; low cost; domestic supply route &
+      Lower energy resolution; batch and surface quality must be measured & Baseline \\
+    CsI(Tl) & High light output and widespread availability &
+      Slow decay, hygroscopic handling, severe SiPM saturation risk & Not recommended \\
+    GAGG(Ce) & High light output; non-hygroscopic &
+      Dense high-Z material, slower timing, higher cost, more saturation & Future comparison only \\
+    LYSO(Ce) & Fast inorganic option; high stopping power &
+      High cost, high-Z background, intrinsic activity, saturation risk & Not recommended \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+Domestic plastic material and rough/finish machining should be quoted through Shanghai EPIC
+Crystal / Shanghai Shuojie or another qualified Chinese producer
+\cite{epic_plastic}. EJ-200/204-class properties are a reference, not a mandatory imported
+material \cite{eljen_plastic}. The purchase specification must state the measured emission
+spectrum, rise/decay behavior, light output relative to a named reference, bulk attenuation,
+dimensional tolerance, surface finish, reflector, adhesive, and vacuum-material evidence.
+
+\subsection{Recommended cassette and optical variants}
+
+\begin{itemize}
+  \item Active plastic: \SI{20}{\milli\meter} diameter by
+    \SIrange{5}{6}{\milli\meter} for the 0.8-scale study, or
+    \SI{25}{\milli\meter} diameter by the same tested thickness at the current radii.
+  \item Polish the SiPM-coupling face and define the side/rear finish on the drawing.
+  \item Couple one centered 6-by-6-mm SiPM to the flat rear face. Avoid a long acrylic light
+    guide until uniformity measurements show it is necessary.
+  \item Use a removable cassette with a spring-preloaded optical joint. Avoid permanent
+    optical epoxy in the first prototype.
+  \item Provide a copper thermal path to the chamber wall, temperature sensing near the
+    SiPM, strain relief, wrapped coax, and an interchangeable mechanical datum.
+\end{itemize}
+
+The first coupon program should compare diffuse reflector, specular reflector, a shallow
+integral taper, and a deliberately attenuated interface. Each variant must be scanned in two
+dimensions with a collimated source while recording pulse charge, timing, spatial uniformity,
+and the inferred total optical collection.
+
+\section{SiPM selection and saturation calculation}
+
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \caption{Candidate SiPM input data. PDE and gain are engineering values copied into the
+  auditable assumptions file; current signed datasheets govern procurement.}
+  \begin{tabular}{L{0.23\textwidth}C{0.14\textwidth}C{0.08\textwidth}C{0.12\textwidth}C{0.08\textwidth}L{0.20\textwidth}}
+    \toprule
+    Candidate & Active area (\si{\milli\meter\squared}) & Pitch (\si{\micro\meter}) &
+      Cells & PDE & Role \\
+    \midrule
+    \input{generated/sipm_device_table.tex}
+  \end{tabular}
+  \datatag{data/report_assumptions.yaml; references.bib}
+\end{table}
+
+The EQR15 is preferred because its \SI{15}{\micro\meter} pitch provides the largest microcell
+population among the evaluated 6-by-6-mm devices. The EQR20 has similar PDE and higher gain
+but fewer cells. The Hamamatsu device is a documented imported reference. The domestic
+\SI{50}{\micro\meter} Ray-Quant device has too few cells for the expected direct energy
+signal unless optical coupling is deliberately attenuated
+\cite{centao_eqr15,centao_eqr20,hamamatsu_s13360,rayquant_jsp}.
+
+\subsection{Model}
+
+For a scintillation pulse shorter than the cell-recovery time and uniformly illuminating the
+active area, the first-order occupancy model is
+\begin{align}
+  N_{\mathrm{seed}} &=
+    E_{\mathrm{dep}}\,Y_{\gamma}\,\eta_{\mathrm{opt}}\,\mathrm{PDE}, \\
+  N_{\mathrm{fired}} &=
+    N_{\mathrm{cell}}
+    \left[1-\exp\left(-\frac{N_{\mathrm{seed}}}{N_{\mathrm{cell}}}\right)\right], \\
+  \delta_{\mathrm{sat}} &=
+    1-\frac{N_{\mathrm{fired}}}{N_{\mathrm{seed}}}, \\
+  Q &= e\,G\,N_{\mathrm{fired}}.
+\end{align}
+This follows the standard short-pulse occupancy picture
+\cite{hamamatsu_occupancy}. Correlated avalanches, recovery during the pulse, nonuniform
+illumination, temperature, and electronics are excluded. Those effects belong in measured
+channel calibration.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+      width=\textwidth,
+      height=0.49\textwidth,
+      xmin=0,
+      xmax=210,
+      ymin=0,
+      ymax=56,
+      xlabel={Deposited energy in unquenched light upper-bound model (\si{\mega\electronvolt})},
+      ylabel={Microcell nonlinearity (\%)},
+      grid=major,
+      axis on top,
+      legend style={font=\scriptsize,at={(0.02,0.98)},anchor=north west,fill=white,draw=gray!45},
+      tick label style={font=\small},
+      label style={font=\small}
+    ]
+      \draw[fill=green!10,draw=none] (axis cs:0,0) rectangle (axis cs:210,5);
+      \addplot[ReportBlue,thick] table[x=energy_mev,y=eqr15_nonlinearity_pct,col sep=comma]
+        {generated/sipm_curve.csv};
+      \addlegendentry{NDL EQR15}
+      \addplot[green!55!black,thick] table[x=energy_mev,y=eqr20_nonlinearity_pct,col sep=comma]
+        {generated/sipm_curve.csv};
+      \addlegendentry{NDL EQR20}
+      \addplot[violet!75!black,thick] table[x=energy_mev,y=hamamatsu_nonlinearity_pct,col sep=comma]
+        {generated/sipm_curve.csv};
+      \addlegendentry{Hamamatsu S13360}
+      \addplot[red!75!black,thick] table[x=energy_mev,y=rayquant_nonlinearity_pct,col sep=comma]
+        {generated/sipm_curve.csv};
+      \addlegendentry{Ray-Quant JSP-TP6050}
+      \addplot[orange!70!black,dashed,thick] coordinates {(0,10) (210,10)};
+      \addplot[ReportBlue,dotted,thick]
+        coordinates {(\CandidateMaximumDepositMeV,0) (\CandidateMaximumDepositMeV,56)};
+      \addplot[black!65,dotted,thick]
+        coordinates {(\LegacyMaximumDepositMeV,0) (\LegacyMaximumDepositMeV,56)};
+      \addplot[black!65,dotted,thick] coordinates {(192.75,0) (192.75,56)};
+      \node[anchor=north west,font=\scriptsize,text=ReportBlue] at (axis cs:16,18)
+        {\SI{5}{\milli\meter} candidate};
+      \node[anchor=north west,font=\scriptsize,text=black!70] at (axis cs:41,29)
+        {\SI{10}{\milli\meter} legacy};
+      \node[anchor=north east,font=\scriptsize,text=black!70,align=right] at (axis cs:190,54)
+        {unquenched carbon\\upper deposit};
+      \node[anchor=south west,font=\scriptsize,text=green!45!black] at (axis cs:3,1.4)
+        {preferred region};
+    \end{axis}
+  \end{tikzpicture}
+  \caption{Calculated short-pulse SiPM nonlinearity at 5\% total optical collection.}
+  \datatag{generated/sipm_curve.csv}
+\end{figure}
+
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \caption{Calculated saturation and charge results. The carbon column is intentionally
+  unquenched and therefore conservative for light output.}
+  \begin{adjustbox}{width=\textwidth}
+    \begin{tabular}{lccccc}
+      \toprule
+      Device & \multicolumn{2}{c}{\SI{\ActiveThicknessMm}{\milli\meter} candidate upper d-p deposit} &
+        Charge at 5\% (\si{\nano\coulomb}) & Carbon upper bound at 5\% &
+        10\% limit at 5\% (\si{\mega\electronvolt}) \\
+      \cmidrule(lr){2-3}
+       & Nonlinearity at 2\% & Nonlinearity at 5\% & & Nonlinearity & \\
+      \midrule
+      \input{generated/saturation_table.tex}
+    \end{tabular}
+  \end{adjustbox}
+  \datatag{generated/sipm_saturation.csv; generated/derived_results.json}
+\end{table}
+
+\begin{decisionbox}{Saturation decision}
+  The EQR15 remains below the preferred 5\% microcell-nonlinearity target for every normal
+  d--p event at 2--5\% total optical collection. The conservative unquenched carbon point is
+  approximately \EqrCarbonNonlinearity\% nonlinear. The Ray-Quant \SI{50}{\micro\meter}
+  comparison device is not recommended for direct coupling because its normal upper d--p
+  point is already about 8.3\% nonlinear at 5\% collection.
+\end{decisionbox}
+
+\subsection{Front-end range and channel architecture}
+
+At the \SI{\ActiveThicknessMm}{\milli\meter} candidate's normal upper d--p point and 5\%
+optical collection, the EQR15 calculation gives
+\SI{\EqrNormalCharge}{\nano\coulomb}. Spread over an effective
+\SI{20}{\nano\second} window, this corresponds to \SI{\FrontEndAverageCurrentMilliAmp}{\milli\ampere}
+average current and a \SI{\FrontEndVoltageScale}{\volt} scale across
+\SI{50}{\ohm}. The real peak depends on sensor capacitance, cable, bias tee, termination,
+and shaping.
+
+\begin{itemize}
+  \item Provide a fast timing-discriminator path and a lower-gain charge path, or one
+    protected broadband digitizer path with two calibrated gain ranges.
+  \item Set the prototype low-gain integrated-charge range to at least
+    \SI{\LowGainRangeNc}{\nano\coulomb}; revise it after carbon/quenching measurements.
+  \item Use programmable low-noise bias with temperature compensation. Store temperature
+    and bias in run metadata.
+  \item Measure breakdown voltage, gain, dark count, crosstalk, afterpulsing, recovery,
+    spatial response, saturation, and temperature coefficient for every production lot.
+\end{itemize}
+
+\section{Vacuum electrical services, grounding, and thermal design}
+
+The recommended service architecture uses one shielded \SI{50}{\ohm} coaxial path per
+detector. Signal and bias share the coax through an external bias tee. Analog electronics
+remain outside vacuum. For twelve detectors, the baseline is twelve separately testable
+coaxial feedthrough channels plus low-rate housekeeping. The current CAD groups the channels
+by azimuth sector: four ICF70 four-channel coax interfaces provide three used channels and
+one installed spare per sector. A separate ICF70 32-pin envelope provides 24 used conductors
+for twelve two-wire SiPM temperature sensors and eight spare pins. Exact purchased feedthrough
+part numbers remain unfrozen.
+
+Beijing Feedivac publicly lists \SI{50}{\ohm} SMA50/SMAD50 feedthrough arrangements on CF
+interfaces \cite{feedivac_sma}. The RFQ must freeze exact part numbers, connector gender,
+in-vacuum cable type and length, bake temperature, leak certificate, installed bandwidth,
+and spare quantities. Public web data are screening evidence only.
+
+\begin{itemize}
+  \item Bond the metal cassette and chamber to protective earth; do not rely on uncertain
+    mechanical contacts through removable joints.
+  \item Keep the scintillator below its qualified service temperature during bake.
+    Use a controlled chamber bake with the detector cartridge removable where practical.
+  \item Use low-outgassing, mechanically secured internal cabling. Avoid unvented blind holes,
+    virtual leaks, loose reflector film, and unsupported connectors.
+  \item Monitor each SiPM temperature and define a bias-temperature correction in calibration.
+\end{itemize}
+
+\section{Chamber, ICF interfaces, and rotary feedthrough}
+
+\subsection{Cylinder versus square chamber}
+
+A cylindrical shell is not incompatible with ICF ports or feedthroughs. Radial ports are
+normally integrated through welded bosses or formed local pads. The concern is practical:
+twelve distributed signal ports, a rotary feedthrough, beam ports, and detector access can
+produce a crowded curved shell with difficult datum control and maintenance.
+
+The recommended concept is therefore hybrid:
+\begin{itemize}
+  \item a short cylindrical pressure shell for vacuum efficiency and lower mass;
+  \item a removable flat service plate or faceted cartridge for feedthroughs, detector
+    cassettes, cable routing, and alignment datums;
+  \item certified ICF114 beam-port components at both ends; and
+  \item a dedicated ICF70 rotary-feedthrough boss for both instruments. For
+    CompactInVacuum the mounting interface is fixed, while the purchased unit, shaft-load
+    rating, torque, backlash, lifetime, and bake limit remain RFQ closure items.
+\end{itemize}
+
+An initial thin-shell comparison suggests why a round vessel is attractive, but final
+thickness must come from external-pressure FEA including penetrations, weld efficiencies,
+local reinforcement, handling loads, and imperfection sensitivity.
+
+\subsection{Frozen ICF interface contract}
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{Interface contract for the two polarimeters. Certified supplier drawings govern
+  exact bores, bolt geometry, and installed envelope.}
+  \begin{tabularx}{\textwidth}{L{0.20\textwidth}L{0.24\textwidth}L{0.22\textwidth}Y}
+    \toprule
+    Instrument & Beam interfaces & Other vacuum interfaces & Fixed requirement \\
+    \midrule
+    afterSRC & Front ICF114; rear ICF114 &
+      Top ICF70 rotary feedthrough; no added side vacuum ports &
+      External mating faces remain ICF114 even when adapters or bellows are used \\
+    CompactInVacuum & Front ICF114; rear ICF114 &
+      Top ICF70 rotary mount; four ICF70 4-channel coax interfaces; one ICF70 32-pin
+      housekeeping interface &
+      Mount standards and capacity are fixed; supplier models remain interface envelopes \\
+    Both instruments & Purchased ICF knife edges and OFHC copper gaskets &
+      Chamber, welds, adapters, bellows, and feedthroughs are one acceptance boundary &
+      Assembly helium-leak acceptance $\leq
+      \IcfAssemblyLeakMantissa\times10^{-10}\,\si{\pascal\meter\cubed\per\second}$ \\
+    \bottomrule
+  \end{tabularx}
+  \datatag{docs/specs/BLP_v1_requirement_baseline.md;
+  compactInVacuum/config/default_compactInVacuum.yaml; generated/derived_results.json}
+\end{table}
+
+Purchase certified ICF flanges or half nipples from a qualified vacuum-component source.
+PrMat may weld and integrate them, but should not recreate the knife edge without a controlled,
+qualified process. ICF uses a knife edge and OFHC copper gasket for UHV service; internal
+welds and pocket-free geometry are required to avoid virtual leaks
+\cite{cosmotec_icf_standard,leybold_cf_hardware}. Avoid describing every nominal 4.5-inch
+CF-style product as \enquote{ICF114}; the vendor drawing and mating component must define
+the bore and bolt contract.
+
+Adapters and bellows are explicitly allowed for alignment, vibration isolation, and
+installation tolerance. Each purchased item must return a signed drawing, material and
+cleaning record, bake rating, and helium-leak certificate. The complete welded chamber
+assembly is then leak-tested again; individual component certificates do not replace the
+system test.
+
+\subsection{Rotary-feedthrough RFQ data}
+
+Both instruments now use a top-mounted ICF70 rotary-feedthrough mounting interface. The
+current mechanism study uses an approximately \SI{18}{\milli\meter} shaft and 0/90-degree
+work positions. For CompactInVacuum, fixing ICF70 does not select a supplier mechanism:
+the interface envelope remains provisional until the load and service study closes.
+Bellows-sealed and magnetic-coupling ICF motion-feedthrough families are commercially
+available \cite{cosmotec_motion_feedthrough}. PrMat should supply or integrate the selected
+unit and provide:
+\begin{itemize}
+  \item flange standard and complete dimensions, shaft diameter, material, usable internal
+    length, external envelope, and coupling detail;
+  \item allowable radial, axial, and overturning loads; output torque; breakaway torque;
+    backlash; angular repeatability; hard stops; and position indication or encoder provision;
+  \item seal and bearing technology, continuous versus intermittent duty, lifecycle,
+    lubricant, particle generation, magnetic materials, and service/rebuild procedure; and
+  \item rated operating and bake temperatures, vacuum class, certified helium-leak rate,
+    motor/manual options, and interface agreement with the chamber.
+\end{itemize}
+
+\section{Chamber manufacturing and acceptance}
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{Minimum chamber manufacturing specification.}
+  \begin{tabularx}{\textwidth}{L{0.18\textwidth}Y Y}
+    \toprule
+    Topic & Proposed RFQ requirement & Required evidence \\
+    \midrule
+    Material & 304L or 316L stainless steel with heat/lot traceability; final alloy by
+      vacuum and magnetic review & Material certificates and traceability \\
+    Purchased ICF items & Certified flanges/half nipples; no reverse-engineered knife edges &
+      Supplier drawings and certificates \\
+    Welding & Full weld map, process, welder qualification, sequence, and distortion plan &
+      Weld plan, WPS/PQR as appropriate, weld log, visual records \\
+    Vacuum design & ICF knife-edge/OFHC primary seals; no trapped volume; vented blind holes;
+      cleanable internal geometry; adapters/bellows may not introduce an elastomer downgrade &
+      Sectioned drawing, seal schedule, and design-review checklist \\
+    Structure & External-pressure buckling plus handling and interface loads &
+      Calculation report and approved drawing \\
+    Dimensional control & Beam-axis datums, flange-face position/orientation, detector
+      datums, and CMM plan & First-article dimensional report \\
+    Leak acceptance & Complete assembly helium leak
+      $\leq\IcfAssemblyLeakMantissa\times10^{-10}\,\si{\pascal\meter\cubed\per\second}$;
+      record method, sensitivity, dwell, and background &
+      Calibrated helium-leak report with serial number and test configuration \\
+    Cleaning & Controlled process compatible with detector and vacuum materials &
+      Cleaning and packing records \\
+    Bake qualification & Bare-metal chamber and bought-out ICF hardware qualified separately
+      from the populated detector cartridge & Component bake ratings and an approved
+      assembled-system temperature limit \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{notebox}{No release before a supplier-specific package exists}
+  Do not release fabrication from a STEP model alone. The fabrication package must contain
+  controlled two-dimensional drawings, GD\&T, weld symbols, material and cleaning notes,
+  purchased-component part numbers, acceptance criteria, and an inspection plan.
+\end{notebox}
+
+\subsection{PrMat qualification}
+
+PrMat's public material supports candidate status, but this project requires demonstrated
+vacuum precision, welded chamber experience, dimensional control, and helium-leak capability.
+Before award:
+\begin{itemize}
+  \item request two comparable chamber references, maximum completed chamber size/mass,
+    in-house vacuum capability, CMM capability, helium-leak equipment and calibration;
+  \item ask whether the rotary feedthrough is a PrMat design, OEM item, or integrated
+    third-party product, and obtain the manufacturer and authenticated certificate;
+  \item separate supplier FEA from project-side independent review for the pressure boundary;
+  \item require a process traveler covering material receipt, machining, welding, inspection,
+    cleaning, assembly, and packing; and
+  \item define engineering hold points after DFM, before welding, after dimensional inspection,
+    and after pressure/leak acceptance.
+\end{itemize}
+
+\section{China-based procurement and workshare}
+
+\begin{longtable}{L{0.17\textwidth}L{0.22\textwidth}L{0.31\textwidth}L{0.22\textwidth}}
+  \caption{Proposed China-based workshare and qualification action.}\\
+  \toprule
+  Package & Preferred China route & Recommended responsibility & Qualification action \\
+  \midrule
+  \endfirsthead
+  \toprule
+  Package & Preferred China route & Recommended responsibility & Qualification action \\
+  \midrule
+  \endhead
+  Vacuum chamber and target integration & Shanghai PrMat &
+    Chamber DFM, welding, machining, assembly, dimensional and leak acceptance &
+    Capability questionnaire, references, process and inspection plan \\
+  Rotary feedthrough & Shanghai PrMat purchase/integration route &
+    Selected model, OEM data, top ICF integration &
+    Torque/load/life/leak/bake certificate and incoming inspection \\
+  Plastic scintillator & Shanghai EPIC Crystal / Shanghai Shuojie or qualified domestic producer &
+    Material batch, rough and precision machining, polishing, reflector options &
+    Witness samples, light yield, timing, uniformity, vacuum screen \\
+  Primary SiPM & NDL through Shanghai Centao or authorized domestic route &
+    EQR15 11-6060D-S with current datasheet and lot traceability &
+    Breakdown, gain, DCR, crosstalk, afterpulse, linearity, temperature screen \\
+  Backup SiPM & NDL EQR20 through Shanghai Centao &
+    Small prototype quantity &
+    Same screening; compare timing and electronics headroom \\
+  Reference SiPM & Hamamatsu Photonics China &
+    Small control quantity &
+    Reference against domestic devices \\
+  Coax feedthroughs & Beijing Feedivac &
+    CF40 four-channel \SI{50}{\ohm} assemblies and vacuum cables &
+    Freeze part number, gender, bake, leak certificate, and spares \\
+  Electronics & Chinese PCB assembler plus project design &
+    Bias, protection, timing, charge range, temperature monitoring &
+    Schematic review, production test, calibration and burn-in \\
+  Metal cassettes & PrMat or detector-part machining supplier &
+    Replaceable sensor cassette, thermal path, datums, strain relief &
+    First-article CMM, fit, vacuum materials, repeated assembly test \\
+  \bottomrule
+\end{longtable}
+
+PrMat should own the vacuum boundary, purchased ICF integration, rotary-feedthrough
+installation, metal cassette interfaces, final chamber dimensional report, and helium-leak
+acceptance. The scintillator supplier should own the optical material and polished part.
+The project electronics team should own sensor selection, PCB, dynamic range, bias control,
+calibration, and data interpretation. PrMat may perform final mechanical assembly only after
+the project supplies an accepted golden cassette and a controlled assembly traveler.
+
+\subsection{Preliminary purchase phasing}
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{Recommended staged purchase quantities.}
+  \begin{tabularx}{\textwidth}{L{0.17\textwidth}L{0.25\textwidth}L{0.25\textwidth}Y}
+    \toprule
+    Gate & Suggested items & Quantity guidance & Purpose \\
+    \midrule
+    Gate 0: bench study & EQR15, EQR20, reference SiPMs; plastic coupons &
+      At least 5 EQR15, 3 EQR20, 2 reference devices; 4 coupon styles &
+      Lot screening and optical-interface choice \\
+    Gate 1: one sector & Three channel cassettes, cables, feedthrough allocation &
+      D, P-small, P-large plus spares &
+      Coincidence, noise, timing, saturation, calibration \\
+    Gate 2: chamber first article & One chamber, one rotary feedthrough, ICF components &
+      One integrated first article &
+      DFM, dimensional, pressure, leak, bake, maintenance tests \\
+    Production & Twelve operating channels plus spares &
+      At least 15 scintillators and 15 screened SiPMs &
+      Matched operation with replacement inventory \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{Development and verification plan}
+\label{sec:verification-plan}
+
+\begin{enumerate}
+  \item \textbf{Gate 0 -- freeze physics and interfaces.} Approve beam stay-clear, detector
+    radii/diameters, the \SIrange{5}{6}{\milli\meter} prototype study band, target envelope,
+    populated-system bake limit, port map, survey datums, and transport limits. Record ICF114
+    front/rear and afterSRC ICF70 top interfaces as fixed.
+  \item \textbf{Gate 1 -- single-detector optical/electronic prototype.} Compare EQR15,
+    EQR20, and the reference SiPM with 2D uniformity scans. Complete LED/laser saturation,
+    charge range, timing, temperature, and 4/5/6/8/10-mm plastic-thickness comparison.
+  \item \textbf{Gate 2 -- one-sector coincidence prototype.} Build D, P-small, and P-large
+    channels with final-style cabling and front-end. Validate thresholds, time walk, energy
+    separation, common-mode noise, and calibration metadata.
+  \item \textbf{Gate 3 -- vacuum detector cartridge.} Run vacuum soak, thermal cycling,
+    dark-rate monitoring, outgassing screening, cable/feedthrough noise testing, and repeated
+    cassette removal/reinstallation.
+  \item \textbf{Gate 4 -- engineering chamber.} Complete PrMat first article, external-pressure
+    review, CMM report, helium-leak test, target-motion test, detector insertion/removal trial,
+    and transport/handling demonstration.
+  \item \textbf{Gate 5 -- production release.} Freeze drawings and travelers only after
+    the golden sector and engineering chamber pass. Procure production channels plus approved
+    spares and repeat acceptance tests.
+\end{enumerate}
+
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \caption{Minimum detector acceptance matrix.}
+  \begin{tabularx}{\textwidth}{L{0.16\textwidth}L{0.27\textwidth}Y L{0.18\textwidth}}
+    \toprule
+    Test & Method & Provisional acceptance action & Produced record \\
+    \midrule
+    SiPM electrical screen & Automated I--V, gain, dark count, crosstalk, afterpulse,
+      temperature scan & Accepted statistical distribution; outliers rejected &
+      Per-device serial record \\
+    Optical linearity & Pulsed 415--425-nm source with calibrated intensity steps &
+      Corrected residual within project target through normal d--p range; no clipping &
+      Per-channel correction curve \\
+    Timing & Fast pulsed source and coincidence reference &
+      Threshold and time-walk correction support final coincidence window &
+      Timing calibration \\
+    Uniformity & Collimated 2D source scan across active face &
+      Agreed spatial uniformity; edge response documented &
+      2D map and summary \\
+    Vacuum/thermal & Soak and temperature cycles with dark/noise monitoring &
+      Stable response; no material or connector degradation &
+      Assembly serial record \\
+    Mechanical repeatability & Repeated cassette removal and installation &
+      Response and datum shift within project tolerance &
+      Fit and calibration comparison \\
+    Cable crosstalk & Source scan with neighboring channels terminated and active &
+      Normal d--p pulses remain identifiable in required coincidence window &
+      Configuration and crosstalk matrix \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{Risk register and decisions required before purchase}
+
+\begin{longtable}{L{0.27\textwidth}C{0.10\textwidth}C{0.10\textwidth}L{0.37\textwidth}}
+  \caption{Principal risks and controls.}\\
+  \toprule
+  Risk & Likelihood & Impact & Control / exit condition \\
+  \midrule
+  \endfirsthead
+  \toprule
+  Risk & Likelihood & Impact & Control / exit condition \\
+  \midrule
+  \endhead
+  True \SI{63}{\milli\meter} stay-clear is incompatible with reference ICF114 bore &
+    High & High & Keep ICF114 fixed; replace placeholder pipe geometry with the certified
+    nipple/adapter/bellows bore and reduce the internal stay-clear budget accordingly \\
+  Scintillator thickness selected from a single LISE++ column or treated as a calorimeter &
+    Medium & High & Use the five-model CSV envelope, test 5/6 mm first, retain 4/8/10 mm
+    coupons, and freeze only after timing/threshold and Geant4 validation \\
+  SiPM or front-end saturation on unquenched high-load events &
+    Medium & High & EQR15, controlled optical collection, \SI{\LowGainRangeNc}{\nano\coulomb}
+    minimum charge range, calibrated saturation correction \\
+  Front-end clips before SiPM microcells saturate &
+    High & High & Protected timing path, low-gain range, measured waveforms and input headroom \\
+  Chamber external-pressure or weld-distortion failure &
+    Low & High & Independent external-pressure review, weld sequence, dimensional hold points,
+    and helium-leak acceptance \\
+  Supplier capability inferred from public information &
+    Medium & High & Formal capability evidence, reference projects, inspection and quality plan \\
+  Optical response varies across SiPM area &
+    Medium & Medium & Controlled coupling, diffuser/taper variants, 2D scan, per-channel correction \\
+  Organic materials outgas or degrade in vacuum &
+    Medium & High & Material evidence, witness coupon, vacuum soak, bake plan, removable cartridge \\
+  \bottomrule
+\end{longtable}
+
+Before any production purchase:
+\begin{itemize}
+  \item approve the beam stay-clear against certified ICF114 nipple, adapter, and bellows
+    drawings; ICF114 is fixed rather than a flange-size trade;
+  \item approve the 0.8-scale geometry or retain current radii and \SI{25}{\milli\meter} acceptance;
+  \item approve 5-mm and 6-mm active-thickness cassettes for Gate 1 and the comparison coupons;
+  \item approve the ICF-class metal-seal boundary and assembly leak limit, then define operating
+    pressure, gas load, populated-system bake temperature, pump-down time, cleaning class,
+    and residual-gas requirement;
+  \item freeze rotary-feedthrough load, torque, life, backlash, angular repeatability,
+    duty cycle, and maintenance review;
+  \item approve twelve-channel coax architecture, digitizer range, timing requirement,
+    grounding, thermal design, and temperature/bias metadata; and
+  \item accept PrMat's capability, quality plan, quotation scope, and first-article plan.
+\end{itemize}
+
+\section{RFQ checklist for Shanghai PrMat}
+
+The RFQ should be sent as a controlled response matrix so supplier answers, attachments,
+and deviations can be reviewed independently.
+
+\begin{longtable}{L{0.19\textwidth}L{0.34\textwidth}L{0.38\textwidth}}
+  \caption{Minimum RFQ response matrix for Shanghai PrMat.}\\
+  \toprule
+  RFQ section & Information provided by the project & Information required from PrMat \\
+  \midrule
+  \endfirsthead
+  \toprule
+  RFQ section & Information provided by the project & Information required from PrMat \\
+  \midrule
+  \endhead
+  System overview & Approved 3D envelope, beam axis, detector zones, handling limits,
+    maintenance direction & Value-to-fabricate concept, mass and COG, critical interfaces,
+    maintenance and lifting provisions \\
+  Vacuum boundary & Working pressure, cleaning/bake requirement, selected ICF interfaces &
+    Material/weld design, venting, external-pressure calculation, leak-test method and certificate \\
+  Beam interfaces & Fixed ICF114 front/rear interfaces with stay-clear and mating drawings &
+    Purchased-part identity, knife-edge protection, flange position/orientation, inspection method \\
+  Rotary target & Shaft and target loads, 0/90 positions, stop requirement, backlash target &
+    Selected OEM/model, torque, radial/axial loads, repeatability, life, rebuild, bake, leak certificate \\
+  Detector cartridge & Golden cassette interface, cable routing, thermal-path requirement &
+    Detailed metal cassette, repeatable datums, cable strain relief, removal procedure \\
+  Electrical feedthroughs & Twelve \SI{50}{\ohm} coax concept and housekeeping requirement &
+    Selected part numbers, connector/cable drawings, certificates, spare recommendation \\
+  Metrology & Critical datums, flange runout, detector axes, target-axis requirement &
+    CMM plan and final report, inspection uncertainty, traceable instruments \\
+  Acceptance & Vacuum soak, helium-leak and dimensional criteria &
+    Inspection and test plan, calibrated equipment, nonconformance procedure \\
+  Commercial & Prototype and production quantity, delivery target, change-control expectation &
+    Itemized quotation, lead time, warranty, documentation list, IP/drawing ownership,
+    packing and transport plan \\
+  \bottomrule
+\end{longtable}
+
+Recommended order:
+\begin{enumerate}
+  \item freeze the rotary-feedthrough data review and one detector-cassette interface;
+  \item send chamber requirements and the separate response matrix;
+  \item obtain a manufacturing review before any hard tooling or welding;
+  \item release production only after the chamber first article and one-sector detector
+    prototype pass their acceptance gates.
+\end{enumerate}
+
+\section{Data and calculation verification}
+\label{sec:verification}
+
+The report separates four classes of information:
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{Traceability classes used throughout the report.}
+  \begin{tabularx}{\textwidth}{L{0.17\textwidth}Y Y}
+    \toprule
+    Class & Meaning & Verification route \\
+    \midrule
+    \sourcevalue & Read directly from CAD configuration, channel manifest, validation report,
+      or cited supplier evidence & Source hash plus direct file inspection \\
+    \derived & Recalculated from source values by the report generator &
+      CSV/JSON output, unit tests, and stale-file check \\
+    \provisional & Engineering screening input not yet measured or frozen &
+      Explicit entry in \path{data/report_assumptions.yaml} \\
+    \proposal & Recommended choice not yet promoted into authoritative CAD configuration &
+      Design review and controlled configuration update \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{One-command reproduction}
+
+From this report directory:
+\begin{Verbatim}[fontsize=\small,frame=single]
+make verify
+\end{Verbatim}
+
+The command performs all of the following:
+\begin{enumerate}
+  \item loads the current CompactInVacuum YAML configuration, target, channel manifest,
+    and strict validation report;
+  \item checks detector angles and active-center radii against the generated CAD manifest;
+  \item reuses \path{code/data/energy_lise/dp_dc_kinematics.py} for kinematics and
+    \path{code/data/energy_lise/lise_range.py} for explicit LISE++ model selection, then
+    recalculates the 1/2/3/4/5/6/8/10-mm energy-deposition scan;
+  \item recalculates every SiPM saturation, charge, and 10\%-nonlinearity result;
+  \item recalculates chamber screening volume/mass and ICF arithmetic;
+  \item compares regenerated CSV, JSON, and LaTeX fragments byte-for-byte against the files
+    included by this report;
+  \item runs the independent unit tests; and
+  \item compiles the report with LuaLaTeX/Biber and verifies searchable PDF content.
+\end{enumerate}
+
+Useful partial commands are:
+\begin{Verbatim}[fontsize=\small,frame=single]
+make data
+make check-data
+make test
+make report
+\end{Verbatim}
+
+\subsection{Generated, inspectable data}
+
+\begin{itemize}
+  \item \path{generated/derived_results.json}: full-precision derived geometry, energy,
+    saturation, electronics, chamber, and ICF results.
+  \item \path{generated/energy_deposition.csv}: machine-readable acceptance and energy ranges.
+  \item \path{generated/thickness_summary.csv}: compact one-row-per-thickness comparison.
+  \item \path{generated/thickness_scan.csv}: full event-by-event, five-model LISE++ scan.
+  \item \path{generated/sipm_saturation.csv}: one-row-per-device saturation and charge summary.
+  \item \path{generated/sipm_curve.csv}: all plotted saturation points.
+  \item \path{generated/provenance.json}: source paths, SHA-256 hashes, Git commit, environment,
+    CAD decision state, and report proposal state.
+  \item \path{generated/verification_summary.txt}: human-readable PASS/FAIL record.
+\end{itemize}
+
+\begin{longtable}{L{0.18\textwidth}L{0.47\textwidth}L{0.27\textwidth}}
+  \caption{Source-file provenance captured when numerical fragments were generated.}\\
+  \toprule
+  Source role & Repository-relative file & SHA-256 \\
+  \midrule
+  \endfirsthead
+  \toprule
+  Source role & Repository-relative file & SHA-256 \\
+  \midrule
+  \endhead
+  \input{generated/provenance_table.tex}
+\end{longtable}
+
+\begin{notebox}{Configuration-state warning}
+  The current CAD source still says \enquote{active medium: placeholder/undecided} and
+  \enquote{photosensor: placeholder/undecided}. This report deliberately records the plastic
+  scintillator and EQR15 as a proposed prototype baseline. The verification tool reports both
+  states so the recommendation cannot be mistaken for an already-frozen CAD requirement.
+\end{notebox}
+
+\subsection{Limits of the current verification}
+
+The d--p/d--C energy values use the repository's analytic two-body and LISE++ range-table
+workflow. They use a continuous-slowing-down range subtraction and do not include range
+straggling, wrapping/dead layers, incidence-angle path variation, Birks quenching, or detector
+resolution. They are engineering screening values, not a substitute for the version-controlled
+Geant4 model required before production. The SiPM model is first-order and assumes spatially uniform,
+short-pulse illumination. The chamber mass is a closed-square-shell arithmetic estimate, not
+an FEA model or fabrication mass. Supplier webpages support candidate selection only; signed
+drawings, current datasheets, quotations, lot traceability, and certificates govern purchase.
+
+\clearpage
+\nocite{polarimeter_repo}
+\printbibliography[title={References and supplier evidence}]
+
+\vfill
+\begin{center}
+  {\sffamily\small\bfseries\color{ReportMuted} END OF PRELIMINARY REPORT}
+\end{center}
+
+\end{document}

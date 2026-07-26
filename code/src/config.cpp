@@ -84,6 +84,24 @@ int getInt(const IniMap& values, const std::string& key, const int fallback) {
     return std::stoi(iterator->second);
 }
 
+bool getBool(const IniMap& values, const std::string& key, const bool fallback) {
+    const auto iterator = values.find(key);
+    if (iterator == values.end()) {
+        return fallback;
+    }
+    std::string value = trim(iterator->second);
+    std::transform(value.begin(), value.end(), value.begin(), [](const unsigned char character) {
+        return static_cast<char>(std::tolower(character));
+    });
+    if (value == "true" || value == "yes" || value == "1") {
+        return true;
+    }
+    if (value == "false" || value == "no" || value == "0") {
+        return false;
+    }
+    throw std::runtime_error("Invalid boolean value for scenario key: " + key);
+}
+
 std::vector<double> parseDoubleList(const std::string& raw) {
     std::vector<double> values;
     std::stringstream stream(raw);
@@ -128,9 +146,10 @@ std::vector<double> broadcast(const std::vector<double>& values, const std::size
 
 std::vector<DetectorArm> makeArms(
     const std::vector<double>& theta_deg,
-    const double distance_mm,
+    const std::vector<double>& distance_mm,
     const std::vector<double>& width_theta_mm,
     const std::vector<double>& width_phi_mm) {
+    const std::vector<double> distances = broadcast(distance_mm, theta_deg.size());
     const std::vector<double> theta_widths = broadcast(width_theta_mm, theta_deg.size());
     const std::vector<double> phi_widths = broadcast(width_phi_mm, theta_deg.size());
 
@@ -140,7 +159,7 @@ std::vector<DetectorArm> makeArms(
         // [EN] Broadcast scalar widths into full detector arrays so geometry presets stay concise / [CN] 将标量宽度广播成完整阵列，便于保持几何预设简洁
         arms.push_back(DetectorArm {
             theta_deg[index],
-            distance_mm,
+            distances[index],
             theta_widths[index],
             phi_widths[index],
         });
@@ -193,10 +212,55 @@ ScenarioConfig loadScenarioConfig(const std::filesystem::path& scenario_path) {
     scenario.data.tensor_file = resolvePath(scenario.data.observables_dir, requireString(values, "data.tensor_file"));
     scenario.data.energy_range_file = resolvePath(base_dir, requireString(values, "data.energy_range_file"));
 
+    const std::string geometry_source_config = getString(values, "geometry_contract.source_config", "");
+    const std::string geometry_channel_manifest = getString(values, "geometry_contract.channel_manifest_file", "");
+    if (!geometry_source_config.empty()) {
+        scenario.geometry_contract.source_config = resolvePath(base_dir, geometry_source_config);
+    }
+    if (!geometry_channel_manifest.empty()) {
+        scenario.geometry_contract.channel_manifest_file = resolvePath(base_dir, geometry_channel_manifest);
+    }
+    scenario.geometry_contract.radius_reference = getString(
+        values,
+        "geometry_contract.radius_reference",
+        scenario.geometry_contract.radius_reference);
+    scenario.geometry_contract.active_face_shape = getString(
+        values,
+        "geometry_contract.active_face_shape",
+        scenario.geometry_contract.active_face_shape);
+    scenario.geometry_contract.acceptance_model = getString(
+        values,
+        "geometry_contract.acceptance_model",
+        scenario.geometry_contract.acceptance_model);
+
+    scenario.detector_model.response_status = getString(
+        values,
+        "detector_model.response_status",
+        scenario.detector_model.response_status);
+    scenario.detector_model.active_medium = getString(
+        values,
+        "detector_model.active_medium",
+        scenario.detector_model.active_medium);
+    scenario.detector_model.photosensor = getString(
+        values,
+        "detector_model.photosensor",
+        scenario.detector_model.photosensor);
+    scenario.detector_model.active_diameter_mm = getDouble(
+        values,
+        "detector_model.active_diameter_mm",
+        scenario.detector_model.active_diameter_mm);
+    scenario.detector_model.active_length_mm = getDouble(
+        values,
+        "detector_model.active_length_mm",
+        scenario.detector_model.active_length_mm);
+
     const std::vector<double> custom_proton_theta = getDoubleList(values, "custom_layout.proton_theta_lab_deg", {53.4, 11.2});
     const std::vector<double> custom_proton_theta_width = getDoubleList(values, "custom_layout.proton_width_theta_mm", {40.0, 40.0});
     const std::vector<double> custom_proton_phi_width = getDoubleList(values, "custom_layout.proton_width_phi_mm", {40.0, 40.0});
-    const double custom_proton_distance = getDouble(values, "custom_layout.proton_distance_mm", 620.0);
+    const std::vector<double> custom_proton_distance = getDoubleList(
+        values,
+        "custom_layout.proton_distance_mm",
+        {620.0});
     const std::vector<DetectorArm> proton_arms = makeArms(
         custom_proton_theta,
         custom_proton_distance,
@@ -215,15 +279,16 @@ ScenarioConfig loadScenarioConfig(const std::filesystem::path& scenario_path) {
 
     scenario.sekiguchi_layout.proton_arms = makeArms(
         getDoubleList(values, "sekiguchi_layout.proton_theta_lab_deg", {21.3, 26.1, 30.9, 35.8, 40.8, 45.0, 50.8, 55.9}),
-        getDouble(values, "sekiguchi_layout.proton_distance_mm", 560.0),
+        getDoubleList(values, "sekiguchi_layout.proton_distance_mm", {560.0}),
         getDoubleList(values, "sekiguchi_layout.proton_width_theta_mm", {20.0}),
         getDoubleList(values, "sekiguchi_layout.proton_width_phi_mm", {20.0}));
     scenario.sekiguchi_layout.deuteron_arms = makeArms(
         getDoubleList(values, "sekiguchi_layout.deuteron_theta_lab_deg", {20.1, 22.7, 25.6, 29.3}),
-        getDouble(values, "sekiguchi_layout.deuteron_distance_mm", 560.0),
+        getDoubleList(values, "sekiguchi_layout.deuteron_distance_mm", {560.0}),
         getDoubleList(values, "sekiguchi_layout.deuteron_width_theta_mm", {24.0, 24.0, 24.0, 50.0}),
         getDoubleList(values, "sekiguchi_layout.deuteron_width_phi_mm", {24.0, 24.0, 24.0, 50.0}));
 
+    scenario.energy_loss.enabled = getBool(values, "energy_loss.enabled", scenario.energy_loss.enabled);
     scenario.energy_loss.projectile_mass_number = getInt(values, "energy_loss.projectile_mass_number", scenario.energy_loss.projectile_mass_number);
     scenario.energy_loss.energy_min_mev_per_u = getDouble(values, "energy_loss.energy_min_mev_per_u", scenario.energy_loss.energy_min_mev_per_u);
     scenario.energy_loss.energy_max_mev_per_u = getDouble(values, "energy_loss.energy_max_mev_per_u", scenario.energy_loss.energy_max_mev_per_u);

@@ -1,0 +1,1039 @@
+\documentclass[UTF8,10pt,letterpaper,fontset=none]{ctexart}
+
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Termes}
+\setsansfont{TeX Gyre Heros}
+\setmonofont{DejaVu Sans Mono}[Scale=0.82]
+\setCJKmainfont{Noto Serif CJK SC}[AutoFakeSlant=0.2]
+\setCJKsansfont{Noto Sans CJK SC}
+\setCJKmonofont{Noto Sans Mono CJK SC}[Scale=0.82]
+
+\usepackage[margin=0.82in,headheight=15pt]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{adjustbox}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{placeins}
+\usepackage{xcolor}
+\usepackage[most]{tcolorbox}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{siunitx}
+\usepackage{pgfplots}
+\usepackage{fancyvrb}
+\usepackage{csquotes}
+\usepackage[
+  backend=biber,
+  style=numeric,
+  sorting=none,
+  maxbibnames=9,
+  url=true,
+  doi=true
+]{biblatex}
+\usepackage[
+  colorlinks=true,
+  linkcolor=blue!45!black,
+  citecolor=blue!45!black,
+  urlcolor=blue!55!black,
+  pdfauthor={CompactInVacuum Polarimeter Project},
+  pdftitle={CompactInVacuum SiPM 探测器、真空靶室与中国采购工程报告}
+]{hyperref}
+\usepackage{bookmark}
+
+\addbibresource{references.bib}
+\AtBeginBibliography{\small\sloppy}
+\pgfplotsset{compat=1.18}
+\sisetup{
+  detect-all,
+  group-separator={,},
+  group-minimum-digits=4,
+  range-phrase={--},
+  range-units=single
+}
+
+\definecolor{ReportBlue}{HTML}{2E74B5}
+\definecolor{ReportDarkBlue}{HTML}{1F4D78}
+\definecolor{ReportText}{HTML}{202124}
+\definecolor{ReportMuted}{HTML}{5F6368}
+\definecolor{ReportGreen}{HTML}{E8F3EC}
+\definecolor{ReportAmber}{HTML}{FFF4D6}
+\definecolor{ReportRed}{HTML}{FCE8E6}
+\definecolor{ReportLight}{HTML}{F2F4F7}
+
+\titleformat{\section}
+  {\sffamily\bfseries\Large\color{ReportBlue}}
+  {\thesection.}{0.55em}{}
+\titleformat{\subsection}
+  {\sffamily\bfseries\large\color{ReportBlue}}
+  {\thesubsection}{0.55em}{}
+\titleformat{\subsubsection}
+  {\sffamily\bfseries\normalsize\color{ReportDarkBlue}}
+  {\thesubsubsection}{0.55em}{}
+\titlespacing*{\section}{0pt}{1.6em}{0.7em}
+\titlespacing*{\subsection}{0pt}{1.25em}{0.45em}
+\titlespacing*{\subsubsection}{0pt}{1.0em}{0.35em}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.22}
+\setlist[itemize]{leftmargin=1.35em,itemsep=0.25em,topsep=0.25em}
+\setlist[enumerate]{leftmargin=1.55em,itemsep=0.3em,topsep=0.3em}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\sffamily\scriptsize COMPACTINVACUUM 极化仪}
+\fancyhead[R]{\sffamily\scriptsize 初步工程报告}
+\fancyfoot[L]{\sffamily\scriptsize 不得直接用于加工或采购订单}
+\fancyfoot[R]{\sffamily\scriptsize 第 \thepage 页}
+\renewcommand{\headrulewidth}{0.25pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+\newtcolorbox{decisionbox}[1]{
+  enhanced,
+  breakable,
+  colback=ReportGreen,
+  colframe=ReportBlue!45,
+  boxrule=0.55pt,
+  arc=1.2mm,
+  left=2.2mm,
+  right=2.2mm,
+  top=1.8mm,
+  bottom=1.8mm,
+  title={#1},
+  fonttitle=\sffamily\bfseries,
+  coltitle=ReportDarkBlue
+}
+
+\newtcolorbox{warningbox}[1]{
+  enhanced,
+  breakable,
+  colback=ReportRed,
+  colframe=red!45!black,
+  boxrule=0.55pt,
+  arc=1.2mm,
+  left=2.2mm,
+  right=2.2mm,
+  top=1.8mm,
+  bottom=1.8mm,
+  title={#1},
+  fonttitle=\sffamily\bfseries,
+  coltitle=red!45!black
+}
+
+\newtcolorbox{notebox}[1]{
+  enhanced,
+  breakable,
+  colback=ReportAmber,
+  colframe=orange!55!black,
+  boxrule=0.5pt,
+  arc=1.2mm,
+  left=2.2mm,
+  right=2.2mm,
+  top=1.6mm,
+  bottom=1.6mm,
+  title={#1},
+  fonttitle=\sffamily\bfseries,
+  coltitle=orange!45!black
+}
+
+\newcommand{\datatag}[1]{%
+  \par{\sffamily\scriptsize\color{ReportMuted}数据来源：\path{#1}}\par
+}
+\newcommand{\proposal}{\textsf{\bfseries 建议值}}
+\newcommand{\derived}{\textsf{\bfseries 计算值}}
+\newcommand{\sourcevalue}{\textsf{\bfseries 源数据}}
+\newcommand{\provisional}{\textsf{\bfseries 暂定值}}
+
+\input{generated/macros.tex}
+
+\begin{document}
+\hypersetup{pageanchor=false}
+
+\begin{titlepage}
+  \thispagestyle{empty}
+  \vspace*{0.62in}
+
+  {\sffamily\bfseries\fontsize{25}{29}\selectfont\color{ReportText}
+  CompactInVacuum 极化仪\par}
+  \vspace{0.25em}
+  {\sffamily\fontsize{14}{18}\selectfont\color{ReportMuted}
+  SiPM 探测器、真空靶室与中国采购工程报告\par}
+
+  \vspace{0.55in}
+  \renewcommand{\arraystretch}{1.35}
+  \begin{tabularx}{\textwidth}{>{\sffamily\bfseries}L{0.23\textwidth}Y}
+    \toprule
+    状态 & 初步设计评审 / 采购规划 \\
+    发布日期 & 2026 年 7 月 26 日 \\
+    CAD 基准 & Polarimeter commit \texttt{\ReportGitCommit} \\
+    配置文件 & \path{compactInVacuum/config/default_compactInVacuum.yaml} \\
+    源数据验证 & \SourceValidationStatus \\
+    优先采购区域 & 中华人民共和国境内 \\
+    主要集成候选方 & 上海谱幂精密仪器科技有限公司（需完成供应商资格验证） \\
+    \bottomrule
+  \end{tabularx}
+
+  \vfill
+  \begin{warningbox}{初步报告 -- 不得直接用于加工或采购订单}
+    本报告把当前物理分析和 CAD 状态整理为一个建议工程基线。所有开放尺寸、
+    真空要求、接口图纸、材料证书和供应商能力必须在规定的开发门审中关闭。
+  \end{warningbox}
+
+  \vspace{0.22in}
+  {\small\color{ReportMuted}
+  本中文版与英文版共用同一套自动生成数值。完整复现命令为
+  \texttt{make verify}，详见第 \ref{sec:verification-zh} 节。}
+\end{titlepage}
+
+\hypersetup{pageanchor=true}
+\pagenumbering{roman}
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+
+\section{执行结论}
+
+\begin{decisionbox}{首轮原型推荐基线}
+  \begin{itemize}
+    \item 首轮紧凑型探测器采用快速蓝光塑料闪烁体，不采用高光产额无机晶体。
+    \item 0.8 比例几何首先采用直径
+      \SI{\CompactScaledActiveDiameter}{\milli\meter}、有效厚度
+      \SI{\ActiveThicknessMm}{\milli\meter} 的候选方案；量产厚度冻结前必须比较
+      \SIrange{5}{6}{\milli\meter}。若保留现有半径，则保持
+      \SI{\ActiveDiameterMm}{\milli\meter} 直径并测试相同厚度。
+    \item SiPM 基准采用 NDL EQR15 11-6060D-S；NDL EQR20 作为高增益备选，
+      Hamamatsu S13360-6025CS 作为进口参考器件。
+    \item SiPM 有效面积上的总光收集效率按 2--5\% 设计并实测；
+      该数值不是供应商固有规格。
+    \item 有源电子学保持在真空外。每个快速信号使用一条屏蔽
+      \SI{50}{\ohm} 同轴馈通，SiPM 偏置通过外部 bias tee 注入。
+  \end{itemize}
+\end{decisionbox}
+
+对于 \SI{\ActiveThicknessMm}{\milli\meter} 候选厚度，正常 d--p 弹性散射的
+最大计算沉积能为 \SI{\CandidateMaximumDepositMeV}{\mega\electronvolt}。
+EQR15 在 2\% 和 5\% 光收集效率下的短脉冲微胞非线性分别为
+\EqrNormalNonlinearityTwo\% 和 \EqrNormalNonlinearityFive\%。
+在 5\% 情况下，计算的一次雪崩电荷为
+\SI{\EqrNormalCharge}{\nano\coulomb}。因此 SiPM 本身具有足够余量，
+但前端仍可能在微胞达到不可接受非线性之前削顶。首轮原型必须包含快速定时通道、
+受保护的低增益电荷通道以及可标定的光注入扫描。
+
+旧 \SI{\LegacyThicknessMm}{\milli\meter} 厚度的最大沉积能为
+\SI{\LegacyMaximumDepositMeV}{\mega\electronvolt}；相同光收集效率下，
+EQR15 非线性为 \EqrLegacyNormalNonlinearityFive\%，电荷为
+\SI{\EqrLegacyNormalCharge}{\nano\coulomb}。
+
+碳本底点使用未施加 Birks 淬灭的电子等效光产额，因此是保守上限。
+EQR15 在该点的计算非线性为 \EqrCarbonNonlinearity\%。
+重离子淬灭会降低真实占用率，但必须测量，不能直接假定。
+
+上海谱幂公开资料表明其具备定制真空部件设计和加工能力
+\cite{prmat_about,prmat_kcell}，可作为靶室集成候选方。
+这些资料只构成候选证据，不等同于已经完成资格认证。采购前必须要求正式 RFQ、
+可制造性评审、焊接与检验计划、尺寸报告、清洗记录和氦检漏报告。
+
+\begin{warningbox}{已固定的 ICF114 合同与当前 CAD 通光孔冲突}
+  项目规划两台极化仪。afterSRC 外置探测器版本的前、后束流接口固定为 ICF114，
+  顶部旋转馈通接口固定为 ICF70。CompactInVacuum 的前、后束流接口也固定为
+  ICF114，旋转馈通安装接口现也固定为 ICF70；具体旋转馈通器尚未选型。
+  允许使用转接器和波纹管，但必须保持规定的全金属密封真空等级。
+
+  当前 CAD 使用 \SI{63.6}{\milli\meter} 管外径和
+  \SI{63.0}{\milli\meter} 内径，径向壁厚仅为
+  \SI{\PipeRadialWallMm}{\milli\meter}。参考 ICF114 半接管净孔约为
+  \SI{60.2}{\milli\meter}，当前 \SI{63}{\milli\meter} stay-clear 超出约
+  \SI{\IcfOneOneFourDeficitMm}{\milli\meter}\cite{cosmotec_icf}。
+  ICF114 不是开放选项。应依据已认证的 ICF114 法兰、接管、转接器和波纹管图纸
+  冻结可用孔径，再修改内部管道和 stay-clear 几何。
+\end{warningbox}
+
+\section{范围、基准配置与决策状态}
+
+本项目包含两台不同用途的极化仪：
+\begin{itemize}
+  \item \textbf{afterSRC 极化仪：}探测器位于专用靶室外，沿用已经验证的
+    H+V+V 机械布局。前端 ICF114、后端 ICF114、顶部 ICF70 旋转馈通，
+    不增加侧面真空口。
+  \item \textbf{CompactInVacuum 极化仪：}作为后续主要开发版本，
+    探测器在真空内工作，前后端束流接口固定为 ICF114，顶部旋转接口固定为
+    ICF70。当前概念基线另含四个按方位分组的 ICF70 四通道同轴接口，
+    以及一个 ICF70 32 针 housekeeping 接口。
+\end{itemize}
+
+本报告主要讨论 CompactInVacuum 的探测器技术，同时把 afterSRC 接口合同
+作为不可改变的机械约束。参考物理工况为
+\SI{\BeamEnergyMeV}{\mega\electronvolt} 氘束轰击 CH$_2$ 靶，
+在四个方位扇区中对弹性散射氘核与质子作 coincidence 探测。
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{两台极化仪的固定真空接口合同。精确孔径、螺栓几何和安装包络以供应商
+  认证图纸为准。}
+  \begin{tabularx}{\textwidth}{L{0.20\textwidth}L{0.24\textwidth}L{0.24\textwidth}Y}
+    \toprule
+    仪器 & 束流接口 & 其他真空接口 & 固定要求 \\
+    \midrule
+    afterSRC & 前 ICF114；后 ICF114 &
+      顶部 ICF70 旋转馈通；无附加侧面真空口 &
+      即使使用转接器或波纹管，外部配合面仍为 ICF114 \\
+    CompactInVacuum & 前 ICF114；后 ICF114 &
+      顶部 ICF70 旋转接口；四个 ICF70 四通道同轴接口；
+      一个 ICF70 32 针 housekeeping 接口 &
+      安装标准和容量已固定；供应商型号仍为接口包络 \\
+    两台仪器 & 采购 ICF 刀口件和 OFHC 铜垫片 &
+      靶室、焊缝、转接器、波纹管和馈通构成一个验收边界 &
+      整机氦漏率 $\leq
+      \IcfAssemblyLeakMantissa\times10^{-10}\,
+      \si{\pascal\meter\cubed\per\second}$ \\
+    \bottomrule
+  \end{tabularx}
+  \datatag{docs/specs/BLP_v1_requirement_baseline.md；
+  compactInVacuum/config/default_compactInVacuum.yaml}
+\end{table}
+
+\subsection{当前探测器与靶室包络}
+
+当前 CAD 探测器包络为直径
+\SI{\ActiveDiameterMm}{\milli\meter}、长度
+\SI{\ActiveLengthMm}{\milli\meter}。配置中 active medium 和 photosensor
+仍标记为 placeholder/undecided；本报告中的塑料闪烁体和 EQR15 是
+\proposal，而不是已经写入权威 CAD 配置的冻结要求。
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{当前三类探测通道的几何。}
+  \begin{tabular}{lcccc}
+    \toprule
+    站位 & 粒子 & 中心角（度） & 中心半径（mm） & 实验室角覆盖（度） \\
+    \midrule
+    \input{generated/geometry_table_zh.tex}
+  \end{tabular}
+  \datatag{compactInVacuum/compactInVacuum.channel\_manifest.json}
+\end{table}
+
+当前方形靶室内截面约为 $440\times440$ mm，轴向长度约
+\SI{360}{\milli\meter}。封闭方壳材料体积筛算为
+\SI{\ChamberMaterialVolumeL}{\liter}，按不锈钢密度估算约
+\SI{\ChamberScreeningMassKg}{\kilogram}。该数值只是算术筛选，不是加工质量，
+也不能代替外压屈曲 FEA。
+
+\subsection{Compact v2 方向}
+
+\begin{itemize}
+  \item 首个几何候选采用约 0.8 的比例：
+    D/P-small/P-large 中心半径约为
+    \SI{\CompactScaledDeuteronRadius}{\milli\meter}/
+    \SI{\CompactScaledProtonSmallRadius}{\milli\meter}/
+    \SI{\CompactScaledProtonLargeRadius}{\milli\meter}，
+    有效直径约 \SI{\CompactScaledActiveDiameter}{\milli\meter}。
+  \item 优先研究短圆筒外压壳体加可拆平面服务板或多面体内部探测器框架。
+    圆筒承担外压，平面结构集中同轴馈通、定位基准和维护接口。
+  \item 不把十二路快速信号馈通分散布置在曲面壳体上，除非端口布局和维护评审
+    证明这种方案有明确优势。
+  \item 束流两端使用短、可拆 ICF 接管，运输时安装刀口保护盖，并设置吊点和
+    可人工搬运子组件质量上限。
+\end{itemize}
+
+\section{探测器物理与有效厚度}
+
+现有能损分析最初服务于旧外置探测器布局。本报告按当前 CompactInVacuum
+探测器直径和半径重新计算弹性 d--p coincidence 接受度。质心系前向重叠区约为
+\ForwardCmLow--\ForwardCmHigh 度，后向重叠区约为
+\BackwardCmLow--\BackwardCmHigh 度。
+
+每一个入射动能先通过 LISE++ 表换算为射程，从射程中减去闪烁体厚度，再用
+反插值求剩余能量。报告主结果使用 \LisePrimaryRangeModel，同时保留
+Hubert 1990、Ziegler low energy、ATIMA 1.2 without LS 和
+ATIMA 1.4 mean charge 构成模型包络。
+
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \caption{\SI{\ActiveThicknessMm}{\milli\meter} 塑料闪烁体中的计算沉积能。
+  碳核行未施加 Birks 淬灭，因此是光输出保守上限。}
+  \begin{tabularx}{\textwidth}{L{0.27\textwidth}L{0.10\textwidth}
+    L{0.17\textwidth}L{0.18\textwidth}Y}
+    \toprule
+    反应与粒子 & 站位 & 实验室角（度） & 沉积能（MeV） & 状态 \\
+    \midrule
+    \input{generated/energy_table_zh.tex}
+  \end{tabularx}
+  \datatag{generated/energy\_deposition.csv}
+\end{table}
+
+\subsection{有效厚度建议}
+
+本探测器应按 $\Delta E$ 计数器设计，而不是停止型量能器。LISE++ 模型包络中，
+被接受粒子的最大射程约为 \SI{\WorstCaseNormalRangeMm}{\milli\meter}，
+远大于 5--10 mm 闪烁体。
+
+\SI{\ActiveThicknessMm}{\milli\meter} 候选方案在正常 d--p coincidence 分支中
+沉积 \SIrange{\CandidateMinimumDepositMeV}{\CandidateMaximumDepositMeV}
+{\mega\electronvolt}。旧 \SI{\LegacyThicknessMm}{\milli\meter} 方案的最大沉积
+达到 \SI{\LegacyMaximumDepositMeV}{\mega\electronvolt}，因此 5 mm 候选把
+最大正常光负载降低约 \MaximumDepositReductionPercent\%，同时最低分支仍高于
+\SI{1.5}{\mega\electronvolt}。
+
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \caption{LISE++ 厚度扫描。单元格为相应 coincidence 分支的沉积能范围，
+  单位为 MeV。}
+  \begin{tabular}{cccccc}
+    \toprule
+    厚度（mm） & 前向 d & 前向 p & 后向 d & 后向 p & 用途 \\
+    \midrule
+    \input{generated/thickness_table_zh.tex}
+  \end{tabular}
+  \datatag{generated/thickness\_summary.csv；generated/thickness\_scan.csv}
+\end{table}
+
+\begin{decisionbox}{厚度门审}
+  首轮制作至少一套 \SI{5}{\milli\meter} 和
+  \SI{6}{\milli\meter} 的同结构探测盒，同时保留 4、8、10 mm 样片。
+  最终厚度必须结合真实触发阈值、时间分辨、质子/氘核淬灭、光学均匀性、
+  前端噪声和版本受控 Geant4 计算后冻结。
+\end{decisionbox}
+
+\subsection{光产额淬灭}
+
+饱和计算采用电子等效光产额作为保守上限。重带电粒子的光产额可用
+Birks 关系作一阶描述：
+\begin{equation}
+  \frac{\mathrm{d}L}{\mathrm{d}x}
+  =
+  \frac{S\,\mathrm{d}E/\mathrm{d}x}
+       {1+k_B\,\mathrm{d}E/\mathrm{d}x}.
+\end{equation}
+所选国产塑料批次的 $k_B$ 以及氘核、质子和碳核响应必须实测或由可靠束流数据验证。
+仅引用相似材料的文献值不足以支持精确碳本底判别。
+
+\section{闪烁体与探测器盒}
+
+\subsection{材料选择}
+
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \caption{首轮原型的闪烁材料权衡。}
+  \begin{tabularx}{\textwidth}{L{0.19\textwidth}L{0.17\textwidth}Y Y L{0.13\textwidth}}
+    \toprule
+    材料 & 时间/光产额 & 优点 & 主要问题 & 结论 \\
+    \midrule
+    快速蓝光塑料闪烁体 & 约 2.1--2.4 ns；电子参考约
+      10,000 photons/MeV & coincidence 快、低密度、低 Z、易加工、可国内定制 &
+      Birks 淬灭、均匀性和真空材料验证 & 基准 \\
+    CsI(Tl) & 高光产额；约 $\SI{1}{\micro\second}$ 量级 &
+      阻止本领高、国内供应成熟 & SiPM 负载严重、慢、高 Z、本底与封装问题 &
+      不作为基准 \\
+    GAGG(Ce) & 高光产额；约 90 ns & 不潮解、能量分辨较好 &
+      高密度、高 Z、成本和饱和较高、时间慢 & 后续比较 \\
+    LYSO(Ce) & 中高光产额；约 40 ns & 在无机晶体中较快、机械稳定 &
+      高 Z、本征放射性、成本和饱和 & 不优先 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+采购讨论中可能把塑料闪烁体口头称作“晶体”，但首轮推荐的有效材料是塑料。
+只有当后续需求证明必须作停止型量能或需要显著更高的能量分辨时，才重新评估
+无机晶体。
+
+\subsection{推荐探测器盒与光学变量}
+
+\begin{itemize}
+  \item 0.8 比例原型采用直径 \SI{20}{\milli\meter}、厚度 5--6 mm 的塑料；
+    若保留现有半径，则采用直径 \SI{25}{\milli\meter}、相同厚度。
+  \item 抛光 SiPM 耦合面并明确侧面和后表面处理；反射层与遮光外壳分开定义，
+    记录每一种光学材料和批次。
+  \item 一个居中的 $6\times6$ mm SiPM 直接耦合在后表面。第一轮避免不可拆
+    光学胶，采用可重复预紧的可拆传感器座。
+  \item 为 SiPM 提供到靶室壁的铜热路径，并在每个探测盒或热耦合组附近布置温度传感器。
+  \item 统一十二个探测盒的可交换机械基准，包含防转、插入限位、线缆应力释放和
+    遮光检查特征。
+\end{itemize}
+
+一个 $6\times6$ mm SiPM 只覆盖直径 20--25 mm 圆片后表面的约 9--11\%。
+直接耦合能限制光收集并改善饱和余量，但可能产生径向响应变化。
+原型应比较漫反射包覆、镜面反射包覆、浅一体式锥形和有意衰减界面，
+并使用准直源完成二维电荷与时间扫描。
+
+\section{SiPM 选择与饱和计算}
+
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \caption{候选 SiPM 输入数据。PDE 和增益为报告假设文件中的工程值；
+  采购以当前签字版 datasheet 为准。}
+  \begin{tabular}{lccccc}
+    \toprule
+    型号 & 有效面积（mm$^2$） & 像元间距（\si{\micro\meter}） &
+      微胞数 & PDE & 用途 \\
+    \midrule
+    \input{generated/sipm_device_table_zh.tex}
+  \end{tabular}
+  \datatag{data/report\_assumptions.yaml；references.bib}
+\end{table}
+
+EQR15 的 15 \si{\micro\meter} 像元间距使其在所比较的约 $6\times6$ mm 器件中
+拥有最多微胞。EQR20 的 PDE 相近且增益更高，但微胞较少。
+Hamamatsu 器件用于提供文档完整的进口参考。国产 Ray-Quant 50
+\si{\micro\meter} 器件的微胞数过少，不适合作为直接耦合主通道。
+
+\subsection{模型与结果}
+
+对于短于微胞恢复时间、且在有效面积上均匀照明的闪烁脉冲，一阶占用模型为
+\begin{align}
+  N_{\mathrm{seed}} &= E_{\mathrm{dep}}Y_\gamma\eta_{\mathrm{opt}}\mathrm{PDE},\\
+  N_{\mathrm{fired}} &= N_{\mathrm{cell}}
+  \left[1-\exp\left(-\frac{N_{\mathrm{seed}}}{N_{\mathrm{cell}}}\right)\right],\\
+  \delta_{\mathrm{sat}} &= 1-\frac{N_{\mathrm{fired}}}{N_{\mathrm{seed}}},\\
+  Q &= eG N_{\mathrm{fired}}.
+\end{align}
+该模型遵循标准短脉冲占用近似\cite{hamamatsu_occupancy}。
+相关雪崩、脉冲内恢复、非均匀照明、温度和电子学效应均未计入，
+这些效应必须由通道标定覆盖。
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}
+    \begin{axis}[
+      width=\textwidth,
+      height=0.49\textwidth,
+      xmin=0,
+      xmax=210,
+      ymin=0,
+      ymax=56,
+      xlabel={未淬灭光输出上限模型中的沉积能（\si{\mega\electronvolt}）},
+      ylabel={SiPM 微胞非线性（\%）},
+      grid=major,
+      axis on top,
+      legend style={font=\scriptsize,at={(0.02,0.98)},anchor=north west,fill=white,draw=gray!45},
+      tick label style={font=\small},
+      label style={font=\small}
+    ]
+      \draw[fill=green!10,draw=none] (axis cs:0,0) rectangle (axis cs:210,5);
+      \addplot[ReportBlue,thick] table[x=energy_mev,y=eqr15_nonlinearity_pct,col sep=comma]
+        {generated/sipm_curve.csv};
+      \addlegendentry{NDL EQR15}
+      \addplot[green!55!black,thick] table[x=energy_mev,y=eqr20_nonlinearity_pct,col sep=comma]
+        {generated/sipm_curve.csv};
+      \addlegendentry{NDL EQR20}
+      \addplot[violet!75!black,thick]
+        table[x=energy_mev,y=hamamatsu_nonlinearity_pct,col sep=comma]
+        {generated/sipm_curve.csv};
+      \addlegendentry{Hamamatsu S13360}
+      \addplot[red!75!black,thick]
+        table[x=energy_mev,y=rayquant_nonlinearity_pct,col sep=comma]
+        {generated/sipm_curve.csv};
+      \addlegendentry{Ray-Quant JSP-TP6050}
+      \addplot[orange!70!black,dashed,thick] coordinates {(0,10) (210,10)};
+      \addplot[ReportBlue,dotted,thick]
+        coordinates {(\CandidateMaximumDepositMeV,0) (\CandidateMaximumDepositMeV,56)};
+      \addplot[black!65,dotted,thick]
+        coordinates {(\LegacyMaximumDepositMeV,0) (\LegacyMaximumDepositMeV,56)};
+      \addplot[black!65,dotted,thick] coordinates {(192.75,0) (192.75,56)};
+      \node[anchor=north west,font=\scriptsize,text=ReportBlue] at (axis cs:16,18)
+        {\SI{5}{\milli\meter} 候选};
+      \node[anchor=north west,font=\scriptsize,text=black!70] at (axis cs:41,29)
+        {\SI{10}{\milli\meter} 旧方案};
+      \node[anchor=north east,font=\scriptsize,text=black!70,align=right]
+        at (axis cs:190,54) {未淬灭碳核\\沉积上限};
+      \node[anchor=south west,font=\scriptsize,text=green!45!black]
+        at (axis cs:3,1.4) {推荐区};
+    \end{axis}
+  \end{tikzpicture}
+  \caption{总光收集效率为 5\% 时计算的短脉冲 SiPM 非线性。}
+  \datatag{generated/sipm\_curve.csv}
+\end{figure}
+
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \caption{计算的 SiPM 饱和与电荷。碳核列未施加淬灭，是保守光输出上限。}
+  \begin{adjustbox}{width=\textwidth}
+    \begin{tabular}{lccccc}
+      \toprule
+      器件 & \multicolumn{2}{c}{\SI{\ActiveThicknessMm}{\milli\meter} 候选方案的
+        d--p 沉积上限} & 5\% 时电荷（nC） & 5\% 碳核上限 & 5\% 时 10\% 非线性界限（MeV） \\
+      \cmidrule(lr){2-3}
+       & 2\% 时非线性 & 5\% 时非线性 & & 非线性 & \\
+      \midrule
+      \input{generated/saturation_table.tex}
+    \end{tabular}
+  \end{adjustbox}
+  \datatag{generated/sipm\_saturation.csv；generated/derived\_results.json}
+\end{table}
+
+\FloatBarrier
+\begin{decisionbox}{饱和结论}
+  EQR15 在 2--5\% 总光收集效率下，对所有正常 d--p 事件都低于推荐的
+  5\% 微胞非线性目标。未淬灭碳核点约为
+  \EqrCarbonNonlinearity\% 非线性，仍需碳核标定。
+  Ray-Quant 50 \si{\micro\meter} 对比器件在 5\% 光收集效率下，
+  正常上限点已经约 8.3\% 非线性，因此不推荐直接耦合。
+\end{decisionbox}
+
+\subsection{前端量程与通道结构}
+
+在 \SI{\ActiveThicknessMm}{\milli\meter} 候选方案的正常 d--p 上限点和
+5\% 光收集效率下，EQR15 计算电荷为
+\SI{\EqrNormalCharge}{\nano\coulomb}。若分布在
+\SI{20}{\nano\second} 等效时间窗内，对应平均电流约
+\SI{\FrontEndAverageCurrentMilliAmp}{\milli\ampere}，
+\SI{50}{\ohm} 上的电压尺度约
+\SI{\FrontEndVoltageScale}{\volt}。真实峰值取决于传感器电容、线缆、
+bias tee、终端和整形。
+
+\begin{itemize}
+  \item 设置快速定时鉴别通道和低增益电荷通道，或使用一个受保护宽带通道加
+    两个已标定增益范围。
+  \item 原型低增益积分电荷范围至少达到
+    \SI{\LowGainRangeNc}{\nano\coulomb}，之后根据碳核淬灭测量修订。
+  \item 使用可编程低噪声偏置和温度补偿，在 run metadata 中保存温度与偏置。
+  \item 每个生产批次测量击穿电压、增益、暗计数、串扰、后脉冲、恢复、
+    空间响应、饱和与温度系数。
+\end{itemize}
+
+\section{真空电气服务、接地与热设计}
+
+推荐每个探测器使用一条屏蔽 \SI{50}{\ohm} 同轴通道。
+信号和偏置通过外部 bias tee 共用同轴线，有源模拟电子学保持在真空外。
+十二个探测器需要十二条可独立测试的同轴馈通通道，另设低速温度与 housekeeping
+接口。当前 CAD 按方位分组：四个 ICF70 四通道同轴接口在每个方位使用三路、
+保留一路安装备用；另一个 ICF70 32 针接口为 12 个两线 SiPM 温度传感器使用
+24 针并保留 8 针。准确采购料号仍未冻结。
+
+北京飞迪真空公开列出 CF 接口上的 \SI{50}{\ohm} SMA50/SMAD50 馈通方案
+\cite{feedivac_sma}。RFQ 必须冻结准确料号、连接器性别、真空内线缆型号和长度、
+烘烤温度、氦漏证书、安装带宽和备件数量。网页数据仅用于候选筛选。
+
+\begin{itemize}
+  \item 金属探测盒和靶室可靠连接到保护地，不能依赖可拆机械接触作为唯一接地。
+  \item 烘烤期间闪烁体不得超过已验证工作温度；优先采用探测器框架可拆的受控烘烤。
+  \item 真空内线缆采用低放气并机械固定的结构，避免不通气盲孔、虚漏、
+    松散反射膜和无支撑连接器。
+  \item 监测每个 SiPM 温度，并在标定中定义偏置温度修正。
+\end{itemize}
+
+\section{靶室、ICF 接口与旋转馈通}
+
+\subsection{圆筒与方形靶室}
+
+圆筒并不妨碍安装 ICF 口或电气馈通。径向端口通常通过焊接凸台或局部加强结构
+接入。真正的问题是制造和维护：若十二个信号口、旋转馈通、束流口和探测器维护口
+全部分散在曲面上，会导致端口拥挤、角度基准难控制、焊接变形和维护困难。
+
+因此推荐混合结构：
+\begin{itemize}
+  \item 短圆筒外压壳体负责真空结构效率和减重；
+  \item 可拆平面服务板或多面探测器框架集中馈通、探测盒、线缆和定位基准；
+  \item 两端使用认证 ICF114 束流接管；
+  \item 两台仪器均设置专用 ICF70 旋转馈通凸台。CompactInVacuum 已固定
+    安装接口，但具体采购件、轴载荷、扭矩、回差、寿命和烘烤温度仍待 RFQ 关闭。
+\end{itemize}
+
+\subsection{固定 ICF 接口合同}
+
+采购经认证的 ICF 法兰或半接管。上海谱幂可以完成焊接和集成，
+但不应在无受控工艺的情况下自行复制刀口几何。ICF 使用刀口和 OFHC 铜垫片
+实现 UHV 全金属密封；内部焊缝和无积气袋几何用于避免虚漏
+\cite{cosmotec_icf_standard,leybold_cf_hardware}。
+所有 nominal 4.5-inch CF 类产品不能只用“ICF114”名称代替图纸，
+孔径、螺栓和配合合同必须由供应商图纸定义。
+
+允许使用转接器和波纹管解决对准、振动隔离和安装公差问题。
+每个采购件必须提供签字图纸、材料和清洗记录、烘烤等级与氦漏证书。
+完成焊接和安装后的整机还必须再次检漏；单个部件证书不能替代系统验收。
+
+\subsection{旋转馈通 RFQ 数据}
+
+两台仪器目前都固定使用顶部 ICF70 旋转馈通安装接口。当前机构研究采用约
+\SI{18}{\milli\meter} 轴和 0/90 度工作位置。对 CompactInVacuum 而言，
+固定 ICF70 并不等于已经选定供应商机构；载荷与服务研究关闭前仍使用接口包络。
+市场上存在波纹管密封和磁耦合 ICF 运动馈通系列
+\cite{cosmotec_motion_feedthrough}。上海谱幂应采购或集成所选单元并提供：
+\begin{itemize}
+  \item 完整法兰尺寸、轴径、材料、真空内可用长度、外部包络和联轴器细节；
+  \item 允许径向/轴向/倾覆载荷、输出与启动扭矩、回差、角度重复性、
+    硬限位和位置反馈方案；
+  \item 密封和轴承技术、连续或间歇工况、寿命、润滑、颗粒、磁性材料和维修方案；
+  \item 工作与烘烤温度、真空等级、认证氦漏率、电动/手动选项以及与靶室的接口确认。
+\end{itemize}
+
+\section{靶室制造与验收}
+
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \caption{靶室制造的最低要求。}
+  \begin{tabularx}{\textwidth}{L{0.18\textwidth}Y Y}
+    \toprule
+    主题 & RFQ 建议要求 & 必须返回的证据 \\
+    \midrule
+    材料 & 304L 或 316L 不锈钢，炉号/批次可追溯；最终牌号由真空和磁性评审决定 &
+      材料证书与追溯记录 \\
+    采购 ICF 件 & 使用认证法兰/半接管，不逆向仿制刀口 &
+      供应商图纸、证书和进货检验 \\
+    焊接 & 完整焊缝图、工艺、焊工资格、顺序和变形控制 &
+      焊接计划、WPS/PQR、焊接记录和外观记录 \\
+    真空设计 & ICF 刀口/OFHC 主密封；无积气体积；盲孔通气；内部可清洗；
+      转接器和波纹管不得引入弹性体降级 &
+      剖面图、密封清单和设计评审表 \\
+    结构 & 外压屈曲、搬运载荷和接口载荷 &
+      计算报告和批准图纸 \\
+    尺寸 & 束流轴基准、法兰面位置/方向、探测器基准与 CMM 计划 &
+      首件尺寸报告 \\
+    漏率 & 整机氦漏率 $\leq
+      \IcfAssemblyLeakMantissa\times10^{-10}\,
+      \si{\pascal\meter\cubed\per\second}$；记录方法、灵敏度、停留时间和本底 &
+      带设备序列号和测试构型的校准氦检报告 \\
+    清洗 & 与探测器和真空材料相容的受控工艺 &
+      清洗、包装和封口记录 \\
+    烘烤 & 裸金属靶室与采购 ICF 硬件的等级和装有探测器后的系统温限分开定义 &
+      部件温限和批准的整机最高温度 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\begin{notebox}{不能只凭 STEP 模型放行加工}
+  加工包必须包含受控二维图纸、GD\&T、焊接符号、材料和清洗要求、
+  采购件料号、验收标准与检验计划。上海谱幂必须在切料前返回可制造性评审、
+  标注图纸、焊接顺序和检验方案。
+\end{notebox}
+
+\subsection{上海谱幂资格验证}
+
+上海谱幂公开资料支持其作为候选供应商，但本项目还需要其证明真空精密制造、
+焊接靶室、尺寸控制和氦检漏能力。授标前应：
+\begin{itemize}
+  \item 要求两个可比靶室项目、已完成最大尺寸/质量、内部真空能力、CMM 能力、
+    氦检设备型号和校准信息；
+  \item 明确旋转馈通是谱幂自研、OEM 采购还是第三方集成，并取得原厂和真实证书；
+  \item 外压边界由供应商 FEA 和项目侧独立复核共同关闭；
+  \item 要求从材料接收、加工、焊接、检验、清洗、装配到包装的工艺流转卡；
+  \item 在 DFM 后、焊接前、尺寸检验后和检漏验收后设置工程 hold point。
+\end{itemize}
+
+\section{中国境内采购与工作分配}
+
+\begin{longtable}{L{0.17\textwidth}L{0.22\textwidth}L{0.31\textwidth}L{0.22\textwidth}}
+  \caption{建议的中国境内采购路径、责任和资格验证。}\\
+  \toprule
+  包件 & 优先国内路径 & 建议责任 & 资格验证 \\
+  \midrule
+  \endfirsthead
+  \toprule
+  包件 & 优先国内路径 & 建议责任 & 资格验证 \\
+  \midrule
+  \endhead
+  真空靶室与靶机构集成 & 上海谱幂 &
+    DFM、焊接、加工、装配、尺寸和检漏验收 &
+    能力问卷、参考项目、工艺和检验计划 \\
+  旋转馈通 & 上海谱幂采购/集成路线 &
+    型号、OEM 数据、顶部 ICF 集成 &
+    扭矩/载荷/寿命/漏率/烘烤证书与进货检验 \\
+  塑料闪烁体 & 上海硕杰/EPIC Crystal 或合格国产厂商 &
+    材料批次、粗精加工、抛光和反射方案 &
+    见证样片、光产额、时间、均匀性和真空筛选 \\
+  主 SiPM & NDL，经上海昕涛或授权国内渠道 &
+    EQR15 11-6060D-S，当前 datasheet 和批次追溯 &
+    击穿、增益、DCR、串扰、后脉冲、线性和温度筛选 \\
+  备选 SiPM & NDL EQR20 &
+    少量原型器件 & 同等筛选并比较时间和电子学余量 \\
+  参考 SiPM & 滨松中国 & 少量对照器件 & 与国产器件交叉验证 \\
+  同轴馈通 & 北京飞迪真空 &
+    CF40 四路 \SI{50}{\ohm} 馈通和真空线缆 &
+    料号、连接器性别、烘烤、漏率证书和备件 \\
+  电子学 & 项目设计加国内 PCB 装配 &
+    偏置、保护、定时、电荷量程和温度监测 &
+    原理图评审、生产测试、标定和老化 \\
+  金属探测盒 & 上海谱幂或探测器精密加工厂 &
+    可更换传感器盒、热路径、基准和应力释放 &
+    首件 CMM、装配、真空材料和重复拆装测试 \\
+  \bottomrule
+\end{longtable}
+
+上海谱幂负责真空边界、采购 ICF 集成、旋转馈通安装、金属探测盒接口、
+最终靶室尺寸报告和氦检验收。闪烁体供应商负责光学材料和抛光件。
+项目电子学团队负责 SiPM 选型、PCB、动态范围、偏置控制、标定和数据解释。
+只有在项目提供通过验收的 golden cassette 和受控装配流转卡后，
+才由上海谱幂执行最终机械装配。
+
+\subsection{分阶段采购}
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{建议的分阶段采购数量。}
+  \begin{tabularx}{\textwidth}{L{0.17\textwidth}L{0.25\textwidth}L{0.25\textwidth}Y}
+    \toprule
+    阶段 & 建议采购 & 数量建议 & 目的 \\
+    \midrule
+    Gate 0：台架研究 & EQR15、EQR20、参考 SiPM、塑料样片 &
+      至少 5 个 EQR15、3 个 EQR20、2 个参考器件；4 类样片 &
+      批次筛选和光学界面选择 \\
+    Gate 1：一个扇区 & 三类通道探测盒、线缆与馈通分配 &
+      D、P-small、P-large 加备件 &
+      coincidence、噪声、时间、饱和和标定 \\
+    Gate 2：靶室首件 & 一套靶室、一套旋转馈通、ICF 件 &
+      一套完整首件 & DFM、尺寸、外压、检漏、烘烤和维护测试 \\
+    量产 & 十二个工作通道加备件 &
+      至少 15 个闪烁体和 15 个筛选通过的 SiPM &
+      成组运行和更换库存 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{开发与验证计划}
+
+\begin{enumerate}
+  \item \textbf{Gate 0 -- 冻结物理和接口。}
+    固定 ICF114 前后接口和 afterSRC 顶部 ICF70；批准束流 stay-clear、
+    探测器半径/直径、5--6 mm 厚度研究带、靶运动包络、装机烘烤温限、
+    端口图、测量基准和运输限制。
+  \item \textbf{Gate 1 -- 单探测器光学/电子学原型。}
+    比较 EQR15、EQR20 和参考 SiPM，完成二维均匀性、LED/激光饱和、
+    电荷量程、时间、温度和 4/5/6/8/10 mm 厚度比较。
+  \item \textbf{Gate 2 -- 单扇区 coincidence 原型。}
+    制作 D、P-small、P-large 三路最终风格通道，验证阈值、time walk、
+    能量分离、共模噪声和标定 metadata。
+  \item \textbf{Gate 3 -- 真空探测器框架。}
+    执行真空浸泡、热循环、暗计数监测、放气筛选、线缆/馈通噪声和重复拆装。
+  \item \textbf{Gate 4 -- 工程靶室。}
+    完成上海谱幂首件、外压复核、CMM 报告、氦检、靶运动、探测器拆装和运输演示。
+  \item \textbf{Gate 5 -- 量产放行。}
+    只有 golden sector 与工程靶室通过后，才能冻结图纸和流转卡并采购量产通道。
+\end{enumerate}
+
+\begin{table}[htbp]
+  \centering
+  \scriptsize
+  \caption{探测器最低验收矩阵。}
+  \begin{tabularx}{\textwidth}{L{0.16\textwidth}L{0.27\textwidth}Y L{0.18\textwidth}}
+    \toprule
+    测试 & 方法 & 暂定验收动作 & 产出记录 \\
+    \midrule
+    SiPM 电筛 & 自动 I--V、增益、暗计数、串扰、后脉冲、温度扫描 &
+      接受统计分布，剔除离群器件 & 单器件序列号记录 \\
+    光学线性 & 标定强度的 415--425 nm 脉冲光源 &
+      正常 d--p 范围内修正残差满足目标且无削顶 & 单通道修正曲线 \\
+    时间 & 快速脉冲光源和 coincidence 参考 &
+      阈值与 time walk 修正支持最终 coincidence 窗 & 时间标定 \\
+    均匀性 & 有效面准直二维扫描 &
+      满足空间均匀性限值，记录边缘响应 & 二维图和摘要 \\
+    真空/热 & 真空浸泡和温度循环，同时监测暗噪声 &
+      响应稳定，材料与连接器无退化 & 组件序列记录 \\
+    机械重复性 & 多次拆装探测盒 &
+      响应和基准漂移处于项目公差内 & 装配与标定对比 \\
+    串扰 & 相邻通道终端和工作状态下的源扫描 &
+      正常 d--p 脉冲在 coincidence 窗内可识别 & 构型和串扰矩阵 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\section{风险与采购前决策}
+
+\begin{longtable}{L{0.27\textwidth}C{0.10\textwidth}C{0.10\textwidth}L{0.37\textwidth}}
+  \caption{主要风险与控制措施。}\\
+  \toprule
+  风险 & 概率 & 影响 & 控制与关闭条件 \\
+  \midrule
+  \endfirsthead
+  \toprule
+  风险 & 概率 & 影响 & 控制与关闭条件 \\
+  \midrule
+  \endhead
+  当前 \SI{63}{\milli\meter} stay-clear 与参考 ICF114 净孔不相容 &
+    高 & 高 & 保持 ICF114 固定；按认证接管/转接器/波纹管孔径替换占位几何，
+    重新分配内部通光孔预算 \\
+  只使用一列 LISE++ 数据选厚度或把探测器当作量能器 &
+    中 & 高 & 使用五模型 CSV 包络，先测试 5/6 mm，保留 4/8/10 mm，
+    经阈值、时间和 Geant4 后冻结 \\
+  未淬灭高负载事件导致 SiPM 或前端饱和 &
+    中 & 高 & EQR15、受控光收集、至少
+    \SI{\LowGainRangeNc}{\nano\coulomb} 量程和饱和修正 \\
+  前端早于 SiPM 微胞削顶 &
+    高 & 高 & 受保护定时通道、低增益量程、实测波形和输入余量 \\
+  靶室外压或焊接变形失效 &
+    低 & 高 & 独立外压复核、焊接顺序、尺寸 hold point 和氦检 \\
+  仅凭网页判断供应商能力 &
+    中 & 高 & 正式能力证据、参考项目、检验和质量计划 \\
+  光学响应随位置变化 &
+    中 & 中 & 受控耦合、反射/锥形方案、二维扫描和逐通道修正 \\
+  有机材料放气或真空退化 &
+    中 & 高 & 材料证据、见证样片、真空浸泡、烘烤计划和可拆框架 \\
+  \bottomrule
+\end{longtable}
+
+任何生产采购前必须完成：
+\begin{itemize}
+  \item 对照认证 ICF114 接管、转接器和波纹管图纸批准 stay-clear；
+    ICF114 已固定，不再比较法兰尺寸；
+  \item 批准 0.8 比例几何，或明确保留当前半径和
+    \SI{25}{\milli\meter} 接受度；
+  \item 批准 Gate 1 的 5 mm、6 mm 探测盒和比较样片；
+  \item 批准 ICF 全金属边界与整机漏率，再定义工作压力、气负载、
+    装机烘烤温度、抽气时间、清洗等级和 RGA 要求；
+  \item 冻结旋转馈通载荷、扭矩、寿命、回差、角度重复性、工况和维护；
+  \item 批准十二路同轴结构、数字化量程、时间要求、接地、热设计和温度/偏置 metadata；
+  \item 接受上海谱幂能力、质量计划、报价范围和首件方案。
+\end{itemize}
+
+\section{上海谱幂 RFQ 清单}
+
+RFQ 应采用受控响应矩阵，使供应商回答、附件和偏差可以逐项评审。
+
+\begin{longtable}{L{0.19\textwidth}L{0.34\textwidth}L{0.38\textwidth}}
+  \caption{上海谱幂最低 RFQ 响应矩阵。}\\
+  \toprule
+  RFQ 章节 & 项目提供 & 上海谱幂必须返回 \\
+  \midrule
+  \endfirsthead
+  \toprule
+  RFQ 章节 & 项目提供 & 上海谱幂必须返回 \\
+  \midrule
+  \endhead
+  系统概况 & 批准的三维包络、束流轴、探测区、搬运和维护方向 &
+    可制造方案、质量和重心、关键接口、维护与吊装方案 \\
+  真空边界 & 工作压力、清洗/烘烤要求、固定 ICF 接口 &
+    材料/焊接、通气设计、外压计算、检漏方法和证书 \\
+  束流接口 & 固定 ICF114 前后接口、stay-clear 和配合图纸 &
+    采购件身份、刀口保护、法兰位置/方向和检验方法 \\
+  旋转靶 & 轴与靶载荷、0/90 位置、限位、回差目标 &
+    OEM/型号、扭矩、径向/轴向载荷、重复性、寿命、维修、烘烤和漏率证书 \\
+  探测器框架 & golden cassette 接口、线缆和热路径要求 &
+    金属探测盒细节、重复基准、应力释放和拆装方案 \\
+  电气馈通 & 十二路 \SI{50}{\ohm} 同轴和 housekeeping 要求 &
+    料号、连接器/线缆图、证书和备件建议 \\
+  测量 & 关键基准、法兰跳动、探测器轴和靶轴要求 &
+    CMM 计划与报告、测量不确定度和可追溯仪器 \\
+  验收 & 真空浸泡、氦漏和尺寸标准 &
+    检验测试计划、校准设备和不符合项流程 \\
+  商务 & 原型/量产数量、交期、变更控制要求 &
+    分项报价、交期、质保、文档清单、图纸/IP 所有权和运输包装 \\
+  \bottomrule
+\end{longtable}
+
+\section{数据与计算验证}
+\label{sec:verification-zh}
+
+本报告区分四类信息：
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{报告中的可追溯性分类。}
+  \begin{tabularx}{\textwidth}{L{0.17\textwidth}Y Y}
+    \toprule
+    类别 & 含义 & 验证方式 \\
+    \midrule
+    \sourcevalue & 直接读取 CAD 配置、通道清单、验证报告或引用的供应商资料 &
+      源文件哈希和直接检查 \\
+    \derived & 由报告生成器从源数据重新计算 &
+      CSV/JSON、单元测试和 stale-file 检查 \\
+    \provisional & 尚未测量或冻结的工程筛选输入 &
+      在 \path{data/report_assumptions.yaml} 中显式记录 \\
+    \proposal & 推荐但尚未写入权威 CAD 配置的选择 &
+      设计评审和受控配置更新 \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+\subsection{一条命令复现}
+
+在本报告目录执行：
+\begin{Verbatim}[fontsize=\small,frame=single]
+make verify
+\end{Verbatim}
+
+该命令执行：
+\begin{enumerate}
+  \item 读取当前 CompactInVacuum YAML、target、通道清单和 strict validation 报告；
+  \item 将探测器角度和有效中心半径与 CAD 生成清单比较；
+  \item 使用 \path{code/data/energy_lise/dp_dc_kinematics.py} 计算运动学，
+    使用 \path{code/data/energy_lise/lise_range.py} 显式选择 LISE++ 模型，
+    重算 1/2/3/4/5/6/8/10 mm 能损扫描；
+  \item 重算全部 SiPM 饱和、电荷和 10\% 非线性界限；
+  \item 重算靶室质量筛算和 ICF 几何算术；
+  \item 把重新生成的 CSV、JSON 和 LaTeX 片段与报告输入逐字节比较；
+  \item 运行独立单元测试；
+  \item 使用 LuaLaTeX/Biber 编译中英文报告并检查 PDF 可搜索内容。
+\end{enumerate}
+
+常用分步命令为：
+\begin{Verbatim}[fontsize=\small,frame=single]
+make data
+make check-data
+make test
+make report-en
+make report-zh
+\end{Verbatim}
+
+\subsection{可直接检查的生成数据}
+
+\begin{itemize}
+  \item \path{generated/derived_results.json}：全精度几何、能损、饱和、电子学、
+    靶室和 ICF 结果。
+  \item \path{generated/energy_deposition.csv}：接受度与能损范围。
+  \item \path{generated/thickness_summary.csv}：每个厚度一行的紧凑比较。
+  \item \path{generated/thickness_scan.csv}：逐事件、五模型 LISE++ 厚度扫描。
+  \item \path{generated/sipm_saturation.csv}：每个 SiPM 的饱和与电荷摘要。
+  \item \path{generated/sipm_curve.csv}：图中的全部饱和曲线点。
+  \item \path{generated/provenance.json}：路径、SHA-256、Git commit、
+    环境和决策状态。
+  \item \path{generated/verification_summary.txt}：人可读 PASS/FAIL 记录。
+\end{itemize}
+
+\begin{longtable}{L{0.18\textwidth}L{0.47\textwidth}L{0.27\textwidth}}
+  \caption{生成数值片段时捕获的源文件来源。}\\
+  \toprule
+  来源角色 & 仓库相对路径 & SHA-256 \\
+  \midrule
+  \endfirsthead
+  \toprule
+  来源角色 & 仓库相对路径 & SHA-256 \\
+  \midrule
+  \endhead
+  \input{generated/provenance_table_zh.tex}
+\end{longtable}
+
+\begin{notebox}{配置状态警告}
+  当前 CAD 源仍写着 active medium: placeholder/undecided 和
+  photosensor: placeholder/undecided。本报告有意把塑料闪烁体和 EQR15
+  记录为建议原型基线。验证工具同时报告 CAD 状态与报告建议，
+  避免把建议误认为已经冻结的 CAD 要求。
+\end{notebox}
+
+\subsection{当前验证的局限}
+
+d--p/d--C 能量使用仓库中的解析二体运动学和 LISE++ 射程表流程。
+计算采用连续慢化近似的射程相减，不包含射程涨落、包覆/死层、
+入射角路径变化、Birks 淬灭和探测器分辨。这些数值用于工程筛选，
+不能替代量产前版本受控的 Geant4 模型。
+
+SiPM 模型是一阶均匀短脉冲近似。靶室质量是封闭方壳算术估计，
+不是 FEA 或实际加工质量。供应商网页只支持候选筛选；
+采购以签字图纸、当前 datasheet、正式报价、批次追溯和证书为准。
+
+\clearpage
+\nocite{polarimeter_repo}
+\printbibliography[title={参考文献与供应商证据}]
+
+\vfill
+\begin{center}
+  {\sffamily\small\bfseries\color{ReportMuted} 初步报告结束}
+\end{center}
+
+\end{document}

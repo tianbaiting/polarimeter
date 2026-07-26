@@ -55,6 +55,80 @@ int main() {
         const dpolar::PolarizationInference inference(scenario);
         const dpolar::AnalysisSession analysis(scenario);
 
+        const std::filesystem::path compact_scenario_path =
+            std::filesystem::path(DPOLAR_SOURCE_DIR) / "config" / "compact_in_vacuum.ini";
+        const dpolar::ScenarioConfig compact_scenario = dpolar::loadScenarioConfig(compact_scenario_path);
+        require(compact_scenario.scenario_name == "compact_in_vacuum", "compact scenario name mismatch");
+        require(
+            approx(compact_scenario.custom_layout.proton_arms[0].distance_mm, 205.0, 1.0e-12),
+            "compact large-angle proton distance mismatch");
+        require(
+            approx(compact_scenario.custom_layout.proton_arms[1].distance_mm, 190.0, 1.0e-12),
+            "compact small-angle proton distance mismatch");
+        require(
+            approx(compact_scenario.custom_layout.deuteron_arm.distance_mm, 140.0, 1.0e-12),
+            "compact deuteron distance mismatch");
+        require(
+            approx(compact_scenario.run.coincidence_sector_multiplier, 4.0, 1.0e-12),
+            "compact pzz coincidence multiplier must include four opposite-sector pairs");
+        require(
+            approx(compact_scenario.run.lrud_sector_multiplier, 2.0, 1.0e-12),
+            "compact pyy LR/UD multiplier must include two pairs per group");
+        require(
+            compact_scenario.geometry_contract.radius_reference == "active_center",
+            "compact geometry radius reference mismatch");
+        require(
+            compact_scenario.geometry_contract.channel_manifest_file.filename()
+                == "compactInVacuum.channel_manifest.json",
+            "compact channel manifest path mismatch");
+        require(
+            compact_scenario.detector_model.response_status == "placeholder",
+            "compact detector response must remain a placeholder");
+        require(!compact_scenario.energy_loss.enabled, "compact energy-loss model must remain disabled");
+
+        const dpolar::ElasticDpKinematics compact_kinematics(compact_scenario.beam);
+        const dpolar::BranchPair compact_deuteron_windows =
+            dpolar::deuteronWindowsFromArm(compact_kinematics, compact_scenario.custom_layout.deuteron_arm);
+        const dpolar::CmBranchWindow compact_proton_forward =
+            dpolar::protonWindowFromArm(compact_kinematics, compact_scenario.custom_layout.proton_arms[0]);
+        const dpolar::CmBranchWindow compact_proton_backward =
+            dpolar::protonWindowFromArm(compact_kinematics, compact_scenario.custom_layout.proton_arms[1]);
+        const dpolar::CmBranchWindow compact_overlap_forward =
+            dpolar::intersectWindows(compact_proton_forward, compact_deuteron_windows.forward);
+        const dpolar::CmBranchWindow compact_overlap_backward =
+            dpolar::intersectWindows(compact_proton_backward, compact_deuteron_windows.backward);
+        require(compact_overlap_forward.valid(), "compact forward D-P overlap must be nonzero");
+        require(compact_overlap_backward.valid(), "compact backward D-P overlap must be nonzero");
+        require(
+            approx(dpolar::toDegrees(compact_overlap_forward.begin_rad), 61.90830732, 1.0e-6)
+                && approx(dpolar::toDegrees(compact_overlap_forward.end_rad), 75.50773069, 1.0e-6),
+            "compact forward CM overlap changed unexpectedly");
+        require(
+            approx(dpolar::toDegrees(compact_overlap_backward.begin_rad), 147.58346266, 1.0e-6)
+                && approx(dpolar::toDegrees(compact_overlap_backward.end_rad), 163.54759701, 1.0e-6),
+            "compact backward CM overlap changed unexpectedly");
+
+        const dpolar::ObservableTableRepository compact_observables(compact_scenario);
+        const dpolar::CountRateCalculator compact_counts(compact_scenario, compact_observables);
+        const dpolar::PolarizationInference compact_inference(compact_scenario);
+        const double compact_test_pzz = 0.5;
+        const double compact_coincidence_forward =
+            compact_counts.countsFromIntegratedCrossSection(
+                compact_counts.integralForPzz(compact_overlap_forward, compact_test_pzz))
+            * compact_scenario.run.coincidence_sector_multiplier;
+        const double compact_coincidence_backward =
+            compact_counts.countsFromIntegratedCrossSection(
+                compact_counts.integralForPzz(compact_overlap_backward, compact_test_pzz))
+            * compact_scenario.run.coincidence_sector_multiplier;
+        const dpolar::PolarizationEstimate compact_pzz_estimate =
+            compact_inference.inferPzzFromCounts(
+                dpolar::PzzObservable::Coincidence,
+                compact_coincidence_forward,
+                compact_coincidence_backward);
+        require(
+            approx(compact_pzz_estimate.estimate, compact_test_pzz, 1.0e-5),
+            "compact coincidence pzz inference must recover the input polarization");
+
         const double theta_cm_rad = dpolar::toRadians(68.6);
         const dpolar::ScatteringSolution solution = kinematics.scatter(theta_cm_rad, 0.0);
         const auto recovered = kinematics.deuteronCmFromLab(solution.deuteron.theta_lab_rad);
@@ -211,6 +285,17 @@ int main() {
             ("dpolar_overlay_tests_" + std::to_string(static_cast<long long>(
                                          std::chrono::steady_clock::now().time_since_epoch().count())));
         std::filesystem::remove_all(overlay_root);
+
+        const dpolar::AnalysisSession compact_analysis(compact_scenario);
+        bool compact_energy_loss_failed = false;
+        try {
+            static_cast<void>(compact_analysis.runEnergyLossScan(overlay_root));
+        } catch (const std::exception&) {
+            compact_energy_loss_failed = true;
+        }
+        require(
+            compact_energy_loss_failed,
+            "compact energy-loss analysis must fail until the detector medium is frozen");
 
         const dpolar::AnalysisArtifacts pzz_plot_artifacts =
             dpolar::runPzzInferencePlot(
@@ -441,6 +526,25 @@ int main() {
                 expected_backward_efficiency_one_sector,
                 1.0e-6),
             "backward coincidence efficiency must be normalized to one proton sector");
+
+        dpolar::ScenarioConfig compact_single_duration_scenario = compact_scenario;
+        compact_single_duration_scenario.run.duration_s_list = {
+            compact_single_duration_scenario.run.duration_s};
+        const dpolar::AnalysisSession compact_single_duration_analysis(compact_single_duration_scenario);
+        const dpolar::AnalysisArtifacts compact_coincidence_scan_artifacts =
+            compact_single_duration_analysis.runCoincidenceScan(overlay_root);
+        const double compact_forward_efficiency = std::stod(findSummaryValue(
+            compact_coincidence_scan_artifacts.summary,
+            "coincidence_forward_efficiency_one_sector_at_max_pol"));
+        const double compact_backward_efficiency = std::stod(findSummaryValue(
+            compact_coincidence_scan_artifacts.summary,
+            "coincidence_backward_efficiency_one_sector_at_max_pol"));
+        require(
+            compact_forward_efficiency > 0.0 && compact_forward_efficiency <= 1.0,
+            "compact forward per-sector coincidence efficiency must be a probability");
+        require(
+            compact_backward_efficiency > 0.0 && compact_backward_efficiency <= 1.0,
+            "compact backward per-sector coincidence efficiency must be a probability");
 
         const dpolar::AnalysisArtifacts ratio_proton_artifacts =
             single_duration_analysis.runRatioScan(dpolar::RatioMode::Proton, overlay_root);

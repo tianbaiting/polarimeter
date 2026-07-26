@@ -1,0 +1,60 @@
+{
+  "calculation_environment": {
+    "numpy": "2.2.6",
+    "python": "3.10.19",
+    "pyyaml": "6.0.3"
+  },
+  "git_commit": "d1fc28f96a2018a212be7de07d94d80ad435ba9f",
+  "report_recommendation_state": {
+    "active_medium": "fast blue plastic scintillator",
+    "candidate_active_thickness_mm": 5.0,
+    "photosensor": "NDL EQR15 11-6060D-S",
+    "status": "proposed prototype baseline; not yet promoted into the CAD configuration"
+  },
+  "schema_version": 1,
+  "source_detector_decision_state": {
+    "active_medium": "placeholder",
+    "active_medium_status": "undecided",
+    "photosensor": "SiPM_device_model_provisional",
+    "photosensor_status": "selected"
+  },
+  "source_hashes": {
+    "analysis_scenario": {
+      "path": "code/config/compact_in_vacuum.ini",
+      "sha256": "be0bc270a47a5969ccd390cb5896d61881d33077fb20c215afc36e1853d174ac"
+    },
+    "channel_manifest": {
+      "path": "compactInVacuum/compactInVacuum.channel_manifest.json",
+      "sha256": "7997601490146763cbfa3776699985e2dd21cf85e10c063eb8072acd7db11258"
+    },
+    "compact_config": {
+      "path": "compactInVacuum/config/default_compactInVacuum.yaml",
+      "sha256": "099c4f5596532b3e2acde11f0f7dd048ef6b1d58b76a2cea639b729c6928de1b"
+    },
+    "compact_target": {
+      "path": "compactInVacuum/target.yaml",
+      "sha256": "4e6078905408278fe5e383db4579fef2da2bb9f83ea79032bb8d7e6da7168462"
+    },
+    "energy_model": {
+      "path": "code/data/energy_lise/dp_dc_kinematics.py",
+      "sha256": "4c650dc8bd1ae9eabb9a5fa6f4042fec2de6787d9bcb7c3086992fce7711451e"
+    },
+    "lise_range_model": {
+      "path": "code/data/energy_lise/lise_range.py",
+      "sha256": "ef329f25f9c1459179fe630b8287230bffeeef4c8c33d9afcd76f5a5e9f386fe"
+    },
+    "mechanical_baseline": {
+      "path": "docs/specs/BLP_v1_requirement_baseline.md",
+      "sha256": "bd1b8faccd5ca8971ae77952fc5bcfa2cf2d0ec5ef5a4fa3cd68f0bdc1d68445"
+    },
+    "report_assumptions": {
+      "path": "docs/polarimeter_detector/compact_in_vacuum_sipm_report/data/report_assumptions.yaml",
+      "sha256": "c981717c112146278dda32fdb59d080c77fd9f029bf886eef78ebdcefe3e1d63"
+    },
+    "validation_report": {
+      "path": "compactInVacuum/compactInVacuum.validation_report.json",
+      "sha256": "0701e2bebd1b068bd153861f36b5ea47636b54f3bb16921f1ba25e63cdec9eb7"
+    }
+  },
+  "source_validation_status": "pass"
+}

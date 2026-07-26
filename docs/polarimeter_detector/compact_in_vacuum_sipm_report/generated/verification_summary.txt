@@ -1,0 +1,31 @@
+CompactInVacuum SiPM report numerical verification
+OVERALL: PASS
+Git commit: d1fc28f96a2018a212be7de07d94d80ad435ba9f
+Source validation status: pass
+CAD detector decision state: active_medium=placeholder (undecided), photosensor=SiPM_device_model_provisional (selected)
+Report detector proposal: fast blue plastic scintillator + NDL EQR15 11-6060D-S
+Thickness study: primary=atima_1_2_ls, candidate=5.0 mm, candidate deposit=1.7071-13.9342 MeV, legacy maximum=39.4864 MeV
+Frozen vacuum interfaces: afterSRC=ICF114/ICF114 + top ICF70; compact=ICF114/ICF114
+
+Checks:
+PASS | CAD strict validation | validation status=pass
+PASS | Target strict mode | target.validation.strict=True
+PASS | deuteron geometry source agreement | delta_angle=0 deg, delta_radius=0 mm
+PASS | proton_small geometry source agreement | delta_angle=0 deg, delta_radius=0 mm
+PASS | proton_large geometry source agreement | delta_angle=0 deg, delta_radius=0 mm
+PASS | Candidate thickness agrees with the detailed energy table | computed=13.9342 MeV
+PASS | Carbon energy upper bound | computed=192.7505 MeV, reference=192.8 MeV
+PASS | Candidate minimum normal d-p deposit | minimum=1.7071 MeV, threshold=1.5000 MeV
+PASS | Candidate is treated as a delta-E counter rather than a stopping calorimeter | thickness=5.0 mm, maximum accepted-particle range=598.16 mm
+PASS | Candidate reduces the maximum normal deposit relative to 10 mm | candidate=13.9342 MeV, legacy=39.4864 MeV
+PASS | Legacy 10 mm maximum normal deposit | computed=39.4864 MeV, reference=39.5000 MeV
+PASS | EQR15 candidate-thickness nonlinearity at 5 percent collection | computed=0.9299%, limit=2.0000%
+PASS | EQR15 conservative carbon nonlinearity | computed=11.8949%
+PASS | Current beam pipe radial wall arithmetic | radial_wall=0.300 mm
+PASS | afterSRC frozen interface contract | front=ICF114, rear=ICF114, top rotary feedthrough=ICF70
+PASS | CompactInVacuum beam-interface contract | front=ICF114, rear=ICF114
+PASS | ICF114 purchased-part bore conflict is explicitly detected | CAD stay-clear exceeds reference purchased-part clear bore by 2.800 mm; ICF114 remains fixed
+PASS | ICF-class assembly helium-leak target | acceptance<=1.000e-10 Pa m^3/s
+
+Reproduction command:
+micromamba run -n anaroot-env python scripts/generate_report_data.py --check

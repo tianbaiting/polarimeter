@@ -2218,10 +2218,14 @@ AnalysisArtifacts AnalysisSession::runCoincidenceScanSingleDuration(const std::f
         const double deuteron_forward_integral = counts_.integralForPzz(deuteron_windows.forward, polarization);
         const double deuteron_backward_integral = counts_.integralForPzz(deuteron_windows.backward, polarization);
 
-        const double forward_coincidence_value = counts_.countsFromIntegratedCrossSection(forward_coincidence_integral)
-                                                 * scenario_.run.coincidence_sector_multiplier;
-        const double backward_coincidence_value = counts_.countsFromIntegratedCrossSection(backward_coincidence_integral)
-                                                  * scenario_.run.coincidence_sector_multiplier;
+        const double forward_coincidence_one_sector =
+            counts_.countsFromIntegratedCrossSection(forward_coincidence_integral);
+        const double backward_coincidence_one_sector =
+            counts_.countsFromIntegratedCrossSection(backward_coincidence_integral);
+        const double forward_coincidence_value =
+            forward_coincidence_one_sector * scenario_.run.coincidence_sector_multiplier;
+        const double backward_coincidence_value =
+            backward_coincidence_one_sector * scenario_.run.coincidence_sector_multiplier;
         const double proton_forward_single = counts_.countsFromIntegratedCrossSection(proton_forward_integral)
                                              * scenario_.run.single_arm_sector_multiplier;
         const double proton_backward_single = counts_.countsFromIntegratedCrossSection(proton_backward_integral)
@@ -2241,8 +2245,9 @@ AnalysisArtifacts AnalysisSession::runCoincidenceScanSingleDuration(const std::f
         proton_single_backward_counts.push_back(proton_backward_single);
         deuteron_single_forward_counts.push_back(deuteron_forward_single);
         deuteron_single_backward_counts.push_back(deuteron_backward_single);
-        forward_efficiency.push_back(safeRatio(forward_coincidence_value, proton_forward_single_one_sector));
-        backward_efficiency.push_back(safeRatio(backward_coincidence_value, proton_backward_single_one_sector));
+        // [EN] Efficiency is a per-pair conditional probability and must not inherit the whole-instrument sector multiplier / [CN] 效率是单组配对的条件概率，不能带入整机方位扇区倍数
+        forward_efficiency.push_back(safeRatio(forward_coincidence_one_sector, proton_forward_single_one_sector));
+        backward_efficiency.push_back(safeRatio(backward_coincidence_one_sector, proton_backward_single_one_sector));
     }
 
     auto drawCountsCanvas = [&](const bool forward_branch, const std::filesystem::path& base_path) {
@@ -2496,6 +2501,10 @@ AnalysisArtifacts AnalysisSession::runCrossSectionScan(const std::filesystem::pa
 }
 
 AnalysisArtifacts AnalysisSession::runEnergyLossScan(const std::filesystem::path& output_root) const {
+    if (!scenario_.energy_loss.enabled) {
+        throw std::runtime_error(
+            "Energy-loss analysis is disabled because the detector medium or thickness is not frozen");
+    }
     const std::filesystem::path dir = analysisOutputDir(resolveOutputRoot(scenario_, output_root), scenario_.scenario_name, "energy_loss_scan");
     std::filesystem::create_directories(dir);
 
@@ -2542,21 +2551,23 @@ AnalysisArtifacts AnalysisSession::runEnergyLossScan(const std::filesystem::path
 
 AnalysisArtifacts AnalysisSession::runBatchWorkflow(const std::filesystem::path& output_root) const {
     const std::filesystem::path root = resolveOutputRoot(scenario_, output_root);
-    const std::vector<AnalysisArtifacts> runs = {
-        runTransformValidation(root),
-        runLayoutOverlay(LayoutPreset::Custom, root),
-        runLayoutOverlay(LayoutPreset::Sekiguchi, root),
-        runEnergyPlot(root),
-        runRatioScan(RatioMode::Deuteron, root),
-        runRatioScan(RatioMode::Proton, root),
-        runRatioScan(RatioMode::Coincidence, root),
-        runLrudScan(LrudObservable::Proton, root),
-        runLrudScan(LrudObservable::Coincidence, root),
-        runCoincidenceScan(root),
-        runCoincidenceTotalScan(root),
-        runCrossSectionScan(root),
-        runEnergyLossScan(root),
-    };
+    std::vector<AnalysisArtifacts> runs;
+    runs.push_back(runTransformValidation(root));
+    runs.push_back(runLayoutOverlay(LayoutPreset::Custom, root));
+    runs.push_back(runLayoutOverlay(LayoutPreset::Sekiguchi, root));
+    runs.push_back(runEnergyPlot(root));
+    runs.push_back(runRatioScan(RatioMode::Deuteron, root));
+    runs.push_back(runRatioScan(RatioMode::Proton, root));
+    runs.push_back(runRatioScan(RatioMode::Coincidence, root));
+    runs.push_back(runLrudScan(LrudObservable::Proton, root));
+    runs.push_back(runLrudScan(LrudObservable::Coincidence, root));
+    runs.push_back(runCoincidenceScan(root));
+    runs.push_back(runCoincidenceTotalScan(root));
+    runs.push_back(runCrossSectionScan(root));
+    if (scenario_.energy_loss.enabled) {
+        // [EN] Do not fabricate a response curve while the compact detector material is undecided / [CN] 紧凑型探测器材料未定时不生成虚假的响应曲线
+        runs.push_back(runEnergyLossScan(root));
+    }
 
     const std::filesystem::path dir = analysisOutputDir(root, scenario_.scenario_name, "batch_full");
     std::filesystem::create_directories(dir);

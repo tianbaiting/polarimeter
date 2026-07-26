@@ -1,7 +1,7 @@
 schema_version: 1
 module: compactInVacuum
 intent:
-  description: 'Compact in-vacuum polarimeter: detectors inside a square-section vacuum chamber at 140/190/205 mm radii, same angles as BLP-v1 (11.2/20.9/53.4 deg), 3x4=12 plastic scintillator placeholders on internal frame arms, no external support plates, and modular front/rear beamline interfaces defaulting to ICF114 welded pipe-stub flange modules that can be replaced by JIS-standard alternatives.'
+  description: 'Compact in-vacuum tensor polarimeter: 12 replaceable SiPM detector placeholders inside a square-section vacuum chamber, active-center radii 140/190/205 mm at 20.9/11.2/53.4 deg, explicit opposite-azimuth D-P elastic coincidence pairing, provisional 380 MeV deuteron plus CH2 physics inputs, front/rear ICF114 beam interfaces, a top ICF70 rotary-target feedthrough interface envelope, four sector-grouped ICF70 four-channel 50-ohm coax service interfaces providing 12 used plus 4 spare channels, one ICF70 32-pin housekeeping interface, and parameterized in-vacuum cable/strain-relief keep-outs; exact purchased feedthrough and cable part numbers remain unfrozen.'
 build:
   config: config/default_compactInVacuum.yaml
   overrides: []
@@ -17,3 +17,4 @@ output:
   formats: [fcstd, step]
 artifacts:
   report_json: compactInVacuum.validation_report.json
+  channel_manifest_json: compactInVacuum.channel_manifest.json

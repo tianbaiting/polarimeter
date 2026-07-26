@@ -50,6 +50,22 @@ struct DataConfig {
     std::filesystem::path energy_range_file;
 };
 
+struct GeometryContractConfig {
+    std::filesystem::path source_config;
+    std::filesystem::path channel_manifest_file;
+    std::string radius_reference {"unspecified"};
+    std::string active_face_shape {"unspecified"};
+    std::string acceptance_model {"legacy_rectangular"};
+};
+
+struct DetectorModelConfig {
+    std::string response_status {"legacy"};
+    std::string active_medium {"C8H8"};
+    std::string photosensor {"unspecified"};
+    double active_diameter_mm {};
+    double active_length_mm {};
+};
+
 struct CustomLayoutConfig {
     std::array<DetectorArm, 2> proton_arms {};
     DetectorArm deuteron_arm {};
@@ -61,6 +77,7 @@ struct SekiguchiLayoutConfig {
 };
 
 struct EnergyLossConfig {
+    bool enabled {true};
     int projectile_mass_number {1};
     double energy_min_mev_per_u {0.0};
     double energy_max_mev_per_u {200.0};
@@ -79,6 +96,8 @@ struct ScenarioConfig {
     ScanConfig scan;
     CoverageConfig coverage;
     DataConfig data;
+    GeometryContractConfig geometry_contract;
+    DetectorModelConfig detector_model;
     CustomLayoutConfig custom_layout;
     SekiguchiLayoutConfig sekiguchi_layout;
     EnergyLossConfig energy_loss;

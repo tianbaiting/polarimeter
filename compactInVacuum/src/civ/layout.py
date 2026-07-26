@@ -12,6 +12,8 @@ from .config import CIVConfig
 class DetectorPlacement:
     channel_name: str
     sector_name: str
+    particle: str
+    cm_branches: tuple[str, ...]
     angle_deg: float
     radius_mm: float
     confidence: str
@@ -69,6 +71,8 @@ def build_detector_placements(cfg: CIVConfig) -> list[DetectorPlacement]:
                 DetectorPlacement(
                     channel_name=channel.name,
                     sector_name=sector,
+                    particle=channel.particle,
+                    cm_branches=channel.cm_branches,
                     angle_deg=channel.angle_deg,
                     radius_mm=channel.radius_mm,
                     confidence=channel.confidence,
@@ -88,5 +92,19 @@ def local_basis_from_direction(direction: App.Vector) -> tuple[App.Vector, App.V
     return u, v, w
 
 
-def front_face_center(placement: DetectorPlacement) -> App.Vector:
+def detector_center(placement: DetectorPlacement) -> App.Vector:
     return scaled(placement.direction, placement.radius_mm)
+
+
+def target_facing_active_face_center(
+    placement: DetectorPlacement,
+    detector_length_mm: float,
+) -> App.Vector:
+    return scaled(placement.direction, placement.radius_mm - (0.5 * detector_length_mm))
+
+
+def detector_outer_face_center(
+    placement: DetectorPlacement,
+    detector_length_mm: float,
+) -> App.Vector:
+    return scaled(placement.direction, placement.radius_mm + (0.5 * detector_length_mm))

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -16,6 +17,12 @@ import matplotlib.pyplot as plt
 SCRIPT_DIR = Path(__file__).resolve().parent
 CODE_DIR = SCRIPT_DIR.parents[1]
 DEFAULT_OUTPUT_DIR = CODE_DIR / "output" / "energy_lise" / "dp_dc_kinematics"
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from lise_range import RangeTable
+from lise_range import energy_loss_mev as lise_energy_loss_mev
+from lise_range import load_range_table as load_lise_range_table
 
 DEUTERON_MASS_MEV = 1875.612
 PROTON_MASS_MEV = 938.0
@@ -23,13 +30,7 @@ CARBON_MASS_MEV = 12.011 * 931.5
 DEFAULT_BEAM_KINETIC_MEV = 380.0
 DEFAULT_THICKNESS_UM = 10000.0
 DEFAULT_POINTS = 300
-RANGE_COLUMN_INDEX = 1
-
-
-@dataclass(frozen=True)
-class RangeTable:
-    energy_mev_per_u: np.ndarray
-    range_um: np.ndarray
+LEGACY_RANGE_MODEL_KEY = "hubert_1990"
 
 
 @dataclass(frozen=True)
@@ -103,7 +104,7 @@ class LorentzVector:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate corrected dp/dC kinematic-relation and 10 mm C8H8 energy-loss plots.",
+        description="Generate corrected d-p/d-C kinematic-relation and configurable C8H8 energy-loss plots.",
     )
     parser.add_argument("--beam-kinetic-mev", type=float, default=DEFAULT_BEAM_KINETIC_MEV)
     parser.add_argument("--thickness-um", type=float, default=DEFAULT_THICKNESS_UM)
@@ -122,9 +123,8 @@ def detector_windows() -> list[DetectorWindow]:
 
 
 def load_range_table(path: Path) -> RangeTable:
-    data = np.loadtxt(path, skiprows=3)
-    # [EN] Keep the notebook's first range column so the standalone script stays numerically comparable to the original study / [CN] 保留 notebook 使用的第一列射程数据，使独立脚本与原始研究的数值风格保持一致
-    return RangeTable(energy_mev_per_u=data[:, 0], range_um=data[:, RANGE_COLUMN_INDEX])
+    # [EN] Preserve the original notebook's Hubert column for this legacy plotting entry point; new thickness studies select the LISE++ model explicitly / [CN] 此旧绘图入口继续使用原 notebook 的 Hubert 列；新的厚度研究会显式选择 LISE++ 模型
+    return load_lise_range_table(path, LEGACY_RANGE_MODEL_KEY)
 
 
 def make_dp_context(beam_kinetic_mev: float) -> DpAnalyticContext:
@@ -225,15 +225,11 @@ def energy_loss_mev(
     thickness_um: float,
     table: RangeTable,
 ) -> np.ndarray:
-    kinetic_energy_per_u = np.asarray(kinetic_energy_per_u_mev, dtype=float)
-    total_kinetic_energy_mev = kinetic_energy_per_u * float(mass_number)
-    initial_range_um = np.interp(kinetic_energy_per_u, table.energy_mev_per_u, table.range_um)
-    residual_range_um = np.maximum(initial_range_um - thickness_um, 0.0)
-    residual_energy_per_u_mev = np.interp(residual_range_um, table.range_um, table.energy_mev_per_u)
-    return np.where(
-        initial_range_um > thickness_um,
-        total_kinetic_energy_mev - residual_energy_per_u_mev * float(mass_number),
-        total_kinetic_energy_mev,
+    return lise_energy_loss_mev(
+        mass_number,
+        kinetic_energy_per_u_mev,
+        thickness_um,
+        table,
     )
 
 
@@ -413,8 +409,9 @@ def main() -> int:
 
     theta_csv_path = output_dir / "theta_relations.csv"
     theta_png_path = output_dir / "theta_relations.png"
-    energy_csv_path = output_dir / "energy_loss_10mm_c8h8.csv"
-    energy_png_path = output_dir / "energy_loss_10mm_c8h8.png"
+    thickness_label = f"{args.thickness_um / 1000.0:g}mm"
+    energy_csv_path = output_dir / f"energy_loss_{thickness_label}_c8h8.csv"
+    energy_png_path = output_dir / f"energy_loss_{thickness_label}_c8h8.png"
 
     write_csv(theta_csv_path, theta_curves.columns)
     write_csv(energy_csv_path, energy_curves.columns)

@@ -164,6 +164,20 @@ def _report_path(target: dict[str, Any], target_path: Path, output_dir: Path, ba
     return (output_dir / f"{basename}.validation_report.json").resolve()
 
 
+def _channel_manifest_path(
+    target: dict[str, Any],
+    target_path: Path,
+    output_dir: Path,
+    basename: str,
+) -> Path:
+    artifacts = target.get("artifacts", {})
+    if isinstance(artifacts, dict):
+        manifest_json = artifacts.get("channel_manifest_json")
+        if isinstance(manifest_json, str) and manifest_json.strip():
+            return _resolve_path(target_path.parent, manifest_json)
+    return (output_dir / f"{basename}.channel_manifest.json").resolve()
+
+
 def _status_exit_code(status: str, strict: bool) -> int:
     if status == "pass":
         return 0
@@ -198,6 +212,7 @@ def main(argv: list[str] | None = None) -> int:
     basename = _basename(target)
     formats = _formats(target)
     report_path = _report_path(target, target_path, output_dir, basename)
+    channel_manifest_path = _channel_manifest_path(target, target_path, output_dir, basename)
     current_hash = compute_config_hash(str(config_path), overrides)
     previous_state = load_state(str(state_path))
     if should_skip(previous_state, current_hash) and not args.force_rebuild:
@@ -212,6 +227,13 @@ def main(argv: list[str] | None = None) -> int:
         placements = build_detector_placements(cfg)
         report = validate_assembly(cfg, placements, strict, output_path=report_path)
         artifacts["validation_report"] = str(report_path)
+        from .manifest import export_channel_manifest
+
+        artifacts["channel_manifest"] = export_channel_manifest(
+            cfg,
+            placements,
+            channel_manifest_path,
+        )
 
         validate_only = args.validate_only or str(build_cfg.get("mode", "build")).lower() == "validate_only"
         if not validate_only:
