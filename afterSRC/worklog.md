@@ -93,3 +93,13 @@ Entry Template:
 - State Snapshot: run_id=`20260726T170350Z-3938883`, run.status=`pass`, validation.status=`pass`, strict=`true`.
 - Artifacts: validation report refreshed; validate-only intentionally did not replace FCStd/STEP.
 - Next Action: execute the full final external-route regression and retain v1.33 as inactive until its assembly integration is complete.
+
+- Timestamp UTC: 2026-07-26T17:14:28Z
+- Timestamp Local: 2026-07-27 02:14:28 JST
+- Intent: Produce the final strict-pass FCStd/STEP artifacts for the preserved external afterSRC route.
+- Command(s): `IFSM_SKIP_FCSTD_ROUNDTRIP=1 ./afterSRC/run_afterSRC.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: committed external-reference fixture contract at git `7d9b9b8`; offscreen FCStd round-trip bypass retained per the documented FreeCAD GUI deadlock workaround.
+- Validation Result: pass, strict=true.
+- State Snapshot: run_id=`20260726T171124Z-3950602`, run.status=`pass`, validation.status=`pass`, git_dirty=`false`.
+- Artifacts: FCStd `828249` bytes, sha256=`ade4db98...`; STEP `4538083` bytes / 96142 entities, sha256=`00c5d617...`.
+- Next Action: preserve this route unchanged while advancing CompactOne; activate v1.33 only through a separate reviewed migration milestone.

@@ -157,3 +157,12 @@ Entry Template:
 - Validation Result: both deployment builds PASS non-strict geometry validation; afterSRC strict validate-only exits nonzero as designed. SAMURAI selected-square minimum cartridge clearance is now 10.0 mm and target-motion clearance is 26.0 mm.
 - Artifacts/State: generated FCStd/STEP/JSON for golden cassette, golden sector, serviced four-sector internal assembly, CompactOne-afterSRC, and CompactOne-infrontSamurai. afterSRC STEP has 64,115 entities and SAMURAI STEP has 63,073 entities; deployment FCStd files are 540 KiB and 466 KiB respectively.
 - Next Action: rerun afterSRC once after the strict rejection check to restore final non-strict pass state, then regress both preserved external routes.
+
+- Timestamp UTC: 2026-07-26T17:14:28Z
+- Timestamp Local: 2026-07-27 02:14:28 JST
+- Module/Scope: CompactOne final verification and deployment artifact refresh
+- Command(s): `micromamba run -n anaroot-env python -m pytest -q compactInVacuum/tests/test_platform_config.py compactInVacuum/tests/test_geometry.py`; `./compactInVacuum/run_freecad_tests.sh`; forced full builds through both CompactOne deployment wrappers
+- Key Parameters/Overrides: no overrides; afterSRC uses the selected 440 mm cylindrical screening candidate and SAMURAI uses the provisional 450 x 450 mm square candidate; shared cassette/cartridge/target/services platform unchanged.
+- Validation Result: 24 pure-Python tests pass; all cassette/sector/internal/services/failure/categorized FreeCAD groups pass; both deployment reports pass non-strict with 30 passes, 9 warnings, and 0 failures.
+- Artifacts/State: afterSRC state finished `2026-07-26T17:10:20Z`, FCStd `552058` bytes, STEP `3072037` bytes / 64115 entities; SAMURAI state finished `2026-07-26T17:10:34Z`, FCStd `476300` bytes, STEP `2961074` bytes / 63073 entities.
+- Next Action: close supplier drawings, site-envelope measurements, material/cleaning evidence, cartridge removal access, and pressure-vessel FEA gates before requesting strict engineering release.

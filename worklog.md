@@ -816,3 +816,12 @@ Entry Template:
 - Validation Result: initial afterSRC diagnostic errored on a removed v1.31 field; after isolation, external afterSRC PASS and external in-front-of-SAMURAI PASS under strict validation.
 - Artifacts/State: afterSRC run_id=`20260726T170350Z-3938883`; SAMURAI run_id=`20260726T170500Z-3940391`; both validation reports refreshed with status `pass`.
 - Next Action: run final full builds/test matrices, restore the two CompactOne non-strict release-candidate reports, and complete the engineering handoff.
+
+- Timestamp UTC: 2026-07-26T17:14:28Z
+- Timestamp Local: 2026-07-27 02:14:28 JST
+- Module/Scope: Final four-route verification and artifact refresh
+- Command(s): CompactOne 24-test pure suite and full FreeCAD suite; forced CompactOne afterSRC/SAMURAI builds; forced external afterSRC/SAMURAI builds with the documented offscreen round-trip guard; full external pytest suite
+- Key Parameters/Overrides: no geometry overrides; external routes use committed `external_reference_v1_31`; CompactOne routes share the v2 cassette/cartridge/services platform and retain profile-specific chamber candidates.
+- Validation Result: external afterSRC strict PASS; external in-front-of-SAMURAI strict PASS; CompactOne-afterSRC non-strict PASS (30/9/0); CompactOne-infrontSamurai non-strict PASS (30/9/0); CompactOne pure tests 24 passed; external pytest 61 passed / 45 skipped because the pytest venv Python ABI cannot import system FreeCAD.
+- Artifacts/State: all four complete FCStd/STEP pairs refreshed; both external state files record clean git `7d9b9b8`; both CompactOne state files record final non-strict pass. Stable artifact sizes/hashes are captured in the module worklogs.
+- Next Action: commit final worklog handoff, inspect repository status, and hand over unresolved supplier/site/FEA/Geant4 evidence gates.

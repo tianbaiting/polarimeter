@@ -682,3 +682,13 @@ Entry Template:
 - State Snapshot: run_id=`20260726T170500Z-3940391`, run.status=`pass`, validation.status=`pass`, strict=`true`.
 - Artifacts: validation report refreshed; validate-only intentionally did not replace FCStd/STEP.
 - Next Action: run final test suites/full generation and keep v1.33 activation blocked until its load path, placement, fasteners, interference, and strict gates are complete.
+
+- Timestamp UTC: 2026-07-26T17:14:28Z
+- Timestamp Local: 2026-07-27 02:14:28 JST
+- Intent: Produce the final strict-pass FCStd/STEP artifacts for the preserved external in-front-of-SAMURAI route.
+- Command(s): `IFSM_SKIP_FCSTD_ROUNDTRIP=1 ./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: committed external-reference fixture contract at git `7d9b9b8`; offscreen FCStd round-trip bypass retained per the documented FreeCAD GUI deadlock workaround.
+- Validation Result: pass, strict=true.
+- State Snapshot: run_id=`20260726T171250Z-3952380`, run.status=`pass`, validation.status=`pass`, git_dirty=`false`.
+- Artifacts: FCStd `821803` bytes, sha256=`87a178b4...`; STEP `4513067` bytes / 95634 entities, sha256=`39a0f61d...`.
+- Next Action: preserve the external route as a valid parallel technology route and keep the incomplete v1.33 clamp inactive until all assembly/strict gates exist.
