@@ -85,3 +85,12 @@ Entry Template:
 - Validation Result: pass.
 - Artifacts/State: FCStd, STEP, validation report, state, and schema-v2 channel/service manifest regenerated; FCStd contains 67 non-null objects (27 physical, 6 supplier-interface envelopes, 17 keep-outs, 17 interface envelopes); STEP contains 13,939 transfer entities.
 - Next Action: close supplier RFQs for the rotary unit, four-channel coax assemblies, 32-pin housekeeping feedthrough, and vacuum cable; replace the 20 mm beam stay-clear and 25 mm cable bend-radius assumptions with signed interface data.
+
+- Timestamp UTC: 2026-07-26T15:38:41Z
+- Timestamp Local: 2026-07-27 00:38:41 JST
+- Module/Scope: CompactOne Phase A architecture and requirement audit
+- Command(s): repository/commit/worklog inspection; source/config/report audit; `git switch -c compact-one-architecture-v1`; `git diff --check`
+- Key Parameters/Overrides: no CAD or configuration changes; external `afterSRC/` and `infrontofSamuraiMag/` routes classified as preserved parallel routes; current CompactInVacuum geometry audited at commit `679849a`.
+- Validation Result: architecture audit complete; confirmed strict flag is currently ignored, 0.30 mm radial-wall beam stubs pass, detector active/housing geometry is conflated, square-only validator contradicts cylindrical builder, and target/LOS/service/thermal abstractions are incomplete.
+- Artifacts/State: added CompactOne audit, CompactOne requirement baseline, module README, and corrected root project matrix; no runtime state or generated CAD changed.
+- Next Action: implement common configuration domains and two deployment profiles before replacing preferred geometry.

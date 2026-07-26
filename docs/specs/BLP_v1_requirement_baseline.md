@@ -1,13 +1,15 @@
 # BLP Mechanical Requirement Baseline v1
 
 ## 1. Purpose
-本文件是当前机械设计需求的唯一基线，用于跨终端一致协作与上下文连续性。
+本文件是 `afterSRC/` 与 `infrontofSamuraiMag/` 外置探测器机械路线的需求基线，用于跨终端一致协作与上下文连续性。
+
+CompactOne 真空内探测器平台由 `docs/specs/compact_one_requirement_baseline.md` 管理。本文件中已有 CompactInVacuum 条目仅作为迁移历史和外置路线接口关联说明；若两者冲突，以 CompactOne 专用基线为准。
 
 ## 2. Frozen Decisions
 - target chamber 不使用圆锥过渡。
-- 探测器全部位于 chamber 外部；chamber 不提供探测器信号穿腔接口。
-- 三板拓扑：H+V+V，且三块板均偏离束流中心轴。
-- 探测器系统：12 个位点（3 通道 × 上下左右）。
+- `infrontofSamuraiMag` 与 `afterSRC` 外置探测器家族：探测器全部位于 chamber 外部；chamber 不提供探测器信号穿腔接口。
+- 外置探测器家族三板拓扑：H+V+V，且三块板均偏离束流中心轴。
+- 两个设计家族均保持 12 个位点（3 通道 × 上下左右）；`CompactInVacuum` 将 12 个位点和对应 SiPM 安装在真空内，不使用外置 H+V+V 板。
 - 探测器夹具：两半抱箍，轴向分型；固定角度过渡块；全固定（无调节）；抱箍锁紧螺钉必须布置在探测体圆柱外侧两侧，不允许任何锁紧螺钉轴线穿过探测器圆柱包络或抱箍内孔中心带。
 - 探测器夹具与板连接采用“探测器 + 抱箍 + 过渡块 + 桥接件 + 底座”共享同一局部刚体坐标系后整体旋转落板；板上 4 孔矩形由该刚体总成方向带出确定打孔位置”，不使用杆件支撑。
 - 探测器夹具安装拓扑冻结为“底座 + 双立板 + 顶部桥接件 + 过渡块”，其中整套夹具相对探测体圆柱保持刚性参考关系，底座必须与夹具形成连续承载路径。
@@ -30,6 +32,10 @@
 - 驱动：电机在真空外，纯机械旋转馈通；机械止挡 + 计步校准；外部手轮应急；工作位使靶心落在束流中心，停靠位使整套 holder 偏心摆离 z 轴束流包络。
 - 真空接口采用模块化合同冻结：`infrontofSamuraiMag` 保持前后 JIS 可更换模块，默认上游 `VF100` / 下游 `VG80`，接口装配语义为 `[ chamber ] -> welded round pipe stub -> [ flange ] <-> [ mating flange / equipment ]`；当前默认上游 stub 长 `100 mm`、下游 stub 长 `20 mm`；`VG` 侧在对外接口面带 O-ring groove，`VF` 侧不带 groove。
 - `afterSRC` 真空接口合同冻结为：前后束流端面均为 `ICF114`，保留与 chamber 焊接的一段圆管 stub 用于和上下游束线接续；顶置靶旋转馈通安装面为 `ICF70` 直连法兰。
+- `CompactInVacuum` 当前接口合同冻结为：前后束流端面均为 `ICF114`；顶部靶旋转馈通安装面采用 `ICF70`。`ICF70` 安装接口尺寸为合同项，但馈通器供应商型号、允许载荷、输出扭矩、回差、寿命和烘烤温度仍为待 RFQ 关闭项；CAD 在关闭前只能使用明确标识的接口/外形包络。
+- `CompactInVacuum` 当前电气服务概念基线为“真空内无有源模拟电子学”：每个 SiPM 使用一条独立、可测试的 `50 Ω` 同轴通道，信号与偏置通过真空外 bias tee 共线；四个方位各使用一个四通道 `ICF70` 同轴馈通接口（每个方位 3 用 1 备，共 12 用 + 4 备），另设一个 `ICF70` 多芯 housekeeping 馈通接口，基线按 12 个两线温度传感器和不少于 32 个引脚预留。具体连接器、真空电缆、馈通料号和针脚分配在供应商图纸返回前不冻结。
+- `CompactInVacuum` 馈通与线缆应集中在顶面服务区。所有外置馈通器按可拆采购件处理，运输状态允许拆除并用同等级 ICF 盲板封闭；焊接短管、ICF 刀口、铜垫片、转接器、波纹管、馈通器和整机焊缝共同构成验收真空边界，不允许以弹性体密封降低接口等级。
+- `CompactInVacuum` 真空内布线必须有参数化路由包络、靠近探测器和馈通端的机械应力释放、独立保护接地/等电位连接以及束流和旋转靶 keep-out。供应商电缆未冻结前，概念 CAD 使用 `25 mm` 最小静态弯曲半径和 `8 mm` 路由包络直径；这些值是待电缆图纸验证的设计假设，不是采购规格。
 - chamber 端口按模块化合同冻结：`infrontofSamuraiMag` 保持主泵口 + 真空计/安全口 + 机械旋转馈通口 + 备用口（固定 4 口）；`afterSRC` 仅保留顶置 `rotary_feedthrough`，不再保留 `main_pump / gauge_safety / spare` 侧口；允许端口在所属壁面内做偏心布置以服务新 target rotary 机构。
 - 主泵口在右侧；真空计/安全口在对侧。
 - chamber 安装：放置于水平主板，改为 chamber 自支撑四柱 + `H` 板独立四柱，共 `8` 个支撑脚。
@@ -86,6 +92,7 @@ LOS scope definition (frozen contract):
 - LOS 无遮挡（v1 概念几何范围：plates / ports / stand；豁免：chamber_shell / end_modules / target_hardware / detector_packages）
 - 无实体干涉（至少覆盖 detector package 对主装配碰撞矩阵）
 - 真空边界完整
+- `CompactInVacuum` 额外要求：前后 `ICF114` 与顶部旋转 `ICF70` 接口合同命中；12 条已分配同轴通道和 4 条备用容量可追踪；housekeeping 引脚容量不少于 24；线缆路由包络不进入束流 stay-clear 或旋转靶工作/停靠包络；馈通端与探测器端均有应力释放；外部馈通器包络不得与相邻法兰或维护抽取包络重叠。
 
 ## 6. Required Artifacts
 - FCStd
@@ -96,6 +103,11 @@ LOS scope definition (frozen contract):
 - 本文件为 v1 基线，修改必须追加版本记录，不覆盖历史决策。
 
 ## 8. Version History
+- 2026-07-26 v1.32:
+  - 将原有“探测器全部位于 chamber 外部”的范围明确限定为 `infrontofSamuraiMag/afterSRC` 外置家族，并登记 `CompactInVacuum` 为 12 路真空内 SiPM 主要开发版本。
+  - 冻结 `CompactInVacuum` 前后 `ICF114` 和顶部靶旋转 `ICF70` 安装接口；供应商旋转馈通的载荷、扭矩、寿命及详细外形继续保持待 RFQ。
+  - 建立四方位、每方位一个四通道 `ICF70` 同轴馈通的概念架构，12 路使用、4 路备用；信号与 SiPM 偏置共用同轴并在真空外通过 bias tee 分离。
+  - 增加一个不少于 32 针的 `ICF70` housekeeping 馈通、12 个两线温度通道、独立接地、应力释放、`25 mm` 暂定最小弯曲半径和运输拆卸/盲板合同。
 - 2026-04-08 v1.31:
   - 探测器夹具承载侧从“下半抱箍与过渡块/立板/桥接件直接接触的分体路径”收紧为“下半抱箍 + 过渡块 + 双立板 + 顶桥”的单件承力体。
   - 板侧 4 孔底座板继续独立保留为螺接安装件，形成“单件承载上体 + 独立底座板”的加工/装配语义。

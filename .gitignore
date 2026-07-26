@@ -47,6 +47,7 @@ afterSRC/reports/archive/
 compactInVacuum/state.json
 compactInVacuum/state.lock
 compactInVacuum/*.validation_report.json
+compactInVacuum/*.channel_manifest.json
 compactInVacuum/reports/archive/
 
 # Local superpowers brainstorm scratch (server logs/pids, transient HTML).
@@ -64,3 +65,6 @@ code/build**/
 *.step
 *.FCStd
 *.FCBak
+
+*.dwl
+*.dwl2
