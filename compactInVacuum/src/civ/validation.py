@@ -200,6 +200,15 @@ def validate_assembly(
     strict: bool,
     output_path: str | Path | None = None,
 ) -> dict[str, object]:
+    if cfg.compact_one is not None:
+        from .validation_compact import validate_compact_one
+
+        return validate_compact_one(
+            cfg,
+            placements,
+            strict,
+            output_path=output_path,
+        )
     channel_by_name = {channel.name: channel for channel in cfg.channels}
     checks: list[dict[str, object]] = []
 

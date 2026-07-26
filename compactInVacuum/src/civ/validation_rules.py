@@ -1,0 +1,334 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from .config import CIVConfig
+
+
+@dataclass(frozen=True)
+class ConfigRule:
+    category: str
+    name: str
+    passed: bool
+    strict_only: bool
+    detail: str
+
+
+def _rule(
+    category: str,
+    name: str,
+    passed: bool,
+    detail: str,
+    strict_only: bool = False,
+) -> ConfigRule:
+    return ConfigRule(
+        category=category,
+        name=name,
+        passed=passed,
+        strict_only=strict_only,
+        detail=detail,
+    )
+
+
+def evaluate_config_rules(cfg: CIVConfig) -> tuple[ConfigRule, ...]:
+    if cfg.compact_one is None:
+        raise ValueError("CompactOne config rules require schema version 2")
+    platform = cfg.compact_one
+    detector = platform.detector
+    cassette = detector.cassette
+    deployment = platform.deployment
+    services = platform.services
+    thermal = platform.thermal
+    rules: list[ConfigRule] = []
+
+    rules.append(
+        _rule(
+            "physics",
+            "compact_platform_contract",
+            platform.schema_version == 2
+            and platform.architecture_mode == "compact_one"
+            and len(cfg.channels) * len(cfg.sectors) == 12,
+            (
+                f"schema={platform.schema_version}, mode={platform.architecture_mode}, "
+                f"placements={len(cfg.channels) * len(cfg.sectors)}"
+            ),
+        )
+    )
+    rules.append(
+        _rule(
+            "detector",
+            "active_detector_separate_from_cassette",
+            detector.active.thickness_mm < cassette.outer_envelope_mm[2]
+            and detector.active.diameter_mm < cassette.front_nose_envelope_mm[0]
+            and detector.sipm.package_envelope_mm != cassette.outer_envelope_mm,
+            (
+                f"active={detector.active.diameter_mm:.3f}x"
+                f"{detector.active.thickness_mm:.3f} mm, "
+                f"nose={cassette.front_nose_envelope_mm}, "
+                f"cassette={cassette.outer_envelope_mm}"
+            ),
+        )
+    )
+    rules.append(
+        _rule(
+            "detector",
+            "prototype_thickness_candidate",
+            detector.active.thickness_mm
+            in detector.active.thickness_candidates_mm
+            and detector.active.thickness_status
+            in {"provisional", "recommended"},
+            (
+                f"selected={detector.active.thickness_mm}, "
+                f"candidates={detector.active.thickness_candidates_mm}, "
+                f"status={detector.active.thickness_status}"
+            ),
+        )
+    )
+    rules.append(
+        _rule(
+            "detector",
+            "supplier_and_optics_decisions_resolved",
+            detector.sipm.status in {"frozen", "purchased-part-contract"}
+            and detector.optics.reflector_status != "placeholder"
+            and cassette.temperature_sensor_status != "placeholder",
+            (
+                f"sipm={detector.sipm.status}, "
+                f"reflector={detector.optics.reflector_status}, "
+                f"temperature_sensor={cassette.temperature_sensor_status}"
+            ),
+            strict_only=True,
+        )
+    )
+
+    signal_capacity = (
+        services.signal_feedthrough_count
+        * services.channels_per_signal_feedthrough
+    )
+    rules.append(
+        _rule(
+            "services",
+            "fast_signal_channel_capacity",
+            services.fast_signal_channels == 12
+            and signal_capacity >= services.fast_signal_channels,
+            (
+                f"required={services.fast_signal_channels}, "
+                f"capacity={signal_capacity}"
+            ),
+        )
+    )
+    required_housekeeping = (
+        services.temperature_channels
+        * services.wires_per_temperature_channel
+    )
+    rules.append(
+        _rule(
+            "services",
+            "housekeeping_capacity",
+            services.temperature_channels == 12
+            and services.housekeeping_pin_capacity >= required_housekeeping,
+            (
+                f"temperature_channels={services.temperature_channels}, "
+                f"required_pins={required_housekeeping}, "
+                f"capacity={services.housekeeping_pin_capacity}"
+            ),
+        )
+    )
+    rules.append(
+        _rule(
+            "services",
+            "passive_in_vacuum_electronics",
+            services.coax_impedance_ohm == 50.0
+            and services.bias_architecture
+            == "external_bias_tee_on_signal_coax"
+            and not services.active_electronics_in_vacuum,
+            (
+                f"impedance={services.coax_impedance_ohm}, "
+                f"bias={services.bias_architecture}, "
+                f"active_in_vacuum={services.active_electronics_in_vacuum}"
+            ),
+        )
+    )
+    rules.append(
+        _rule(
+            "services",
+            "protective_grounding_contract",
+            services.grounding.protective_bond_required
+            and services.grounding.coax_shield_bond_at_feedthrough
+            and not services.grounding.signal_shield_is_only_protective_earth,
+            (
+                f"reference={services.grounding.reference}, "
+                f"protective_bond={services.grounding.protective_bond_required}"
+            ),
+        )
+    )
+
+    aperture_mm = min(
+        deployment.front_interface.nominal_clear_bore_mm,
+        deployment.rear_interface.nominal_clear_bore_mm,
+        deployment.front_interface.transition_inner_diameter_mm,
+        deployment.rear_interface.transition_inner_diameter_mm,
+    )
+    rules.append(
+        _rule(
+            "beamline",
+            "certified_interface_aperture_compatible",
+            deployment.beam_stay_clear_diameter_mm <= aperture_mm,
+            (
+                f"stay_clear={deployment.beam_stay_clear_diameter_mm:.3f}, "
+                f"minimum_interface_bore={aperture_mm:.3f}"
+            ),
+        )
+    )
+    for side, interface in (
+        ("front", deployment.front_interface),
+        ("rear", deployment.rear_interface),
+    ):
+        radial_wall_mm = 0.5 * (
+            interface.transition_outer_diameter_mm
+            - interface.transition_inner_diameter_mm
+        )
+        rules.append(
+            _rule(
+                "mechanical",
+                f"{side}_transition_minimum_sanity_wall",
+                radial_wall_mm >= 1.0,
+                f"radial_wall_mm={radial_wall_mm:.3f}, screening_minimum_mm=1.000",
+                strict_only=True,
+            )
+        )
+        rules.append(
+            _rule(
+                "vacuum",
+                f"{side}_purchased_interface_contract_resolved",
+                interface.dimensions_status
+                in {"frozen", "purchased-part-contract"}
+                and interface.supplier != "unresolved"
+                and interface.part_number != "unresolved"
+                and interface.certified_drawing_reference != "unresolved",
+                (
+                    f"dimensions={interface.dimensions_status}, "
+                    f"supplier={interface.supplier}, part={interface.part_number}, "
+                    f"drawing={interface.certified_drawing_reference}"
+                ),
+                strict_only=True,
+            )
+        )
+    for role, interface in (
+        ("signal", services.signal_interface),
+        ("housekeeping", services.housekeeping_interface),
+    ):
+        rules.append(
+            _rule(
+                "vacuum",
+                f"{role}_feedthrough_contract_resolved",
+                interface.dimensions_status
+                in {"frozen", "purchased-part-contract"}
+                and interface.supplier != "unresolved"
+                and interface.part_number != "unresolved"
+                and interface.certified_drawing_reference != "unresolved",
+                (
+                    f"dimensions={interface.dimensions_status}, "
+                    f"supplier={interface.supplier}, part={interface.part_number}, "
+                    f"drawing={interface.certified_drawing_reference}"
+                ),
+                strict_only=True,
+            )
+        )
+
+    rules.append(
+        _rule(
+            "target",
+            "target_mechanism_complete",
+            platform.target.mode == "single_rotary"
+            and platform.target.rotary.work_angle_deg
+            != platform.target.rotary.park_angle_deg
+            and platform.target.rotary.hard_stop_angles_deg
+            == (
+                platform.target.rotary.work_angle_deg,
+                platform.target.rotary.park_angle_deg,
+            )
+            and platform.target.holder.removable,
+            (
+                f"mode={platform.target.mode}, "
+                f"work={platform.target.rotary.work_angle_deg}, "
+                f"park={platform.target.rotary.park_angle_deg}, "
+                f"stops={platform.target.rotary.hard_stop_angles_deg}"
+            ),
+        )
+    )
+    rules.append(
+        _rule(
+            "thermal",
+            "thermal_path_declared",
+            not thermal.floating_allowed
+            and len(thermal.path) >= 5
+            and len(thermal.required_connections) >= 5,
+            (
+                f"floating_allowed={thermal.floating_allowed}, "
+                f"path_nodes={len(thermal.path)}, "
+                f"required_connections={len(thermal.required_connections)}"
+            ),
+        )
+    )
+    unresolved_materials = tuple(
+        material.name
+        for material in platform.materials
+        if material.vacuum_compatibility_status == "placeholder"
+    )
+    rules.append(
+        _rule(
+            "vacuum",
+            "vacuum_material_compatibility_resolved",
+            not unresolved_materials,
+            f"placeholder_materials={unresolved_materials}",
+            strict_only=True,
+        )
+    )
+    rules.append(
+        _rule(
+            "mechanical",
+            "chamber_candidate_supported",
+            deployment.chamber.cross_section in {"square", "cylindrical"},
+            (
+                f"candidate={deployment.chamber.name}, "
+                f"cross_section={deployment.chamber.cross_section}"
+            ),
+        )
+    )
+    rules.append(
+        _rule(
+            "mechanical",
+            "fabrication_wall_requires_structural_gate",
+            deployment.chamber.wall_thickness_status == "frozen",
+            (
+                f"wall={deployment.chamber.wall_thickness_mm:.3f} mm, "
+                f"status={deployment.chamber.wall_thickness_status}; "
+                "fabrication requires pressure-vessel analysis"
+            ),
+            strict_only=True,
+        )
+    )
+    rules.append(
+        _rule(
+            "mechanical",
+            "deployment_envelopes_resolved",
+            deployment.available_envelope_status != "placeholder"
+            and deployment.external_service_envelope_status != "placeholder"
+            and deployment.support_alignment_status != "placeholder",
+            (
+                f"available={deployment.available_envelope_status}, "
+                f"external_service={deployment.external_service_envelope_status}, "
+                f"support_alignment={deployment.support_alignment_status}"
+            ),
+            strict_only=True,
+        )
+    )
+    return tuple(rules)
+
+
+def rule_status(rule: ConfigRule, strict: bool) -> str:
+    if rule.passed:
+        return "pass"
+    if rule.strict_only and not strict:
+        return "warning"
+    return "fail"

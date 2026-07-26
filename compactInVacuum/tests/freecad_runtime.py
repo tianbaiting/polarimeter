@@ -14,12 +14,19 @@ sys.path.insert(0, str(MODULE_ROOT / "src"))
 
 from civ.cassette import build_detector_cassette, cassette_compound
 from civ.cartridge import build_sector_cartridge, cartridge_compound
+from civ.chamber import build_chamber
 from civ.config import load_config
 from civ.detector import build_active_acceptance_cone
 from civ.internal import build_internal_assembly, internal_compound
 from civ.layout import build_detector_placements
 from civ.services import build_services
 from civ.thermal import evaluate_thermal_paths
+from civ.validation_compact import (
+    find_acceptance_obstructions,
+    find_pair_collisions,
+    find_target_motion_collisions,
+    validate_compact_one,
+)
 
 
 def _distance_mm(shape_a: Part.Shape, shape_b: Part.Shape) -> float:
@@ -434,6 +441,111 @@ def test_services_runtime() -> dict[str, object]:
     }
 
 
+def test_failure_regressions_runtime() -> dict[str, object]:
+    cfg = load_config(str(MODULE_ROOT / "config" / "afterSRC_compact.yaml"))
+    internal = build_internal_assembly(cfg)
+    placement = internal.placements[0]
+    blocker_start = placement.direction * 60.0
+    blocker = Part.makeCylinder(
+        5.0,
+        12.0,
+        blocker_start,
+        placement.direction,
+    )
+    blocked_los = find_acceptance_obstructions(
+        cfg,
+        [placement],
+        {"DeliberateBlockingSupport": blocker},
+    )
+    assert blocked_los
+    assert blocked_los[0]["obstructing_component"] == "DeliberateBlockingSupport"
+
+    collision_blocker = Part.makeSphere(
+        8.0,
+        internal.target.park.target_center,
+    )
+    target_collisions = find_target_motion_collisions(
+        internal.target,
+        {"DeliberateParkCollision": collision_blocker},
+    )
+    assert target_collisions
+    assert any(
+        item["obstructing_component"] == "DeliberateParkCollision"
+        for item in target_collisions
+    )
+
+    overlap_shape = Part.makeBox(10.0, 10.0, 10.0)
+    cassette_overlap = find_pair_collisions(
+        {
+            "CassetteA": overlap_shape,
+            "CassetteB": overlap_shape.copy(),
+        }
+    )
+    assert cassette_overlap
+    assert cassette_overlap[0]["intersection_volume_mm3"] > 0.0
+
+    aftersrc_chamber = build_chamber(cfg)
+    samurai_cfg = load_config(
+        str(MODULE_ROOT / "config" / "infrontSamurai_compact.yaml")
+    )
+    samurai_chamber = build_chamber(samurai_cfg)
+    assert aftersrc_chamber.candidate.cross_section == "cylindrical"
+    assert samurai_chamber.candidate.cross_section == "square"
+    assert aftersrc_chamber.vacuum_control_volume.isValid()
+    assert samurai_chamber.vacuum_control_volume.isValid()
+
+    return {
+        "status": "pass",
+        "blocked_los_failure_count": len(blocked_los),
+        "target_motion_failure_count": len(target_collisions),
+        "cassette_overlap_failure_count": len(cassette_overlap),
+        "cylindrical_chamber_accepted": True,
+        "square_chamber_accepted": True,
+    }
+
+
+def test_categorized_validation_runtime() -> dict[str, object]:
+    cfg = load_config(str(MODULE_ROOT / "config" / "afterSRC_compact.yaml"))
+    report = validate_compact_one(
+        cfg,
+        build_detector_placements(cfg),
+        strict=False,
+    )
+    assert report["status"] == "pass"
+    assert report["validation_mode"] == "prototype_non_strict"
+    assert report["summary"]["fail_count"] == 0
+    assert report["summary"]["warning_count"] > 0
+    assert set(report["categories"]) == {
+        "physics",
+        "beamline",
+        "detector",
+        "sector_cartridge",
+        "target",
+        "LOS",
+        "services",
+        "vacuum",
+        "mechanical",
+        "thermal",
+    }
+    metrics = report["engineering_metrics"]
+    assert len(metrics["detector_acceptance"]) == 12
+    assert len(metrics["coincidence_geometry"]) == 8
+    assert len(metrics["material_path_inventory"]) == 12
+    assert {
+        item["cross_section"] for item in metrics["chamber_candidates"]
+    } == {"square", "cylindrical"}
+
+    return {
+        "status": "pass",
+        "prototype_status": report["status"],
+        "warning_count": report["summary"]["warning_count"],
+        "category_count": len(report["categories"]),
+        "detector_acceptance_count": len(metrics["detector_acceptance"]),
+        "coincidence_geometry_count": len(metrics["coincidence_geometry"]),
+        "material_inventory_count": len(metrics["material_path_inventory"]),
+    }
+
+
 def main() -> int:
     print(
         json.dumps(
@@ -442,6 +554,8 @@ def main() -> int:
                 "sector": test_sector_runtime(),
                 "internal": test_internal_runtime(),
                 "services": test_services_runtime(),
+                "failure_regressions": test_failure_regressions_runtime(),
+                "categorized_validation": test_categorized_validation_runtime(),
             },
             indent=2,
         )

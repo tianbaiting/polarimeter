@@ -789,3 +789,12 @@ Entry Template:
 - Validation Result: pass; all service capacity, collision, acceptance, and thermal-continuity checks pass.
 - Artifacts/State: service/feedthrough/thermal modules and serviced-internal document builder added. An initially direct routing concept was rejected because it crossed cartridge and cassette material; the retained route follows a high peripheral lane.
 - Next Action: implement categorized strict CompactOne validation and material inventory.
+
+- Timestamp UTC: 2026-07-26T16:45:10Z
+- Timestamp Local: 2026-07-27 01:45:10 JST
+- Module/Scope: CompactOne categorized validation and chamber candidates
+- Command(s): CompactOne pure-Python/FreeCAD suites; afterSRC and SAMURAI direct profile validation; afterSRC stateful validate-only
+- Key Parameters/Overrides: strict evidence gates are separate from hard geometry gates; both square and cylindrical chambers remain supported screening candidates.
+- Validation Result: both deployment profiles PASS non-strict geometry validation; strict correctly FAILS nine unresolved engineering-release contracts. Deliberate 0.30 mm wall, LOS blocker, target sweep blocker, cassette overlap, low service capacity, and invalid aperture regressions all fail.
+- Artifacts/State: categorized validation JSON, material-path inventory, detector/acceptance/coincidence metrics, chamber volume/mass/clearance screening, and profile-specific state entry.
+- Next Action: export both full CompactOne deployment assemblies and regress the two external routes.

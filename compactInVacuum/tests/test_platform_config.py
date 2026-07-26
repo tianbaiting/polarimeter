@@ -10,6 +10,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).parent.parent / "src"))
 
 from civ.config import config_dependency_paths, load_config
 from civ.stateflow import compute_config_hash
+from civ.validation_rules import evaluate_config_rules, rule_status
 
 
 CONFIG_DIR = pathlib.Path(__file__).parent.parent / "config"
@@ -92,3 +93,55 @@ def test_purchased_interface_and_project_transition_are_separate() -> None:
     assert interface.transition_status == "provisional"
     assert interface.transition_outer_diameter_mm > interface.transition_inner_diameter_mm
     assert (interface.transition_outer_diameter_mm - interface.transition_inner_diameter_mm) / 2.0 > 0.30
+
+
+def _rule_by_name(cfg, name: str):
+    return next(rule for rule in evaluate_config_rules(cfg) if rule.name == name)
+
+
+def test_point_three_mm_structural_tube_wall_is_strict_failure() -> None:
+    cfg = load_config(
+        str(CONFIG_DIR / "afterSRC_compact.yaml"),
+        overrides={
+            "deployment.front_interface.transition_outer_diameter_mm": 63.6,
+            "deployment.front_interface.transition_inner_diameter_mm": 63.0,
+        },
+    )
+    rule = _rule_by_name(cfg, "front_transition_minimum_sanity_wall")
+
+    assert not rule.passed
+    assert rule_status(rule, strict=False) == "warning"
+    assert rule_status(rule, strict=True) == "fail"
+
+
+def test_insufficient_signal_feedthrough_capacity_is_rejected() -> None:
+    cfg = load_config(
+        str(CONFIG_DIR / "afterSRC_compact.yaml"),
+        overrides={"services.signal_feedthrough_count": 2},
+    )
+    rule = _rule_by_name(cfg, "fast_signal_channel_capacity")
+
+    assert not rule.passed
+    assert rule_status(rule, strict=False) == "fail"
+    assert rule_status(rule, strict=True) == "fail"
+
+
+def test_invalid_beam_aperture_is_rejected() -> None:
+    cfg = load_config(
+        str(CONFIG_DIR / "afterSRC_compact.yaml"),
+        overrides={"deployment.front_interface.nominal_clear_bore_mm": 15.0},
+    )
+    rule = _rule_by_name(cfg, "certified_interface_aperture_compatible")
+
+    assert not rule.passed
+    assert rule_status(rule, strict=False) == "fail"
+    assert rule_status(rule, strict=True) == "fail"
+
+
+def test_strict_mode_changes_placeholder_outcomes() -> None:
+    cfg = load_config(str(CONFIG_DIR / "afterSRC_compact.yaml"))
+    rule = _rule_by_name(cfg, "front_purchased_interface_contract_resolved")
+
+    assert not rule.passed
+    assert rule_status(rule, strict=False) == "warning"
+    assert rule_status(rule, strict=True) == "fail"

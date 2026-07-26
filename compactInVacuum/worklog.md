@@ -139,3 +139,12 @@ Entry Template:
 - Validation Result: pass; signal capacity 16 for 12 required, housekeeping capacity 32 for 24 required, zero route-to-physical collision, zero cable/housekeeping obstruction of any active acceptance loft, and all 12 declared thermal paths connected with maximum numerical contact gap 3.18e-14 mm.
 - Artifacts/State: purchased feedthrough envelopes are separate from project weld collars; cable centerlines, connector keep-outs, clear bores, external manifold envelope, grounding datum, and thermal path report are generated. Direct point-to-port routing was rejected after it intersected cartridges; the accepted candidate uses a peripheral high service lane.
 - Next Action: replace legacy validation with categorized CompactOne gates, material-path inventory, strict/non-strict semantics, and intentional failure regressions.
+
+- Timestamp UTC: 2026-07-26T16:45:10Z
+- Timestamp Local: 2026-07-27 01:45:10 JST
+- Module/Scope: CompactOne categorized validation, chamber screening, and afterSRC profile validate-only
+- Command(s): `./compactInVacuum/run_freecad_tests.sh`; 24-test pure-Python suite; direct strict/non-strict validation for both profiles; `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --validate-only --force-rebuild`
+- Key Parameters/Overrides: full target-plane-to-active-disc acceptance lofts; material-path probes; cylindrical and square chamber candidates; strict-only supplier/fabrication/access evidence gates; no geometry overrides.
+- Validation Result: afterSRC non-strict PASS with 29 passes, 9 warnings, 0 failures; in-front-of-SAMURAI non-strict PASS with the same counts. afterSRC strict engineering mode intentionally FAILS 9 unresolved evidence gates: optics/sensor freeze, four purchased-interface contracts, vacuum material evidence, pressure-vessel wall gate, site envelopes, and cartridge shell-access closure.
+- Artifacts/State: categorized JSON contains physics, beamline, detector, sector cartridge, target, LOS, services, vacuum, mechanical, and thermal results; 12 active-acceptance metrics, 8 coincidence geometry entries, 12 material inventories, and square/cylindrical mass/clearance screening. Intentional blocked-LOS, target-collision, cassette-overlap, 0.30 mm wall, feedthrough-capacity, and aperture failures are detected. `compactOne_afterSRC.state.json` records validate-only pass.
+- Next Action: generate and inspect complete FCStd/STEP artifacts for both deployment profiles, then rerun preserved external-route regressions.
