@@ -1,7 +1,7 @@
 schema_version: 1
 module: compactOneInfrontSamurai
 intent:
-  description: CompactOne in-vacuum engineering prototype in front of SAMURAI; external infrontofSamuraiMag remains a separate route.
+  description: CompactInVacuum-preSAMURAI baseline in-vacuum engineering prototype before the SAMURAI terminal; chamber and beamline interfaces remain site-specific and unresolved until supported by approved evidence.
 build:
   config: config/infrontSamurai_compact.yaml
   overrides: []

@@ -1,17 +1,55 @@
-# CompactOne Requirement Baseline v1
+# CompactInVacuum Requirement Baseline v1
 
 ## 1. Authority and scope
 
-This document is the requirement authority for the CompactOne in-vacuum polarimeter platform. It does not supersede the external-detector mechanical baseline for `afterSRC/` or `infrontofSamuraiMag/`.
+This document is the requirement authority for the common CompactInVacuum detector platform and its two baseline instruments:
 
-The project matrix is:
+1. `CompactInVacuum-afterSRC`, installed downstream of SRC.
+2. `CompactInVacuum-preSAMURAI`, installed before the SAMURAI terminal.
 
-| Detector technology | afterSRC | in front of SAMURAI |
-|---|---|---|
-| External detector route | preserved in `afterSRC/` | preserved in `infrontofSamuraiMag/` |
-| CompactOne in-vacuum route | `CompactOne-afterSRC` | `CompactOne-infrontSamurai` |
+Both instruments place the scintillators, SiPM packages, local passive services, and detector supports inside vacuum. They share detector technology and engineering philosophy, but their chamber geometry, beamline interfaces, target integration, supports, and maintenance envelopes are site-specific.
 
-CompactOne is a shared detector and internal-mechanism platform with two deployment profiles. It is a parallel alternative, not a replacement for either external route.
+The previously developed afterSRC external-detector configuration in `afterSRC/` is retained as a legacy/fallback/reference route. It is not one of the two baseline instruments. The external-route mechanical baseline remains in `docs/specs/BLP_v1_requirement_baseline.md`; values from that baseline shall not become CompactInVacuum site requirements without independent evidence.
+
+| Item | afterSRC compact | pre-SAMURAI compact | legacy afterSRC external |
+|---|---|---|---|
+| Baseline status | baseline | baseline | legacy/fallback |
+| Detector location | in vacuum | in vacuum | outside vacuum |
+| Detector platform | common CompactInVacuum platform | common CompactInVacuum platform | established external design |
+| Chamber geometry | site-specific / TBD | site-specific / TBD | existing reference geometry |
+| Beam interfaces | verify independently | verify independently | existing legacy assumptions |
+
+```text
+SRC
+ |
+ +-- CompactInVacuum-afterSRC
+ |
+ |   beam transport
+ |
+ +-- CompactInVacuum-preSAMURAI
+ |
+SAMURAI
+
+Both compact instruments:
+  common detector platform
+  site-specific mechanics and interfaces
+
+Legacy:
+  afterSRC external-detector design
+  reference/fallback only
+```
+
+Repository compatibility names such as `CompactOne-afterSRC`, `CompactOne-infrontSamurai`, and the directory `compactInVacuum/` may remain until a controlled API/path migration is justified.
+
+### 1.1 Requirement levels
+
+Requirements shall be recorded at exactly one of these levels:
+
+- **COMMON PLATFORM REQUIREMENTS:** scintillator and SiPM technology, optical package, cassette, sector cartridge, detector services, electronics, calibration, thermal-path semantics, and common physics/response studies.
+- **AFTER-SRC SITE REQUIREMENTS:** actual available envelope, usable beam aperture, neighboring equipment, flange interfaces, support/alignment, target integration, and installation/maintenance access downstream of SRC.
+- **PRE-SAMURAI SITE REQUIREMENTS:** the same site categories, independently established for the location before the SAMURAI terminal.
+
+Unknown site quantities shall be `TBD` and shall name the drawing, survey, measurement, or beamline-owner decision needed to close them.
 
 ## 2. Decision-state vocabulary
 
@@ -35,7 +73,7 @@ Unknown values shall remain unresolved. Exact-looking dimensions shall not be in
 - One separately testable nominal 50-ohm coax signal path per detector; SiPM bias shares that coax through an external bias tee.
 - Temperature/housekeeping monitoring and spare service capacity are required.
 - Development hierarchy: single detector -> golden cassette -> golden three-channel sector -> four-sector polarimeter.
-- External afterSRC and in-front-of-SAMURAI routes remain usable and independently validated.
+- Legacy external-route code and evidence remain preserved and independently testable, without being promoted into the two-instrument baseline.
 
 ## 4. Recommended prototype detector platform
 
@@ -156,23 +194,38 @@ Purchased interfaces shall support standard, supplier, part number, certified dr
 
 The current 63.6 mm OD / 63.0 mm ID tube has a 0.30 mm radial wall. It is a non-fabricable placeholder and shall fail strict engineering validation.
 
+Interface statements shall carry one evidence class:
+
+- `A — EXTERNAL CONSTRAINT`: supported by an approved beamline/interface requirement, signed drawing, or responsible-owner decision.
+- `B — LEGACY INHERITANCE`: inherited from an external-detector or earlier design and not independently established for a compact instrument.
+- `C — ENGINEERING ASSUMPTION`: used for screening or integration studies, but not an external requirement.
+- `D — UNRESOLVED / TBD`: no justified selection exists yet.
+
+Class `B` or `C` shall never be described as class `A`. A purchased-part contract may only become site-authoritative after the mating interface and certified drawing are both resolved.
+
 ## 12. Deployment profiles
 
-### 12.1 CompactOne-afterSRC
+### 12.1 CompactInVacuum-afterSRC
 
 - Location: after SRC.
-- External route remains `afterSRC/`.
-- Beamline mating interfaces: front ICF114 and rear ICF114 are `FROZEN` project contracts.
-- Target rotary mounting interface: ICF70 is `FROZEN`; the purchased rotary model and signed outline drawing remain unresolved.
-- Actual clear bore, transition/stub geometry, bellows/adapters, available envelope, pump/gauge requirements, external service envelope, and support/alignment envelope require certified site/supplier evidence.
+- Baseline status: current baseline compact instrument.
+- Detectors: inside vacuum, using the common CompactInVacuum platform.
+- Beamline mating interfaces: `D — UNRESOLVED / TBD`. Front/rear ICF114 values in the old afterSRC design are `B — LEGACY INHERITANCE`, not independently supported CompactInVacuum requirements.
+- Target rotary mounting interface: current ICF70 envelope is `C — ENGINEERING ASSUMPTION`; the actual site constraint, purchased rotary model, load case, and signed outline drawing are unresolved.
+- Chamber dimensions, detector radii, port layout, actual clear bore, transition/stub geometry, bellows/adapters, available envelope, pump/gauge requirements, external service envelope, support/alignment, and maintenance access are site-specific and remain TBD unless separately supported.
+- Closure evidence: approved afterSRC beamline interface drawing, local XYZ survey/envelope, neighboring-equipment model, beam-stay-clear definition, vacuum-services ownership, support datum definition, and installation/maintenance review.
+- Legacy route: `afterSRC/` remains available only as a legacy/fallback/reference alternative.
 
-### 12.2 CompactOne-infrontSamurai
+### 12.2 CompactInVacuum-preSAMURAI
 
-- Location: immediately in front of SAMURAI.
-- External route remains `infrontofSamuraiMag/`.
-- Existing site evidence identifies the gate-valve boundary as VF100 and the current external profile as upstream VF100/downstream VG80.
+- Location: upstream of the SAMURAI terminal.
+- Baseline status: current baseline compact instrument.
+- Detectors: inside vacuum, using the common CompactInVacuum platform.
+- Beamline mating interfaces: `D — UNRESOLVED / TBD`.
+- Existing external-route evidence identifying a VF100 gate-valve boundary and an upstream VF100/downstream VG80 profile is `B — LEGACY INHERITANCE` until the compact instrument's actual mating chain and ownership are confirmed.
 - CompactOne shall not silently inherit a complete chamber from the external route.
 - Exact mating-chain ownership, usable bore, available XYZ envelope, straight length, pump/gauge requirements, target-feedthrough interface, support/alignment envelope, and service-removal envelope remain unresolved until beamline confirmation.
+- Closure evidence: approved pre-SAMURAI interface drawing, local survey/envelope, neighboring-equipment model, beam-stay-clear definition, vacuum-services ownership, support datum definition, and installation/maintenance review.
 
 Deployment profiles shall contain only site-specific constraints. Detector, cassette, cartridge, cabling philosophy, electronics interface, and calibration semantics shall remain common where feasible.
 
@@ -261,4 +314,3 @@ Cross-machine comparison shall use stable quantities: solid counts, bounding box
 ## 18. Change history
 
 - 2026-07-27 v1.0: established CompactOne as a shared in-vacuum platform with afterSRC and in-front-of-SAMURAI deployment profiles while preserving both external routes.
-

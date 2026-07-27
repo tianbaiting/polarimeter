@@ -150,6 +150,8 @@ target:
   rotary:
     status: provisional
     mount_standard: ICF70
+    interface_evidence_class: C_engineering_assumption
+    site_requirement_status: unresolved_per_deployment
     pivot_mm: [70.0, 0.0, 0.0]
     axis: [0.0, 1.0, 0.0]
     shaft_diameter_mm: 18.0
@@ -177,6 +179,8 @@ services:
   signal_interface:
     standard: ICF70
     status: purchased-part-contract
+    interface_evidence_class: C_engineering_assumption
+    site_requirement_status: unresolved_per_deployment
     supplier: unresolved
     part_number: unresolved
     certified_drawing_reference: unresolved
@@ -193,6 +197,8 @@ services:
   housekeeping_interface:
     standard: ICF70
     status: purchased-part-contract
+    interface_evidence_class: C_engineering_assumption
+    site_requirement_status: unresolved_per_deployment
     supplier: unresolved
     part_number: unresolved
     certified_drawing_reference: unresolved

@@ -1,7 +1,7 @@
 schema_version: 1
 module: compactInVacuum
 intent:
-  description: 'Compact in-vacuum tensor polarimeter: 12 replaceable SiPM detector placeholders inside a square-section vacuum chamber, active-center radii 140/190/205 mm at 20.9/11.2/53.4 deg, explicit opposite-azimuth D-P elastic coincidence pairing, provisional 380 MeV deuteron plus CH2 physics inputs, front/rear ICF114 beam interfaces, a top ICF70 rotary-target feedthrough interface envelope, four sector-grouped ICF70 four-channel 50-ohm coax service interfaces providing 12 used plus 4 spare channels, one ICF70 32-pin housekeeping interface, and parameterized in-vacuum cable/strain-relief keep-outs; exact purchased feedthrough and cable part numbers remain unfrozen.'
+  description: 'Legacy numerical CompactInVacuum scaffold retained for reproducible detector-physics and CAD comparison. Its ICF114 beam and ICF70 rotary/service envelopes are engineering reference assumptions, not site requirements for CompactInVacuum-afterSRC or CompactInVacuum-preSAMURAI.'
 build:
   config: config/default_compactInVacuum.yaml
   overrides: []

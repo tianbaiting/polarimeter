@@ -1,4 +1,4 @@
-# CompactOne Architecture Audit
+# CompactInVacuum Architecture Audit
 
 ## Audit scope
 
@@ -6,14 +6,14 @@ Audit date: 2026-07-27
 Repository: `tianbaiting/polarimeter`  
 Audit baseline: commit `679849a200591a4bcce76db62c6572ba656525e8`
 
-The repository contains two independent axes that must not be collapsed:
+The earlier repository narrative incorrectly presented an afterSRC external-detector instrument and one CompactInVacuum instrument as the two planned polarimeters. The authoritative project hierarchy is instead:
 
-| Detector technology | afterSRC | in front of SAMURAI |
-|---|---|---|
-| External detectors | `afterSRC/` | `infrontofSamuraiMag/` |
-| CompactOne in-vacuum detectors | required deployment profile | required deployment profile |
+- `CompactInVacuum-afterSRC`: baseline, downstream of SRC, detectors inside vacuum.
+- `CompactInVacuum-preSAMURAI`: baseline, before the SAMURAI terminal, detectors inside vacuum.
+- Common CompactInVacuum detector platform: shared detector technology, cassette, services, electronics, calibration, and physics/response studies.
+- `afterSRC/`: legacy/fallback/reference external-detector route, retained and runnable but not a baseline instrument.
 
-`afterSRC/` and `infrontofSamuraiMag/` are mature external-detector routes. They are not migration targets for CompactOne and must remain independently runnable.
+The two compact deployments shall not be assumed to share chamber geometry or beamline interfaces. Existing external-route dimensions and interfaces are evidence to audit, not automatic compact-platform requirements. `infrontofSamuraiMag/` remains preserved external-route engineering work; its program status beyond reference use is not defined by this baseline.
 
 ## Current architecture assessment
 
@@ -26,8 +26,8 @@ The repository contains two independent axes that must not be collapsed:
 - Existing square and cylindrical shell primitives.
 - Existing separation of physical objects, purchased-component envelopes, interface envelopes, and keep-outs in the FreeCAD document.
 - The baseline electrical concept: twelve independent 50-ohm coax paths, bias on signal coax through external bias tees, active electronics outside vacuum, temperature monitoring, spare capacity, grounding, and strain relief.
-- The ICF70 rotary-interface envelope and WORK/PARK target-position semantics as a starting point.
-- The external-route modules and their independent profiles, tests, worklogs, and artifacts.
+- The ICF70 rotary-interface envelope as a provisional integration study and the WORK/PARK target-position semantics as a starting point; the flange standard is not a site constraint without independent evidence.
+- The external-route modules and their independent profiles, tests, worklogs, and artifacts as preserved reference implementations.
 - The report's staged-development concept: single detector, golden cassette, golden sector, then four-sector instrument.
 
 ### REFACTOR
@@ -87,6 +87,7 @@ The repository contains two independent axes that must not be collapsed:
 | LOS is incomplete | A constant-radius cylinder approximates active acceptance and aggregates all intersections | Build target-region-to-active-disc acceptance cones with per-component failures |
 | Cable bend radius is metadata only | Routes are sharp segmented polylines | Model sweep envelopes or explicitly report unresolved routing |
 | ICF precision is not evidence-backed | Project dimensions are drawn as if exact | Add purchased-part contract metadata and unresolved status |
+| Compact afterSRC inherits legacy interfaces | ICF114 beam ports and ICF70 rotary mounting were presented as fixed without independent compact-site evidence | Classify them as inherited/provisional assumptions and keep the compact site interfaces TBD |
 | Report and CAD disagree | Report recommends fast plastic, 5–6 mm, EQR15, and 2–5%; CAD still uses a generic placeholder | Encode recommendations explicitly without promoting them to frozen values |
 | SAMURAI CompactOne interface is unknown | External profile records VF100/VG80, but CompactOne has no site profile | Reuse only confirmed interface evidence; keep envelope and certified bore unresolved |
 
@@ -94,3 +95,18 @@ The repository contains two independent axes that must not be collapsed:
 
 The first CompactOne implementation will preserve the existing module name and stateful entry point for compatibility. New common subsystem abstractions will replace the preferred assembly path. The old detector/support geometry will remain selectable as `legacy_scaffold` until migration tests and generated artifacts prove the new path.
 
+## Project-narrative audit inventory
+
+The architecture correction applies to these current authorities and executable metadata:
+
+| Location | Previous issue | Corrected role |
+|---|---|---|
+| `readme.md` | Presented a symmetric two-site/two-technology matrix | Leads with the two baseline CompactInVacuum instruments and marks afterSRC external as legacy/fallback |
+| `compactInVacuum/README.md` and `MIGRATION.md` | Described CompactOne as a parallel alternative to external routes | Defines one common platform, two baseline deployments, and compatibility names |
+| `docs/specs/compact_one_requirement_baseline.md` | Treated external and compact routes as an equal project matrix; froze compact afterSRC ICF114/ICF70 | Defines the two-instrument authority, requirement levels, and A/B/C/D interface evidence classes |
+| `docs/specs/BLP_v1_requirement_baseline.md` | Contained current-looking CompactInVacuum interface freezes inside the external-route baseline | Limits those values to legacy/history or class C screening assumptions |
+| CompactInVacuum deployment YAML/targets | Used compatibility names and component values without distinguishing site authority | Adds baseline instrument names and explicit legacy/assumption/TBD evidence metadata |
+| English and Chinese LaTeX report | Named external afterSRC plus one CompactInVacuum as the two polarimeters | Describes CompactInVacuum-afterSRC and CompactInVacuum-preSAMURAI on the first page and throughout |
+| Report assumptions/generator/verification output | Verified frozen ICF contracts as if they were project truth | Verifies the two baseline instruments, legacy status, and unresolved site interfaces |
+
+Historical worklogs are append-only execution records and are not rewritten. The existing DOCX and `scripts/build_docx_report.py` are frozen, non-authoritative historical outputs because the project has explicitly moved to bilingual LaTeX; neither participates in `make verify`.

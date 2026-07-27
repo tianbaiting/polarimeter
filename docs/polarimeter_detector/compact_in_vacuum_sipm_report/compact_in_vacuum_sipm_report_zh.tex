@@ -41,7 +41,7 @@
   citecolor=blue!45!black,
   urlcolor=blue!55!black,
   pdfauthor={CompactInVacuum Polarimeter Project},
-  pdftitle={CompactInVacuum SiPM 探测器、真空靶室与中国采购工程报告}
+  pdftitle={afterSRC 与 pre-SAMURAI 极化仪的 CompactInVacuum 公共探测器平台}
 ]{hyperref}
 \usepackage{bookmark}
 
@@ -87,7 +87,7 @@
 
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\sffamily\scriptsize COMPACTINVACUUM 极化仪}
+\fancyhead[L]{\sffamily\scriptsize COMPACTINVACUUM 公共平台}
 \fancyhead[R]{\sffamily\scriptsize 初步工程报告}
 \fancyfoot[L]{\sffamily\scriptsize 不得直接用于加工或采购订单}
 \fancyfoot[R]{\sffamily\scriptsize 第 \thepage 页}
@@ -164,19 +164,25 @@
   \vspace*{0.62in}
 
   {\sffamily\bfseries\fontsize{25}{29}\selectfont\color{ReportText}
-  CompactInVacuum 极化仪\par}
+  CompactInVacuum 公共探测器平台\par}
   \vspace{0.25em}
   {\sffamily\fontsize{14}{18}\selectfont\color{ReportMuted}
-  SiPM 探测器、真空靶室与中国采购工程报告\par}
+  afterSRC 与 pre-SAMURAI 真空内极化仪工程报告\par}
+  \vspace{0.12em}
+  {\sffamily\fontsize{11}{14}\selectfont\color{ReportMuted}
+  SiPM 探测器、真空集成与中国采购调研\par}
 
   \vspace{0.55in}
   \renewcommand{\arraystretch}{1.35}
   \begin{tabularx}{\textwidth}{>{\sffamily\bfseries}L{0.23\textwidth}Y}
     \toprule
-    状态 & 初步设计评审 / 采购规划 \\
-    发布日期 & 2026 年 7 月 26 日 \\
+    状态 & 已更正项目架构的初步工程研究 \\
+    发布日期 & 2026 年 7 月 27 日 \\
     CAD 基准 & Polarimeter commit \texttt{\ReportGitCommit} \\
-    配置文件 & \path{compactInVacuum/config/default_compactInVacuum.yaml} \\
+    架构权威文件 & \path{docs/specs/compact_one_requirement_baseline.md} \\
+    部署配置 & \path{compactInVacuum/config/afterSRC_compact.yaml}；
+      \path{compactInVacuum/config/infrontSamurai_compact.yaml} \\
+    数值参考配置 & \path{compactInVacuum/config/default_compactInVacuum.yaml} \\
     源数据验证 & \SourceValidationStatus \\
     优先采购区域 & 中华人民共和国境内 \\
     主要集成候选方 & 上海谱幂精密仪器科技有限公司（需完成供应商资格验证） \\
@@ -184,9 +190,11 @@
   \end{tabularx}
 
   \vfill
-  \begin{warningbox}{初步报告 -- 不得直接用于加工或采购订单}
-    本报告把当前物理分析和 CAD 状态整理为一个建议工程基线。所有开放尺寸、
-    真空要求、接口图纸、材料证书和供应商能力必须在规定的开发门审中关闭。
+  \begin{warningbox}{项目基线 -- 初步报告，不得直接用于加工或采购订单}
+    当前基线是两台 CompactInVacuum 极化仪：一台位于 SRC 下游，一台位于
+    SAMURAI 终端之前。两台仪器均把闪烁体/SiPM 探测器放在真空内，并共享公共
+    探测器平台；靶室和束线接口必须按站点独立定义。旧 afterSRC 外置探测器概念
+    仅作为 legacy/fallback/reference 路线保留。
   \end{warningbox}
 
   \vspace{0.22in}
@@ -202,6 +210,15 @@
 \pagenumbering{arabic}
 
 \section{执行结论}
+
+\begin{decisionbox}{权威的两仪器项目架构}
+  极化氘实验当前规划两台真空内紧凑型极化仪：
+  \textbf{CompactInVacuum-afterSRC} 安装在 SRC 下游，
+  \textbf{CompactInVacuum-preSAMURAI} 安装在 SAMURAI 终端之前。
+  两台仪器共享 CompactInVacuum 探测器平台，但靶室几何、束线接口、靶机构集成、
+  支撑和维护空间均为站点特定。此前研究的 afterSRC 外置探测器构型继续作为
+  legacy/reference 备选保留，但不是当前基线。
+\end{decisionbox}
 
 \begin{decisionbox}{首轮原型推荐基线}
   \begin{itemize}
@@ -243,69 +260,117 @@ EQR15 在该点的计算非线性为 \EqrCarbonNonlinearity\%。
 这些资料只构成候选证据，不等同于已经完成资格认证。采购前必须要求正式 RFQ、
 可制造性评审、焊接与检验计划、尺寸报告、清洗记录和氦检漏报告。
 
-\begin{warningbox}{已固定的 ICF114 合同与当前 CAD 通光孔冲突}
-  项目规划两台极化仪。afterSRC 外置探测器版本的前、后束流接口固定为 ICF114，
-  顶部旋转馈通接口固定为 ICF70。CompactInVacuum 的前、后束流接口也固定为
-  ICF114，旋转馈通安装接口现也固定为 ICF70；具体旋转馈通器尚未选型。
-  允许使用转接器和波纹管，但必须保持规定的全金属密封真空等级。
+\begin{warningbox}{参考 CAD 孔径冲突；紧凑型站点接口尚未固定}
+  旧 afterSRC 外置探测器设计采用前后 ICF114 和顶部 ICF70，这属于 B 类
+  legacy 继承。当前 CompactInVacuum 参考 CAD 也含 ICF114/ICF70 外形假设，
+  但它们只是 C 类工程假设，不能作为 CompactInVacuum-afterSRC 的独立 A 类
+  束线证据；CompactInVacuum-preSAMURAI 接口同样未关闭。
 
-  当前 CAD 使用 \SI{63.6}{\milli\meter} 管外径和
+  旧数值参考 CAD 使用 \SI{63.6}{\milli\meter} 管外径和
   \SI{63.0}{\milli\meter} 内径，径向壁厚仅为
   \SI{\PipeRadialWallMm}{\milli\meter}。参考 ICF114 半接管净孔约为
   \SI{60.2}{\milli\meter}，当前 \SI{63}{\milli\meter} stay-clear 超出约
   \SI{\IcfOneOneFourDeficitMm}{\milli\meter}\cite{cosmotec_icf}。
-  ICF114 不是开放选项。应依据已认证的 ICF114 法兰、接管、转接器和波纹管图纸
-  冻结可用孔径，再修改内部管道和 stay-clear 几何。
+  这仍是参考几何中的有效警告，但不能据此为两台 compact 仪器选择 ICF114。
+  每个站点应先提供已批准的配合接口图和可用孔径，再依据选定采购件修正 CAD。
 \end{warningbox}
 
 \section{范围、基准配置与决策状态}
 
-本项目包含两台不同用途的极化仪：
-\begin{itemize}
-  \item \textbf{afterSRC 极化仪：}探测器位于专用靶室外，沿用已经验证的
-    H+V+V 机械布局。前端 ICF114、后端 ICF114、顶部 ICF70 旋转馈通，
-    不增加侧面真空口。
-  \item \textbf{CompactInVacuum 极化仪：}作为后续主要开发版本，
-    探测器在真空内工作，前后端束流接口固定为 ICF114，顶部旋转接口固定为
-    ICF70。当前概念基线另含四个按方位分组的 ICF70 四通道同轴接口，
-    以及一个 ICF70 32 针 housekeeping 接口。
-\end{itemize}
+本报告发展两台基线仪器共享的 CompactInVacuum 探测器平台，并不定义一套
+通用于两个站点的靶室。已有探测器、能损、饱和、电子学、真空服务、探测盒、
+靶室质量筛算、加工与中国采购研究继续作为公共平台工作保留；站点尺寸不能从
+legacy afterSRC 靶室直接复制。
 
-本报告主要讨论 CompactInVacuum 的探测器技术，同时把 afterSRC 接口合同
-作为不可改变的机械约束。参考物理工况为
-\SI{\BeamEnergyMeV}{\mega\electronvolt} 氘束轰击 CH$_2$ 靶，
-在四个方位扇区中对弹性散射氘核与质子作 coincidence 探测。
+\begin{center}
+\begin{minipage}{0.72\textwidth}
+\begin{Verbatim}[fontsize=\small,frame=single]
+SRC
+ |
+ +-- CompactInVacuum-afterSRC
+ |
+ |   beam transport
+ |
+ +-- CompactInVacuum-preSAMURAI
+ |
+SAMURAI
+
+两台 compact：公共探测器平台
+               站点特定机械与接口
+Legacy：       afterSRC 外置探测器
+               仅作参考/备选
+\end{Verbatim}
+\end{minipage}
+\end{center}
 
 \begin{table}[htbp]
   \centering
   \small
-  \caption{两台极化仪的固定真空接口合同。精确孔径、螺栓几何和安装包络以供应商
-  认证图纸为准。}
-  \begin{tabularx}{\textwidth}{L{0.20\textwidth}L{0.24\textwidth}L{0.24\textwidth}Y}
+  \caption{极化仪概念的权威状态。}
+  \begin{tabularx}{\textwidth}{L{0.22\textwidth}Y Y Y}
     \toprule
-    仪器 & 束流接口 & 其他真空接口 & 固定要求 \\
+    项目 & afterSRC compact & pre-SAMURAI compact & legacy afterSRC external \\
     \midrule
-    afterSRC & 前 ICF114；后 ICF114 &
-      顶部 ICF70 旋转馈通；无附加侧面真空口 &
-      即使使用转接器或波纹管，外部配合面仍为 ICF114 \\
-    CompactInVacuum & 前 ICF114；后 ICF114 &
-      顶部 ICF70 旋转接口；四个 ICF70 四通道同轴接口；
-      一个 ICF70 32 针 housekeeping 接口 &
-      安装标准和容量已固定；供应商型号仍为接口包络 \\
-    两台仪器 & 采购 ICF 刀口件和 OFHC 铜垫片 &
-      靶室、焊缝、转接器、波纹管和馈通构成一个验收边界 &
-      整机氦漏率 $\leq
-      \IcfAssemblyLeakMantissa\times10^{-10}\,
-      \si{\pascal\meter\cubed\per\second}$ \\
+    基线状态 & 基线 & 基线 & legacy/fallback \\
+    探测器位置 & 真空内 & 真空内 & 真空外 \\
+    探测器平台 & 公共 compact 平台 & 公共 compact 平台 & 旧外置设计 \\
+    靶室几何 & 站点特定 / TBD & 站点特定 / TBD & 现有参考 \\
+    束线接口 & 独立验证 & 独立验证 & 现有旧假设 \\
     \bottomrule
   \end{tabularx}
-  \datatag{docs/specs/BLP_v1_requirement_baseline.md；
-  compactInVacuum/config/default_compactInVacuum.yaml}
 \end{table}
 
-\subsection{当前探测器与靶室包络}
+\subsection{三级需求分离}
 
-当前 CAD 探测器包络为直径
+\textbf{公共平台需求。}
+闪烁体与 SiPM 技术、光学包、探测盒与扇区、十二路真空服务、电子学、标定、
+热路径语义以及公共物理/响应研究。
+
+\textbf{afterSRC 站点需求。}
+SRC 下游的实际纵向/横向包络、可用束流孔径、相邻设备、法兰接口、靶机构集成、
+真空服务、支撑/对准以及安装维护空间。
+
+\textbf{pre-SAMURAI 站点需求。}
+SAMURAI 终端前位置的相同类别要求，必须独立建立。
+
+未知站点量保持 TBD。关闭它们需要已批准的接口图、现场测量/测绘、相邻设备包络、
+beam stay-clear、真空服务责任边界、支撑基准以及安装维护评审。
+
+\subsection{接口证据分类}
+
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{当前接口声明及其证据级别。}
+  \begin{tabularx}{\textwidth}{L{0.24\textwidth}C{0.08\textwidth}Y Y}
+    \toprule
+    项目 & 类别 & 当前状态 & 关闭所需证据 \\
+    \midrule
+    CompactInVacuum-afterSRC 束流接口 & D & 前后标准及可用孔径 TBD &
+      afterSRC compact 批准配合图与现场测量 \\
+    CompactInVacuum-afterSRC 旋转接口 & C & ICF70 是暂定研究包络 &
+      站点要求、载荷工况及签字采购件/接口图 \\
+    CompactInVacuum-preSAMURAI 束流接口 & D & 配合链与可用孔径 TBD &
+      pre-SAMURAI 批准配合链图与现场测量 \\
+    CompactInVacuum-preSAMURAI 旋转接口 & D & 靶/馈通接口 TBD &
+      靶运动要求与批准站点接口 \\
+    compact 信号/housekeeping 端口布局 & C & 容量已知；法兰数量、标准与位置暂定 &
+      两台仪器分别完成采购件、走线、维护和站点包络评审 \\
+    legacy afterSRC 外置接口 & B & ICF114 前后口与 ICF70 顶口属于旧设计 &
+      没有独立 A 类证据不得传播到 compact afterSRC \\
+    \bottomrule
+  \end{tabularx}
+\end{table}
+
+A 类表示已批准的外部束线约束；B 类表示 legacy 继承；C 类表示当前工程假设；
+D 类表示未解决/TBD。B/C 类不得写成 A 类。
+
+参考物理工况为 \SI{\BeamEnergyMeV}{\mega\electronvolt} 氘束轰击 CH$_2$ 靶，
+在四个方位扇区中对弹性散射氘核与质子作 coincidence 探测。
+
+\subsection{旧数值参考探测器与靶室包络}
+
+旧数值参考 CAD 探测器包络为直径
 \SI{\ActiveDiameterMm}{\milli\meter}、长度
 \SI{\ActiveLengthMm}{\milli\meter}。配置中 active medium 和 photosensor
 仍标记为 placeholder/undecided；本报告中的塑料闪烁体和 EQR15 是
@@ -314,7 +379,7 @@ EQR15 在该点的计算非线性为 \EqrCarbonNonlinearity\%。
 \begin{table}[htbp]
   \centering
   \small
-  \caption{当前三类探测通道的几何。}
+  \caption{旧数值参考配置中三类探测通道的几何。}
   \begin{tabular}{lcccc}
     \toprule
     站位 & 粒子 & 中心角（度） & 中心半径（mm） & 实验室角覆盖（度） \\
@@ -324,7 +389,7 @@ EQR15 在该点的计算非线性为 \EqrCarbonNonlinearity\%。
   \datatag{compactInVacuum/compactInVacuum.channel\_manifest.json}
 \end{table}
 
-当前方形靶室内截面约为 $440\times440$ mm，轴向长度约
+旧数值参考方形靶室内截面约为 $440\times440$ mm，轴向长度约
 \SI{360}{\milli\meter}。封闭方壳材料体积筛算为
 \SI{\ChamberMaterialVolumeL}{\liter}，按不锈钢密度估算约
 \SI{\ChamberScreeningMassKg}{\kilogram}。该数值只是算术筛选，不是加工质量，
@@ -343,13 +408,13 @@ EQR15 在该点的计算非线性为 \EqrCarbonNonlinearity\%。
     圆筒承担外压，平面结构集中同轴馈通、定位基准和维护接口。
   \item 不把十二路快速信号馈通分散布置在曲面壳体上，除非端口布局和维护评审
     证明这种方案有明确优势。
-  \item 束流两端使用短、可拆 ICF 接管，运输时安装刀口保护盖，并设置吊点和
-    可人工搬运子组件质量上限。
+  \item 束流两端使用符合各站点已批准配合标准的短、可拆采购接管；运输时保护
+    密封面，并设置吊点和可人工搬运子组件质量上限。
 \end{itemize}
 
 \section{探测器物理与有效厚度}
 
-现有能损分析最初服务于旧外置探测器布局。本报告按当前 CompactInVacuum
+现有能损分析最初服务于旧外置探测器布局。本报告按旧数值参考 CompactInVacuum
 探测器直径和半径重新计算弹性 d--p coincidence 接受度。质心系前向重叠区约为
 \ForwardCmLow--\ForwardCmHigh 度，后向重叠区约为
 \BackwardCmLow--\BackwardCmHigh 度。
@@ -609,12 +674,14 @@ bias tee、终端和整形。
 
 \section{真空电气服务、接地与热设计}
 
-推荐每个探测器使用一条屏蔽 \SI{50}{\ohm} 同轴通道。
+公共平台推荐每个探测器使用一条屏蔽 \SI{50}{\ohm} 同轴通道。
 信号和偏置通过外部 bias tee 共用同轴线，有源模拟电子学保持在真空外。
 十二个探测器需要十二条可独立测试的同轴馈通通道，另设低速温度与 housekeeping
-接口。当前 CAD 按方位分组：四个 ICF70 四通道同轴接口在每个方位使用三路、
-保留一路安装备用；另一个 ICF70 32 针接口为 12 个两线 SiPM 温度传感器使用
-24 针并保留 8 针。准确采购料号仍未冻结。
+接口。参考 CAD 按方位分组：四个四通道同轴包络在每个方位使用三路、
+保留一路安装备用；另一个 32 针包络为 12 个两线 SiPM 温度传感器使用
+24 针并保留 8 针。把这些包络实现为 ICF70 只是 C 类集成假设，不是两站点的
+公共接口要求。每台仪器必须在自身服务与维护包络内分别确定法兰标准、端口数量/
+位置、连接器系列和准确采购料号。
 
 北京飞迪真空公开列出 CF 接口上的 \SI{50}{\ohm} SMA50/SMAD50 馈通方案
 \cite{feedivac_sma}。RFQ 必须冻结准确料号、连接器性别、真空内线缆型号和长度、
@@ -628,7 +695,7 @@ bias tee、终端和整形。
   \item 监测每个 SiPM 温度，并在标定中定义偏置温度修正。
 \end{itemize}
 
-\section{靶室、ICF 接口与旋转馈通}
+\section{站点特定靶室、真空接口与旋转馈通}
 
 \subsection{圆筒与方形靶室}
 
@@ -636,33 +703,58 @@ bias tee、终端和整形。
 接入。真正的问题是制造和维护：若十二个信号口、旋转馈通、束流口和探测器维护口
 全部分散在曲面上，会导致端口拥挤、角度基准难控制、焊接变形和维护困难。
 
-因此推荐混合结构：
+一种值得筛选的公共平台概念是混合结构：
 \begin{itemize}
   \item 短圆筒外压壳体负责真空结构效率和减重；
   \item 可拆平面服务板或多面探测器框架集中馈通、探测盒、线缆和定位基准；
-  \item 两端使用认证 ICF114 束流接管；
-  \item 两台仪器均设置专用 ICF70 旋转馈通凸台。CompactInVacuum 已固定
-    安装接口，但具体采购件、轴载荷、扭矩、回差、寿命和烘烤温度仍待 RFQ 关闭。
+  \item 两端使用与各站点批准配合标准一致的认证采购束流件；
+  \item 旋转馈通接口和采购件按站点独立确定，并分别关闭轴载荷、扭矩、回差、
+    寿命、烘烤温度和维护包络。
 \end{itemize}
 
-\subsection{固定 ICF 接口合同}
+\subsection{各仪器接口状态}
 
-采购经认证的 ICF 法兰或半接管。上海谱幂可以完成焊接和集成，
+\begin{table}[htbp]
+  \centering
+  \small
+  \caption{两台 compact 基线仪器和 legacy 路线的接口状态。}
+  \begin{tabularx}{\textwidth}{L{0.22\textwidth}L{0.23\textwidth}L{0.20\textwidth}Y}
+    \toprule
+    仪器 & 束流接口 & 其他真空接口 & 当前权威状态 \\
+    \midrule
+    CompactInVacuum-afterSRC & 前后标准与孔径 TBD &
+      旋转、信号、housekeeping、泵与规管口 TBD &
+      束流 D 类；当前 ICF70 旋转/服务包络 C 类 \\
+    CompactInVacuum-preSAMURAI & 配合链、标准与孔径 TBD &
+      旋转、信号、housekeeping、泵与规管口 TBD &
+      束流与旋转 D 类；服务容量概念公共、布局 C 类 \\
+    legacy afterSRC external & 前后 ICF114 &
+      顶部 ICF70；历史无侧口概念 &
+      B 类 legacy 合同；仅作参考/备选 \\
+    \bottomrule
+  \end{tabularx}
+  \datatag{docs/specs/compact_one_requirement_baseline.md；
+  data/report_assumptions.yaml；generated/derived_results.json}
+\end{table}
+
+若某站点选择 ICF/CF 硬件，应采购经认证的法兰或半接管。上海谱幂可完成焊接和集成，
 但不应在无受控工艺的情况下自行复制刀口几何。ICF 使用刀口和 OFHC 铜垫片
 实现 UHV 全金属密封；内部焊缝和无积气袋几何用于避免虚漏
 \cite{cosmotec_icf_standard,leybold_cf_hardware}。
-所有 nominal 4.5-inch CF 类产品不能只用“ICF114”名称代替图纸，
-孔径、螺栓和配合合同必须由供应商图纸定义。
+所有 nominal 4.5-inch CF 类产品不能只用“ICF114”名称代替图纸；
+批准的配合图必须定义实际标准、孔径、螺栓和保护包络。
 
 允许使用转接器和波纹管解决对准、振动隔离和安装公差问题。
 每个采购件必须提供签字图纸、材料和清洗记录、烘烤等级与氦漏证书。
 完成焊接和安装后的整机还必须再次检漏；单个部件证书不能替代系统验收。
 
-\subsection{旋转馈通 RFQ 数据}
+\subsection{旋转馈通需求数据}
 
-两台仪器目前都固定使用顶部 ICF70 旋转馈通安装接口。当前机构研究采用约
-\SI{18}{\milli\meter} 轴和 0/90 度工作位置。对 CompactInVacuum 而言，
-固定 ICF70 并不等于已经选定供应商机构；载荷与服务研究关闭前仍使用接口包络。
+两台基线仪器都需要旋转靶机构，但目前没有证据证明它们都必须采用顶部 ICF70。
+现有机构研究采用约 \SI{18}{\milli\meter} 轴、0/90 度工作/停靠位置以及
+ICF70 研究包络。对 CompactInVacuum-afterSRC，这些是 C 类假设；对
+CompactInVacuum-preSAMURAI，旋转接口仍是 D 类/TBD，必须结合靶运动和站点集成
+独立关闭。
 市场上存在波纹管密封和磁耦合 ICF 运动馈通系列
 \cite{cosmotec_motion_feedthrough}。上海谱幂应采购或集成所选单元并提供：
 \begin{itemize}
@@ -685,11 +777,11 @@ bias tee、终端和整形。
     \midrule
     材料 & 304L 或 316L 不锈钢，炉号/批次可追溯；最终牌号由真空和磁性评审决定 &
       材料证书与追溯记录 \\
-    采购 ICF 件 & 使用认证法兰/半接管，不逆向仿制刀口 &
+    采购真空接口件 & 使用符合站点标准的认证法兰/接管，不逆向仿制密封面 &
       供应商图纸、证书和进货检验 \\
     焊接 & 完整焊缝图、工艺、焊工资格、顺序和变形控制 &
       焊接计划、WPS/PQR、焊接记录和外观记录 \\
-    真空设计 & ICF 刀口/OFHC 主密封；无积气体积；盲孔通气；内部可清洗；
+    真空设计 & 采用站点批准的主密封；无积气体积；盲孔通气；内部可清洗；
       转接器和波纹管不得引入弹性体降级 &
       剖面图、密封清单和设计评审表 \\
     结构 & 外压屈曲、搬运载荷和接口载荷 &
@@ -702,7 +794,7 @@ bias tee、终端和整形。
       带设备序列号和测试构型的校准氦检报告 \\
     清洗 & 与探测器和真空材料相容的受控工艺 &
       清洗、包装和封口记录 \\
-    烘烤 & 裸金属靶室与采购 ICF 硬件的等级和装有探测器后的系统温限分开定义 &
+    烘烤 & 裸金属靶室与采购真空硬件的等级和装有探测器后的系统温限分开定义 &
       部件温限和批准的整机最高温度 \\
     \bottomrule
   \end{tabularx}
@@ -788,8 +880,9 @@ bias tee、终端和整形。
     Gate 1：一个扇区 & 三类通道探测盒、线缆与馈通分配 &
       D、P-small、P-large 加备件 &
       coincidence、噪声、时间、饱和和标定 \\
-    Gate 2：靶室首件 & 一套靶室、一套旋转馈通、ICF 件 &
-      一套完整首件 & DFM、尺寸、外压、检漏、烘烤和维护测试 \\
+    站点首件 & 每个基线站点在自身接口门审关闭后制作一套靶室/馈通集成 &
+      afterSRC compact 与 pre-SAMURAI compact 各一套，分别放行 &
+      DFM、尺寸、外压、检漏、烘烤、维护和安装测试 \\
     量产 & 十二个工作通道加备件 &
       至少 15 个闪烁体和 15 个筛选通过的 SiPM &
       成组运行和更换库存 \\
@@ -800,10 +893,15 @@ bias tee、终端和整形。
 \section{开发与验证计划}
 
 \begin{enumerate}
-  \item \textbf{Gate 0 -- 冻结物理和接口。}
-    固定 ICF114 前后接口和 afterSRC 顶部 ICF70；批准束流 stay-clear、
-    探测器半径/直径、5--6 mm 厚度研究带、靶运动包络、装机烘烤温限、
-    端口图、测量基准和运输限制。
+  \item \textbf{平台 Gate 0 -- 确认架构与研究矩阵。}
+    保持两台 compact 基线仪器和一条 afterSRC external legacy 路线；批准包含
+    5--6 mm 候选带的公共探测器试验矩阵，但不冻结站点机械。
+  \item \textbf{站点 Gate 0A -- afterSRC 接口定义。}
+    取得 SRC 下游批准配合图、beam stay-clear、可用 XYZ 包络、相邻设备、
+    真空服务责任、靶包络、支撑/测量基准及安装维护限制。没有独立证据不得提升
+    legacy ICF114/ICF70 值。
+  \item \textbf{站点 Gate 0B -- pre-SAMURAI 接口定义。}
+    为 SAMURAI 终端前位置取得同类批准证据；不得假设其机械结构与 afterSRC 相同。
   \item \textbf{Gate 1 -- 单探测器光学/电子学原型。}
     比较 EQR15、EQR20 和参考 SiPM，完成二维均匀性、LED/激光饱和、
     电荷量程、时间、温度和 4/5/6/8/10 mm 厚度比较。
@@ -812,10 +910,12 @@ bias tee、终端和整形。
     能量分离、共模噪声和标定 metadata。
   \item \textbf{Gate 3 -- 真空探测器框架。}
     执行真空浸泡、热循环、暗计数监测、放气筛选、线缆/馈通噪声和重复拆装。
-  \item \textbf{Gate 4 -- 工程靶室。}
-    完成上海谱幂首件、外压复核、CMM 报告、氦检、靶运动、探测器拆装和运输演示。
+  \item \textbf{Gate 4A/4B -- 站点特定工程靶室。}
+    对应站点 Gate 0 关闭后，分别完成 afterSRC 与 pre-SAMURAI 首件；各自执行
+    外压复核、CMM、氦检、靶运动、探测器拆装、安装适配和运输演示。
   \item \textbf{Gate 5 -- 量产放行。}
-    只有 golden sector 与工程靶室通过后，才能冻结图纸和流转卡并采购量产通道。
+    只有 golden sector 与相应站点工程靶室通过后才能冻结图纸和流转卡。
+    两套靶室独立放行，合格的公共探测器零件可共享量产批次。
 \end{enumerate}
 
 \begin{table}[htbp]
@@ -856,9 +956,13 @@ bias tee、终端和整形。
   风险 & 概率 & 影响 & 控制与关闭条件 \\
   \midrule
   \endhead
-  当前 \SI{63}{\milli\meter} stay-clear 与参考 ICF114 净孔不相容 &
-    高 & 高 & 保持 ICF114 固定；按认证接管/转接器/波纹管孔径替换占位几何，
-    重新分配内部通光孔预算 \\
+  旧数值参考的 \SI{63}{\milli\meter} stay-clear 与参考 ICF114 净孔不相容 &
+    高 & 高 & 将其作为参考几何冲突而非站点合同；先取得各站点批准接口和采购件
+    认证孔径，再关闭 stay-clear \\
+  legacy ICF114/ICF70 被传播到 CompactInVacuum-afterSRC &
+    中 & 高 & 在 compact 站点批准图将实际接口提升为 A 类前，保持 B/C 类 \\
+  两个站点错误复用同一靶室概念 &
+    中 & 高 & 独立关闭站点 Gate 0A/0B，并释放两套靶室/接口配置 \\
   只使用一列 LISE++ 数据选厚度或把探测器当作量能器 &
     中 & 高 & 使用五模型 CSV 包络，先测试 5/6 mm，保留 4/8/10 mm，
     经阈值、时间和 Geant4 后冻结 \\
@@ -880,12 +984,12 @@ bias tee、终端和整形。
 
 任何生产采购前必须完成：
 \begin{itemize}
-  \item 对照认证 ICF114 接管、转接器和波纹管图纸批准 stay-clear；
-    ICF114 已固定，不再比较法兰尺寸；
-  \item 批准 0.8 比例几何，或明确保留当前半径和
-    \SI{25}{\milli\meter} 接受度；
+  \item 使用批准束线图、现场测量和每站点选定采购件，分别关闭 afterSRC 与
+    pre-SAMURAI 接口门审；
+  \item 批准具有站点证据的 compact 几何；旧半径和
+    \SI{25}{\milli\meter} 接受度仅保留为受控对比方案；
   \item 批准 Gate 1 的 5 mm、6 mm 探测盒和比较样片；
-  \item 批准 ICF 全金属边界与整机漏率，再定义工作压力、气负载、
+  \item 批准各站点适用的真空边界与整机漏率，再定义工作压力、气负载、
     装机烘烤温度、抽气时间、清洗等级和 RGA 要求；
   \item 冻结旋转馈通载荷、扭矩、寿命、回差、角度重复性、工况和维护；
   \item 批准十二路同轴结构、数字化量程、时间要求、接地、热设计和温度/偏置 metadata；
@@ -908,10 +1012,10 @@ RFQ 应采用受控响应矩阵，使供应商回答、附件和偏差可以逐�
   \endhead
   系统概况 & 批准的三维包络、束流轴、探测区、搬运和维护方向 &
     可制造方案、质量和重心、关键接口、维护与吊装方案 \\
-  真空边界 & 工作压力、清洗/烘烤要求、固定 ICF 接口 &
+  真空边界 & 工作压力、清洗/烘烤要求和站点选定接口 &
     材料/焊接、通气设计、外压计算、检漏方法和证书 \\
-  束流接口 & 固定 ICF114 前后接口、stay-clear 和配合图纸 &
-    采购件身份、刀口保护、法兰位置/方向和检验方法 \\
+  束流接口 & 批准的站点配合标准、stay-clear 和图纸 &
+    采购件身份、密封面保护、法兰位置/方向和检验方法 \\
   旋转靶 & 轴与靶载荷、0/90 位置、限位、回差目标 &
     OEM/型号、扭矩、径向/轴向载荷、重复性、寿命、维修、烘烤和漏率证书 \\
   探测器框架 & golden cassette 接口、线缆和热路径要求 &
@@ -926,6 +1030,27 @@ RFQ 应采用受控响应矩阵，使供应商回答、附件和偏差可以逐�
     分项报价、交期、质保、文档清单、图纸/IP 所有权和运输包装 \\
   \bottomrule
 \end{longtable}
+
+\section{结论}
+
+当前项目基线是两台真空内紧凑型仪器：
+\begin{itemize}
+  \item SRC 下游：\texttt{CompactInVacuum-afterSRC}；
+  \item SAMURAI 终端前：\texttt{CompactInVacuum-preSAMURAI}。
+\end{itemize}
+两者共享的探测器平台包括快速塑料研究、
+\SIrange{5}{6}{\milli\meter} 首轮厚度候选带、EQR15 基准 SiPM、光收集与
+饱和研究、前端动态范围、十二路真空同轴架构、探测盒、电子学、标定和公共
+物理/响应研究。
+
+靶室几何和束线接口不是公共平台常数。afterSRC compact 与 pre-SAMURAI compact
+必须各自获得批准接口图、可用孔径、可用包络、靶/馈通集成、服务、支撑/对准和
+维护空间定义。现有 ICF114/ICF70 数值在缺少独立 compact 站点证据时只能算
+legacy 继承或工程假设。本报告不冻结新的靶室尺寸，也不放行采购件。
+
+旧 afterSRC 外置探测器构型完整保留为 legacy/fallback/reference 路线，可用于
+比较和风险控制，但不是两台当前基线仪器之一。下一架构里程碑是关闭站点
+Gate 0A/0B，同时继续公共 golden detector 与 golden sector 实验。
 
 \section{数据与计算验证}
 \label{sec:verification-zh}
@@ -960,13 +1085,14 @@ make verify
 
 该命令执行：
 \begin{enumerate}
-  \item 读取当前 CompactInVacuum YAML、target、通道清单和 strict validation 报告；
+  \item 读取公共平台需求/配置、两套部署配置，以及保留的旧数值参考配置、
+    target、通道清单和 validation 报告；
   \item 将探测器角度和有效中心半径与 CAD 生成清单比较；
   \item 使用 \path{code/data/energy_lise/dp_dc_kinematics.py} 计算运动学，
     使用 \path{code/data/energy_lise/lise_range.py} 显式选择 LISE++ 模型，
     重算 1/2/3/4/5/6/8/10 mm 能损扫描；
   \item 重算全部 SiPM 饱和、电荷和 10\% 非线性界限；
-  \item 重算靶室质量筛算和 ICF 几何算术；
+  \item 重算旧靶室质量筛算和参考 ICF 几何算术，但不把参考值提升为部署合同；
   \item 把重新生成的 CSV、JSON 和 LaTeX 片段与报告输入逐字节比较；
   \item 运行独立单元测试；
   \item 使用 LuaLaTeX/Biber 编译中英文报告并检查 PDF 可搜索内容。
@@ -1010,7 +1136,7 @@ make report-zh
 \end{longtable}
 
 \begin{notebox}{配置状态警告}
-  当前 CAD 源仍写着 active medium: placeholder/undecided 和
+  旧数值参考 CAD 源仍写着 active medium: placeholder/undecided 和
   photosensor: placeholder/undecided。本报告有意把塑料闪烁体和 EQR15
   记录为建议原型基线。验证工具同时报告 CAD 状态与报告建议，
   避免把建议误认为已经冻结的 CAD 要求。

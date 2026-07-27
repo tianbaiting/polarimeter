@@ -1,13 +1,17 @@
-schema_version: 1
+schema_version: 2
 
 report:
-  title: CompactInVacuum Polarimeter
-  subtitle: SiPM Detector, Vacuum Chamber, and China Procurement Engineering Report
-  issue_date: 2026-07-26
-  status: Preliminary Design Review / Procurement Planning
+  title: CompactInVacuum Common Detector Platform
+  subtitle: Engineering Report for the afterSRC and pre-SAMURAI In-Vacuum Polarimeters
+  issue_date: 2026-07-27
+  status: Architecture-corrected preliminary engineering study
   procurement_region: People's Republic of China preferred
 
 source_files:
+  compact_architecture_baseline: docs/specs/compact_one_requirement_baseline.md
+  compact_platform_common: compactInVacuum/config/common_detector.yaml
+  compact_after_src_profile: compactInVacuum/config/afterSRC_compact.yaml
+  compact_pre_samurai_profile: compactInVacuum/config/infrontSamurai_compact.yaml
   compact_config: compactInVacuum/config/default_compactInVacuum.yaml
   compact_target: compactInVacuum/target.yaml
   channel_manifest: compactInVacuum/compactInVacuum.channel_manifest.json
@@ -16,6 +20,81 @@ source_files:
   energy_model: code/data/energy_lise/dp_dc_kinematics.py
   lise_range_model: code/data/energy_lise/lise_range.py
   mechanical_baseline: docs/specs/BLP_v1_requirement_baseline.md
+  report_source_en: docs/polarimeter_detector/compact_in_vacuum_sipm_report/compact_in_vacuum_sipm_report.tex
+  report_source_zh: docs/polarimeter_detector/compact_in_vacuum_sipm_report/compact_in_vacuum_sipm_report_zh.tex
+  report_generator: docs/polarimeter_detector/compact_in_vacuum_sipm_report/scripts/generate_report_data.py
+  report_makefile: docs/polarimeter_detector/compact_in_vacuum_sipm_report/Makefile
+
+project_architecture:
+  common_platform: CompactInVacuum platform
+  baseline_instruments:
+    - key: compact_afterSRC
+      name: CompactInVacuum-afterSRC
+      location: downstream of SRC
+      detector_location: in vacuum
+      status: baseline
+    - key: compact_preSAMURAI
+      name: CompactInVacuum-preSAMURAI
+      location: before the SAMURAI terminal
+      detector_location: in vacuum
+      status: baseline
+  legacy_instruments:
+    - key: legacy_afterSRC_external
+      name: legacy afterSRC external-detector design
+      detector_location: outside vacuum
+      status: legacy/fallback/reference
+  common_scope:
+    - scintillator and SiPM technology
+    - detector cassette
+    - vacuum detector services
+    - electronics and calibration
+    - common physics and response studies
+  site_specific_scope:
+    - chamber geometry
+    - beamline interfaces
+    - target integration
+    - supports and alignment
+    - installation and maintenance access
+
+interface_classification:
+  classes:
+    A: externally constrained by approved beamline evidence
+    B: inherited from a legacy design
+    C: current engineering assumption
+    D: unresolved / TBD
+  compact_afterSRC:
+    beam_interfaces:
+      class: D
+      status: TBD
+      evidence_required: approved afterSRC beamline interface drawing and site survey
+    rotary_interface:
+      class: C
+      status: provisional ICF70 study envelope
+      evidence_required: site constraint and signed feedthrough/interface drawing
+    signal_feedthrough_layout:
+      class: C
+      status: provisional capacity/layout study
+      evidence_required: selected parts, site envelope, and service-routing review
+  compact_preSAMURAI:
+    beam_interfaces:
+      class: D
+      status: TBD
+      evidence_required: approved pre-SAMURAI mating-chain drawing and site survey
+    rotary_interface:
+      class: D
+      status: TBD
+      evidence_required: target-motion and site-interface requirements
+    signal_feedthrough_layout:
+      class: C
+      status: provisional capacity/layout study
+      evidence_required: selected parts, site envelope, and service-routing review
+  legacy_afterSRC_external:
+    beam_interfaces:
+      class: B
+      status: ICF114 front/rear in legacy baseline
+    rotary_interface:
+      class: B
+      status: ICF70 top mount in legacy baseline
 
 calculation:
   scintillation_yield_photons_per_mev_ee: 10000.0
@@ -47,12 +126,12 @@ calculation:
 
 icf_screening:
   icf114_reference_clear_bore_mm: 60.2
-  after_src_front_interface: ICF114
-  after_src_rear_interface: ICF114
-  rotary_feedthrough_interface: ICF70
-  compact_front_interface: ICF114
-  compact_rear_interface: ICF114
-  compact_rotary_feedthrough_interface: ICF70
+  legacy_after_src_front_interface: ICF114
+  legacy_after_src_rear_interface: ICF114
+  legacy_after_src_rotary_interface: ICF70
+  reference_cad_front_interface: ICF114
+  reference_cad_rear_interface: ICF114
+  reference_cad_rotary_interface: ICF70
   compact_signal_feedthrough_ports: 4
   compact_signal_channels_per_port: 4
   compact_signal_channels_used: 12

@@ -1,7 +1,7 @@
 schema_version: 1
 module: compactOneAfterSRC
 intent:
-  description: CompactOne in-vacuum engineering prototype deployed after SRC; external afterSRC remains a separate route.
+  description: CompactInVacuum-afterSRC baseline in-vacuum engineering prototype downstream of SRC; afterSRC external is retained only as a legacy/fallback/reference route, and its interfaces are not inherited as compact site requirements.
 build:
   config: config/afterSRC_compact.yaml
   overrides: []

@@ -825,3 +825,12 @@ Entry Template:
 - Validation Result: external afterSRC strict PASS; external in-front-of-SAMURAI strict PASS; CompactOne-afterSRC non-strict PASS (30/9/0); CompactOne-infrontSamurai non-strict PASS (30/9/0); CompactOne pure tests 24 passed; external pytest 61 passed / 45 skipped because the pytest venv Python ABI cannot import system FreeCAD.
 - Artifacts/State: all four complete FCStd/STEP pairs refreshed; both external state files record clean git `7d9b9b8`; both CompactOne state files record final non-strict pass. Stable artifact sizes/hashes are captured in the module worklogs.
 - Next Action: commit final worklog handoff, inspect repository status, and hand over unresolved supplier/site/FEA/Geant4 evidence gates.
+
+- Timestamp UTC: 2026-07-27T01:18:20Z
+- Timestamp Local: 2026-07-27 10:18:20 JST
+- Module/Scope: project-level polarimeter architecture correction
+- Command(s): authoritative README/spec/report/config metadata audit and correction; bilingual LaTeX generation/verification; CompactInVacuum and preserved external-route regressions
+- Key Parameters/Overrides: supersedes the earlier two-location-by-two-technology matrix as the project baseline. The current baseline instruments are `CompactInVacuum-afterSRC` downstream of SRC and `CompactInVacuum-preSAMURAI` before the SAMURAI terminal. The external `afterSRC/` design remains legacy/fallback/reference only. Site chambers and interfaces remain independent and TBD where evidence is missing.
+- Validation Result: report `make verify` PASS; report numerical tests 8/8; CompactInVacuum pure-Python 24/24 and FreeCAD runtime groups PASS; external pure-Python 35/35 PASS. A direct FreeCAD execution of the 45 external runtime markers found 43 PASS and two existing failures (weldment-side bolt-count expectation and an old validation fixture rejected by a newer earlier config guard); external sources were untouched.
+- Artifacts/State: root/project/module architecture documents, requirement baselines, bilingual LaTeX sources, report assumptions/generator/provenance, and compatibility deployment metadata updated. English and Chinese PDFs rebuilt and visually inspected. Existing DOCX tooling remains historical and is not maintained.
+- Next Action: collect approved afterSRC and pre-SAMURAI beamline/interface evidence independently; do not freeze ICF114, ICF70, chamber size, radii, or port layout from the legacy afterSRC route.

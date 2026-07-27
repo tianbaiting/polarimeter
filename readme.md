@@ -1,21 +1,49 @@
 # Deuteron Beam Polarimeter Engineering Repository
 
-This repository develops deuteron-beam polarimeters for two physical installation locations and two independent detector-technology routes.
+Two compact in-vacuum polarimeters are the current project baseline:
 
-## Project matrix
+1. **CompactInVacuum-afterSRC**, installed downstream of SRC.
+2. **CompactInVacuum-preSAMURAI**, installed before the SAMURAI terminal.
 
-| Detector technology | afterSRC | in front of SAMURAI |
-|---|---|---|
-| External detectors | `afterSRC/` | `infrontofSamuraiMag/` |
-| CompactOne in-vacuum detectors | CompactOne afterSRC profile | CompactOne in-front-of-SAMURAI profile |
+Both instruments use the common CompactInVacuum detector platform: scintillator/SiPM technology, detector cassettes, vacuum detector services, electronics, calibration, and physics/response studies. Their chambers, beamline interfaces, target integration, supports, and maintenance envelopes are site-specific and shall be verified independently.
 
-The existing external-detector routes are preserved. CompactOne is a parallel in-vacuum platform, not a rename or replacement of those modules.
+The previously developed afterSRC external-detector configuration is retained in `afterSRC/` as a legacy/fallback/reference route. It is not one of the two baseline instruments. Existing external-route code and evidence are preserved; they are not automatically requirements for either compact installation.
+
+## Project architecture
+
+| Item | afterSRC compact | pre-SAMURAI compact | legacy afterSRC external |
+|---|---|---|---|
+| Baseline status | baseline | baseline | legacy/fallback |
+| Detector location | in vacuum | in vacuum | outside vacuum |
+| Detector platform | common CompactInVacuum platform | common CompactInVacuum platform | established external design |
+| Chamber geometry | site-specific / TBD | site-specific / TBD | existing reference geometry |
+| Beam interfaces | verify from afterSRC site evidence | verify from pre-SAMURAI site evidence | existing legacy assumptions |
+
+```text
+SRC
+ |
+ +-- CompactInVacuum-afterSRC
+ |
+ |   beam transport
+ |
+ +-- CompactInVacuum-preSAMURAI
+ |
+SAMURAI
+
+Both compact instruments:
+  common detector platform
+  site-specific mechanics and interfaces
+
+Legacy:
+  afterSRC external-detector design
+  reference/fallback only
+```
 
 ## Repository map
 
-- `afterSRC/`: stateful external-detector afterSRC assembly using the established H+V+V family.
-- `infrontofSamuraiMag/`: stateful external-detector assembly for the SAMURAI-front location.
-- `compactInVacuum/`: compatibility module name for the shared CompactOne in-vacuum platform and its two deployment profiles.
+- `afterSRC/`: legacy/fallback external-detector afterSRC assembly using the established H+V+V family.
+- `infrontofSamuraiMag/`: retained external-detector engineering work for the SAMURAI-front location; not a current baseline instrument.
+- `compactInVacuum/`: compatibility module name for the common CompactInVacuum platform and its two baseline deployment profiles.
 - `code/`: ROOT/C++ reconstruction, coincidence, polarization, and plotting tools.
 - `docs/specs/BLP_v1_requirement_baseline.md`: external-route mechanical requirement authority.
 - `docs/specs/compact_one_requirement_baseline.md`: CompactOne requirement authority.
@@ -24,13 +52,13 @@ The existing external-detector routes are preserved. CompactOne is a parallel in
 - `codex_targets.yaml`: stateful module registry.
 - `worklog.md`: cross-module execution and handoff history.
 
-## CompactOne
+## CompactInVacuum platform
 
-CompactOne separates:
+The common platform separates:
 
 `active plastic -> optical package -> SiPM -> removable cassette -> three-channel sector -> four-sector internal machine -> deployment chamber`
 
-The platform shares detector and internal-machine concepts across afterSRC and SAMURAI. Site-specific beamline interfaces, available envelopes, vacuum ports, external service space, support, and alignment live in deployment profiles.
+The platform shares detector and internal-machine concepts across afterSRC and pre-SAMURAI. Site-specific beamline interfaces, available envelopes, vacuum ports, external service space, support, and alignment live in deployment profiles. The compatibility labels `CompactOne-afterSRC` and `CompactOne-infrontSamurai` remain in scripts and configuration paths to avoid an unnecessary API/directory rename.
 
 The first-prototype recommendations—fast blue plastic, approximately 20 mm active diameter, 5–6 mm thickness, EQR15 SiPM, and 2–5% measured total optical collection—remain recommendations until test gates close.
 

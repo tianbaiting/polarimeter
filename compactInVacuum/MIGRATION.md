@@ -1,4 +1,6 @@
-# CompactInVacuum to CompactOne Migration
+# CompactInVacuum Platform Migration
+
+The current project baseline comprises `CompactInVacuum-afterSRC` and `CompactInVacuum-preSAMURAI`. They share the detector platform below but have independently verified site mechanics and beamline interfaces. `afterSRC/` is retained as a legacy/fallback external-detector route.
 
 The module directory and stateful runner retain the `compactInVacuum` name for compatibility. The preferred architecture is now CompactOne.
 
@@ -22,8 +24,8 @@ The module directory and stateful runner retain the `compactInVacuum` name for c
 Configuration migration:
 
 - Common platform: `config/common_detector.yaml`
-- CompactOne afterSRC: `config/afterSRC_compact.yaml`
-- CompactOne in front of SAMURAI: `config/infrontSamurai_compact.yaml`
+- CompactInVacuum-afterSRC (compatibility runner label: CompactOne afterSRC): `config/afterSRC_compact.yaml`
+- CompactInVacuum-preSAMURAI (compatibility runner label: CompactOne in front of SAMURAI): `config/infrontSamurai_compact.yaml`
 - Stable alias afterSRC: `config/compact_one_afterSRC.yaml`
 - Stable alias SAMURAI: `config/compact_one_infrontSamurai.yaml`
 - Legacy scaffold: `config/default_compactInVacuum.yaml`

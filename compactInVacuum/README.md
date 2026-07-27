@@ -1,13 +1,13 @@
-# CompactOne / compactInVacuum
+# CompactInVacuum Common Platform
 
-`compactInVacuum` is the compatibility name and stateful entry point for the CompactOne shared in-vacuum polarimeter platform.
+Two compact in-vacuum polarimeters are the current baseline:
 
-CompactOne supports two deployment profiles:
+- `CompactInVacuum-afterSRC`, downstream of SRC;
+- `CompactInVacuum-preSAMURAI`, before the SAMURAI terminal.
 
-- `CompactOne-afterSRC`
-- `CompactOne-infrontSamurai`
+`compactInVacuum` is the compatibility directory and stateful entry point for their common detector platform. Existing runner/configuration labels `CompactOne-afterSRC` and `CompactOne-infrontSamurai` are retained temporarily to avoid breaking paths; they map to the two baseline instruments above.
 
-It does not replace the external-detector implementations in `afterSRC/` or `infrontofSamuraiMag/`.
+The external afterSRC implementation in `afterSRC/` is retained as a legacy/fallback/reference route, not as a baseline instrument. The existing external SAMURAI-front work in `infrontofSamuraiMag/` is also preserved as reference engineering work. Neither external implementation is silently migrated into the compact platform.
 
 ## Architecture
 
@@ -15,7 +15,7 @@ The preferred subsystem hierarchy is:
 
 `active detector -> detector cassette -> three-channel sector cartridge -> four-sector internal machine -> deployment chamber`
 
-Shared concepts include the active plastic, optical package, SiPM, cassette, sector cartridge, target mechanism, cabling philosophy, thermal path, physics acceptance, and validation rules. Beamline interfaces, chamber envelope, ports, support, and external service space belong to deployment profiles.
+Shared concepts include the active plastic, optical package, SiPM, cassette, sector cartridge, cabling philosophy, electronics, calibration, thermal path, physics acceptance, and validation rules. Beamline interfaces, target integration, chamber envelope, ports, support, and external service space belong to deployment profiles and require independent site evidence.
 
 The former 25 × 50 mm detector cylinder, annular clamp, and twelve independent arms are retained only as a legacy scaffold during migration.
 
@@ -34,8 +34,8 @@ Configuration values carry explicit status:
 The common detector platform and the two deployment profiles are kept separate. Missing site or supplier facts stay unresolved rather than receiving invented dimensions.
 
 - Common detector/mechanics: `config/common_detector.yaml`
-- afterSRC deployment: `config/afterSRC_compact.yaml`
-- in-front-of-SAMURAI deployment: `config/infrontSamurai_compact.yaml`
+- CompactInVacuum-afterSRC deployment: `config/afterSRC_compact.yaml`
+- CompactInVacuum-preSAMURAI deployment: `config/infrontSamurai_compact.yaml`
 - old scaffold: `config/default_compactInVacuum.yaml`
 
 See `MIGRATION.md` for old-to-new field and geometry mappings.
@@ -60,7 +60,7 @@ Use `--strict-validation` for the engineering gate and `--force-rebuild` only wh
 
 Generated CAD and runtime state remain untracked. Validation reports and stable geometry metrics are the cross-machine comparison authority.
 
-The two preferred CompactOne deployment entries are:
+The two baseline CompactInVacuum deployment entries are:
 
 ```bash
 ./compactInVacuum/run_compactOne_afterSRC.sh \

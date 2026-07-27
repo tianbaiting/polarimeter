@@ -3,9 +3,13 @@ doc_name: CompactOne_infrontSamurai
 
 deployment:
   name: CompactOne-infrontSamurai
+  instrument_name: CompactInVacuum-preSAMURAI
   location: in-front-of-SAMURAI
   status: provisional
+  baseline_status: baseline
+  detector_location: in_vacuum
   external_route_module: infrontofSamuraiMag
+  external_route_status: preserved_reference_not_baseline
   selected_chamber_candidate: samurai_square_service_plate
   chamber_candidates:
     - name: samurai_square_service_plate
@@ -40,6 +44,9 @@ deployment:
     side: front
     standard: VF100
     status: purchased-part-contract
+    site_requirement_status: unresolved
+    evidence_class: B_legacy_inheritance
+    evidence_required: approved_preSAMURAI_compact_mating_chain_drawing_and_site_survey
     supplier: unresolved
     part_number: unresolved
     certified_drawing_reference: unresolved
@@ -65,6 +72,9 @@ deployment:
     side: rear
     standard: VG80
     status: purchased-part-contract
+    site_requirement_status: unresolved
+    evidence_class: B_legacy_inheritance
+    evidence_required: approved_preSAMURAI_compact_mating_chain_drawing_and_site_survey
     supplier: unresolved
     part_number: unresolved
     certified_drawing_reference: unresolved
@@ -88,6 +98,8 @@ deployment:
     transition_status: provisional
   target_feedthrough_standard: ICF70
   target_feedthrough_status: provisional
+  target_feedthrough_evidence_class: D_unresolved
+  target_feedthrough_evidence_required: approved_target_motion_and_site_interface_requirements
   pump_gauge_requirements:
     - unresolved_compactone_pump_connection
     - unresolved_compactone_gauge_and_safety_connection

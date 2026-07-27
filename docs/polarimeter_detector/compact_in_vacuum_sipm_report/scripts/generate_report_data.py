@@ -386,8 +386,6 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
     validation = load_json(source_paths["validation_report"])
     energy_model = load_energy_model(source_paths["energy_model"])
     range_model = load_energy_model(source_paths["lise_range_model"])
-    mechanical_baseline = source_paths["mechanical_baseline"].read_text(encoding="utf-8")
-
     checks: list[str] = []
     failures: list[str] = []
 
@@ -844,32 +842,68 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
     icf114_deficit = beam_bore - float(icf["icf114_reference_clear_bore_mm"])
     compact_front_standard = str(vessel["end_modules"]["front"]["standard"])
     compact_rear_standard = str(vessel["end_modules"]["rear"]["standard"])
-    after_src_contract_present = (
-        "前后束流端面均为 `ICF114`" in mechanical_baseline
-        and "顶置靶旋转馈通安装面为 `ICF70`" in mechanical_baseline
-    )
+    interface_classes = assumptions["interface_classification"]
+    after_src_interface = interface_classes["compact_afterSRC"]["beam_interfaces"]
+    pre_samurai_interface = interface_classes["compact_preSAMURAI"]["beam_interfaces"]
+    legacy_after_src_interface = interface_classes["legacy_afterSRC_external"]
+    architecture = assumptions["project_architecture"]
+    baseline_names = {
+        str(item["name"]): str(item["status"])
+        for item in architecture["baseline_instruments"]
+    }
+    legacy_names = {
+        str(item["name"]): str(item["status"])
+        for item in architecture["legacy_instruments"]
+    }
     record(
         "Current beam pipe radial wall arithmetic",
         abs(radial_wall - 0.3) < 1.0e-12,
         f"radial_wall={radial_wall:.3f} mm",
     )
     record(
-        "afterSRC frozen interface contract",
-        after_src_contract_present,
-        "front=ICF114, rear=ICF114, top rotary feedthrough=ICF70",
+        "Two CompactInVacuum baseline instruments are declared",
+        baseline_names
+        == {
+            "CompactInVacuum-afterSRC": "baseline",
+            "CompactInVacuum-preSAMURAI": "baseline",
+        },
+        ", ".join(f"{name}={status}" for name, status in baseline_names.items()),
     )
     record(
-        "CompactInVacuum beam-interface contract",
-        compact_front_standard == str(icf["compact_front_interface"])
-        and compact_rear_standard == str(icf["compact_rear_interface"]),
-        f"front={compact_front_standard}, rear={compact_rear_standard}",
+        "External afterSRC design is legacy/fallback/reference",
+        legacy_names.get("legacy afterSRC external-detector design")
+        == "legacy/fallback/reference"
+        and legacy_after_src_interface["beam_interfaces"]["class"] == "B",
+        (
+            f"status={legacy_names.get('legacy afterSRC external-detector design')}, "
+            f"interface_class={legacy_after_src_interface['beam_interfaces']['class']}"
+        ),
+    )
+    record(
+        "Compact deployment beam interfaces remain independently unresolved",
+        after_src_interface["class"] == "D"
+        and pre_samurai_interface["class"] == "D",
+        (
+            f"afterSRC={after_src_interface['class']}/{after_src_interface['status']}; "
+            f"preSAMURAI={pre_samurai_interface['class']}/{pre_samurai_interface['status']}"
+        ),
+    )
+    record(
+        "Legacy numerical CAD interface is labelled as a reference assumption",
+        compact_front_standard == str(icf["reference_cad_front_interface"])
+        and compact_rear_standard == str(icf["reference_cad_rear_interface"]),
+        (
+            f"reference CAD front={compact_front_standard}, rear={compact_rear_standard}; "
+            "not a compact deployment contract"
+        ),
     )
     record(
         "ICF114 purchased-part bore conflict is explicitly detected",
         icf114_deficit > 0.0,
         (
             f"CAD stay-clear exceeds reference purchased-part clear bore by "
-            f"{icf114_deficit:.3f} mm; ICF114 remains fixed"
+            f"{icf114_deficit:.3f} mm in the legacy numerical reference geometry; "
+            "no compact deployment interface is inferred"
         ),
     )
     record(
@@ -897,15 +931,30 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
         "path": str(assumptions_path.relative_to(REPOSITORY_ROOT)),
         "sha256": sha256_file(assumptions_path),
     }
+    # [EN] Bind generated artifacts to the newest commit that changed an authoritative input, so a later generated-files-only commit does not invalidate its own provenance. / [CN] 将生成物绑定到最近一次修改权威输入的提交，避免随后仅提交生成文件时让来源记录自我失效。
+    provenance_source_paths = [
+        str(path.relative_to(REPOSITORY_ROOT))
+        for path in source_paths.values()
+    ]
+    provenance_source_paths.append(str(assumptions_path.relative_to(REPOSITORY_ROOT)))
     git_commit = subprocess.run(
-        ["git", "-C", str(REPOSITORY_ROOT), "rev-parse", "HEAD"],
+        [
+            "git",
+            "-C",
+            str(REPOSITORY_ROOT),
+            "log",
+            "-1",
+            "--format=%H",
+            "--",
+            *provenance_source_paths,
+        ],
         check=True,
         capture_output=True,
         text=True,
     ).stdout.strip()
 
     provenance = {
-        "schema_version": 1,
+        "schema_version": 2,
         "git_commit": git_commit,
         "source_hashes": source_hashes,
         "calculation_environment": {
@@ -929,7 +978,7 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
     }
 
     derived = {
-        "schema_version": 1,
+        "schema_version": 2,
         "git_commit": git_commit,
         "geometry": {
             "beam_energy_mev": beam_kinetic_mev,
@@ -1007,19 +1056,33 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
                 icf["assembly_helium_leak_rate_max_pa_m3_s"]
             ),
         },
+        "project_architecture": architecture,
+        "interface_classification": interface_classes,
         "instrument_interfaces": {
-            "after_src": {
-                "front": str(icf["after_src_front_interface"]),
-                "rear": str(icf["after_src_rear_interface"]),
-                "rotary_feedthrough": str(icf["rotary_feedthrough_interface"]),
+            "legacy_after_src_external": {
+                "front": str(icf["legacy_after_src_front_interface"]),
+                "rear": str(icf["legacy_after_src_rear_interface"]),
+                "rotary_feedthrough": str(icf["legacy_after_src_rotary_interface"]),
                 "extra_side_vacuum_ports": False,
+                "classification": "B",
             },
-            "compact_in_vacuum": {
+            "legacy_numerical_reference_cad": {
                 "front": compact_front_standard,
                 "rear": compact_rear_standard,
                 "adapters_and_bellows_allowed": bool(
                     icf["adapters_and_bellows_allowed"]
                 ),
+                "classification": "C",
+            },
+            "compact_after_src": {
+                "front": "TBD",
+                "rear": "TBD",
+                "classification": str(after_src_interface["class"]),
+            },
+            "compact_pre_samurai": {
+                "front": "TBD",
+                "rear": "TBD",
+                "classification": str(pre_samurai_interface["class"]),
             },
             "vacuum_boundary": {
                 "primary_seal": str(icf["primary_seal"]),
@@ -1321,6 +1384,10 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
     provenance_tex_lines.extend([r"\bottomrule", ""])
 
     provenance_role_labels_zh = {
+        "compact_architecture_baseline": "紧凑型架构基线",
+        "compact_platform_common": "公共探测器平台配置",
+        "compact_after_src_profile": "afterSRC 紧凑型部署配置",
+        "compact_pre_samurai_profile": "pre-SAMURAI 紧凑型部署配置",
         "compact_config": "紧凑型配置",
         "compact_target": "靶系统配置",
         "channel_manifest": "通道清单",
@@ -1329,6 +1396,10 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
         "energy_model": "能损模型",
         "lise_range_model": "LISE 射程模型",
         "mechanical_baseline": "机械需求基线",
+        "report_source_en": "英文报告源文件",
+        "report_source_zh": "中文报告源文件",
+        "report_generator": "报告数据生成器",
+        "report_makefile": "报告构建工作流",
         "report_assumptions": "报告假设",
     }
     provenance_tex_lines_zh = [
@@ -1343,7 +1414,7 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
     provenance_tex_lines_zh.extend([r"\bottomrule", ""])
 
     summary_lines = [
-        "CompactInVacuum SiPM report numerical verification",
+        "CompactInVacuum common-platform report numerical verification",
         f"OVERALL: {'FAIL' if failures else 'PASS'}",
         f"Git commit: {git_commit}",
         f"Source validation status: {validation.get('status')}",
@@ -1362,10 +1433,12 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
             f"legacy maximum={legacy_maximum_deposit_mev:.4f} MeV"
         ),
         (
-            "Frozen vacuum interfaces: "
-            f"afterSRC={icf['after_src_front_interface']}/{icf['after_src_rear_interface']} "
-            f"+ top {icf['rotary_feedthrough_interface']}; "
-            f"compact={compact_front_standard}/{compact_rear_standard}"
+            "Project baseline: CompactInVacuum-afterSRC + "
+            "CompactInVacuum-preSAMURAI; legacy afterSRC external=reference/fallback"
+        ),
+        (
+            "Compact beam interfaces: afterSRC=D/TBD; preSAMURAI=D/TBD; "
+            f"legacy numerical reference CAD={compact_front_standard}/{compact_rear_standard}"
         ),
         "",
         "Checks:",
