@@ -4,14 +4,14 @@
     "python": "3.10.19",
     "pyyaml": "6.0.3"
   },
-  "git_commit": "d1fc28f96a2018a212be7de07d94d80ad435ba9f",
+  "git_commit": "123fee48396193b9d9c62dc4cf60cde15788ef78",
   "report_recommendation_state": {
     "active_medium": "fast blue plastic scintillator",
     "candidate_active_thickness_mm": 5.0,
     "photosensor": "NDL EQR15 11-6060D-S",
     "status": "proposed prototype baseline; not yet promoted into the CAD configuration"
   },
-  "schema_version": 1,
+  "schema_version": 2,
   "source_detector_decision_state": {
     "active_medium": "placeholder",
     "active_medium_status": "undecided",
@@ -27,13 +27,29 @@
       "path": "compactInVacuum/compactInVacuum.channel_manifest.json",
       "sha256": "7997601490146763cbfa3776699985e2dd21cf85e10c063eb8072acd7db11258"
     },
+    "compact_after_src_profile": {
+      "path": "compactInVacuum/config/afterSRC_compact.yaml",
+      "sha256": "fe7258bfe6ddd2e3d532b131f2d219d1950548329ae4a786019a8ff41a417fec"
+    },
+    "compact_architecture_baseline": {
+      "path": "docs/specs/compact_one_requirement_baseline.md",
+      "sha256": "651efe396cf3ae56f338a4862e24266d37fa5ca5e44d6a06f91e122446ebb7ea"
+    },
     "compact_config": {
       "path": "compactInVacuum/config/default_compactInVacuum.yaml",
       "sha256": "099c4f5596532b3e2acde11f0f7dd048ef6b1d58b76a2cea639b729c6928de1b"
     },
+    "compact_platform_common": {
+      "path": "compactInVacuum/config/common_detector.yaml",
+      "sha256": "0b6e6552ff01c8c71ed7fe0f29f94928b07dafd69f90612597163eabc1364da0"
+    },
+    "compact_pre_samurai_profile": {
+      "path": "compactInVacuum/config/infrontSamurai_compact.yaml",
+      "sha256": "c002d966a31da3b8d9b2499702dfa41d5bbacf32dc3ff8bb50f6561f62b61a00"
+    },
     "compact_target": {
       "path": "compactInVacuum/target.yaml",
-      "sha256": "4e6078905408278fe5e383db4579fef2da2bb9f83ea79032bb8d7e6da7168462"
+      "sha256": "abe34b0fbc06416855766d7b80f5964889b46e5182f3a0130fb3c7964db41e15"
     },
     "energy_model": {
       "path": "code/data/energy_lise/dp_dc_kinematics.py",
@@ -45,11 +61,27 @@
     },
     "mechanical_baseline": {
       "path": "docs/specs/BLP_v1_requirement_baseline.md",
-      "sha256": "bd1b8faccd5ca8971ae77952fc5bcfa2cf2d0ec5ef5a4fa3cd68f0bdc1d68445"
+      "sha256": "f4e6e1ce5980b6708a007c92e82225b16e8634bf201a15d0d0994ffd37b92e57"
     },
     "report_assumptions": {
       "path": "docs/polarimeter_detector/compact_in_vacuum_sipm_report/data/report_assumptions.yaml",
-      "sha256": "c981717c112146278dda32fdb59d080c77fd9f029bf886eef78ebdcefe3e1d63"
+      "sha256": "d0ae41aff893a2939f9971195aa8ac69fd3af444a0eace9d5f839923755f47a1"
+    },
+    "report_generator": {
+      "path": "docs/polarimeter_detector/compact_in_vacuum_sipm_report/scripts/generate_report_data.py",
+      "sha256": "1abf86dc11c93739e146a8bd68eab3ccc39e3977aee2c3c72079deb44a3a7417"
+    },
+    "report_makefile": {
+      "path": "docs/polarimeter_detector/compact_in_vacuum_sipm_report/Makefile",
+      "sha256": "c7d5160535a9834a0b5b44296a3c1630780c17e050c64b4ad62b0b9dfeda3591"
+    },
+    "report_source_en": {
+      "path": "docs/polarimeter_detector/compact_in_vacuum_sipm_report/compact_in_vacuum_sipm_report.tex",
+      "sha256": "0a9757648615b2ccf04cee896962631ef91c616c2dc3724ff161b219f0056994"
+    },
+    "report_source_zh": {
+      "path": "docs/polarimeter_detector/compact_in_vacuum_sipm_report/compact_in_vacuum_sipm_report_zh.tex",
+      "sha256": "f3b236632754e681ad3122da4ad18874b2c0ece5cea61e8d2a32c3037d785d64"
     },
     "validation_report": {
       "path": "compactInVacuum/compactInVacuum.validation_report.json",

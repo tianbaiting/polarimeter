@@ -218,16 +218,28 @@
       "proton_small": 152.0
     }
   },
-  "git_commit": "d1fc28f96a2018a212be7de07d94d80ad435ba9f",
+  "git_commit": "123fee48396193b9d9c62dc4cf60cde15788ef78",
   "instrument_interfaces": {
-    "after_src": {
+    "compact_after_src": {
+      "classification": "D",
+      "front": "TBD",
+      "rear": "TBD"
+    },
+    "compact_pre_samurai": {
+      "classification": "D",
+      "front": "TBD",
+      "rear": "TBD"
+    },
+    "legacy_after_src_external": {
+      "classification": "B",
       "extra_side_vacuum_ports": false,
       "front": "ICF114",
       "rear": "ICF114",
       "rotary_feedthrough": "ICF70"
     },
-    "compact_in_vacuum": {
+    "legacy_numerical_reference_cad": {
       "adapters_and_bellows_allowed": true,
+      "classification": "C",
       "front": "ICF114",
       "rear": "ICF114"
     },
@@ -236,7 +248,100 @@
       "primary_seal": "OFHC copper gasket on ICF knife edge"
     }
   },
-  "schema_version": 1,
+  "interface_classification": {
+    "classes": {
+      "A": "externally constrained by approved beamline evidence",
+      "B": "inherited from a legacy design",
+      "C": "current engineering assumption",
+      "D": "unresolved / TBD"
+    },
+    "compact_afterSRC": {
+      "beam_interfaces": {
+        "class": "D",
+        "evidence_required": "approved afterSRC beamline interface drawing and site survey",
+        "status": "TBD"
+      },
+      "rotary_interface": {
+        "class": "C",
+        "evidence_required": "site constraint and signed feedthrough/interface drawing",
+        "status": "provisional ICF70 study envelope"
+      },
+      "signal_feedthrough_layout": {
+        "class": "C",
+        "evidence_required": "selected parts, site envelope, and service-routing review",
+        "status": "provisional capacity/layout study"
+      }
+    },
+    "compact_preSAMURAI": {
+      "beam_interfaces": {
+        "class": "D",
+        "evidence_required": "approved pre-SAMURAI mating-chain drawing and site survey",
+        "status": "TBD"
+      },
+      "rotary_interface": {
+        "class": "D",
+        "evidence_required": "target-motion and site-interface requirements",
+        "status": "TBD"
+      },
+      "signal_feedthrough_layout": {
+        "class": "C",
+        "evidence_required": "selected parts, site envelope, and service-routing review",
+        "status": "provisional capacity/layout study"
+      }
+    },
+    "legacy_afterSRC_external": {
+      "beam_interfaces": {
+        "class": "B",
+        "status": "ICF114 front/rear in legacy baseline"
+      },
+      "rotary_interface": {
+        "class": "B",
+        "status": "ICF70 top mount in legacy baseline"
+      }
+    }
+  },
+  "project_architecture": {
+    "baseline_instruments": [
+      {
+        "detector_location": "in vacuum",
+        "key": "compact_afterSRC",
+        "location": "downstream of SRC",
+        "name": "CompactInVacuum-afterSRC",
+        "status": "baseline"
+      },
+      {
+        "detector_location": "in vacuum",
+        "key": "compact_preSAMURAI",
+        "location": "before the SAMURAI terminal",
+        "name": "CompactInVacuum-preSAMURAI",
+        "status": "baseline"
+      }
+    ],
+    "common_platform": "CompactInVacuum platform",
+    "common_scope": [
+      "scintillator and SiPM technology",
+      "detector cassette",
+      "vacuum detector services",
+      "electronics and calibration",
+      "common physics and response studies"
+    ],
+    "legacy_instruments": [
+      {
+        "detector_location": "outside vacuum",
+        "key": "legacy_afterSRC_external",
+        "name": "legacy afterSRC external-detector design",
+        "status": "legacy/fallback/reference"
+      }
+    ],
+    "site_specific_scope": [
+      "chamber geometry",
+      "beamline interfaces",
+      "target integration",
+      "supports and alignment",
+      "installation and maintenance access"
+    ]
+  },
+  "schema_version": 2,
   "sipm": [
     {
       "carbon_5pct": {
