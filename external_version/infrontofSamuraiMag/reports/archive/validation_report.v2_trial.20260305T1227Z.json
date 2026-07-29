@@ -1,0 +1,327 @@
+{
+  "status": "pass",
+  "thresholds": {
+    "angle_tolerance_deg": 0.05,
+    "radius_tolerance_mm": 0.2
+  },
+  "channels": [
+    {
+      "tag": "left_deuteron",
+      "target_angle_deg": 20.9,
+      "actual_angle_deg": 20.900000000000006,
+      "delta_angle_deg": 7.105427357601002e-15,
+      "target_radius_mm": 560.0,
+      "actual_radius_mm": 560.0,
+      "delta_radius_mm": 0.0,
+      "pass": true
+    },
+    {
+      "tag": "right_deuteron",
+      "target_angle_deg": 20.9,
+      "actual_angle_deg": 20.900000000000006,
+      "delta_angle_deg": 7.105427357601002e-15,
+      "target_radius_mm": 560.0,
+      "actual_radius_mm": 560.0,
+      "delta_radius_mm": 0.0,
+      "pass": true
+    },
+    {
+      "tag": "up_deuteron",
+      "target_angle_deg": 20.9,
+      "actual_angle_deg": 20.900000000000006,
+      "delta_angle_deg": 7.105427357601002e-15,
+      "target_radius_mm": 560.0,
+      "actual_radius_mm": 560.0,
+      "delta_radius_mm": 0.0,
+      "pass": true
+    },
+    {
+      "tag": "down_deuteron",
+      "target_angle_deg": 20.9,
+      "actual_angle_deg": 20.900000000000006,
+      "delta_angle_deg": 7.105427357601002e-15,
+      "target_radius_mm": 560.0,
+      "actual_radius_mm": 560.0,
+      "delta_radius_mm": 0.0,
+      "pass": true
+    },
+    {
+      "tag": "left_proton_small",
+      "target_angle_deg": 11.2,
+      "actual_angle_deg": 11.19999999999998,
+      "delta_angle_deg": -1.9539925233402755e-14,
+      "target_radius_mm": 760.0,
+      "actual_radius_mm": 760.0000000000001,
+      "delta_radius_mm": 1.1368683772161603e-13,
+      "pass": true
+    },
+    {
+      "tag": "right_proton_small",
+      "target_angle_deg": 11.2,
+      "actual_angle_deg": 11.19999999999998,
+      "delta_angle_deg": -1.9539925233402755e-14,
+      "target_radius_mm": 760.0,
+      "actual_radius_mm": 760.0000000000001,
+      "delta_radius_mm": 1.1368683772161603e-13,
+      "pass": true
+    },
+    {
+      "tag": "up_proton_small",
+      "target_angle_deg": 11.2,
+      "actual_angle_deg": 11.19999999999998,
+      "delta_angle_deg": -1.9539925233402755e-14,
+      "target_radius_mm": 760.0,
+      "actual_radius_mm": 760.0000000000001,
+      "delta_radius_mm": 1.1368683772161603e-13,
+      "pass": true
+    },
+    {
+      "tag": "down_proton_small",
+      "target_angle_deg": 11.2,
+      "actual_angle_deg": 11.19999999999998,
+      "delta_angle_deg": -1.9539925233402755e-14,
+      "target_radius_mm": 760.0,
+      "actual_radius_mm": 760.0000000000001,
+      "delta_radius_mm": 1.1368683772161603e-13,
+      "pass": true
+    },
+    {
+      "tag": "left_proton_large",
+      "target_angle_deg": 53.4,
+      "actual_angle_deg": 53.4,
+      "delta_angle_deg": 0.0,
+      "target_radius_mm": 820.0,
+      "actual_radius_mm": 820.0000000000001,
+      "delta_radius_mm": 1.1368683772161603e-13,
+      "pass": true
+    },
+    {
+      "tag": "right_proton_large",
+      "target_angle_deg": 53.4,
+      "actual_angle_deg": 53.4,
+      "delta_angle_deg": 0.0,
+      "target_radius_mm": 820.0,
+      "actual_radius_mm": 820.0000000000001,
+      "delta_radius_mm": 1.1368683772161603e-13,
+      "pass": true
+    },
+    {
+      "tag": "up_proton_large",
+      "target_angle_deg": 53.4,
+      "actual_angle_deg": 53.4,
+      "delta_angle_deg": 0.0,
+      "target_radius_mm": 820.0,
+      "actual_radius_mm": 820.0000000000001,
+      "delta_radius_mm": 1.1368683772161603e-13,
+      "pass": true
+    },
+    {
+      "tag": "down_proton_large",
+      "target_angle_deg": 53.4,
+      "actual_angle_deg": 53.4,
+      "delta_angle_deg": 0.0,
+      "target_radius_mm": 820.0,
+      "actual_radius_mm": 820.0000000000001,
+      "delta_radius_mm": 1.1368683772161603e-13,
+      "pass": true
+    }
+  ],
+  "subsystems": {
+    "chamber": {
+      "status": "pass",
+      "checks": [
+        {
+          "name": "no_conical_transition",
+          "pass": true,
+          "detail": "chamber geometry is rectangular core with planar end modules"
+        },
+        {
+          "name": "end_module_standard",
+          "pass": true,
+          "detail": "front=VG150, rear=VF150"
+        },
+        {
+          "name": "fixed_4_ports",
+          "pass": true,
+          "detail": "ports={main_pump,gauge_safety,rotary_feedthrough,spare} with main_pump.side=right, gauge_safety.side=left"
+        },
+        {
+          "name": "end_module_interface_complete",
+          "pass": true,
+          "detail": "seal_face=12.000, bolt_circle=180.000, bolt_count=12, oring=6.000x2.200"
+        },
+        {
+          "name": "end_module_fastener_hardware",
+          "pass": true,
+          "detail": "bolts=24, washers=24, nuts=24, spec=(6.0,34.0,12.0,5.0,14.0,1.5)"
+        },
+        {
+          "name": "vacuum_boundary_complete",
+          "pass": true,
+          "detail": "param_ok=True, geom_ok=True, solids=1, shells=2, closed=True, volume=23305248.256"
+        },
+        {
+          "name": "no_detector_signal_feedthrough_port",
+          "pass": true,
+          "detail": "port_fields=main_pump,gauge_safety,rotary_feedthrough,spare"
+        }
+      ]
+    },
+    "plates": {
+      "status": "pass",
+      "checks": [
+        {
+          "name": "hvv_topology",
+          "pass": true,
+          "detail": "plate set includes H + V1 + V2"
+        },
+        {
+          "name": "plate_pose_valid_hvv",
+          "pass": true,
+          "detail": "h=horizontal/xz, v1=vertical/xy, v2=vertical/xy"
+        },
+        {
+          "name": "all_plates_offset_from_beam_axis",
+          "pass": true,
+          "detail": "h=(24.000,0.000), v1=(-16.000,93.000), v2=(14.000,-93.000)"
+        },
+        {
+          "name": "regular_annular_sector_openings",
+          "pass": true,
+          "detail": "h[inner=1.000,outer=220.000,open=140.000]; v1[inner=1.000,outer=235.000,open=170.000]; v2[inner=1.000,outer=250.000,open=170.000]"
+        },
+        {
+          "name": "load_path_complete",
+          "pass": true,
+          "detail": "h[lug=48.0x76.0x20.0,bolts=2,stiffeners=3]; v1[lug=42.0x74.0x20.0,bolts=2,stiffeners=2]; v2[lug=42.0x74.0x20.0,bolts=2,stiffeners=2]"
+        },
+        {
+          "name": "plate_to_stand_tie_hardware",
+          "pass": true,
+          "detail": "columns=6, top_caps=6, bottom_caps=6, bolts=6, spec=(12.0,32.0,26.0,8.0,6.0)"
+        },
+        {
+          "name": "bolt_pattern_valid",
+          "pass": true,
+          "detail": "h[hole_d=14.0,pitch=42.0,count=2]; v1[hole_d=14.0,pitch=40.0,count=2]; v2[hole_d=14.0,pitch=40.0,count=2]"
+        },
+        {
+          "name": "stiffener_presence",
+          "pass": true,
+          "detail": "h[n=3,t=10.0,h=30.0,l=200.0]; v1[n=2,t=10.0,h=26.0,l=120.0]; v2[n=2,t=10.0,h=26.0,l=120.0]"
+        },
+        {
+          "name": "los_unobstructed_margin_5mm",
+          "pass": true,
+          "detail": "margin=5.000 mm, failures=0"
+        },
+        {
+          "name": "los_all_occluders_clear",
+          "pass": true,
+          "detail": "all LOS rays are clear against modeled occluders; scope=v2_fullpath; path=source_plane->chamber_effective_channels->detector_active_face; occluders={chamber_shell,end_modules,ports,plates,plate_ties,target_hardware,stand}; exempt={detector_packages}"
+        }
+      ]
+    },
+    "detector": {
+      "status": "pass",
+      "checks": [
+        {
+          "name": "angle_radius_hit",
+          "pass": true,
+          "detail": "channels=12, failed=0"
+        },
+        {
+          "name": "all_detectors_outside_chamber",
+          "pass": true,
+          "detail": "clearance=40.000 mm"
+        },
+        {
+          "name": "no_detector_interference",
+          "pass": true,
+          "detail": "pairs=66, overlap_tol=1e-3 mm^3"
+        },
+        {
+          "name": "no_detector_package_interference_with_assembly",
+          "pass": true,
+          "detail": "matrix_pairs=816, overlap_tol=1e-3 mm^3"
+        },
+        {
+          "name": "support_bridge_connected_to_plate",
+          "pass": true,
+          "detail": "all detector supports include explicit bridge solids to load-bearing plates"
+        },
+        {
+          "name": "split_clamp_with_limit_features",
+          "pass": true,
+          "detail": "detector=58.000, inner=62.000, outer=74.000, split_gap=1.500"
+        },
+        {
+          "name": "clamp_fastening_and_key_features",
+          "pass": true,
+          "detail": "ear=(18.0,14.0,16.0), bolt_d=6.0, pitch=18.0, key=(8.0,1.5,12.0)"
+        },
+        {
+          "name": "support_attached_to_loadbearing_plate",
+          "pass": true,
+          "detail": "all support anchors are inside corresponding load-bearing plate envelopes"
+        }
+      ]
+    },
+    "target": {
+      "status": "pass",
+      "checks": [
+        {
+          "name": "linear_3_position_ladder",
+          "pass": true,
+          "detail": "slot_pitch=45.000, active_index=1"
+        },
+        {
+          "name": "target_set_empty_experiment_fluorescence",
+          "pass": true,
+          "detail": "experiment_t=0.200, fluorescence_t=1.200"
+        },
+        {
+          "name": "removable_holder_dual_screw_clamp",
+          "pass": true,
+          "detail": "clamp_block=(12.000,8.000), screw=(3.500,6.500,2.200), screw_parts=6"
+        },
+        {
+          "name": "external_rotary_feedthrough_drive",
+          "pass": true,
+          "detail": "shaft_d=18.000, handwheel_d=110.000"
+        },
+        {
+          "name": "drive_semantics_complete",
+          "pass": true,
+          "detail": "motor_mount=(120.0,90.0,16.0), hard_stop=(70.0,10.0), index=(70.0,6.0)"
+        }
+      ]
+    },
+    "stand": {
+      "status": "pass",
+      "checks": [
+        {
+          "name": "four_point_support",
+          "pass": true,
+          "detail": "stand generator emits 4 support feet"
+        },
+        {
+          "name": "anchor_slots_and_leveling",
+          "pass": true,
+          "detail": "slot=(30.000,14.000), level_screw_d=16.000, shim_t=2.000"
+        },
+        {
+          "name": "plate_tie_parameterized",
+          "pass": true,
+          "detail": "column_d=12.000, cap=(32.000,26.000,8.000), bolt_d=6.000"
+        },
+        {
+          "name": "maintenance_clearance_top_and_sides",
+          "pass": true,
+          "detail": "top=180.000, side=150.000"
+        }
+      ]
+    }
+  },
+  "artifacts": {}
+}

@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "module": "infrontofSamuraiMag",
+  "target": {
+    "path": "/home/tian/workspace/dpol/polarimeter/infrontofSamuraiMag/target.yaml",
+    "sha256": "ac81464fbffd5d91f69918c3b07a1e13cfe2ba46d491ca13dfd1ea5436398e05"
+  },
+  "run": {
+    "run_id": "20260726T171250Z-3952380",
+    "started_at_utc": "2026-07-26T17:12:50Z",
+    "finished_at_utc": "2026-07-26T17:14:10Z",
+    "status": "pass",
+    "git_head": "7d9b9b8931400e0f99d089473a0be9992e1119dd",
+    "git_dirty": false
+  },
+  "validation": {
+    "status": "pass",
+    "strict": true,
+    "angle_tolerance_deg": 0.05,
+    "radius_tolerance_mm": 0.2,
+    "report_json": "/home/tian/workspace/dpol/polarimeter/infrontofSamuraiMag/infrontofSamuraiMag.validation_report.json"
+  },
+  "artifacts": {
+    "fcstd": {
+      "path": "/home/tian/workspace/dpol/polarimeter/infrontofSamuraiMag/infrontofSamuraiMag.FCStd",
+      "exists": true,
+      "size_bytes": 821803,
+      "sha256": "87a178b431336720ee472c3b9b4daf920846c6d28748f78ff13d7d678c38759b"
+    },
+    "step": {
+      "path": "/home/tian/workspace/dpol/polarimeter/infrontofSamuraiMag/infrontofSamuraiMag.step",
+      "exists": true,
+      "size_bytes": 4513067,
+      "sha256": "39a0f61d548bc136ec180fbf3d7a79f55aa4490ea07b3771ea61c54ec99131b9"
+    },
+    "validation_report": {
+      "path": "/home/tian/workspace/dpol/polarimeter/infrontofSamuraiMag/infrontofSamuraiMag.validation_report.json",
+      "exists": true,
+      "size_bytes": 32076,
+      "sha256": "423205f669d06d2312ecb607dfcfedecd5a7ff94e9ad2194a99c944becd770b6"
+    }
+  }
+}
