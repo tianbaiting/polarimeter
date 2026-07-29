@@ -1,6 +1,6 @@
 CompactInVacuum common-platform report numerical verification
 OVERALL: PASS
-Git commit: 123fee48396193b9d9c62dc4cf60cde15788ef78
+Git commit: 7e748004667a6dd1b68a511c4b3f2682c015b3c1
 Source validation status: pass
 CAD detector decision state: active_medium=placeholder (undecided), photosensor=SiPM_device_model_provisional (selected)
 Report detector proposal: fast blue plastic scintillator + NDL EQR15 11-6060D-S

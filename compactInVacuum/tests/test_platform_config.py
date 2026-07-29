@@ -109,21 +109,23 @@ def test_repository_angles_remain_unchanged_pending_evidence() -> None:
     assert channels["proton_small"].angle_deg == pytest.approx(11.2)
 
 
-def test_square_and_cylindrical_candidates_are_real_choices() -> None:
+def test_aftersrc_uses_only_square_while_samurai_retains_screening_choices() -> None:
     aftersrc = load_config(str(CONFIG_DIR / "afterSRC_compact.yaml")).compact_one
     samurai = load_config(str(CONFIG_DIR / "infrontSamurai_compact.yaml")).compact_one
     assert aftersrc is not None
     assert samurai is not None
 
-    assert {item.cross_section for item in aftersrc.deployment.chamber_candidates} == {
-        "square",
-        "cylindrical",
-    }
+    assert aftersrc.deployment.selected_chamber_candidate == (
+        "aftersrc_square_service_plate"
+    )
+    assert {
+        item.cross_section for item in aftersrc.deployment.chamber_candidates
+    } == {"square"}
     assert {item.cross_section for item in samurai.deployment.chamber_candidates} == {
         "square",
         "cylindrical",
     }
-    assert aftersrc.deployment.chamber.cross_section == "cylindrical"
+    assert aftersrc.deployment.chamber.cross_section == "square"
     assert samurai.deployment.chamber.cross_section == "square"
 
 

@@ -174,8 +174,8 @@
   \renewcommand{\arraystretch}{1.35}
   \begin{tabularx}{\textwidth}{>{\sffamily\bfseries}L{0.23\textwidth}Y}
     \toprule
-    Status & Architecture-corrected preliminary engineering study \\
-    Issue date & 27 July 2026 \\
+    Status & Compact-head and square-chamber preliminary engineering study \\
+    Issue date & 29 July 2026 \\
     CAD reference & Polarimeter commit \texttt{\ReportGitCommit} \\
     Architecture authority & \path{docs/specs/compact_one_requirement_baseline.md} \\
     Deployment profiles & \path{compactInVacuum/config/afterSRC_compact.yaml};
@@ -191,9 +191,11 @@
   \begin{warningbox}{PROJECT BASELINE -- PRELIMINARY, NOT FOR FABRICATION OR PURCHASE RELEASE}
     Two CompactInVacuum polarimeters are the current baseline: one after SRC and one before
     SAMURAI. Both place their scintillator/SiPM detectors inside vacuum and share a common
-    detector platform. Their chambers and beamline interfaces are site-specific and remain
-    independently controlled. The old afterSRC external-detector concept is retained only as
-    a legacy/fallback/reference route.
+    detector platform. The current CAD profiles use separate square screening chambers:
+    \SI{440}{\milli\meter} by \SI{440}{\milli\meter} for afterSRC and
+    \SI{450}{\milli\meter} by \SI{450}{\milli\meter} for pre-SAMURAI. Their beamline
+    interfaces remain site-specific and independently controlled. The old afterSRC
+    external-detector concept is retained only as a legacy/fallback/reference route.
   \end{warningbox}
 
   \vspace{0.22in}
@@ -218,7 +220,7 @@
   chamber geometry, beamline interfaces, target integration, supports, and maintenance
   access remain site-specific. The previously studied afterSRC external-detector
   configuration is retained as a legacy/reference alternative but is not the present
-  baseline.
+  baseline. The selected afterSRC screening chamber is square, not cylindrical.
 \end{decisionbox}
 
 \begin{decisionbox}{Recommended first-prototype baseline}
@@ -291,15 +293,19 @@ plans, dimensional inspection, cleaning records, and helium-leak acceptance.
       Source/beam timing, threshold, light-output, and thickness-comparison data \\
     SiPM & EQR15 baseline; EQR20 backup; Hamamatsu reference &
       Bench linearity, gain, dark rate, temperature coefficient, and lot screening \\
-    Chamber & Short cylindrical pressure shell plus removable flat service plate or
-      faceted detector cartridge & Port map, external-pressure FEA, handling mass, and access review \\
+    Chamber & Separate square service-plate chambers: \SI{440}{\milli\meter} by
+      \SI{440}{\milli\meter} afterSRC and \SI{450}{\milli\meter} by
+      \SI{450}{\milli\meter} pre-SAMURAI & Port map, external-pressure FEA, handling mass,
+      and access review for each deployment \\
     Site interfaces & afterSRC compact and pre-SAMURAI compact defined independently; current
       beam interfaces TBD & Approved beamline drawings, site surveys, selected purchased
       components, vacuum-boundary definition, and leak acceptance \\
-    PrMat workshare & Chamber, rotary-feedthrough integration, metal cassettes, final
+    PrMat workshare & Chamber, rotary-feedthrough integration, detector-head and
+      sector-holder interfaces, final
       dimensional and leak acceptance & Accepted capability questionnaire and quality plan \\
     Detector workshare & Scintillator supplier plus project electronics team &
-      A golden cassette passes optical, vacuum, electrical, and coincidence tests \\
+      A golden detector head and one complete sector pass optical, vacuum, electrical,
+      mechanical-removal, and coincidence tests \\
     \bottomrule
   \end{tabularx}
 \end{table}
@@ -308,9 +314,10 @@ plans, dimensional inspection, cleaning records, and helium-leak acceptance.
 
 This report develops the \emph{common} CompactInVacuum detector platform for both baseline
 instruments. It does not define one universal chamber. The existing numerical detector,
-energy-loss, saturation, electronics, service, cassette, mass-screening, manufacturing, and
-China-sourcing studies remain useful common-platform work. Site-specific dimensions are not
-created by copying the legacy afterSRC chamber.
+energy-loss, saturation, electronics, service, detector-head, sector-holder, mass-screening,
+manufacturing, and China-sourcing studies remain useful common-platform work. The current
+screening profiles use square chambers at both sites, while their dimensions and interfaces
+remain independently controlled rather than copied from the legacy afterSRC chamber.
 
 \begin{center}
 \begin{minipage}{0.72\textwidth}
@@ -344,7 +351,9 @@ Legacy: afterSRC external detector
     Baseline status & Baseline & Baseline & Legacy/fallback \\
     Detector location & In vacuum & In vacuum & Outside vacuum \\
     Detector platform & Common compact platform & Common compact platform & Old external design \\
-    Chamber geometry & Site-specific / TBD & Site-specific / TBD & Existing reference \\
+    Chamber geometry & Square, \SI{440}{\milli\meter} by \SI{440}{\milli\meter},
+      provisional & Square, \SI{450}{\milli\meter} by \SI{450}{\milli\meter},
+      provisional & Existing reference \\
     Beam interfaces & Verify independently & Verify independently & Existing assumptions \\
     \bottomrule
   \end{tabularx}
@@ -353,9 +362,9 @@ Legacy: afterSRC external detector
 \subsection{Requirement separation}
 
 \textbf{Common platform requirements.}
-Scintillator and SiPM technology, optical package, cassette and sector concepts,
-twelve-channel vacuum services, electronics, calibration, thermal-path semantics,
-and common physics/response studies.
+Scintillator and SiPM technology, the explicit compact detector-head stack, coherent
+three-head sector holders, twelve signal channels, passive conductive interfaces,
+electronics, calibration, and common physics/response studies.
 
 \textbf{afterSRC site requirements.}
 Actual longitudinal/transverse envelope, usable beam aperture, neighboring equipment,
@@ -388,7 +397,7 @@ ownership, support datums, and an installation/maintenance review.
       Approved pre-SAMURAI mating-chain drawing and site survey \\
     CompactInVacuum-preSAMURAI rotary interface & D & Target/feedthrough interface TBD &
       Target-motion requirements and approved site interface \\
-    Compact signal/housekeeping port layout & C & Required capacity is known; flange count,
+    Compact signal-port layout & C & Required signal capacity is known; flange count,
       standards, and locations are provisional & Selected parts plus routing, access, and
       site-envelope review for each instrument \\
     Legacy afterSRC external interfaces & B & ICF114 front/rear and ICF70 top mount belong
@@ -408,9 +417,8 @@ CH2 target with elastic d--p coincidence in four azimuthal sectors.
 \begin{table}[htbp]
   \centering
   \small
-  \caption{Detector geometry read from the legacy numerical CompactInVacuum reference
-  configuration and
-  checked against the generated channel manifest.}
+  \caption{Detector directions and active-center radii checked against the generated
+  channel manifest.}
   \begin{tabular}{L{0.10\textwidth}L{0.13\textwidth}C{0.12\textwidth}C{0.20\textwidth}L{0.24\textwidth}}
     \toprule
     Station & Particle & Angle (\si{\degree}) & Active-center radius (\si{\milli\meter}) &
@@ -421,28 +429,38 @@ CH2 target with elastic d--p coincidence in four azimuthal sectors.
   \datatag{generated/geometry_table.tex; generated/provenance.json}
 \end{table}
 
-The legacy numerical CAD detector envelope is \SI{\ActiveDiameterMm}{\milli\meter} diameter by
-\SI{\ActiveLengthMm}{\milli\meter}. Its configuration still records both active medium and
-photosensor as \enquote{undecided/placeholder}. The SiPM and plastic-scintillator choices in
-this report are therefore a \proposal{} prototype baseline. They should be promoted into
-the authoritative common-platform target/configuration only after the first optical coupon
-and packaging decisions are accepted.
+The schema-3 detector configuration now defines a \SI{20}{\milli\meter}-diameter,
+\SI{5.5}{\milli\meter}-thick fast-plastic prototype with an NDL EQR15 11-6060D-S-class
+SiPM. Its calculated physical head depth is \SI{9.70}{\milli\meter}, measured from the
+active entrance face to the rear housing and excluding the cable exit, connector keepout,
+and removal envelope. Supplier drawings, reflector material, optical-pad material, PCB,
+connector, and production tolerances remain provisional.
 
-\subsection{Legacy numerical chamber envelope}
+\subsection{Square chamber baseline and legacy mass screen}
+
+The selected CompactInVacuum-afterSRC screening chamber is square with a provisional
+\SI{440}{\milli\meter} by \SI{440}{\milli\meter} internal section,
+\SI{360}{\milli\meter} body length, and \SI{8}{\milli\meter} wall. The selected
+pre-SAMURAI screening chamber is independently defined as
+\SI{450}{\milli\meter} by \SI{450}{\milli\meter}, \SI{380}{\milli\meter} long, with a
+provisional \SI{8}{\milli\meter} wall. Neither wall is released without external-pressure,
+penetration, weld, support, and handling analysis.
 
 \begin{table}[htbp]
   \centering
   \small
-  \caption{Legacy square-vessel screening metrics. The closed-shell mass estimate ignores
-  ports, weld preparations, local reinforcements, and removed material.}
+  \caption{Earlier \SI{10}{\milli\meter}-wall square-vessel arithmetic retained only as a
+  legacy mass screen. It is not the selected afterSRC wall model and ignores ports, weld
+  preparations, local reinforcements, and removed material.}
   \begin{tabularx}{\textwidth}{L{0.26\textwidth}L{0.23\textwidth}Y}
     \toprule
     Parameter & Current model / calculation & Engineering interpretation \\
     \midrule
     Inner cross-section & \SI{440}{\milli\meter} by \SI{440}{\milli\meter} &
-      Larger than expected for a compact detector cartridge; drives transport volume \\
-    Nominal wall thickness & \SI{10}{\milli\meter} &
-      Must not be frozen without external-pressure buckling analysis and weld details \\
+      Larger than the internal detector sectors require; drives transport volume \\
+    Nominal wall thickness & \SI{10}{\milli\meter} historical screen &
+      Superseded by the provisional \SI{8}{\milli\meter} deployment profiles; neither value
+      is releasable without external-pressure buckling analysis and weld details \\
     Body length & \SI{360}{\milli\meter} &
       A short body, but detector services and target access still dominate packaging \\
     Closed-shell material volume & \SI{\ChamberMaterialVolumeL}{\liter} &
@@ -464,12 +482,14 @@ and packaging decisions are accepted.
     \SI{\CompactScaledProtonSmallRadius}{\milli\meter}, and
     \SI{\CompactScaledProtonLargeRadius}{\milli\meter}, with a
     \SI{\CompactScaledActiveDiameter}{\milli\meter} active diameter.
-  \item Evaluate a short cylindrical pressure shell around a removable flat or faceted
-    detector/service cartridge. A cylinder remains structurally efficient under external
-    pressure; the flat service element simplifies ICF bosses, feedthroughs, datums, and maintenance.
-  \item Group electrical services on one removable plate or top/rear manifold. Avoid
-    distributing twelve signal feedthroughs around the curved shell unless routing and weld
-    distortion analyses justify it.
+  \item Use a square chamber with planar service walls for both current deployment profiles.
+    CompactInVacuum-afterSRC uses the \SI{440}{\milli\meter} square screening profile; a
+    cylindrical afterSRC candidate is not retained.
+  \item Use a removable top service manifold and planar chamber datums. Group the four
+    signal interfaces so that sector extraction, tool access, cable routing, and weld
+    distortion can be reviewed directly.
+  \item Validate each square chamber for external-pressure buckling and local penetration
+    loads; the selected shape does not waive pressure-vessel engineering.
   \item Use removable beamline spools, knife-edge covers, lifting points, and a stated
     maximum manually handled subassembly mass.
 \end{itemize}
@@ -540,7 +560,7 @@ The \SI{\ActiveThicknessMm}{\milli\meter} candidate gives
 over the normal accepted branches and reduces the maximum deposited energy by approximately
 \MaximumDepositReductionPercent\% relative to \SI{\LegacyThicknessMm}{\milli\meter}.
 It is the compactness/low-saturation starting point, not a frozen optimum. Build at least
-\SI{5}{\milli\meter} and \SI{6}{\milli\meter} otherwise-identical cassettes; retain
+\SI{5}{\milli\meter} and \SI{6}{\milli\meter} otherwise-identical detector heads; retain
 \SI{4}{\milli\meter}, \SI{8}{\milli\meter}, and \SI{10}{\milli\meter} coupons for threshold,
 timing, quenching, and dynamic-range comparison. Freeze production thickness only after a
 source or beam test and a version-controlled Geant4 response study.
@@ -560,7 +580,7 @@ while the Birks constant depends on material and measurement conditions. No assu
 constant is applied in the saturation numbers. Carbon values are therefore intentionally
 conservative for SiPM occupancy but still valuable for defining the calibration range.
 
-\section{Scintillator and detector cassette}
+\section{Scintillator and compact detector head}
 
 \subsection{Material choice}
 
@@ -591,19 +611,26 @@ material \cite{eljen_plastic}. The purchase specification must state the measure
 spectrum, rise/decay behavior, light output relative to a named reference, bulk attenuation,
 dimensional tolerance, surface finish, reflector, adhesive, and vacuum-material evidence.
 
-\subsection{Recommended cassette and optical variants}
+\subsection{Recommended detector-head and optical variants}
 
 \begin{itemize}
   \item Active plastic: \SI{20}{\milli\meter} diameter by
-    \SIrange{5}{6}{\milli\meter} for the 0.8-scale study, or
-    \SI{25}{\milli\meter} diameter by the same tested thickness at the legacy reference radii.
+    \SIrange{5}{6}{\milli\meter}; the current prototype value is
+    \SI{5.5}{\milli\meter}.
   \item Polish the SiPM-coupling face and define the side/rear finish on the drawing.
   \item Couple one centered 6-by-6-mm SiPM to the flat rear face. Avoid a long acrylic light
     guide until uniformity measurements show it is necessary.
-  \item Use a removable cassette with a spring-preloaded optical joint. Avoid permanent
-    optical epoxy in the first prototype.
-  \item Provide a copper thermal path to the chamber wall, temperature sensing near the
-    SiPM, strain relief, wrapped coax, and an interchangeable mechanical datum.
+  \item Build the head as an explicit axial stack: active plastic, thin reflector envelope,
+    \SI{0.5}{\milli\meter} optical pad, SiPM package, minimal PCB/carrier, and shallow rear
+    mounting face. Avoid permanent optical epoxy in the first prototype.
+  \item Keep the physical entrance-to-rear-housing depth at
+    \SI{9.70}{\milli\meter} for the current prototype and below the
+    \SI{18}{\milli\meter} gate. Model the short cable exit and connector keepout separately.
+  \item Use the rear mounting plane and D-flat as the insertion stop, conductive contact,
+    and anti-rotation datum. Do not add a long thermal bridge or a dedicated temperature
+    sensor.
+  \item Mount exactly three heads in one coherent sector carrier with relieved acceptance
+    windows, removable clamps, a common cable lane, and a plane--pin--slot chamber interface.
 \end{itemize}
 
 The first coupon program should compare diffuse reflector, specular reflector, a shallow
@@ -754,18 +781,19 @@ and shaping.
     spatial response, saturation, and temperature coefficient for every production lot.
 \end{itemize}
 
-\section{Vacuum electrical services, grounding, and thermal design}
+\section{Vacuum electrical services, grounding, and passive conductive design}
 
 The common-platform service architecture uses one shielded \SI{50}{\ohm} coaxial path per
 detector. Signal and bias share the coax through an external bias tee. Analog electronics
 remain outside vacuum. For twelve detectors, the baseline is twelve separately testable
-coaxial feedthrough channels plus low-rate housekeeping. The reference CAD groups the channels
-by azimuth sector: four four-channel coax envelopes provide three used channels and one
-installed spare per sector, while a separate 32-pin envelope provides 24 used conductors
-for twelve two-wire SiPM temperature sensors and eight spare pins. Using ICF70 for those
-envelopes is a class C integration assumption, not a shared site-interface requirement.
-Each instrument must resolve the flange standard, port count and placement, connector
-families, and exact purchased part numbers within its own service and maintenance envelope.
+coaxial feedthrough channels. The reference CAD groups them by azimuth sector: four
+four-channel coax envelopes provide three used channels and one available signal position
+per sector. There is no dedicated temperature sensor, temperature harness, housekeeping
+channel, multipin housekeeping feedthrough, or required monitoring capacity. Using ICF70
+for the signal envelopes is a class C integration assumption, not a shared site-interface
+requirement. Each instrument must resolve the flange standard, port count and placement,
+connector families, and exact purchased part numbers within its own service and maintenance
+envelope.
 
 Beijing Feedivac publicly lists \SI{50}{\ohm} SMA50/SMAD50 feedthrough arrangements on CF
 interfaces \cite{feedivac_sma}. The RFQ must freeze exact part numbers, connector gender,
@@ -773,37 +801,41 @@ in-vacuum cable type and length, bake temperature, leak certificate, installed b
 and spare quantities. Public web data are screening evidence only.
 
 \begin{itemize}
-  \item Bond the metal cassette and chamber to protective earth; do not rely on uncertain
-    mechanical contacts through removable joints.
+  \item Bond the detector carrier, sector holder, and chamber to protective earth; do not
+    rely on uncertain mechanical contacts through removable joints.
   \item Keep the scintillator below its qualified service temperature during bake.
-    Use a controlled chamber bake with the detector cartridge removable where practical.
+    Use a controlled chamber bake with the detector sectors removable where practical.
   \item Use low-outgassing, mechanically secured internal cabling. Avoid unvented blind holes,
     virtual leaks, loose reflector film, and unsupported connectors.
-  \item Monitor each SiPM temperature and define a bias-temperature correction in calibration.
+  \item Characterize SiPM temperature coefficients on the bench and define operating bias
+    limits without creating an in-vacuum thermometer subsystem.
 \end{itemize}
 
 \section{Site-specific chambers, vacuum interfaces, and rotary feedthroughs}
 
-\subsection{Cylinder versus square chamber}
+\subsection{Selected square chamber architecture}
 
-A cylindrical shell is not incompatible with ICF ports or feedthroughs. Radial ports are
-normally integrated through welded bosses or formed local pads. The concern is practical:
-twelve distributed signal ports, a rotary feedthrough, beam ports, and detector access can
-produce a crowded curved shell with difficult datum control and maintenance.
+Both current CompactInVacuum deployment profiles use square screening chambers. afterSRC
+uses the \SI{440}{\milli\meter} by \SI{440}{\milli\meter} profile and pre-SAMURAI uses the
+\SI{450}{\milli\meter} by \SI{450}{\milli\meter} profile. This is a deliberate integration
+choice: planar walls provide direct service-manifold mounting, survey datums, tool access,
+and radial sector-removal clearance. A cylindrical chamber is not retained for the afterSRC
+compact version.
 
-One common-platform chamber concept to screen is therefore hybrid:
+The selected architecture is:
 \begin{itemize}
-  \item a short cylindrical pressure shell for vacuum efficiency and lower mass;
-  \item a removable flat service plate or faceted cartridge for feedthroughs, detector
-    cassettes, cable routing, and alignment datums;
+  \item a square external-pressure chamber validated for the actual penetrations, welds,
+    supports, and handling loads;
+  \item a removable top service manifold for signal feedthroughs and cable routing;
+  \item four deterministic sector-holder interfaces with radial extraction and tool clearance;
   \item purchased beam-port components selected from each site's approved mating standard; and
   \item a site-specific rotary-feedthrough interface and purchased unit, with shaft loads,
     torque, backlash, lifetime, bake limit, and maintenance envelope resolved independently.
 \end{itemize}
 
-An initial thin-shell comparison suggests why a round vessel is attractive, but final
-thickness must come from external-pressure FEA including penetrations, weld efficiencies,
-local reinforcement, handling loads, and imperfection sensitivity.
+The square selection is an integration baseline, not a structural release. Final wall,
+stiffener, cover, and penetration details must come from external-pressure FEA including
+weld efficiencies, local reinforcement, handling loads, and imperfection sensitivity.
 
 \subsection{Interface status by instrument}
 
@@ -816,10 +848,10 @@ local reinforcement, handling loads, and imperfection sensitivity.
     Instrument & Beam interfaces & Other vacuum interfaces & Current authority \\
     \midrule
     CompactInVacuum-afterSRC & Front/rear standard and bore TBD &
-      Rotary, signal, housekeeping, pumping, and gauge ports TBD &
+      Rotary, signal, pumping, and gauge ports TBD &
       Beam class D; current ICF70 rotary/service envelopes class C \\
     CompactInVacuum-preSAMURAI & Mating chain, standard, and bore TBD &
-      Rotary, signal, housekeeping, pumping, and gauge ports TBD &
+      Rotary, signal, pumping, and gauge ports TBD &
       Beam and rotary class D; service capacity concept common, placement class C \\
     Legacy afterSRC external & Front/rear ICF114 &
       Top ICF70 rotary mount; historical no-side-port concept &
@@ -896,7 +928,7 @@ unit and provide:
     Cleaning & Controlled process compatible with detector and vacuum materials &
       Cleaning and packing records \\
     Bake qualification & Bare-metal chamber and bought-out ICF hardware qualified separately
-      from the populated detector cartridge & Component bake ratings and an approved
+      from the populated detector sectors & Component bake ratings and an approved
       assembled-system temperature limit \\
     \bottomrule
   \end{tabularx}
@@ -959,20 +991,22 @@ Before award:
     CF40 four-channel \SI{50}{\ohm} assemblies and vacuum cables &
     Freeze part number, gender, bake, leak certificate, and spares \\
   Electronics & Chinese PCB assembler plus project design &
-    Bias, protection, timing, charge range, temperature monitoring &
+    Bias, protection, timing, charge range, and run-condition controls &
     Schematic review, production test, calibration and burn-in \\
-  Metal cassettes & PrMat or detector-part machining supplier &
-    Replaceable sensor cassette, thermal path, datums, strain relief &
-    First-article CMM, fit, vacuum materials, repeated assembly test \\
+  Detector heads and sector holders & PrMat or detector-part machining supplier &
+    Short replaceable heads, coherent three-nest carriers, datums, clamps, and strain relief &
+    First-article CMM, fit, vacuum materials, removal-clearance and repeated-assembly tests \\
   \bottomrule
 \end{longtable}
 
 PrMat should own the vacuum boundary, purchased ICF integration, rotary-feedthrough
-installation, metal cassette interfaces, final chamber dimensional report, and helium-leak
+installation, detector-head/sector-holder chamber interfaces, final chamber dimensional
+report, and helium-leak
 acceptance. The scintillator supplier should own the optical material and polished part.
 The project electronics team should own sensor selection, PCB, dynamic range, bias control,
 calibration, and data interpretation. PrMat may perform final mechanical assembly only after
-the project supplies an accepted golden cassette and a controlled assembly traveler.
+the project supplies an accepted golden detector head, golden sector, and controlled assembly
+traveler.
 
 \subsection{Preliminary purchase phasing}
 
@@ -987,7 +1021,8 @@ the project supplies an accepted golden cassette and a controlled assembly trave
     Gate 0: bench study & EQR15, EQR20, reference SiPMs; plastic coupons &
       At least 5 EQR15, 3 EQR20, 2 reference devices; 4 coupon styles &
       Lot screening and optical-interface choice \\
-    Gate 1: one sector & Three channel cassettes, cables, feedthrough allocation &
+    Gate 1: one sector & Three compact detector heads, one coherent holder, cables, and
+      feedthrough allocation &
       D, P-small, P-large plus spares &
       Coincidence, noise, timing, saturation, calibration \\
     Site first articles & One site-specific chamber/feedthrough integration for each baseline
@@ -1019,13 +1054,14 @@ the project supplies an accepted golden cassette and a controlled assembly trave
     mechanically identical to the afterSRC deployment.
   \item \textbf{Gate 1 -- single-detector optical/electronic prototype.} Compare EQR15,
     EQR20, and the reference SiPM with 2D uniformity scans. Complete LED/laser saturation,
-    charge range, timing, temperature, and 4/5/6/8/10-mm plastic-thickness comparison.
+    charge range, timing, controlled bench-temperature characterization, and
+    4/5/6/8/10-mm plastic-thickness comparison.
   \item \textbf{Gate 2 -- one-sector coincidence prototype.} Build D, P-small, and P-large
     channels with final-style cabling and front-end. Validate thresholds, time walk, energy
     separation, common-mode noise, and calibration metadata.
-  \item \textbf{Gate 3 -- vacuum detector cartridge.} Run vacuum soak, thermal cycling,
+  \item \textbf{Gate 3 -- vacuum detector sector.} Run vacuum soak, thermal cycling,
     dark-rate monitoring, outgassing screening, cable/feedthrough noise testing, and repeated
-    cassette removal/reinstallation.
+    detector-head and sector-holder removal/reinstallation.
   \item \textbf{Gates 4A/4B -- site-specific engineering chambers.} After the corresponding
     Site Gate 0 closes, complete separate afterSRC and pre-SAMURAI first articles, each with
     external-pressure review, CMM report, helium-leak test, target-motion test, detector
@@ -1058,7 +1094,7 @@ the project supplies an accepted golden cassette and a controlled assembly trave
     Vacuum/thermal & Soak and temperature cycles with dark/noise monitoring &
       Stable response; no material or connector degradation &
       Assembly serial record \\
-    Mechanical repeatability & Repeated cassette removal and installation &
+    Mechanical repeatability & Repeated detector-head and sector-holder removal and installation &
       Response and datum shift within project tolerance &
       Fit and calibration comparison \\
     Cable crosstalk & Source scan with neighboring channels terminated and active &
@@ -1115,7 +1151,7 @@ Before any production purchase:
     beamline drawings, site surveys, and the certified components selected for each site;
   \item approve a site-supported compact geometry; retain the legacy radii and
     \SI{25}{\milli\meter} acceptance only as a controlled comparison case;
-  \item approve 5-mm and 6-mm active-thickness cassettes for Gate 1 and the comparison coupons;
+  \item approve 5-mm and 6-mm active-thickness detector heads for Gate 1 and the comparison coupons;
   \item approve the site-appropriate vacuum boundary and assembly leak limit, then define operating
     pressure, gas load, populated-system bake temperature, pump-down time, cleaning class,
     and residual-gas requirement;
@@ -1151,9 +1187,11 @@ and deviations can be reviewed independently.
     inspection method \\
   Rotary target & Shaft and target loads, 0/90 positions, stop requirement, backlash target &
     Selected OEM/model, torque, radial/axial loads, repeatability, life, rebuild, bake, leak certificate \\
-  Detector cartridge & Golden cassette interface, cable routing, thermal-path requirement &
-    Detailed metal cassette, repeatable datums, cable strain relief, removal procedure \\
-  Electrical feedthroughs & Twelve \SI{50}{\ohm} coax concept and housekeeping requirement &
+  Detector sector & Golden detector-head and coherent-holder interfaces, cable routing,
+    passive conductive contacts & Detailed head/carrier geometry, repeatable datums, cable
+    strain relief, tool access, and removal procedure \\
+  Electrical feedthroughs & Twelve \SI{50}{\ohm} coax signal paths; no dedicated
+    monitoring feedthrough &
     Selected part numbers, connector/cable drawings, certificates, spare recommendation \\
   Metrology & Critical datums, flange runout, detector axes, target-axis requirement &
     CMM plan and final report, inspection uncertainty, traceable instruments \\
@@ -1167,7 +1205,8 @@ and deviations can be reviewed independently.
 
 Recommended order:
 \begin{enumerate}
-  \item close one common detector-cassette interface and the rotary-feedthrough data needed
+  \item close the common detector-head and sector-holder interfaces and the
+    rotary-feedthrough data needed
     for each site;
   \item send a separate controlled chamber/interface package for afterSRC and pre-SAMURAI;
   \item obtain a manufacturing review before any hard tooling or welding;
@@ -1182,8 +1221,13 @@ CompactInVacuum-afterSRC downstream of SRC and CompactInVacuum-preSAMURAI before
 SAMURAI terminal. Their common detector platform includes the fast-plastic study, the
 \SIrange{5}{6}{\milli\meter} first-prototype thickness band, the EQR15 baseline SiPM,
 optical-collection and saturation work, front-end dynamic-range requirements, twelve-channel
-vacuum coax architecture, cassette concepts, electronics, calibration, and common
-physics/response studies.
+vacuum coax architecture, compact detector heads, coherent sector holders, electronics,
+calibration, and common physics/response studies.
+
+Both current CAD profiles use square screening chambers. The afterSRC profile selects a
+\SI{440}{\milli\meter} by \SI{440}{\milli\meter} square internal section and does not retain
+a cylindrical chamber candidate; pre-SAMURAI selects a separately controlled
+\SI{450}{\milli\meter} by \SI{450}{\milli\meter} square profile.
 
 The chamber geometry and beamline interfaces are not common-platform constants. The
 afterSRC compact and pre-SAMURAI compact sites each require their own approved interface

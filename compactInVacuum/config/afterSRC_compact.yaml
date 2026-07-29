@@ -10,23 +10,11 @@ deployment:
   detector_location: in_vacuum
   external_route_module: afterSRC
   external_route_status: legacy_fallback_reference
-  selected_chamber_candidate: aftersrc_cylindrical_service_plate
+  selected_chamber_candidate: aftersrc_square_service_plate
   chamber_candidates:
-    - name: aftersrc_cylindrical_service_plate
-      cross_section: cylindrical
-      status: recommended
-      inner_size_x_mm: 440.0
-      inner_size_y_mm: 440.0
-      length_mm: 360.0
-      center_z_mm: 130.0
-      wall_thickness_mm: 8.0
-      wall_thickness_status: provisional
-      material: stainless_304L
-      service_accessibility: removable_top_service_manifold
-      service_plate_concept: welded_port_strip_with_removable_bought_out_feedthroughs
     - name: aftersrc_square_service_plate
       cross_section: square
-      status: provisional
+      status: recommended
       inner_size_x_mm: 440.0
       inner_size_y_mm: 440.0
       length_mm: 360.0

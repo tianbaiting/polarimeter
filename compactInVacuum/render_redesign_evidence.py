@@ -94,6 +94,9 @@ def _render(
     source = source.resolve()
     if not source.exists():
         raise FileNotFoundError(source)
+    # [EN] Fix the GUI viewport size so saved-image framing does not depend on machine-local FreeCAD window state. / [CN] 固定 GUI 视口尺寸，避免保存图像的构图依赖本机 FreeCAD 窗口状态。
+    gui.getMainWindow().resize(width, height)
+    gui.updateGui()
     document = App.openDocument(str(source))
     gui.setActiveDocument(document.Name)
     _set_roles(document, visible_roles)
@@ -102,6 +105,8 @@ def _render(
             housing_layer = document.getObject(name)
             if housing_layer is not None:
                 housing_layer.ViewObject.Visibility = False
+    # [EN] Flush visibility changes before fitAll so hidden removal envelopes cannot dominate the camera scale. / [CN] 在 fitAll 前刷新可见性，避免已隐藏的拆卸包络支配相机缩放。
+    gui.updateGui()
     view = gui.getDocument(document.Name).activeView()
     view.setAnimationEnabled(False)
     if view_name == "right":

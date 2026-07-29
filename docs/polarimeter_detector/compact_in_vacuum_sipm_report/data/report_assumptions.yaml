@@ -1,10 +1,10 @@
-schema_version: 2
+schema_version: 3
 
 report:
   title: CompactInVacuum Common Detector Platform
   subtitle: Engineering Report for the afterSRC and pre-SAMURAI In-Vacuum Polarimeters
-  issue_date: 2026-07-27
-  status: Architecture-corrected preliminary engineering study
+  issue_date: 2026-07-29
+  status: Compact-head and square-chamber preliminary engineering study
   procurement_region: People's Republic of China preferred
 
 source_files:
@@ -45,7 +45,7 @@ project_architecture:
       status: legacy/fallback/reference
   common_scope:
     - scintillator and SiPM technology
-    - detector cassette
+    - compact detector head and sector holder
     - vacuum detector services
     - electronics and calibration
     - common physics and response studies
@@ -136,8 +136,6 @@ icf_screening:
   compact_signal_channels_per_port: 4
   compact_signal_channels_used: 12
   compact_signal_channels_spare: 4
-  compact_housekeeping_pin_capacity: 32
-  compact_housekeeping_pins_used: 24
   assembly_helium_leak_rate_max_pa_m3_s: 1.0e-10
   primary_seal: OFHC copper gasket on ICF knife edge
   adapters_and_bellows_allowed: true

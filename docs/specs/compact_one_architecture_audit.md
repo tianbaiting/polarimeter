@@ -76,6 +76,10 @@ Documents are grouped by detector head, sector holder, target, services, chamber
 - Independent afterSRC and pre-SAMURAI deployment generation.
 - Legacy external-route isolation.
 
+Both current deployment profiles select square screening chambers: 440 × 440 mm for
+afterSRC and 450 × 450 mm for pre-SAMURAI. The former afterSRC cylindrical candidate was
+removed by project direction; it is not an active alternative in that deployment profile.
+
 ## Schema disposition
 
 Schema version 3 replaces the oversized cassette and procedural cartridge fields with `detector.head` and `sector_holder`.

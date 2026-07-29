@@ -218,7 +218,7 @@
       "proton_small": 152.0
     }
   },
-  "git_commit": "123fee48396193b9d9c62dc4cf60cde15788ef78",
+  "git_commit": "7e748004667a6dd1b68a511c4b3f2682c015b3c1",
   "instrument_interfaces": {
     "compact_after_src": {
       "classification": "D",
@@ -320,7 +320,7 @@
     "common_platform": "CompactInVacuum platform",
     "common_scope": [
       "scintillator and SiPM technology",
-      "detector cassette",
+      "compact detector head and sector holder",
       "vacuum detector services",
       "electronics and calibration",
       "common physics and response studies"

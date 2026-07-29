@@ -225,7 +225,8 @@ Validation also requires:
 ### 11.1 CompactInVacuum-afterSRC
 
 - Baseline instrument downstream of SRC.
-- Selected screening chamber: cylindrical 440 mm internal diameter, provisional.
+- Selected screening chamber: square 440 × 440 mm internal section, provisional.
+- A cylindrical afterSRC chamber is not part of the selected CompactInVacuum-afterSRC profile.
 - Front/rear ICF114 values are legacy/provisional evidence, not approved site requirements.
 - Available envelope, service-removal closure, purchased interface drawings, support datum, and pressure-vessel release remain unresolved.
 - The preserved external afterSRC route remains a legacy fallback/reference.
@@ -298,3 +299,4 @@ Runtime state, caches, and machine-specific files remain untracked.
 
 - 2026-07-27 v1.0: established a common CompactInVacuum platform with two baseline deployments.
 - 2026-07-29 v2.0: removed temperature monitoring end-to-end; replaced the long cassette with a 9.70 mm calculated detector head; replaced arbitrary rails with one coherent sector carrier; added engineering display roles, removal validation, and schema-v3 migration.
+- 2026-07-29 v2.1: selected the square 440 × 440 mm screening chamber for CompactInVacuum-afterSRC and removed its cylindrical chamber candidate.

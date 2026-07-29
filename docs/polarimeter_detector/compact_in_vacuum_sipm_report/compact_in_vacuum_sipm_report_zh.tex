@@ -176,8 +176,8 @@
   \renewcommand{\arraystretch}{1.35}
   \begin{tabularx}{\textwidth}{>{\sffamily\bfseries}L{0.23\textwidth}Y}
     \toprule
-    状态 & 已更正项目架构的初步工程研究 \\
-    发布日期 & 2026 年 7 月 27 日 \\
+    状态 & 短探测器头与方形靶室初步工程研究 \\
+    发布日期 & 2026 年 7 月 29 日 \\
     CAD 基准 & Polarimeter commit \texttt{\ReportGitCommit} \\
     架构权威文件 & \path{docs/specs/compact_one_requirement_baseline.md} \\
     部署配置 & \path{compactInVacuum/config/afterSRC_compact.yaml}；
@@ -193,8 +193,11 @@
   \begin{warningbox}{项目基线 -- 初步报告，不得直接用于加工或采购订单}
     当前基线是两台 CompactInVacuum 极化仪：一台位于 SRC 下游，一台位于
     SAMURAI 终端之前。两台仪器均把闪烁体/SiPM 探测器放在真空内，并共享公共
-    探测器平台；靶室和束线接口必须按站点独立定义。旧 afterSRC 外置探测器概念
-    仅作为 legacy/fallback/reference 路线保留。
+    探测器平台。当前 CAD 配置分别采用方形筛选靶室：afterSRC 为
+    \SI{440}{\milli\meter}$\times$\SI{440}{\milli\meter}，pre-SAMURAI 为
+    \SI{450}{\milli\meter}$\times$\SI{450}{\milli\meter}；束线接口仍须按站点
+    独立定义。旧 afterSRC 外置探测器概念仅作为 legacy/fallback/reference
+    路线保留。
   \end{warningbox}
 
   \vspace{0.22in}
@@ -217,7 +220,8 @@
   \textbf{CompactInVacuum-preSAMURAI} 安装在 SAMURAI 终端之前。
   两台仪器共享 CompactInVacuum 探测器平台，但靶室几何、束线接口、靶机构集成、
   支撑和维护空间均为站点特定。此前研究的 afterSRC 外置探测器构型继续作为
-  legacy/reference 备选保留，但不是当前基线。
+  legacy/reference 备选保留，但不是当前基线。afterSRC 当前选定的是方形
+  筛选靶室，不采用圆柱形方案。
 \end{decisionbox}
 
 \begin{decisionbox}{首轮原型推荐基线}
@@ -278,9 +282,10 @@ EQR15 在该点的计算非线性为 \EqrCarbonNonlinearity\%。
 \section{范围、基准配置与决策状态}
 
 本报告发展两台基线仪器共享的 CompactInVacuum 探测器平台，并不定义一套
-通用于两个站点的靶室。已有探测器、能损、饱和、电子学、真空服务、探测盒、
-靶室质量筛算、加工与中国采购研究继续作为公共平台工作保留；站点尺寸不能从
-legacy afterSRC 靶室直接复制。
+通用于两个站点的靶室。已有探测器、能损、饱和、电子学、真空服务、短探测器头、
+扇区载架、靶室质量筛算、加工与中国采购研究继续作为公共平台工作保留。当前两个
+部署配置均采用方形靶室，但尺寸和接口分别受控，不能从 legacy afterSRC 靶室
+直接复制。
 
 \begin{center}
 \begin{minipage}{0.72\textwidth}
@@ -314,7 +319,9 @@ Legacy：       afterSRC 外置探测器
     基线状态 & 基线 & 基线 & legacy/fallback \\
     探测器位置 & 真空内 & 真空内 & 真空外 \\
     探测器平台 & 公共 compact 平台 & 公共 compact 平台 & 旧外置设计 \\
-    靶室几何 & 站点特定 / TBD & 站点特定 / TBD & 现有参考 \\
+    靶室几何 & 方形 \SI{440}{\milli\meter}$\times$\SI{440}{\milli\meter}，
+      暂定 & 方形 \SI{450}{\milli\meter}$\times$\SI{450}{\milli\meter}，
+      暂定 & 现有参考 \\
     束线接口 & 独立验证 & 独立验证 & 现有旧假设 \\
     \bottomrule
   \end{tabularx}
@@ -323,8 +330,8 @@ Legacy：       afterSRC 外置探测器
 \subsection{三级需求分离}
 
 \textbf{公共平台需求。}
-闪烁体与 SiPM 技术、光学包、探测盒与扇区、十二路真空服务、电子学、标定、
-热路径语义以及公共物理/响应研究。
+闪烁体与 SiPM 技术、明确的短探测器头轴向堆栈、每扇区一个三探头整体载架、
+十二路信号、实际接触件形成的被动导热界面、电子学、标定以及公共物理/响应研究。
 
 \textbf{afterSRC 站点需求。}
 SRC 下游的实际纵向/横向包络、可用束流孔径、相邻设备、法兰接口、靶机构集成、
@@ -354,7 +361,7 @@ beam stay-clear、真空服务责任边界、支撑基准以及安装维护评�
       pre-SAMURAI 批准配合链图与现场测量 \\
     CompactInVacuum-preSAMURAI 旋转接口 & D & 靶/馈通接口 TBD &
       靶运动要求与批准站点接口 \\
-    compact 信号/housekeeping 端口布局 & C & 容量已知；法兰数量、标准与位置暂定 &
+    compact 信号端口布局 & C & 信号容量已知；法兰数量、标准与位置暂定 &
       两台仪器分别完成采购件、走线、维护和站点包络评审 \\
     legacy afterSRC 外置接口 & B & ICF114 前后口与 ICF70 顶口属于旧设计 &
       没有独立 A 类证据不得传播到 compact afterSRC \\
@@ -368,13 +375,13 @@ D 类表示未解决/TBD。B/C 类不得写成 A 类。
 参考物理工况为 \SI{\BeamEnergyMeV}{\mega\electronvolt} 氘束轰击 CH$_2$ 靶，
 在四个方位扇区中对弹性散射氘核与质子作 coincidence 探测。
 
-\subsection{旧数值参考探测器与靶室包络}
+\subsection{当前探测器配置与方形靶室基线}
 
-旧数值参考 CAD 探测器包络为直径
-\SI{\ActiveDiameterMm}{\milli\meter}、长度
-\SI{\ActiveLengthMm}{\milli\meter}。配置中 active medium 和 photosensor
-仍标记为 placeholder/undecided；本报告中的塑料闪烁体和 EQR15 是
-\proposal，而不是已经写入权威 CAD 配置的冻结要求。
+schema-3 探测器配置现已明确采用直径 \SI{20}{\milli\meter}、厚度
+\SI{5.5}{\milli\meter} 的快速塑料闪烁体原型，SiPM 类别为
+NDL EQR15 11-6060D-S。由灵敏塑料、光学垫、SiPM 封装、PCB/载板和后盖相加得到
+物理探测器头深度 \SI{9.70}{\milli\meter}；短电缆出口、连接器避让体和拆卸包络
+不计入该长度。供应商图纸、反射材料、光学垫材料、PCB、连接器和量产公差仍为暂定。
 
 \begin{table}[htbp]
   \centering
@@ -389,11 +396,14 @@ D 类表示未解决/TBD。B/C 类不得写成 A 类。
   \datatag{compactInVacuum/compactInVacuum.channel\_manifest.json}
 \end{table}
 
-旧数值参考方形靶室内截面约为 $440\times440$ mm，轴向长度约
-\SI{360}{\milli\meter}。封闭方壳材料体积筛算为
+当前 CompactInVacuum-afterSRC 选定的筛选靶室为方形，暂定内截面
+$440\times440$ mm、轴向长度 \SI{360}{\milli\meter}、壁厚
+\SI{8}{\milli\meter}。pre-SAMURAI 独立采用 $450\times450$ mm、
+\SI{380}{\milli\meter} 长、暂定 \SI{8}{\milli\meter} 壁厚的方形方案。
+afterSRC 配置不再保留圆柱形候选。旧 \SI{10}{\milli\meter} 壁厚封闭方壳材料体积筛算为
 \SI{\ChamberMaterialVolumeL}{\liter}，按不锈钢密度估算约
-\SI{\ChamberScreeningMassKg}{\kilogram}。该数值只是算术筛选，不是加工质量，
-也不能代替外压屈曲 FEA。
+\SI{\ChamberScreeningMassKg}{\kilogram}；该旧数值只保留作质量算术比较，
+不是当前 afterSRC 壁厚模型，也不能代替外压屈曲、开孔、焊缝、支撑和搬运 FEA。
 
 \subsection{Compact v2 方向}
 
@@ -404,10 +414,12 @@ D 类表示未解决/TBD。B/C 类不得写成 A 类。
     \SI{\CompactScaledProtonSmallRadius}{\milli\meter}/
     \SI{\CompactScaledProtonLargeRadius}{\milli\meter}，
     有效直径约 \SI{\CompactScaledActiveDiameter}{\milli\meter}。
-  \item 优先研究短圆筒外压壳体加可拆平面服务板或多面体内部探测器框架。
-    圆筒承担外压，平面结构集中同轴馈通、定位基准和维护接口。
-  \item 不把十二路快速信号馈通分散布置在曲面壳体上，除非端口布局和维护评审
-    证明这种方案有明确优势。
+  \item 两个当前部署配置均采用有平面服务壁的方形靶室；afterSRC 使用
+    $440\times440$ mm 方形筛选配置，不保留圆柱形 afterSRC 候选。
+  \item 顶部采用可拆服务歧管，并利用平面靶室壁布置测量基准和四组信号接口，
+    使扇区径向抽出、工具空间、线缆路径和焊接变形能够直接评审。
+  \item 方形选型不等于结构放行；每套靶室仍须针对实际开孔、焊缝、支撑和搬运
+    工况完成外压屈曲与局部载荷计算。
   \item 束流两端使用符合各站点已批准配合标准的短、可拆采购接管；运输时保护
     密封面，并设置吊点和可人工搬运子组件质量上限。
 \end{itemize}
@@ -468,7 +480,7 @@ ATIMA 1.4 mean charge 构成模型包络。
 
 \begin{decisionbox}{厚度门审}
   首轮制作至少一套 \SI{5}{\milli\meter} 和
-  \SI{6}{\milli\meter} 的同结构探测盒，同时保留 4、8、10 mm 样片。
+  \SI{6}{\milli\meter} 的同结构短探测器头，同时保留 4、8、10 mm 样片。
   最终厚度必须结合真实触发阈值、时间分辨、质子/氘核淬灭、光学均匀性、
   前端噪声和版本受控 Geant4 计算后冻结。
 \end{decisionbox}
@@ -516,18 +528,23 @@ Birks 关系作一阶描述：
 只有当后续需求证明必须作停止型量能或需要显著更高的能量分辨时，才重新评估
 无机晶体。
 
-\subsection{推荐探测器盒与光学变量}
+\subsection{推荐短探测器头与光学变量}
 
 \begin{itemize}
-  \item 0.8 比例原型采用直径 \SI{20}{\milli\meter}、厚度 5--6 mm 的塑料；
-    若保留现有半径，则采用直径 \SI{25}{\milli\meter}、相同厚度。
+  \item 采用直径 \SI{20}{\milli\meter}、厚度 5--6 mm 的塑料；当前原型值为
+    \SI{5.5}{\milli\meter}。
   \item 抛光 SiPM 耦合面并明确侧面和后表面处理；反射层与遮光外壳分开定义，
     记录每一种光学材料和批次。
-  \item 一个居中的 $6\times6$ mm SiPM 直接耦合在后表面。第一轮避免不可拆
-    光学胶，采用可重复预紧的可拆传感器座。
-  \item 为 SiPM 提供到靶室壁的铜热路径，并在每个探测盒或热耦合组附近布置温度传感器。
-  \item 统一十二个探测盒的可交换机械基准，包含防转、插入限位、线缆应力释放和
-    遮光检查特征。
+  \item 一个居中的 $6\times6$ mm 级 SiPM 直接耦合在光学垫后方。第一轮避免
+    不可拆光学胶。
+  \item 探测器头按灵敏塑料、薄反射包层、\SI{0.5}{\milli\meter} 光学垫、
+    SiPM 封装、最小 PCB/载板和浅后安装面构成明确轴向堆栈。
+  \item 当前入口面到后壳体的物理深度为 \SI{9.70}{\milli\meter}，并保持低于
+    \SI{18}{\milli\meter} 门限。短电缆出口和连接器避让体单独建模。
+  \item 后安装面和 D 形平面同时构成插入限位、实际导电接触和防转基准；不增加
+    长导热桥，也不设置专用温度传感器。
+  \item 每三个探测器头安装在一个整体扇区载架上，载架具有接收锥避让窗、可拆压桥、
+    公共走线槽和 plane--pin--slot 靶室接口。
 \end{itemize}
 
 一个 $6\times6$ mm SiPM 只覆盖直径 20--25 mm 圆片后表面的约 9--11\%。
@@ -672,45 +689,52 @@ bias tee、终端和整形。
     空间响应、饱和与温度系数。
 \end{itemize}
 
-\section{真空电气服务、接地与热设计}
+\section{真空电气服务、接地与被动导电设计}
 
 公共平台推荐每个探测器使用一条屏蔽 \SI{50}{\ohm} 同轴通道。
 信号和偏置通过外部 bias tee 共用同轴线，有源模拟电子学保持在真空外。
-十二个探测器需要十二条可独立测试的同轴馈通通道，另设低速温度与 housekeeping
-接口。参考 CAD 按方位分组：四个四通道同轴包络在每个方位使用三路、
-保留一路安装备用；另一个 32 针包络为 12 个两线 SiPM 温度传感器使用
-24 针并保留 8 针。把这些包络实现为 ICF70 只是 C 类集成假设，不是两站点的
-公共接口要求。每台仪器必须在自身服务与维护包络内分别确定法兰标准、端口数量/
-位置、连接器系列和准确采购料号。
+十二个探测器需要十二条可独立测试的同轴馈通通道。参考 CAD 按方位分组：
+四个四通道同轴包络在每个方位使用三路并保留一个可用信号位置。系统不设置
+专用温度传感器、温度线束、housekeeping 通道、多针 housekeeping 馈通或强制
+监测容量。信号包络采用 ICF70 只是 C 类集成假设，不是两站点的公共接口要求。
+每台仪器必须在自身服务与维护包络内分别确定法兰标准、端口数量/位置、连接器
+系列和准确采购料号。
 
 北京飞迪真空公开列出 CF 接口上的 \SI{50}{\ohm} SMA50/SMAD50 馈通方案
 \cite{feedivac_sma}。RFQ 必须冻结准确料号、连接器性别、真空内线缆型号和长度、
 烘烤温度、氦漏证书、安装带宽和备件数量。网页数据仅用于候选筛选。
 
 \begin{itemize}
-  \item 金属探测盒和靶室可靠连接到保护地，不能依赖可拆机械接触作为唯一接地。
-  \item 烘烤期间闪烁体不得超过已验证工作温度；优先采用探测器框架可拆的受控烘烤。
+  \item 探测器载板、扇区载架和靶室可靠连接到保护地，不能依赖不确定的可拆机械
+    接触作为唯一接地。
+  \item 烘烤期间闪烁体不得超过已验证工作温度；优先采用扇区可拆的受控烘烤。
   \item 真空内线缆采用低放气并机械固定的结构，避免不通气盲孔、虚漏、
     松散反射膜和无支撑连接器。
-  \item 监测每个 SiPM 温度，并在标定中定义偏置温度修正。
+  \item 在台架上表征 SiPM 温度系数并规定偏置工作范围，但不为此建立真空内
+    温度计式监测子系统。
 \end{itemize}
 
 \section{站点特定靶室、真空接口与旋转馈通}
 
-\subsection{圆筒与方形靶室}
+\subsection{选定的方形靶室架构}
 
-圆筒并不妨碍安装 ICF 口或电气馈通。径向端口通常通过焊接凸台或局部加强结构
-接入。真正的问题是制造和维护：若十二个信号口、旋转馈通、束流口和探测器维护口
-全部分散在曲面上，会导致端口拥挤、角度基准难控制、焊接变形和维护困难。
+两个当前 CompactInVacuum 部署配置均使用方形筛选靶室：afterSRC 为
+$440\times440$ mm，pre-SAMURAI 为 $450\times450$ mm。这是明确的集成选择：
+平面壁便于安装服务歧管、建立测量基准、提供工具空间，并保证扇区径向拆卸。
+CompactInVacuum-afterSRC 不保留圆柱形靶室方案。
 
-一种值得筛选的公共平台概念是混合结构：
+选定架构包括：
 \begin{itemize}
-  \item 短圆筒外压壳体负责真空结构效率和减重；
-  \item 可拆平面服务板或多面探测器框架集中馈通、探测盒、线缆和定位基准；
+  \item 针对实际开孔、焊缝、支撑和搬运载荷验证的方形外压靶室；
+  \item 集中信号馈通和线缆路径的可拆顶部服务歧管；
+  \item 具有径向抽出与工具空间的四套确定性扇区载架接口；
   \item 两端使用与各站点批准配合标准一致的认证采购束流件；
   \item 旋转馈通接口和采购件按站点独立确定，并分别关闭轴载荷、扭矩、回差、
     寿命、烘烤温度和维护包络。
 \end{itemize}
+
+方形选型只是集成基线，不是结构放行。最终壁厚、加强筋、盖板和开孔必须由包含
+焊缝效率、局部加强、搬运载荷和初始缺陷敏感性的外压 FEA 确定。
 
 \subsection{各仪器接口状态}
 
@@ -723,10 +747,10 @@ bias tee、终端和整形。
     仪器 & 束流接口 & 其他真空接口 & 当前权威状态 \\
     \midrule
     CompactInVacuum-afterSRC & 前后标准与孔径 TBD &
-      旋转、信号、housekeeping、泵与规管口 TBD &
+      旋转、信号、泵与规管口 TBD &
       束流 D 类；当前 ICF70 旋转/服务包络 C 类 \\
     CompactInVacuum-preSAMURAI & 配合链、标准与孔径 TBD &
-      旋转、信号、housekeeping、泵与规管口 TBD &
+      旋转、信号、泵与规管口 TBD &
       束流与旋转 D 类；服务容量概念公共、布局 C 类 \\
     legacy afterSRC external & 前后 ICF114 &
       顶部 ICF70；历史无侧口概念 &
@@ -850,18 +874,18 @@ CompactInVacuum-preSAMURAI，旋转接口仍是 D 类/TBD，必须结合靶运�
     CF40 四路 \SI{50}{\ohm} 馈通和真空线缆 &
     料号、连接器性别、烘烤、漏率证书和备件 \\
   电子学 & 项目设计加国内 PCB 装配 &
-    偏置、保护、定时、电荷量程和温度监测 &
+    偏置、保护、定时、电荷量程和运行条件控制 &
     原理图评审、生产测试、标定和老化 \\
-  金属探测盒 & 上海谱幂或探测器精密加工厂 &
-    可更换传感器盒、热路径、基准和应力释放 &
-    首件 CMM、装配、真空材料和重复拆装测试 \\
+  探测器头与扇区载架 & 上海谱幂或探测器精密加工厂 &
+    短可更换探测器头、整体三巢载架、基准、压桥和应力释放 &
+    首件 CMM、装配、真空材料、拆卸空间和重复装配测试 \\
   \bottomrule
 \end{longtable}
 
-上海谱幂负责真空边界、采购 ICF 集成、旋转馈通安装、金属探测盒接口、
-最终靶室尺寸报告和氦检验收。闪烁体供应商负责光学材料和抛光件。
+上海谱幂负责真空边界、采购 ICF 集成、旋转馈通安装、探测器头/扇区载架的
+靶室接口、最终靶室尺寸报告和氦检验收。闪烁体供应商负责光学材料和抛光件。
 项目电子学团队负责 SiPM 选型、PCB、动态范围、偏置控制、标定和数据解释。
-只有在项目提供通过验收的 golden cassette 和受控装配流转卡后，
+只有在项目提供通过验收的 golden detector head、golden sector 和受控装配流转卡后，
 才由上海谱幂执行最终机械装配。
 
 \subsection{分阶段采购}
@@ -877,7 +901,7 @@ CompactInVacuum-preSAMURAI，旋转接口仍是 D 类/TBD，必须结合靶运�
     Gate 0：台架研究 & EQR15、EQR20、参考 SiPM、塑料样片 &
       至少 5 个 EQR15、3 个 EQR20、2 个参考器件；4 类样片 &
       批次筛选和光学界面选择 \\
-    Gate 1：一个扇区 & 三类通道探测盒、线缆与馈通分配 &
+    Gate 1：一个扇区 & 三个短探测器头、一个整体载架、线缆与馈通分配 &
       D、P-small、P-large 加备件 &
       coincidence、噪声、时间、饱和和标定 \\
     站点首件 & 每个基线站点在自身接口门审关闭后制作一套靶室/馈通集成 &
@@ -904,12 +928,13 @@ CompactInVacuum-preSAMURAI，旋转接口仍是 D 类/TBD，必须结合靶运�
     为 SAMURAI 终端前位置取得同类批准证据；不得假设其机械结构与 afterSRC 相同。
   \item \textbf{Gate 1 -- 单探测器光学/电子学原型。}
     比较 EQR15、EQR20 和参考 SiPM，完成二维均匀性、LED/激光饱和、
-    电荷量程、时间、温度和 4/5/6/8/10 mm 厚度比较。
+    电荷量程、时间、受控台架温度表征和 4/5/6/8/10 mm 厚度比较。
   \item \textbf{Gate 2 -- 单扇区 coincidence 原型。}
     制作 D、P-small、P-large 三路最终风格通道，验证阈值、time walk、
     能量分离、共模噪声和标定 metadata。
-  \item \textbf{Gate 3 -- 真空探测器框架。}
-    执行真空浸泡、热循环、暗计数监测、放气筛选、线缆/馈通噪声和重复拆装。
+  \item \textbf{Gate 3 -- 真空探测器扇区。}
+    执行真空浸泡、热循环、暗计数监测、放气筛选、线缆/馈通噪声，以及探测器头
+    和扇区载架的重复拆装。
   \item \textbf{Gate 4A/4B -- 站点特定工程靶室。}
     对应站点 Gate 0 关闭后，分别完成 afterSRC 与 pre-SAMURAI 首件；各自执行
     外压复核、CMM、氦检、靶运动、探测器拆装、安装适配和运输演示。
@@ -936,7 +961,7 @@ CompactInVacuum-preSAMURAI，旋转接口仍是 D 类/TBD，必须结合靶运�
       满足空间均匀性限值，记录边缘响应 & 二维图和摘要 \\
     真空/热 & 真空浸泡和温度循环，同时监测暗噪声 &
       响应稳定，材料与连接器无退化 & 组件序列记录 \\
-    机械重复性 & 多次拆装探测盒 &
+    机械重复性 & 多次拆装探测器头与扇区载架 &
       响应和基准漂移处于项目公差内 & 装配与标定对比 \\
     串扰 & 相邻通道终端和工作状态下的源扫描 &
       正常 d--p 脉冲在 coincidence 窗内可识别 & 构型和串扰矩阵 \\
@@ -988,11 +1013,12 @@ CompactInVacuum-preSAMURAI，旋转接口仍是 D 类/TBD，必须结合靶运�
     pre-SAMURAI 接口门审；
   \item 批准具有站点证据的 compact 几何；旧半径和
     \SI{25}{\milli\meter} 接受度仅保留为受控对比方案；
-  \item 批准 Gate 1 的 5 mm、6 mm 探测盒和比较样片；
+  \item 批准 Gate 1 的 5 mm、6 mm 短探测器头和比较样片；
   \item 批准各站点适用的真空边界与整机漏率，再定义工作压力、气负载、
     装机烘烤温度、抽气时间、清洗等级和 RGA 要求；
   \item 冻结旋转馈通载荷、扭矩、寿命、回差、角度重复性、工况和维护；
-  \item 批准十二路同轴结构、数字化量程、时间要求、接地、热设计和温度/偏置 metadata；
+  \item 批准十二路同轴结构、数字化量程、时间要求、接地、被动导电界面和偏置
+    运行条件 metadata；
   \item 接受上海谱幂能力、质量计划、报价范围和首件方案。
 \end{itemize}
 
@@ -1018,9 +1044,9 @@ RFQ 应采用受控响应矩阵，使供应商回答、附件和偏差可以逐�
     采购件身份、密封面保护、法兰位置/方向和检验方法 \\
   旋转靶 & 轴与靶载荷、0/90 位置、限位、回差目标 &
     OEM/型号、扭矩、径向/轴向载荷、重复性、寿命、维修、烘烤和漏率证书 \\
-  探测器框架 & golden cassette 接口、线缆和热路径要求 &
-    金属探测盒细节、重复基准、应力释放和拆装方案 \\
-  电气馈通 & 十二路 \SI{50}{\ohm} 同轴和 housekeeping 要求 &
+  探测器扇区 & golden detector head 与整体载架接口、线缆路径和被动导电接触 &
+    探测器头/载架细节、重复基准、应力释放、工具空间和拆装方案 \\
+  电气馈通 & 十二路 \SI{50}{\ohm} 同轴信号；无专用监测馈通 &
     料号、连接器/线缆图、证书和备件建议 \\
   测量 & 关键基准、法兰跳动、探测器轴和靶轴要求 &
     CMM 计划与报告、测量不确定度和可追溯仪器 \\
@@ -1040,8 +1066,12 @@ RFQ 应采用受控响应矩阵，使供应商回答、附件和偏差可以逐�
 \end{itemize}
 两者共享的探测器平台包括快速塑料研究、
 \SIrange{5}{6}{\milli\meter} 首轮厚度候选带、EQR15 基准 SiPM、光收集与
-饱和研究、前端动态范围、十二路真空同轴架构、探测盒、电子学、标定和公共
-物理/响应研究。
+饱和研究、前端动态范围、十二路真空同轴架构、短探测器头、整体扇区载架、
+电子学、标定和公共物理/响应研究。
+
+两个当前 CAD 部署配置均采用方形筛选靶室。afterSRC 选用
+$440\times440$ mm 方形内截面，并且不保留圆柱形靶室候选；pre-SAMURAI
+采用独立受控的 $450\times450$ mm 方形配置。
 
 靶室几何和束线接口不是公共平台常数。afterSRC compact 与 pre-SAMURAI compact
 必须各自获得批准接口图、可用孔径、可用包络、靶/馈通集成、服务、支撑/对准和
