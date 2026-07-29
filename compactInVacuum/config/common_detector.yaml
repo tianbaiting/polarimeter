@@ -1,4 +1,4 @@
-schema_version: 2
+schema_version: 3
 architecture_mode: compact_one
 doc_name: CompactOne
 
@@ -54,51 +54,58 @@ detector:
     alternatives:
       - NDL EQR20 11-6060D-S
       - Hamamatsu S13360-6025CS
-  cassette:
+  head:
     status: provisional
-    outer_envelope_mm: [32.0, 32.0, 44.0]
-    front_nose_envelope_mm: [23.4, 23.4, 35.0]
-    front_offset_from_active_center_mm: -4.0
-    shell_wall_mm: 1.4
+    carrier_envelope_mm: [14.0, 14.0, 1.2]
+    carrier_material: oxygen_free_copper
+    carrier_status: provisional
+    housing_radial_clearance_mm: 0.25
+    shell_wall_mm: 1.0
     shell_material: black_anodized_aluminum_screening
-    light_tight: true
-    removable: true
-    mounting_datum: rear_stop_face_and_key
-    mounting_datum_offset_mm: 40.0
-    anti_rotation_feature: rectangular_key
-    anti_rotation_key_mm: [4.0, 3.0, 12.0]
-    insertion_stop_mm: [34.0, 34.0, 3.0]
-    insertion_stop_offset_mm: 31.0
-    sensor_carrier_mm: [14.0, 14.0, 2.0]
-    sensor_carrier_material: oxygen_free_copper
-    thermal_spreader_mm: [20.0, 20.0, 1.0]
-    thermal_spreader_material: oxygen_free_copper
+    rear_clearance_mm: 0.0
+    rear_cap_wall_mm: 1.0
+    mounting_flange_diameter_mm: 27.0
+    anti_rotation_feature: rear_flange_d_flat_into_nest_land
+    anti_rotation_flat_depth_mm: 1.5
+    mounting_datum: rear_mounting_plane_and_anti_rotation_d_flat
+    detector_removal_direction: axially_rearward_after_clamp_release
+    detector_removal_clearance_mm: 12.0
     cable_exit: axial_rear
     cable_exit_diameter_mm: 5.0
+    cable_exit_length_mm: 3.0
+    cable_exit_status: provisional
     connector_keepout_diameter_mm: 12.0
-    connector_keepout_length_mm: 28.0
-    strain_relief_length_mm: 18.0
-    temperature_sensor: unresolved_two_wire_sensor
-    temperature_sensor_status: placeholder
+    connector_keepout_length_mm: 20.0
+    maximum_physical_depth_mm: 18.0
 
-sector_cartridge:
+sector_holder:
   status: provisional
-  architecture: removable_three_channel_sector
+  architecture: single_fabricated_three_nest_sector_carrier
   detector_mounts: [deuteron, proton_small, proton_large]
-  mounting_datum: chamber_sector_kinematic_datum
+  mounting_datum: chamber_plane_pin_slot_datum
   survey_datums: [primary_plane, radial_pin, clocking_slot]
-  chamber_interface: removable_service_wall_rail
-  removal_direction: sector_radially_outward
-  removal_clearance_mm: 70.0
-  backbone_width_mm: 24.0
-  backbone_depth_mm: 10.0
-  backbone_margin_mm: 16.0
-  rail_width_mm: 12.0
-  rail_thickness_mm: 6.0
-  mount_pad_mm: [34.0, 34.0, 4.0]
-  service_lane_offset_mm: 24.0
-  thermal_bus_thickness_mm: 2.0
-  thermal_bus_width_mm: 18.0
+  chamber_interface: common_plane_pin_slot_interface_block
+  detector_removal_direction: detector_axis_rearward_after_clamp_release
+  sector_removal_direction: sector_radially_outward
+  sector_removal_clearance_mm: 70.0
+  carrier_plate_thickness_mm: 6.0
+  carrier_web_width_mm: 18.0
+  carrier_node_radius_mm: 20.0
+  common_bracket_width_mm: 24.0
+  nest_axial_depth_mm: 3.0
+  nest_radial_wall_mm: 3.0
+  nest_clearance_mm: 0.30
+  clamp_bridge_thickness_mm: 2.0
+  clamp_fastener_class: M3_provisional
+  clamp_fastener_clearance_diameter_mm: 3.4
+  fastener_status: provisional
+  interface_block_mm: [8.0, 40.0, 50.0]
+  locating_pin_diameter_mm: 6.0
+  locating_slot_width_mm: 6.5
+  locating_slot_length_mm: 10.0
+  service_lane_offset_mm: 8.0
+  acceptance_clearance_mm: 2.0
+  tool_clearance_mm: 35.0
 
 physics:
   status: provisional
@@ -173,28 +180,7 @@ services:
   active_electronics_in_vacuum: false
   signal_feedthrough_count: 4
   channels_per_signal_feedthrough: 4
-  temperature_channels: 12
-  wires_per_temperature_channel: 2
-  housekeeping_pin_capacity: 32
   signal_interface:
-    standard: ICF70
-    status: purchased-part-contract
-    interface_evidence_class: C_engineering_assumption
-    site_requirement_status: unresolved_per_deployment
-    supplier: unresolved
-    part_number: unresolved
-    certified_drawing_reference: unresolved
-    dimensions_status: placeholder
-    module_outer_diameter_mm: 70.0
-    module_inner_diameter_mm: 38.0
-    module_thickness_mm: 15.0
-    seal_face_width_mm: 8.0
-    bolt_circle_diameter_mm: 58.7
-    bolt_count: 6
-    bolt_hole_diameter_mm: 6.6
-    nominal_clear_bore_mm: 38.0
-    knife_edge_protected_zone_mm: 8.0
-  housekeeping_interface:
     standard: ICF70
     status: purchased-part-contract
     interface_evidence_class: C_engineering_assumption
@@ -232,20 +218,20 @@ services:
 thermal:
   status: provisional
   path:
-    - sipm
-    - copper_sensor_carrier
-    - copper_spreader
-    - detector_cassette
-    - sector_thermal_bus
-    - chamber_service_structure
+    - sipm_package
+    - metallic_sensor_pcb_carrier
+    - rear_mounting_face
+    - detector_nest
+    - sector_carrier_plate
+    - chamber_mount_interface
   required_connections:
-    - sipm_to_sensor_carrier
-    - sensor_carrier_to_spreader
-    - spreader_to_cassette
-    - cassette_to_sector_bus
-    - sector_bus_to_chamber
+    - sipm_to_sensor_pcb_carrier
+    - sensor_pcb_carrier_to_rear_mounting_face
+    - rear_mounting_face_to_detector_nest
+    - detector_nest_to_sector_carrier_plate
+    - sector_carrier_plate_to_chamber_mount_interface
   spreader_material: oxygen_free_copper
-  chamber_sink_interface: sector_cartridge_mounting_datum
+  chamber_sink_interface: sector_holder_plane_pin_slot_mounting_datum
   floating_allowed: false
 
 materials:
@@ -273,6 +259,10 @@ materials:
     density_g_per_cm3: 7.90
     vacuum_compatibility_status: recommended
     physics_sensitive: true
+  - name: aluminum_6061_provisional
+    density_g_per_cm3: 2.70
+    vacuum_compatibility_status: provisional
+    physics_sensitive: false
 
 validation:
   angle_tolerance_deg: 0.05

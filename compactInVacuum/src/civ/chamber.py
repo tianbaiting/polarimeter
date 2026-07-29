@@ -215,7 +215,7 @@ def _selected_body_and_vacuum(cfg: CIVConfig) -> tuple[Part.Shape, Part.Shape]:
 
 def build_chamber(cfg: CIVConfig) -> ChamberGeometry:
     if cfg.compact_one is None:
-        raise ValueError("chamber geometry requires a CompactOne schema-v2 configuration")
+        raise ValueError("chamber geometry requires a CompactOne schema-v3 configuration")
     candidate = cfg.compact_one.deployment.chamber
     deployment = cfg.compact_one.deployment
     body, vacuum = _selected_body_and_vacuum(cfg)

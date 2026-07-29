@@ -20,7 +20,6 @@ class ServicesGeometry:
     datums: dict[str, Part.Shape]
     materials: dict[str, str]
     fast_signal_paths: tuple[str, ...]
-    temperature_harnesses: tuple[str, ...]
     grounding_connections: tuple[str, ...]
 
 
@@ -99,7 +98,7 @@ def build_services(
     internal: InternalAssemblyGeometry,
 ) -> ServicesGeometry:
     if cfg.compact_one is None:
-        raise ValueError("services require a CompactOne schema-v2 configuration")
+        raise ValueError("services require a CompactOne schema-v3 configuration")
     services = cfg.compact_one.services
     routing = services.routing
     ports = {
@@ -120,31 +119,25 @@ def build_services(
         materials.update(port.materials)
 
     signal_paths: list[str] = []
-    temperature_harnesses: list[str] = []
     grounding_connections: list[str] = []
     cable_radius_mm = 0.5 * routing.cable_keepout_diameter_mm
-    housekeeping = _port_by_role_sector(ports, "housekeeping", None)
-    housekeeping_lane = (
-        housekeeping.wall_center
-        - App.Vector(0.0, routing.minimum_static_bend_radius_mm, 0.0)
-    )
     service_lane_z_mm = (
         cfg.vessel.center_z_mm
         + 0.5 * cfg.vessel.length_mm
         - routing.minimum_static_bend_radius_mm
     )
 
-    for sector, cartridge in internal.cartridges.items():
+    for sector, holder in internal.sector_holders.items():
         signal_port = _port_by_role_sector(ports, "signal", sector)
         signal_lane = (
             signal_port.wall_center
             - App.Vector(0.0, routing.minimum_static_bend_radius_mm, 0.0)
         )
-        if len(signal_port.channel_entry_points) < len(cartridge.placements):
+        if len(signal_port.channel_entry_points) < len(holder.placements):
             raise ValueError(f"signal feedthrough for {sector} has insufficient entries")
         sector_high_lane = App.Vector(
-            cartridge.service_junction.x,
-            cartridge.service_junction.y,
+            holder.service_junction.x,
+            holder.service_junction.y,
             service_lane_z_mm,
         )
         port_high_lane = App.Vector(
@@ -153,10 +146,10 @@ def build_services(
             service_lane_z_mm,
         )
         tangent = _sector_tangent(sector)
-        for index, placement in enumerate(cartridge.placements):
+        for index, placement in enumerate(holder.placements):
             offset = tangent * (2.5 * (index - 1))
             points = (
-                cartridge.service_junction + offset,
+                holder.service_junction + offset,
                 sector_high_lane + offset,
                 port_high_lane + offset,
                 signal_lane + offset,
@@ -168,31 +161,7 @@ def build_services(
             centerlines[f"{name}_Centerline"] = centerline
             signal_paths.append(name)
 
-        housekeeping_entry = housekeeping.channel_entry_points[
-            8 * tuple(cfg.sectors).index(sector)
-        ]
-        harness_points = (
-            cartridge.service_junction + App.Vector(0.0, 0.0, 8.0),
-            sector_high_lane,
-            port_high_lane,
-            App.Vector(
-                housekeeping_lane.x,
-                housekeeping_lane.y,
-                service_lane_z_mm,
-            ),
-            housekeeping_lane,
-            housekeeping_entry,
-        )
-        harness, harness_centerline = _polyline_keepout(
-            harness_points,
-            cable_radius_mm,
-        )
-        harness_name = f"{sector}_TemperatureHarness"
-        keepouts[harness_name] = harness
-        centerlines[f"{harness_name}_Centerline"] = harness_centerline
-        temperature_harnesses.append(harness_name)
-
-        mount_interface = cartridge.interfaces[f"{sector}_ChamberMountInterface"]
+        mount_interface = holder.interfaces[f"{sector}_ChamberMountInterface"]
         start = App.Vector(
             mount_interface.BoundBox.Center.x,
             mount_interface.BoundBox.Center.y,
@@ -213,9 +182,10 @@ def build_services(
             ),
         ]
     )
+    signal_reference = _port_by_role_sector(ports, "signal", cfg.sectors[0])
     datums["ChamberGroundReferenceDatum"] = Part.makeSphere(
         1.0,
-        housekeeping.wall_center,
+        signal_reference.wall_center,
     )
     return ServicesGeometry(
         ports=ports,
@@ -226,6 +196,5 @@ def build_services(
         datums=datums,
         materials=materials,
         fast_signal_paths=tuple(signal_paths),
-        temperature_harnesses=tuple(temperature_harnesses),
         grounding_connections=tuple(grounding_connections),
     )

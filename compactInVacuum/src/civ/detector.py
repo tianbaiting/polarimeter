@@ -57,15 +57,15 @@ def build_detector_core(
     placement: DetectorPlacement | None = None,
 ) -> DetectorCoreGeometry:
     if cfg.compact_one is None:
-        raise ValueError("detector core requires a CompactOne schema-v2 configuration")
+        raise ValueError("detector core requires a CompactOne schema-v3 configuration")
     detector = cfg.compact_one.detector
     active = detector.active
     optics = detector.optics
     sipm = detector.sipm
-    cassette = detector.cassette
+    head = detector.head
 
-    active_front_z_mm = -0.5 * active.thickness_mm
-    active_back_z_mm = 0.5 * active.thickness_mm
+    active_front_z_mm = detector.front_face_offset_mm
+    active_back_z_mm = active_front_z_mm + active.thickness_mm
     active_shape = Part.makeCylinder(
         0.5 * active.diameter_mm,
         active.thickness_mm,
@@ -97,51 +97,16 @@ def build_detector_core(
         active_back_z_mm
         + optics.coupling_thickness_mm
         + sipm.package_envelope_mm[2]
-        + 0.5 * cassette.sensor_carrier_mm[2]
+        + 0.5 * head.carrier_envelope_mm[2]
     )
-    carrier = _box(cassette.sensor_carrier_mm, carrier_center_z_mm)
-    spreader_center_z_mm = (
-        carrier_center_z_mm
-        + 0.5 * cassette.sensor_carrier_mm[2]
-        + 0.5 * cassette.thermal_spreader_mm[2]
-    )
-    spreader = _box(cassette.thermal_spreader_mm, spreader_center_z_mm)
+    carrier = _box(head.carrier_envelope_mm, carrier_center_z_mm)
 
-    bridge_start_z_mm = spreader_center_z_mm + 0.5 * cassette.thermal_spreader_mm[2]
-    bridge_end_z_mm = (
-        cassette.front_offset_from_active_center_mm
-        + cassette.outer_envelope_mm[2]
-        - cassette.shell_wall_mm
-    )
-    bridge_length_mm = bridge_end_z_mm - bridge_start_z_mm
-    if bridge_length_mm <= 0.0:
-        raise ValueError("cassette mounting datum must lie behind the thermal spreader")
-    thermal_bridge = Part.makeBox(
-        8.0,
-        2.0,
-        bridge_length_mm,
-        App.Vector(-4.0, -1.0, bridge_start_z_mm),
-    )
-
-    temperature_sensor = Part.makeBox(
-        3.0,
-        2.0,
-        1.0,
-        App.Vector(
-            0.5 * cassette.sensor_carrier_mm[0] - 3.0,
-            -1.0,
-            carrier_center_z_mm - 0.5,
-        ),
-    )
     physical = {
         "ActivePlastic": active_shape,
         "ReflectorEnvelope": reflector,
         "OpticalCoupling": coupling,
-        "SiPM": sipm_shape,
-        "SensorCarrier": carrier,
-        "ThermalSpreader": spreader,
-        "CassetteThermalBridge": thermal_bridge,
-        "TemperatureSensor": temperature_sensor,
+        "SiPMPackage": sipm_shape,
+        "SensorPCBCarrier": carrier,
     }
     interface_disc = Part.makeCylinder(
         0.5 * active.diameter_mm,
@@ -153,27 +118,47 @@ def build_detector_core(
         "ActivePlastic": active.material,
         "ReflectorEnvelope": optics.reflector,
         "OpticalCoupling": optics.coupling,
-        "SiPM": "silicon_package",
-        "SensorCarrier": cassette.sensor_carrier_material,
-        "ThermalSpreader": cassette.thermal_spreader_material,
-        "CassetteThermalBridge": cassette.thermal_spreader_material,
-        "TemperatureSensor": cassette.temperature_sensor,
+        "SiPMPackage": "silicon_package",
+        "SensorPCBCarrier": head.carrier_material,
     }
+    # [EN] The SiPM package directly contacts the metallic-backed carrier; no artificial long bridge is introduced between the sensor and the rear mounting face. / [CN] SiPM 封装直接接触金属背衬载板；传感器与后安装面之间不引入人为的长导热桥。
     return DetectorCoreGeometry(
         physical=_place_shapes(physical, placement),
         interfaces=_place_shapes(interfaces, placement),
         materials=materials,
-        thermal_connections=(
-            ("SiPM", "SensorCarrier"),
-            ("SensorCarrier", "ThermalSpreader"),
-            ("ThermalSpreader", "CassetteThermalBridge"),
-        ),
+        thermal_connections=(("SiPMPackage", "SensorPCBCarrier"),),
     )
+
+
+def detector_stack_metrics(cfg: CIVConfig) -> dict[str, object]:
+    if cfg.compact_one is None:
+        raise ValueError("detector stack metrics require a CompactOne schema-v3 configuration")
+    detector = cfg.compact_one.detector
+    return {
+        "components_mm": {
+            "active_plastic": detector.active.thickness_mm,
+            "optical_coupling": detector.optics.coupling_thickness_mm,
+            "sipm_package": detector.sipm.package_envelope_mm[2],
+            "sensor_pcb_carrier": detector.head.carrier_envelope_mm[2],
+            "rear_clearance": detector.head.rear_clearance_mm,
+            "rear_cap": detector.head.rear_cap_wall_mm,
+        },
+        "calculated_physical_depth_mm": detector.physical_depth_mm,
+        "maximum_physical_depth_mm": detector.head.maximum_physical_depth_mm,
+        "front_face_offset_mm": detector.front_face_offset_mm,
+        "rear_housing_offset_mm": detector.rear_housing_offset_mm,
+        "housing_outer_diameter_mm": detector.housing_outer_diameter_mm,
+        "excludes": (
+            "CableExit",
+            "ConnectorKeepout",
+            "DetectorRemovalEnvelope",
+        ),
+    }
 
 
 def active_geometry_metrics(cfg: CIVConfig) -> dict[str, float]:
     if cfg.compact_one is None:
-        raise ValueError("active metrics require a CompactOne schema-v2 configuration")
+        raise ValueError("active metrics require a CompactOne schema-v3 configuration")
     active = cfg.compact_one.detector.active
     radius_mm = 0.5 * active.diameter_mm
     return {
@@ -187,9 +172,11 @@ def active_geometry_metrics(cfg: CIVConfig) -> dict[str, float]:
 def build_active_acceptance_cone(
     cfg: CIVConfig,
     placement: DetectorPlacement,
+    radial_clearance_mm: float = 0.0,
+    extend_past_active_mm: float = 0.0,
 ) -> Part.Shape:
     if cfg.compact_one is None:
-        raise ValueError("acceptance cone requires a CompactOne schema-v2 configuration")
+        raise ValueError("acceptance cone requires a CompactOne schema-v3 configuration")
     active = cfg.compact_one.detector.active
     target = cfg.compact_one.target.foil
     if cfg.physics is None:
@@ -197,7 +184,7 @@ def build_active_acceptance_cone(
     face_center = target_facing_active_face_center(
         placement,
         active.thickness_mm,
-    )
+    ) + scaled(placement.direction, extend_past_active_mm)
     length_mm = face_center.Length
     if length_mm <= 0.0:
         raise ValueError("detector active face must lie downstream of the target")
@@ -206,7 +193,7 @@ def build_active_acceptance_cone(
     source_wire = Part.Wire(
         [
             Part.makeCircle(
-                0.5 * target.diameter_mm,
+                0.5 * target.diameter_mm + radial_clearance_mm,
                 source_center,
                 source_normal,
             )
@@ -215,13 +202,13 @@ def build_active_acceptance_cone(
     detector_wire = Part.Wire(
         [
             Part.makeCircle(
-                0.5 * active.diameter_mm,
+                0.5 * active.diameter_mm + radial_clearance_mm,
                 face_center,
                 scaled(face_center, 1.0 / length_mm),
             )
         ]
     )
-    # [EN] The ruled solid connects the real target-foil plane to the tilted active disc, avoiding the false large-angle obstruction created by a coaxial-cone approximation. / [CN] 该直纹实体连接真实靶箔平面与倾斜灵敏圆面，避免同轴圆锥近似在大角度通道产生虚假遮挡。
+    # [EN] The ruled solid joins the complete target region to the complete active disc and can be expanded for mechanical clearance cuts without changing nominal physics directions. / [CN] 该直纹实体连接完整靶区与完整灵敏圆面，并可为机械避让切口扩张，而不改变名义物理方向。
     return Part.makeLoft(
         [source_wire, detector_wire],
         True,

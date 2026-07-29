@@ -32,10 +32,10 @@ def _rule(
 
 def evaluate_config_rules(cfg: CIVConfig) -> tuple[ConfigRule, ...]:
     if cfg.compact_one is None:
-        raise ValueError("CompactOne config rules require schema version 2")
+        raise ValueError("CompactOne config rules require schema version 3")
     platform = cfg.compact_one
     detector = platform.detector
-    cassette = detector.cassette
+    head = detector.head
     deployment = platform.deployment
     services = platform.services
     thermal = platform.thermal
@@ -45,7 +45,7 @@ def evaluate_config_rules(cfg: CIVConfig) -> tuple[ConfigRule, ...]:
         _rule(
             "physics",
             "compact_platform_contract",
-            platform.schema_version == 2
+            platform.schema_version == 3
             and platform.architecture_mode == "compact_one"
             and len(cfg.channels) * len(cfg.sectors) == 12,
             (
@@ -57,15 +57,50 @@ def evaluate_config_rules(cfg: CIVConfig) -> tuple[ConfigRule, ...]:
     rules.append(
         _rule(
             "detector",
-            "active_detector_separate_from_cassette",
-            detector.active.thickness_mm < cassette.outer_envelope_mm[2]
-            and detector.active.diameter_mm < cassette.front_nose_envelope_mm[0]
-            and detector.sipm.package_envelope_mm != cassette.outer_envelope_mm,
+            "detector_head_axial_stack_complete",
+            detector.active.thickness_mm > 0.0
+            and detector.optics.coupling_thickness_mm > 0.0
+            and detector.sipm.package_envelope_mm[2] > 0.0
+            and head.carrier_envelope_mm[2] > 0.0
+            and head.rear_cap_wall_mm > 0.0,
             (
                 f"active={detector.active.diameter_mm:.3f}x"
                 f"{detector.active.thickness_mm:.3f} mm, "
-                f"nose={cassette.front_nose_envelope_mm}, "
-                f"cassette={cassette.outer_envelope_mm}"
+                f"coupling={detector.optics.coupling_thickness_mm:.3f} mm, "
+                f"sipm={detector.sipm.package_envelope_mm[2]:.3f} mm, "
+                f"carrier={head.carrier_envelope_mm[2]:.3f} mm, "
+                f"rear_cap={head.rear_cap_wall_mm:.3f} mm"
+            ),
+        )
+    )
+    holder = platform.sector_holder
+    rules.append(
+        _rule(
+            "sector_holder",
+            "coherent_three_nest_sector_holder_contract",
+            holder.architecture == "single_fabricated_three_nest_sector_carrier"
+            and holder.detector_mounts
+            == ("deuteron", "proton_small", "proton_large")
+            and "plane_pin_slot" in holder.chamber_interface
+            and "radially_outward" in holder.sector_removal_direction,
+            (
+                f"architecture={holder.architecture}, "
+                f"mounts={holder.detector_mounts}, "
+                f"interface={holder.chamber_interface}, "
+                f"removal={holder.sector_removal_direction}"
+            ),
+        )
+    )
+    rules.append(
+        _rule(
+            "detector",
+            "detector_head_compact_depth",
+            detector.physical_depth_mm <= head.maximum_physical_depth_mm
+            and head.maximum_physical_depth_mm <= 18.0,
+            (
+                f"calculated_physical_depth_mm={detector.physical_depth_mm:.3f}, "
+                f"gate_mm={head.maximum_physical_depth_mm:.3f}; "
+                "cable and connector keepouts excluded"
             ),
         )
     )
@@ -90,11 +125,11 @@ def evaluate_config_rules(cfg: CIVConfig) -> tuple[ConfigRule, ...]:
             "supplier_and_optics_decisions_resolved",
             detector.sipm.status in {"frozen", "purchased-part-contract"}
             and detector.optics.reflector_status != "placeholder"
-            and cassette.temperature_sensor_status != "placeholder",
+            and head.carrier_status != "placeholder",
             (
                 f"sipm={detector.sipm.status}, "
                 f"reflector={detector.optics.reflector_status}, "
-                f"temperature_sensor={cassette.temperature_sensor_status}"
+                f"carrier={head.carrier_status}"
             ),
             strict_only=True,
         )
@@ -113,23 +148,6 @@ def evaluate_config_rules(cfg: CIVConfig) -> tuple[ConfigRule, ...]:
             (
                 f"required={services.fast_signal_channels}, "
                 f"capacity={signal_capacity}"
-            ),
-        )
-    )
-    required_housekeeping = (
-        services.temperature_channels
-        * services.wires_per_temperature_channel
-    )
-    rules.append(
-        _rule(
-            "services",
-            "housekeeping_capacity",
-            services.temperature_channels == 12
-            and services.housekeeping_pin_capacity >= required_housekeeping,
-            (
-                f"temperature_channels={services.temperature_channels}, "
-                f"required_pins={required_housekeeping}, "
-                f"capacity={services.housekeeping_pin_capacity}"
             ),
         )
     )
@@ -213,10 +231,7 @@ def evaluate_config_rules(cfg: CIVConfig) -> tuple[ConfigRule, ...]:
                 strict_only=True,
             )
         )
-    for role, interface in (
-        ("signal", services.signal_interface),
-        ("housekeeping", services.housekeeping_interface),
-    ):
+    for role, interface in (("signal", services.signal_interface),):
         rules.append(
             _rule(
                 "vacuum",
@@ -262,7 +277,7 @@ def evaluate_config_rules(cfg: CIVConfig) -> tuple[ConfigRule, ...]:
             "thermal_path_declared",
             not thermal.floating_allowed
             and len(thermal.path) >= 5
-            and len(thermal.required_connections) >= 5,
+            and len(thermal.required_connections) >= 4,
             (
                 f"floating_allowed={thermal.floating_allowed}, "
                 f"path_nodes={len(thermal.path)}, "

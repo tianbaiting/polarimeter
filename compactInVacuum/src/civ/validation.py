@@ -13,7 +13,6 @@ from .components import (
     build_cable_route_keepouts,
     build_compact_detector,
     build_end_modules,
-    build_housekeeping_harness_keepouts,
     build_inner_frame,
     build_rotary_target_shapes,
     build_strain_relief_envelopes,
@@ -172,13 +171,7 @@ def _engineering_metrics(
             "signal_channels_capacity": (
                 len(electrical.signal_ports) * electrical.channels_per_signal_port
             ),
-            "housekeeping_pins_used": (
-                electrical.housekeeping.sensor_count
-                * electrical.housekeeping.wires_per_sensor
-            ),
-            "housekeeping_pins_capacity": electrical.housekeeping.feedthrough_pin_count,
             "cable_route_count": len(build_cable_route_keepouts(cfg, placements)),
-            "housekeeping_harness_count": len(build_housekeeping_harness_keepouts(cfg)),
             "minimum_static_bend_radius_mm": electrical.routing.minimum_static_bend_radius_mm,
         }
         metrics["rotary_target"] = {
@@ -396,21 +389,6 @@ def validate_assembly(
                 ),
             )
         )
-        housekeeping = electrical.housekeeping
-        required_housekeeping_pins = housekeeping.sensor_count * housekeeping.wires_per_sensor
-        checks.append(
-            _result(
-                "housekeeping_pin_capacity",
-                housekeeping.sensor_count == len(placements)
-                and housekeeping.feedthrough_pin_count >= required_housekeeping_pins,
-                value=housekeeping.feedthrough_pin_count,
-                expected=required_housekeeping_pins,
-                detail=(
-                    f"sensors={housekeeping.sensor_count}, "
-                    f"wires_per_sensor={housekeeping.wires_per_sensor}"
-                ),
-            )
-        )
         checks.append(
             _result(
                 "external_bias_tee_architecture",
@@ -465,7 +443,6 @@ def validate_assembly(
         )
 
         cable_routes = build_cable_route_keepouts(cfg, placements)
-        housekeeping_routes = build_housekeeping_harness_keepouts(cfg)
         strain_reliefs = build_strain_relief_envelopes(cfg, placements)
         checks.append(
             _result(
@@ -477,14 +454,6 @@ def validate_assembly(
                     f"keepout_diameter_mm={electrical.routing.cable_keepout_diameter_mm:.1f}, "
                     f"minimum_static_bend_radius_mm={electrical.routing.minimum_static_bend_radius_mm:.1f}"
                 ),
-            )
-        )
-        checks.append(
-            _result(
-                "housekeeping_harness_route_count",
-                len(housekeeping_routes) == len(cfg.sectors),
-                value=len(housekeeping_routes),
-                expected=len(cfg.sectors),
             )
         )
         expected_strain_reliefs = len(placements) + len(cfg.sectors)
@@ -508,7 +477,7 @@ def validate_assembly(
         frame_beam_overlap_mm3 = _intersection_volume(inner_frame, beam_keepout)
         cable_beam_overlap_mm3 = sum(
             _intersection_volume(route, beam_keepout)
-            for route in (*cable_routes.values(), *housekeeping_routes.values())
+            for route in cable_routes.values()
         )
         checks.append(
             _result(
@@ -568,10 +537,10 @@ def validate_assembly(
         checks.append(
             _result(
                 "top_service_port_count",
-                len(top_service_port_specs(cfg)) == 2 + len(cfg.sectors),
+                len(top_service_port_specs(cfg)) == 1 + len(cfg.sectors),
                 value=len(top_service_port_specs(cfg)),
-                expected=2 + len(cfg.sectors),
-                detail="rotary + four sector signal ports + housekeeping",
+                expected=1 + len(cfg.sectors),
+                detail="rotary + four sector signal ports",
             )
         )
 

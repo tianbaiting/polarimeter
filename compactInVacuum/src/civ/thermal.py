@@ -48,7 +48,7 @@ def evaluate_thermal_paths(
     internal: InternalAssemblyGeometry,
 ) -> ThermalPathReport:
     if cfg.compact_one is None:
-        raise ValueError("thermal audit requires a CompactOne schema-v2 configuration")
+        raise ValueError("thermal audit requires a CompactOne schema-v3 configuration")
     graph: dict[str, set[str]] = {}
     for name_a, name_b in internal.thermal_connections:
         graph.setdefault(name_a, set()).add(name_b)
@@ -59,7 +59,7 @@ def evaluate_thermal_paths(
     }
     channel_reports: list[ChannelThermalPath] = []
     for placement in internal.placements:
-        start = f"{placement.tag}_SiPM"
+        start = f"{placement.tag}_SiPMPackage"
         destination = f"{placement.sector_name}_ChamberMountInterface"
         path = _find_path(graph, start, destination)
         gaps = tuple(

@@ -102,18 +102,6 @@ def top_service_port_specs(cfg: CIVConfig) -> tuple[TopServicePortSpec, ...]:
         )
         for port in electrical.signal_ports
     )
-    housekeeping = electrical.housekeeping
-    specs.append(
-        TopServicePortSpec(
-            name=f"Housekeeping_{housekeeping.name}",
-            role="housekeeping",
-            center_x_mm=housekeeping.center_x_mm,
-            center_z_mm=housekeeping.center_z_mm,
-            inner_diameter_mm=housekeeping.port_inner_diameter_mm,
-            outer_diameter_mm=housekeeping.port_outer_diameter_mm,
-            collar_length_mm=housekeeping.port_collar_length_mm,
-        )
-    )
     return tuple(specs)
 
 
@@ -393,16 +381,6 @@ def build_top_service_equipment_envelopes(cfg: CIVConfig) -> dict[str, Part.Shap
             axis,
         )
         out[f"SignalFeedthroughEnvelope_{port.name}_4ch"] = body
-
-    housekeeping = electrical.housekeeping
-    housekeeping_spec = spec_by_name[f"Housekeeping_{housekeeping.name}"]
-    housekeeping_face_y_mm = _top_interface_face_y(cfg, housekeeping_spec)
-    out[f"HousekeepingFeedthroughEnvelope_{housekeeping.name}_{housekeeping.feedthrough_pin_count}pin"] = _cylinder(
-        0.5 * housekeeping.equipment_envelope_diameter_mm,
-        housekeeping.equipment_envelope_length_mm,
-        App.Vector(housekeeping.center_x_mm, housekeeping_face_y_mm, housekeeping.center_z_mm),
-        axis,
-    )
 
     rotary = services.rotary
     rotary_spec = spec_by_name["RotaryTarget"]
@@ -710,29 +688,6 @@ def build_cable_route_keepouts(
     return out
 
 
-def build_housekeeping_harness_keepouts(cfg: CIVConfig) -> dict[str, Part.Shape]:
-    if cfg.top_services is None:
-        return {}
-    electrical = cfg.top_services.electrical
-    routing = electrical.routing
-    radius_mm = 0.5 * routing.cable_keepout_diameter_mm
-    y_wall_mm = 0.5 * cfg.vessel.inner_size_y_mm - routing.wall_clearance_mm
-    housekeeping = electrical.housekeeping
-    destination = App.Vector(housekeeping.center_x_mm, y_wall_mm, housekeeping.center_z_mm)
-    out: dict[str, Part.Shape] = {}
-    for port in electrical.signal_ports:
-        origin = App.Vector(port.center_x_mm, y_wall_mm, port.center_z_mm)
-        midpoint = App.Vector(port.center_x_mm, y_wall_mm, housekeeping.center_z_mm)
-        out[f"HousekeepingHarnessKeepout_{port.sector}"] = Part.makeCompound(
-            [
-                _segment_keepout(origin, midpoint, radius_mm),
-                _segment_keepout(midpoint, destination, radius_mm),
-                Part.makeSphere(radius_mm, midpoint),
-            ]
-        )
-    return out
-
-
 def build_strain_relief_envelopes(
     cfg: CIVConfig,
     placements: list[DetectorPlacement],
@@ -769,13 +724,13 @@ def build_strain_relief_envelopes(
 def build_grounding_envelopes(cfg: CIVConfig) -> dict[str, Part.Shape]:
     if cfg.top_services is None:
         return {}
-    housekeeping = cfg.top_services.electrical.housekeeping
+    reference_port = cfg.top_services.electrical.signal_ports[0]
     top_outer_y_mm = 0.5 * cfg.vessel.inner_size_y_mm + cfg.vessel.wall_thickness_mm
-    stud_x_mm = housekeeping.center_x_mm - 50.0
+    stud_x_mm = reference_port.center_x_mm - 35.0
     stud = _cylinder(
         5.0,
         20.0,
-        App.Vector(stud_x_mm, top_outer_y_mm, housekeeping.center_z_mm),
+        App.Vector(stud_x_mm, top_outer_y_mm, reference_port.center_z_mm),
         App.Vector(0.0, 1.0, 0.0),
     )
     return {"ProtectiveEarthBondStudEnvelope": stud}

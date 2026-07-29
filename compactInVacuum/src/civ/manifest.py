@@ -92,7 +92,6 @@ def build_channel_manifest(
                 "signal_feedthrough_slot": service_slot_by_channel[placement.channel_name],
                 "signal_impedance_ohm": cfg.top_services.electrical.impedance_ohm,
                 "sipm_bias_on_signal_coax": cfg.top_services.electrical.bias_on_signal_coax,
-                "temperature_sensor_id": f"temperature_{placement.tag}",
             }
         channels.append(channel_payload)
 
@@ -140,7 +139,7 @@ def build_channel_manifest(
             )
 
     payload: dict[str, object] = {
-        "schema_version": 2,
+        "schema_version": 3,
         "module": "compactInVacuum",
         "coordinate_system": {
             "origin": "target",
@@ -206,17 +205,6 @@ def build_channel_manifest(
                 }
                 for port in electrical.signal_ports
             ],
-            "housekeeping": {
-                "name": electrical.housekeeping.name,
-                "standard": cfg.top_services.icf70_interface.standard,
-                "sensor_count": electrical.housekeeping.sensor_count,
-                "wires_per_sensor": electrical.housekeeping.wires_per_sensor,
-                "pins_used": (
-                    electrical.housekeeping.sensor_count
-                    * electrical.housekeeping.wires_per_sensor
-                ),
-                "pin_capacity": electrical.housekeeping.feedthrough_pin_count,
-            },
             "routing": {
                 "cable_keepout_diameter_mm": electrical.routing.cable_keepout_diameter_mm,
                 "minimum_static_bend_radius_mm": electrical.routing.minimum_static_bend_radius_mm,

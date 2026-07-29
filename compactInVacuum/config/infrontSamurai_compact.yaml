@@ -145,10 +145,3 @@ deployment:
       bore_diameter_mm: 38.0
       collar_outer_diameter_mm: 42.0
       collar_length_mm: 8.0
-    - name: sipm_temperature
-      role: housekeeping
-      center_x_mm: -70.0
-      center_z_mm: 0.0
-      bore_diameter_mm: 38.0
-      collar_outer_diameter_mm: 42.0
-      collar_length_mm: 8.0

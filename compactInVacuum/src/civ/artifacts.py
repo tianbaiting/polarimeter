@@ -8,11 +8,13 @@ import sys
 import FreeCAD as App
 
 from .assembly import (
-    build_cassette_document,
-    build_sector_document,
-    build_serviced_internal_document,
+    build_detector_head_document,
+    build_internal_document,
+    build_sector_holder_document,
+    build_transparent_detector_head_document,
 )
 from .config import CIVConfig, load_config
+from .detector import detector_stack_metrics
 from .export import export_fcstd, export_step
 
 
@@ -41,7 +43,11 @@ def document_geometry_metrics(
     total_solid_count = 0
     physical_component_volume_mm3 = 0.0
     for obj in doc.Objects:
-        if not hasattr(obj, "Shape") or obj.Shape.isNull():
+        if (
+            obj.TypeId == "App::DocumentObjectGroup"
+            or not hasattr(obj, "Shape")
+            or obj.Shape.isNull()
+        ):
             continue
         role = (
             str(obj.EngineeringRole)
@@ -71,7 +77,7 @@ def document_geometry_metrics(
             }
         )
     return {
-        "schema_version": 1,
+        "schema_version": 3,
         "artifact_kind": artifact_kind,
         "deployment_profile": cfg.compact_one.deployment.name,
         "document_name": doc.Name,
@@ -79,6 +85,7 @@ def document_geometry_metrics(
         "role_counts": dict(sorted(role_counts.items())),
         "solid_count": total_solid_count,
         "physical_component_volume_sum_mm3": physical_component_volume_mm3,
+        "detector_head_stack": detector_stack_metrics(cfg),
         "objects": objects,
         "software": {
             "freecad_version": ".".join(App.Version()[:3]),
@@ -118,24 +125,29 @@ def generate_prototype_artifacts(
     output_dir: str | Path,
 ) -> dict[str, dict[str, str]]:
     if cfg.compact_one is None:
-        raise ValueError("prototype artifacts require a CompactOne schema-v2 configuration")
+        raise ValueError("prototype artifacts require a CompactOne schema-v3 configuration")
     destination = Path(output_dir).expanduser().resolve()
     destination.mkdir(parents=True, exist_ok=True)
     builders = (
         (
-            "golden_cassette",
-            "CompactOne_golden_cassette",
-            lambda: build_cassette_document(cfg),
+            "detector_head",
+            "CompactOne_detector_head",
+            lambda: build_detector_head_document(cfg),
         ),
         (
-            "golden_sector",
-            "CompactOne_golden_sector",
-            lambda: build_sector_document(cfg, "left"),
+            "detector_head_transparent",
+            "CompactOne_detector_head_transparent",
+            lambda: build_transparent_detector_head_document(cfg),
+        ),
+        (
+            "sector_holder",
+            "CompactOne_sector_holder",
+            lambda: build_sector_holder_document(cfg, "left"),
         ),
         (
             "four_sector_internal",
             "CompactOne_four_sector_internal",
-            lambda: build_serviced_internal_document(cfg),
+            lambda: build_internal_document(cfg),
         ),
     )
     artifacts: dict[str, dict[str, str]] = {}

@@ -5,7 +5,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RUNTIME_DIR="${TMPDIR:-/tmp}/compactOne-prototypes-freecad"
 export XDG_CACHE_HOME="${XDG_CACHE_HOME:-${RUNTIME_DIR}/xdg-cache}"
 export XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${RUNTIME_DIR}/xdg-config}"
-export QT_QPA_PLATFORM="${QT_QPA_PLATFORM:-offscreen}"
+if [[ -z "${QT_QPA_PLATFORM:-}" && -z "${DISPLAY:-}" ]]; then
+  export QT_QPA_PLATFORM="offscreen"
+fi
 export QT_OPENGL="${QT_OPENGL:-software}"
 export LIBGL_ALWAYS_SOFTWARE="${LIBGL_ALWAYS_SOFTWARE:-1}"
 export PYTHONPATH="${SCRIPT_DIR}/src${PYTHONPATH:+:${PYTHONPATH}}"

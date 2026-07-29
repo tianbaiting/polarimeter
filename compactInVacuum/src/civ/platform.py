@@ -48,32 +48,29 @@ class SiPMSpec:
 
 
 @dataclass(frozen=True)
-class CassetteSpec:
+class DetectorHeadSpec:
     status: str
-    outer_envelope_mm: tuple[float, float, float]
-    front_nose_envelope_mm: tuple[float, float, float]
-    front_offset_from_active_center_mm: float
+    carrier_envelope_mm: tuple[float, float, float]
+    carrier_material: str
+    carrier_status: str
+    housing_radial_clearance_mm: float
     shell_wall_mm: float
     shell_material: str
-    light_tight: bool
-    removable: bool
-    mounting_datum: str
-    mounting_datum_offset_mm: float
+    rear_clearance_mm: float
+    rear_cap_wall_mm: float
+    mounting_flange_diameter_mm: float
     anti_rotation_feature: str
-    anti_rotation_key_mm: tuple[float, float, float]
-    insertion_stop_mm: tuple[float, float, float]
-    insertion_stop_offset_mm: float
-    sensor_carrier_mm: tuple[float, float, float]
-    sensor_carrier_material: str
-    thermal_spreader_mm: tuple[float, float, float]
-    thermal_spreader_material: str
+    anti_rotation_flat_depth_mm: float
+    mounting_datum: str
+    detector_removal_direction: str
+    detector_removal_clearance_mm: float
     cable_exit: str
     cable_exit_diameter_mm: float
+    cable_exit_length_mm: float
+    cable_exit_status: str
     connector_keepout_diameter_mm: float
     connector_keepout_length_mm: float
-    strain_relief_length_mm: float
-    temperature_sensor: str
-    temperature_sensor_status: str
+    maximum_physical_depth_mm: float
 
 
 @dataclass(frozen=True)
@@ -83,28 +80,67 @@ class DetectorPlatformSpec:
     active: ActiveDetectorSpec
     optics: OpticalPackageSpec
     sipm: SiPMSpec
-    cassette: CassetteSpec
+    head: DetectorHeadSpec
+
+    @property
+    def physical_depth_mm(self) -> float:
+        # [EN] The housing depth is the explicit axial stack; cable and connector volumes are service geometry and cannot inflate this mechanical metric. / [CN] 壳体深度由明确的轴向堆栈计算；电缆和连接器体积属于服务几何，不能抬高该机械指标。
+        return (
+            self.active.thickness_mm
+            + self.optics.coupling_thickness_mm
+            + self.sipm.package_envelope_mm[2]
+            + self.head.carrier_envelope_mm[2]
+            + self.head.rear_clearance_mm
+            + self.head.rear_cap_wall_mm
+        )
+
+    @property
+    def front_face_offset_mm(self) -> float:
+        return -0.5 * self.active.thickness_mm
+
+    @property
+    def rear_housing_offset_mm(self) -> float:
+        return self.front_face_offset_mm + self.physical_depth_mm
+
+    @property
+    def housing_outer_diameter_mm(self) -> float:
+        return (
+            self.active.diameter_mm
+            + 2.0 * self.optics.reflector_envelope_thickness_mm
+            + 2.0 * self.head.housing_radial_clearance_mm
+            + 2.0 * self.head.shell_wall_mm
+        )
 
 
 @dataclass(frozen=True)
-class SectorCartridgeSpec:
+class SectorHolderSpec:
     status: str
     architecture: str
     detector_mounts: tuple[str, ...]
     mounting_datum: str
     survey_datums: tuple[str, ...]
     chamber_interface: str
-    removal_direction: str
-    removal_clearance_mm: float
-    backbone_width_mm: float
-    backbone_depth_mm: float
-    backbone_margin_mm: float
-    rail_width_mm: float
-    rail_thickness_mm: float
-    mount_pad_mm: tuple[float, float, float]
+    detector_removal_direction: str
+    sector_removal_direction: str
+    sector_removal_clearance_mm: float
+    carrier_plate_thickness_mm: float
+    carrier_web_width_mm: float
+    carrier_node_radius_mm: float
+    common_bracket_width_mm: float
+    nest_axial_depth_mm: float
+    nest_radial_wall_mm: float
+    nest_clearance_mm: float
+    clamp_bridge_thickness_mm: float
+    clamp_fastener_class: str
+    clamp_fastener_clearance_diameter_mm: float
+    fastener_status: str
+    interface_block_mm: tuple[float, float, float]
+    locating_pin_diameter_mm: float
+    locating_slot_width_mm: float
+    locating_slot_length_mm: float
     service_lane_offset_mm: float
-    thermal_bus_thickness_mm: float
-    thermal_bus_width_mm: float
+    acceptance_clearance_mm: float
+    tool_clearance_mm: float
 
 
 @dataclass(frozen=True)
@@ -205,11 +241,7 @@ class ServicesSpec:
     active_electronics_in_vacuum: bool
     signal_feedthrough_count: int
     channels_per_signal_feedthrough: int
-    temperature_channels: int
-    wires_per_temperature_channel: int
-    housekeeping_pin_capacity: int
     signal_interface: FeedthroughInterfaceSpec
-    housekeeping_interface: FeedthroughInterfaceSpec
     routing: ServiceRoutingSpec
     grounding: GroundingSpec
 
@@ -291,6 +323,7 @@ class ServicePortPlacementSpec:
 @dataclass(frozen=True)
 class DeploymentSpec:
     name: str
+    instrument_name: str
     location: str
     status: str
     external_route_module: str
@@ -328,7 +361,7 @@ class CompactOnePlatformConfig:
     schema_version: int
     architecture_mode: str
     detector: DetectorPlatformSpec
-    sector_cartridge: SectorCartridgeSpec
+    sector_holder: SectorHolderSpec
     target: TargetSystemSpec
     services: ServicesSpec
     thermal: ThermalSpec
@@ -479,171 +512,303 @@ def _parse_sipm(raw: Mapping[str, Any]) -> SiPMSpec:
     )
 
 
-def _parse_cassette(raw: Mapping[str, Any]) -> CassetteSpec:
-    outer = _vector(raw.get("outer_envelope_mm"), "detector.cassette.outer_envelope_mm", 3)
-    front_nose = _vector(
-        raw.get("front_nose_envelope_mm"),
-        "detector.cassette.front_nose_envelope_mm",
+def _nonnegative(value: float, name: str) -> float:
+    if value < 0.0:
+        raise ValueError(f"{name} must be >= 0")
+    return value
+
+
+def _parse_detector_head(raw: Mapping[str, Any]) -> DetectorHeadSpec:
+    carrier = _vector(
+        raw.get("carrier_envelope_mm"),
+        "detector.head.carrier_envelope_mm",
         3,
     )
-    anti_rotation = _vector(
-        raw.get("anti_rotation_key_mm"),
-        "detector.cassette.anti_rotation_key_mm",
-        3,
-    )
-    insertion_stop = _vector(
-        raw.get("insertion_stop_mm"),
-        "detector.cassette.insertion_stop_mm",
-        3,
-    )
-    carrier = _vector(raw.get("sensor_carrier_mm"), "detector.cassette.sensor_carrier_mm", 3)
-    spreader = _vector(raw.get("thermal_spreader_mm"), "detector.cassette.thermal_spreader_mm", 3)
-    return CassetteSpec(
-        status=_state(raw.get("status"), "detector.cassette.status"),
-        outer_envelope_mm=(outer[0], outer[1], outer[2]),
-        front_nose_envelope_mm=(
-            front_nose[0],
-            front_nose[1],
-            front_nose[2],
+    return DetectorHeadSpec(
+        status=_state(raw.get("status"), "detector.head.status"),
+        carrier_envelope_mm=(carrier[0], carrier[1], carrier[2]),
+        carrier_material=_text(
+            raw.get("carrier_material"),
+            "detector.head.carrier_material",
         ),
-        front_offset_from_active_center_mm=_number(
-            raw.get("front_offset_from_active_center_mm"),
-            "detector.cassette.front_offset_from_active_center_mm",
+        carrier_status=_state(
+            raw.get("carrier_status"),
+            "detector.head.carrier_status",
+        ),
+        housing_radial_clearance_mm=_nonnegative(
+            _number(
+                raw.get("housing_radial_clearance_mm"),
+                "detector.head.housing_radial_clearance_mm",
+            ),
+            "detector.head.housing_radial_clearance_mm",
         ),
         shell_wall_mm=_positive(
-            _number(raw.get("shell_wall_mm"), "detector.cassette.shell_wall_mm"),
-            "detector.cassette.shell_wall_mm",
+            _number(raw.get("shell_wall_mm"), "detector.head.shell_wall_mm"),
+            "detector.head.shell_wall_mm",
         ),
-        shell_material=_text(raw.get("shell_material"), "detector.cassette.shell_material"),
-        light_tight=_boolean(raw.get("light_tight"), "detector.cassette.light_tight"),
-        removable=_boolean(raw.get("removable"), "detector.cassette.removable"),
-        mounting_datum=_text(raw.get("mounting_datum"), "detector.cassette.mounting_datum"),
-        mounting_datum_offset_mm=_number(
-            raw.get("mounting_datum_offset_mm"),
-            "detector.cassette.mounting_datum_offset_mm",
+        shell_material=_text(
+            raw.get("shell_material"),
+            "detector.head.shell_material",
+        ),
+        rear_clearance_mm=_nonnegative(
+            _number(raw.get("rear_clearance_mm"), "detector.head.rear_clearance_mm"),
+            "detector.head.rear_clearance_mm",
+        ),
+        rear_cap_wall_mm=_positive(
+            _number(raw.get("rear_cap_wall_mm"), "detector.head.rear_cap_wall_mm"),
+            "detector.head.rear_cap_wall_mm",
+        ),
+        mounting_flange_diameter_mm=_positive(
+            _number(
+                raw.get("mounting_flange_diameter_mm"),
+                "detector.head.mounting_flange_diameter_mm",
+            ),
+            "detector.head.mounting_flange_diameter_mm",
         ),
         anti_rotation_feature=_text(
             raw.get("anti_rotation_feature"),
-            "detector.cassette.anti_rotation_feature",
+            "detector.head.anti_rotation_feature",
         ),
-        anti_rotation_key_mm=(anti_rotation[0], anti_rotation[1], anti_rotation[2]),
-        insertion_stop_mm=(insertion_stop[0], insertion_stop[1], insertion_stop[2]),
-        insertion_stop_offset_mm=_number(
-            raw.get("insertion_stop_offset_mm"),
-            "detector.cassette.insertion_stop_offset_mm",
+        anti_rotation_flat_depth_mm=_positive(
+            _number(
+                raw.get("anti_rotation_flat_depth_mm"),
+                "detector.head.anti_rotation_flat_depth_mm",
+            ),
+            "detector.head.anti_rotation_flat_depth_mm",
         ),
-        sensor_carrier_mm=(carrier[0], carrier[1], carrier[2]),
-        sensor_carrier_material=_text(
-            raw.get("sensor_carrier_material"),
-            "detector.cassette.sensor_carrier_material",
+        mounting_datum=_text(
+            raw.get("mounting_datum"),
+            "detector.head.mounting_datum",
         ),
-        thermal_spreader_mm=(spreader[0], spreader[1], spreader[2]),
-        thermal_spreader_material=_text(
-            raw.get("thermal_spreader_material"),
-            "detector.cassette.thermal_spreader_material",
+        detector_removal_direction=_text(
+            raw.get("detector_removal_direction"),
+            "detector.head.detector_removal_direction",
         ),
-        cable_exit=_text(raw.get("cable_exit"), "detector.cassette.cable_exit"),
+        detector_removal_clearance_mm=_positive(
+            _number(
+                raw.get("detector_removal_clearance_mm"),
+                "detector.head.detector_removal_clearance_mm",
+            ),
+            "detector.head.detector_removal_clearance_mm",
+        ),
+        cable_exit=_text(raw.get("cable_exit"), "detector.head.cable_exit"),
         cable_exit_diameter_mm=_positive(
-            _number(raw.get("cable_exit_diameter_mm"), "detector.cassette.cable_exit_diameter_mm"),
-            "detector.cassette.cable_exit_diameter_mm",
+            _number(
+                raw.get("cable_exit_diameter_mm"),
+                "detector.head.cable_exit_diameter_mm",
+            ),
+            "detector.head.cable_exit_diameter_mm",
+        ),
+        cable_exit_length_mm=_positive(
+            _number(
+                raw.get("cable_exit_length_mm"),
+                "detector.head.cable_exit_length_mm",
+            ),
+            "detector.head.cable_exit_length_mm",
+        ),
+        cable_exit_status=_state(
+            raw.get("cable_exit_status"),
+            "detector.head.cable_exit_status",
         ),
         connector_keepout_diameter_mm=_positive(
             _number(
                 raw.get("connector_keepout_diameter_mm"),
-                "detector.cassette.connector_keepout_diameter_mm",
+                "detector.head.connector_keepout_diameter_mm",
             ),
-            "detector.cassette.connector_keepout_diameter_mm",
+            "detector.head.connector_keepout_diameter_mm",
         ),
         connector_keepout_length_mm=_positive(
             _number(
                 raw.get("connector_keepout_length_mm"),
-                "detector.cassette.connector_keepout_length_mm",
+                "detector.head.connector_keepout_length_mm",
             ),
-            "detector.cassette.connector_keepout_length_mm",
+            "detector.head.connector_keepout_length_mm",
         ),
-        strain_relief_length_mm=_positive(
-            _number(raw.get("strain_relief_length_mm"), "detector.cassette.strain_relief_length_mm"),
-            "detector.cassette.strain_relief_length_mm",
-        ),
-        temperature_sensor=_text(
-            raw.get("temperature_sensor"),
-            "detector.cassette.temperature_sensor",
-        ),
-        temperature_sensor_status=_state(
-            raw.get("temperature_sensor_status"),
-            "detector.cassette.temperature_sensor_status",
+        maximum_physical_depth_mm=_positive(
+            _number(
+                raw.get("maximum_physical_depth_mm"),
+                "detector.head.maximum_physical_depth_mm",
+            ),
+            "detector.head.maximum_physical_depth_mm",
         ),
     )
 
 
 def _parse_detector(raw: Mapping[str, Any]) -> DetectorPlatformSpec:
-    return DetectorPlatformSpec(
+    spec = DetectorPlatformSpec(
         status=_state(raw.get("status"), "detector.status"),
         radius_reference=_text(raw.get("radius_reference"), "detector.radius_reference"),
         active=_parse_active(_mapping(raw.get("active"), "detector.active")),
         optics=_parse_optics(_mapping(raw.get("optics"), "detector.optics")),
         sipm=_parse_sipm(_mapping(raw.get("sipm"), "detector.sipm")),
-        cassette=_parse_cassette(_mapping(raw.get("cassette"), "detector.cassette")),
+        head=_parse_detector_head(_mapping(raw.get("head"), "detector.head")),
     )
+    if spec.physical_depth_mm > spec.head.maximum_physical_depth_mm:
+        raise ValueError(
+            "detector calculated physical depth exceeds detector.head.maximum_physical_depth_mm"
+        )
+    if spec.head.mounting_flange_diameter_mm <= spec.housing_outer_diameter_mm:
+        raise ValueError(
+            "detector.head.mounting_flange_diameter_mm must exceed the calculated housing diameter"
+        )
+    return spec
 
 
-def _parse_cartridge(raw: Mapping[str, Any]) -> SectorCartridgeSpec:
-    pad = _vector(raw.get("mount_pad_mm"), "sector_cartridge.mount_pad_mm", 3)
-    return SectorCartridgeSpec(
-        status=_state(raw.get("status"), "sector_cartridge.status"),
-        architecture=_text(raw.get("architecture"), "sector_cartridge.architecture"),
+def _parse_sector_holder(raw: Mapping[str, Any]) -> SectorHolderSpec:
+    interface_block = _vector(
+        raw.get("interface_block_mm"),
+        "sector_holder.interface_block_mm",
+        3,
+    )
+    return SectorHolderSpec(
+        status=_state(raw.get("status"), "sector_holder.status"),
+        architecture=_text(raw.get("architecture"), "sector_holder.architecture"),
         detector_mounts=tuple(
-            _text(item, f"sector_cartridge.detector_mounts[{idx}]")
+            _text(item, f"sector_holder.detector_mounts[{idx}]")
             for idx, item in enumerate(
-                _items(raw.get("detector_mounts"), "sector_cartridge.detector_mounts")
+                _items(raw.get("detector_mounts"), "sector_holder.detector_mounts")
             )
         ),
-        mounting_datum=_text(raw.get("mounting_datum"), "sector_cartridge.mounting_datum"),
+        mounting_datum=_text(raw.get("mounting_datum"), "sector_holder.mounting_datum"),
         survey_datums=tuple(
-            _text(item, f"sector_cartridge.survey_datums[{idx}]")
-            for idx, item in enumerate(_items(raw.get("survey_datums"), "sector_cartridge.survey_datums"))
+            _text(item, f"sector_holder.survey_datums[{idx}]")
+            for idx, item in enumerate(
+                _items(raw.get("survey_datums"), "sector_holder.survey_datums")
+            )
         ),
-        chamber_interface=_text(raw.get("chamber_interface"), "sector_cartridge.chamber_interface"),
-        removal_direction=_text(raw.get("removal_direction"), "sector_cartridge.removal_direction"),
-        removal_clearance_mm=_positive(
-            _number(raw.get("removal_clearance_mm"), "sector_cartridge.removal_clearance_mm"),
-            "sector_cartridge.removal_clearance_mm",
+        chamber_interface=_text(
+            raw.get("chamber_interface"),
+            "sector_holder.chamber_interface",
         ),
-        backbone_width_mm=_positive(
-            _number(raw.get("backbone_width_mm"), "sector_cartridge.backbone_width_mm"),
-            "sector_cartridge.backbone_width_mm",
+        detector_removal_direction=_text(
+            raw.get("detector_removal_direction"),
+            "sector_holder.detector_removal_direction",
         ),
-        backbone_depth_mm=_positive(
-            _number(raw.get("backbone_depth_mm"), "sector_cartridge.backbone_depth_mm"),
-            "sector_cartridge.backbone_depth_mm",
+        sector_removal_direction=_text(
+            raw.get("sector_removal_direction"),
+            "sector_holder.sector_removal_direction",
         ),
-        backbone_margin_mm=_positive(
-            _number(raw.get("backbone_margin_mm"), "sector_cartridge.backbone_margin_mm"),
-            "sector_cartridge.backbone_margin_mm",
+        sector_removal_clearance_mm=_positive(
+            _number(
+                raw.get("sector_removal_clearance_mm"),
+                "sector_holder.sector_removal_clearance_mm",
+            ),
+            "sector_holder.sector_removal_clearance_mm",
         ),
-        rail_width_mm=_positive(
-            _number(raw.get("rail_width_mm"), "sector_cartridge.rail_width_mm"),
-            "sector_cartridge.rail_width_mm",
+        carrier_plate_thickness_mm=_positive(
+            _number(
+                raw.get("carrier_plate_thickness_mm"),
+                "sector_holder.carrier_plate_thickness_mm",
+            ),
+            "sector_holder.carrier_plate_thickness_mm",
         ),
-        rail_thickness_mm=_positive(
-            _number(raw.get("rail_thickness_mm"), "sector_cartridge.rail_thickness_mm"),
-            "sector_cartridge.rail_thickness_mm",
+        carrier_web_width_mm=_positive(
+            _number(
+                raw.get("carrier_web_width_mm"),
+                "sector_holder.carrier_web_width_mm",
+            ),
+            "sector_holder.carrier_web_width_mm",
         ),
-        mount_pad_mm=(pad[0], pad[1], pad[2]),
+        carrier_node_radius_mm=_positive(
+            _number(
+                raw.get("carrier_node_radius_mm"),
+                "sector_holder.carrier_node_radius_mm",
+            ),
+            "sector_holder.carrier_node_radius_mm",
+        ),
+        common_bracket_width_mm=_positive(
+            _number(
+                raw.get("common_bracket_width_mm"),
+                "sector_holder.common_bracket_width_mm",
+            ),
+            "sector_holder.common_bracket_width_mm",
+        ),
+        nest_axial_depth_mm=_positive(
+            _number(
+                raw.get("nest_axial_depth_mm"),
+                "sector_holder.nest_axial_depth_mm",
+            ),
+            "sector_holder.nest_axial_depth_mm",
+        ),
+        nest_radial_wall_mm=_positive(
+            _number(
+                raw.get("nest_radial_wall_mm"),
+                "sector_holder.nest_radial_wall_mm",
+            ),
+            "sector_holder.nest_radial_wall_mm",
+        ),
+        nest_clearance_mm=_positive(
+            _number(
+                raw.get("nest_clearance_mm"),
+                "sector_holder.nest_clearance_mm",
+            ),
+            "sector_holder.nest_clearance_mm",
+        ),
+        clamp_bridge_thickness_mm=_positive(
+            _number(
+                raw.get("clamp_bridge_thickness_mm"),
+                "sector_holder.clamp_bridge_thickness_mm",
+            ),
+            "sector_holder.clamp_bridge_thickness_mm",
+        ),
+        clamp_fastener_class=_text(
+            raw.get("clamp_fastener_class"),
+            "sector_holder.clamp_fastener_class",
+        ),
+        clamp_fastener_clearance_diameter_mm=_positive(
+            _number(
+                raw.get("clamp_fastener_clearance_diameter_mm"),
+                "sector_holder.clamp_fastener_clearance_diameter_mm",
+            ),
+            "sector_holder.clamp_fastener_clearance_diameter_mm",
+        ),
+        fastener_status=_state(
+            raw.get("fastener_status"),
+            "sector_holder.fastener_status",
+        ),
+        interface_block_mm=(
+            interface_block[0],
+            interface_block[1],
+            interface_block[2],
+        ),
+        locating_pin_diameter_mm=_positive(
+            _number(
+                raw.get("locating_pin_diameter_mm"),
+                "sector_holder.locating_pin_diameter_mm",
+            ),
+            "sector_holder.locating_pin_diameter_mm",
+        ),
+        locating_slot_width_mm=_positive(
+            _number(
+                raw.get("locating_slot_width_mm"),
+                "sector_holder.locating_slot_width_mm",
+            ),
+            "sector_holder.locating_slot_width_mm",
+        ),
+        locating_slot_length_mm=_positive(
+            _number(
+                raw.get("locating_slot_length_mm"),
+                "sector_holder.locating_slot_length_mm",
+            ),
+            "sector_holder.locating_slot_length_mm",
+        ),
         service_lane_offset_mm=_number(
             raw.get("service_lane_offset_mm"),
-            "sector_cartridge.service_lane_offset_mm",
+            "sector_holder.service_lane_offset_mm",
         ),
-        thermal_bus_thickness_mm=_positive(
+        acceptance_clearance_mm=_positive(
             _number(
-                raw.get("thermal_bus_thickness_mm"),
-                "sector_cartridge.thermal_bus_thickness_mm",
+                raw.get("acceptance_clearance_mm"),
+                "sector_holder.acceptance_clearance_mm",
             ),
-            "sector_cartridge.thermal_bus_thickness_mm",
+            "sector_holder.acceptance_clearance_mm",
         ),
-        thermal_bus_width_mm=_positive(
-            _number(raw.get("thermal_bus_width_mm"), "sector_cartridge.thermal_bus_width_mm"),
-            "sector_cartridge.thermal_bus_width_mm",
+        tool_clearance_mm=_positive(
+            _number(
+                raw.get("tool_clearance_mm"),
+                "sector_holder.tool_clearance_mm",
+            ),
+            "sector_holder.tool_clearance_mm",
         ),
     )
 
@@ -834,25 +999,9 @@ def _parse_services(raw: Mapping[str, Any]) -> ServicesSpec:
             raw.get("channels_per_signal_feedthrough"),
             "services.channels_per_signal_feedthrough",
         ),
-        temperature_channels=_integer(
-            raw.get("temperature_channels"),
-            "services.temperature_channels",
-        ),
-        wires_per_temperature_channel=_integer(
-            raw.get("wires_per_temperature_channel"),
-            "services.wires_per_temperature_channel",
-        ),
-        housekeeping_pin_capacity=_integer(
-            raw.get("housekeeping_pin_capacity"),
-            "services.housekeeping_pin_capacity",
-        ),
         signal_interface=_parse_feedthrough(
             _mapping(raw.get("signal_interface"), "services.signal_interface"),
             "services.signal_interface",
-        ),
-        housekeeping_interface=_parse_feedthrough(
-            _mapping(raw.get("housekeeping_interface"), "services.housekeeping_interface"),
-            "services.housekeeping_interface",
         ),
         routing=ServiceRoutingSpec(
             status=_state(routing_raw.get("status"), "services.routing.status"),
@@ -1178,8 +1327,17 @@ def _parse_deployment(raw: Mapping[str, Any]) -> DeploymentSpec:
                 ),
             )
         )
+        if ports[-1].role not in {"rotary", "signal"}:
+            raise ValueError(
+                "deployment.service_ports role must be rotary or signal; "
+                f"removed service role {ports[-1].role!r} is not supported"
+            )
     spec = DeploymentSpec(
         name=_text(raw.get("name"), "deployment.name"),
+        instrument_name=_text(
+            raw.get("instrument_name"),
+            "deployment.instrument_name",
+        ),
         location=_text(raw.get("location"), "deployment.location"),
         status=_state(raw.get("status"), "deployment.status"),
         external_route_module=_text(
@@ -1245,19 +1403,61 @@ def _parse_deployment(raw: Mapping[str, Any]) -> DeploymentSpec:
     return spec
 
 
+_REMOVED_SCHEMA_V2_FIELDS = {
+    "cassette",
+    "sector_cartridge",
+    "temperature_sensor",
+    "temperature_sensor_status",
+    "temperature_channels",
+    "wires_per_temperature_channel",
+    "temperature_harnesses",
+    "housekeeping_pin_capacity",
+    "housekeeping_interface",
+    "housekeeping",
+    "anti_rotation_tab_mm",
+}
+
+
+def _removed_field_paths(
+    value: Any,
+    prefix: str = "",
+) -> tuple[str, ...]:
+    paths: list[str] = []
+    if isinstance(value, Mapping):
+        for key, item in value.items():
+            path = f"{prefix}.{key}" if prefix else str(key)
+            if key in _REMOVED_SCHEMA_V2_FIELDS:
+                paths.append(path)
+            paths.extend(_removed_field_paths(item, path))
+    elif isinstance(value, list):
+        for index, item in enumerate(value):
+            paths.extend(_removed_field_paths(item, f"{prefix}[{index}]"))
+    return tuple(paths)
+
+
 def parse_compact_one_config(raw: Mapping[str, Any]) -> CompactOnePlatformConfig:
     schema_version = _integer(raw.get("schema_version"), "schema_version")
-    if schema_version != 2:
-        raise ValueError("CompactOne schema_version must be 2")
+    if schema_version != 3:
+        raise ValueError(
+            "CompactOne schema_version must be 3; migrate detector.cassette to "
+            "detector.head, sector_cartridge to sector_holder, and remove all "
+            "temperature/housekeeping fields"
+        )
+    removed_paths = _removed_field_paths(raw)
+    if removed_paths:
+        raise ValueError(
+            "CompactOne schema v3 rejects removed fields: "
+            + ", ".join(sorted(removed_paths))
+        )
     architecture_mode = _text(raw.get("architecture_mode"), "architecture_mode")
     if architecture_mode != "compact_one":
-        raise ValueError("architecture_mode must be compact_one for schema v2")
+        raise ValueError("architecture_mode must be compact_one for schema v3")
     return CompactOnePlatformConfig(
         schema_version=schema_version,
         architecture_mode=architecture_mode,
         detector=_parse_detector(_mapping(raw.get("detector"), "detector")),
-        sector_cartridge=_parse_cartridge(
-            _mapping(raw.get("sector_cartridge"), "sector_cartridge")
+        sector_holder=_parse_sector_holder(
+            _mapping(raw.get("sector_holder"), "sector_holder")
         ),
         target=_parse_target(_mapping(raw.get("target"), "target")),
         services=_parse_services(_mapping(raw.get("services"), "services")),
@@ -1294,7 +1494,7 @@ def compact_one_vessel_mapping(platform: CompactOnePlatformConfig) -> dict[str, 
             "interface_washer_thickness_mm": 1.5,
         }
 
-    # [EN] The legacy vessel view is generated from the selected deployment candidate so geometry code cannot silently diverge from the schema-v2 source. / [CN] 旧版 vessel 视图由所选部署候选自动生成，避免几何代码与 schema-v2 权威来源静默分叉。
+    # [EN] The legacy vessel view is generated from the selected deployment candidate so geometry code cannot silently diverge from the schema-v3 source. / [CN] 旧版 vessel 视图由所选部署候选自动生成，避免几何代码与 schema-v3 权威来源静默分叉。
     return {
         "cross_section": chamber.cross_section,
         "inner_size_x_mm": chamber.inner_size_x_mm,
@@ -1319,19 +1519,16 @@ def compact_one_vessel_mapping(platform: CompactOnePlatformConfig) -> dict[str, 
 
 def compact_one_detector_mapping(platform: CompactOnePlatformConfig) -> dict[str, Any]:
     detector = platform.detector
-    cassette = detector.cassette
-    # [EN] Deprecated scalar fields mirror only the active geometry needed by old analysis callers; the cassette envelope remains separately authoritative in schema v2. / [CN] 弃用的标量字段只镜像旧分析调用方所需的有效体几何；盒体包络仍由 schema v2 独立权威描述。
+    head = detector.head
+    # [EN] Deprecated scalar fields mirror only active geometry for analysis callers; schema v3 derives the detector-head envelope from the real axial stack. / [CN] 弃用标量只为分析调用方镜像有效体几何；schema v3 由真实轴向堆栈推导探测器头包络。
     return {
         "radius_reference": detector.radius_reference,
         "diameter_mm": detector.active.diameter_mm,
         "length_mm": detector.active.thickness_mm,
-        "clamp_outer_diameter_mm": max(
-            cassette.outer_envelope_mm[0],
-            cassette.outer_envelope_mm[1],
-        ),
+        "clamp_outer_diameter_mm": head.mounting_flange_diameter_mm,
         "clamp_width_mm": min(
             detector.active.thickness_mm,
-            cassette.insertion_stop_mm[2],
+            head.rear_cap_wall_mm,
         ),
         "active_medium_status": "selected",
         "active_medium": detector.active.material,
@@ -1341,12 +1538,12 @@ def compact_one_detector_mapping(platform: CompactOnePlatformConfig) -> dict[str
 
 
 def compact_one_inner_frame_mapping(platform: CompactOnePlatformConfig) -> dict[str, Any]:
-    cartridge = platform.sector_cartridge
-    # [EN] These values exist only for legacy-scaffold compatibility; preferred CompactOne geometry consumes the cartridge specification directly. / [CN] 这些数值仅用于旧脚手架兼容；首选 CompactOne 几何直接读取扇区盒规范。
+    holder = platform.sector_holder
+    # [EN] These values exist only for legacy-scaffold compatibility; preferred CompactOne geometry consumes the sector-holder specification directly. / [CN] 这些数值仅用于旧脚手架兼容；首选 CompactOne 几何直接读取扇区支架规范。
     return {
-        "spine_diameter_mm": cartridge.backbone_width_mm,
-        "arm_cross_width_mm": cartridge.rail_width_mm,
-        "arm_cross_thickness_mm": cartridge.rail_thickness_mm,
+        "spine_diameter_mm": 2.0 * holder.carrier_node_radius_mm,
+        "arm_cross_width_mm": holder.carrier_web_width_mm,
+        "arm_cross_thickness_mm": holder.carrier_plate_thickness_mm,
     }
 
 
@@ -1355,20 +1552,18 @@ def compact_one_top_services_mapping(platform: CompactOnePlatformConfig) -> dict
     target = platform.target
     deployment = platform.deployment
     signal_ports = [port for port in deployment.service_ports if port.role == "signal"]
-    housekeeping_ports = [
-        port for port in deployment.service_ports if port.role == "housekeeping"
-    ]
     rotary_ports = [port for port in deployment.service_ports if port.role == "rotary"]
-    if len(housekeeping_ports) != 1 or len(rotary_ports) != 1:
-        raise ValueError("deployment service layout requires one rotary and one housekeeping port")
-    housekeeping = housekeeping_ports[0]
+    if len(signal_ports) != 4 or len(rotary_ports) != 1:
+        raise ValueError(
+            "deployment service layout requires four sector signal ports and one rotary port"
+        )
     rotary_port = rotary_ports[0]
     interface = services.signal_interface
     rotary = target.rotary
     holder = target.holder
     foil = target.foil
 
-    # [EN] All bought-out flange dimensions remain tagged by schema-v2 decision metadata; this compatibility mapping only supplies envelope geometry to the old builder. / [CN] 所有采购法兰尺寸仍由 schema-v2 决策元数据标识；此兼容映射只向旧生成器提供包络几何。
+    # [EN] All bought-out flange dimensions remain tagged by schema-v3 decision metadata; this compatibility mapping only supplies envelope geometry to the old builder. / [CN] 所有采购法兰尺寸仍由 schema-v3 决策元数据标识；此兼容映射只向旧生成器提供包络几何。
     return {
         "status": "interface_envelope",
         "icf70_interface": {
@@ -1446,19 +1641,6 @@ def compact_one_top_services_mapping(platform: CompactOnePlatformConfig) -> dict
             "signal_port_collar_length_mm": signal_ports[0].collar_length_mm,
             "signal_equipment_envelope_diameter_mm": 50.0,
             "signal_equipment_envelope_length_mm": 55.0,
-            "housekeeping": {
-                "name": housekeeping.name,
-                "center_x_mm": housekeeping.center_x_mm,
-                "center_z_mm": housekeeping.center_z_mm,
-                "sensor_count": services.temperature_channels,
-                "wires_per_sensor": services.wires_per_temperature_channel,
-                "feedthrough_pin_count": services.housekeeping_pin_capacity,
-                "port_inner_diameter_mm": services.housekeeping_interface.nominal_clear_bore_mm,
-                "port_outer_diameter_mm": housekeeping.collar_outer_diameter_mm,
-                "port_collar_length_mm": housekeeping.collar_length_mm,
-                "equipment_envelope_diameter_mm": 50.0,
-                "equipment_envelope_length_mm": 55.0,
-            },
             "routing": {
                 "cable_keepout_diameter_mm": services.routing.cable_keepout_diameter_mm,
                 "minimum_static_bend_radius_mm": services.routing.minimum_static_bend_radius_mm,

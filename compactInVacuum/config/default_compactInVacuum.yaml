@@ -190,18 +190,6 @@ top_services:
     signal_port_collar_length_mm: 8.0
     signal_equipment_envelope_diameter_mm: 50.0
     signal_equipment_envelope_length_mm: 55.0
-    housekeeping:
-      name: sipm_temperature
-      center_x_mm: -70.0
-      center_z_mm: 0.0
-      sensor_count: 12
-      wires_per_sensor: 2
-      feedthrough_pin_count: 32
-      port_inner_diameter_mm: 38.0
-      port_outer_diameter_mm: 42.0
-      port_collar_length_mm: 8.0
-      equipment_envelope_diameter_mm: 50.0
-      equipment_envelope_length_mm: 55.0
     routing:
       cable_keepout_diameter_mm: 8.0
       minimum_static_bend_radius_mm: 25.0

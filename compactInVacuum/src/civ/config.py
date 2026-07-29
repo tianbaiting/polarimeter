@@ -186,21 +186,6 @@ class SignalServicePortConfig:
 
 
 @dataclass(frozen=True)
-class HousekeepingServiceConfig:
-    name: str
-    center_x_mm: float
-    center_z_mm: float
-    sensor_count: int
-    wires_per_sensor: int
-    feedthrough_pin_count: int
-    port_inner_diameter_mm: float
-    port_outer_diameter_mm: float
-    port_collar_length_mm: float
-    equipment_envelope_diameter_mm: float
-    equipment_envelope_length_mm: float
-
-
-@dataclass(frozen=True)
 class CableRoutingConfig:
     cable_keepout_diameter_mm: float
     minimum_static_bend_radius_mm: float
@@ -231,7 +216,6 @@ class ElectricalServicesConfig:
     signal_port_collar_length_mm: float
     signal_equipment_envelope_diameter_mm: float
     signal_equipment_envelope_length_mm: float
-    housekeeping: HousekeepingServiceConfig
     routing: CableRoutingConfig
     grounding: GroundingConfig
 
@@ -1107,6 +1091,11 @@ def _parse_top_services(
         raise ValueError("top_services.rotary.beam_stay_clear_diameter_mm must fit through the holder aperture")
 
     electrical_raw = _to_mapping(raw.get("electrical"), "top_services.electrical")
+    if "housekeeping" in electrical_raw:
+        raise ValueError(
+            "top_services.electrical.housekeeping was removed; temperature monitoring "
+            "and its dedicated feedthrough are not part of CompactInVacuum"
+        )
     architecture_status = _to_str(
         electrical_raw.get("architecture_status"),
         "top_services.electrical.architecture_status",
@@ -1147,53 +1136,6 @@ def _parse_top_services(
         seen_sectors.add(port.sector)
         signal_ports.append(port)
 
-    housekeeping_raw = _to_mapping(
-        electrical_raw.get("housekeeping"),
-        "top_services.electrical.housekeeping",
-    )
-    housekeeping = HousekeepingServiceConfig(
-        name=_to_str(housekeeping_raw.get("name"), "top_services.electrical.housekeeping.name"),
-        center_x_mm=_to_float(
-            housekeeping_raw.get("center_x_mm"),
-            "top_services.electrical.housekeeping.center_x_mm",
-        ),
-        center_z_mm=_to_float(
-            housekeeping_raw.get("center_z_mm"),
-            "top_services.electrical.housekeeping.center_z_mm",
-        ),
-        sensor_count=_to_int(
-            housekeeping_raw.get("sensor_count"),
-            "top_services.electrical.housekeeping.sensor_count",
-        ),
-        wires_per_sensor=_to_int(
-            housekeeping_raw.get("wires_per_sensor"),
-            "top_services.electrical.housekeeping.wires_per_sensor",
-        ),
-        feedthrough_pin_count=_to_int(
-            housekeeping_raw.get("feedthrough_pin_count"),
-            "top_services.electrical.housekeeping.feedthrough_pin_count",
-        ),
-        port_inner_diameter_mm=_to_float(
-            housekeeping_raw.get("port_inner_diameter_mm"),
-            "top_services.electrical.housekeeping.port_inner_diameter_mm",
-        ),
-        port_outer_diameter_mm=_to_float(
-            housekeeping_raw.get("port_outer_diameter_mm"),
-            "top_services.electrical.housekeeping.port_outer_diameter_mm",
-        ),
-        port_collar_length_mm=_to_float(
-            housekeeping_raw.get("port_collar_length_mm"),
-            "top_services.electrical.housekeeping.port_collar_length_mm",
-        ),
-        equipment_envelope_diameter_mm=_to_float(
-            housekeeping_raw.get("equipment_envelope_diameter_mm"),
-            "top_services.electrical.housekeeping.equipment_envelope_diameter_mm",
-        ),
-        equipment_envelope_length_mm=_to_float(
-            housekeeping_raw.get("equipment_envelope_length_mm"),
-            "top_services.electrical.housekeeping.equipment_envelope_length_mm",
-        ),
-    )
     routing_raw = _to_mapping(electrical_raw.get("routing"), "top_services.electrical.routing")
     routing = CableRoutingConfig(
         cable_keepout_diameter_mm=_to_float(
@@ -1276,7 +1218,6 @@ def _parse_top_services(
             electrical_raw.get("signal_equipment_envelope_length_mm"),
             "top_services.electrical.signal_equipment_envelope_length_mm",
         ),
-        housekeeping=housekeeping,
         routing=routing,
         grounding=grounding,
     )
@@ -1288,11 +1229,6 @@ def _parse_top_services(
             "top_services.electrical.signal_port_collar_length_mm": electrical.signal_port_collar_length_mm,
             "top_services.electrical.signal_equipment_envelope_diameter_mm": electrical.signal_equipment_envelope_diameter_mm,
             "top_services.electrical.signal_equipment_envelope_length_mm": electrical.signal_equipment_envelope_length_mm,
-            "top_services.electrical.housekeeping.port_inner_diameter_mm": housekeeping.port_inner_diameter_mm,
-            "top_services.electrical.housekeeping.port_outer_diameter_mm": housekeeping.port_outer_diameter_mm,
-            "top_services.electrical.housekeeping.port_collar_length_mm": housekeeping.port_collar_length_mm,
-            "top_services.electrical.housekeeping.equipment_envelope_diameter_mm": housekeeping.equipment_envelope_diameter_mm,
-            "top_services.electrical.housekeeping.equipment_envelope_length_mm": housekeeping.equipment_envelope_length_mm,
             "top_services.electrical.routing.cable_keepout_diameter_mm": routing.cable_keepout_diameter_mm,
             "top_services.electrical.routing.minimum_static_bend_radius_mm": routing.minimum_static_bend_radius_mm,
             "top_services.electrical.routing.wall_clearance_mm": routing.wall_clearance_mm,
@@ -1304,9 +1240,6 @@ def _parse_top_services(
     for field_name, value in (
         ("top_services.electrical.detector_channel_count", electrical.detector_channel_count),
         ("top_services.electrical.channels_per_signal_port", electrical.channels_per_signal_port),
-        ("top_services.electrical.housekeeping.sensor_count", housekeeping.sensor_count),
-        ("top_services.electrical.housekeeping.wires_per_sensor", housekeeping.wires_per_sensor),
-        ("top_services.electrical.housekeeping.feedthrough_pin_count", housekeeping.feedthrough_pin_count),
     ):
         if value <= 0:
             raise ValueError(f"{field_name} must be > 0, got {value}")
@@ -1320,12 +1253,8 @@ def _parse_top_services(
         raise ValueError("top_services.electrical.signal_ports must define exactly one port per detector sector")
     if len(signal_ports) * electrical.channels_per_signal_port < electrical.detector_channel_count:
         raise ValueError("top_services.electrical.signal_ports do not provide enough coax channel capacity")
-    if housekeeping.feedthrough_pin_count < housekeeping.sensor_count * housekeeping.wires_per_sensor:
-        raise ValueError("top_services.electrical.housekeeping.feedthrough_pin_count is below the sensor wiring demand")
     if electrical.signal_port_inner_diameter_mm >= electrical.signal_port_outer_diameter_mm:
         raise ValueError("top_services.electrical signal port inner diameter must be smaller than outer diameter")
-    if housekeeping.port_inner_diameter_mm >= housekeeping.port_outer_diameter_mm:
-        raise ValueError("top_services.electrical.housekeeping port inner diameter must be smaller than outer diameter")
     if not electrical.bias_on_signal_coax or electrical.active_electronics_in_vacuum:
         raise ValueError(
             "current CompactInVacuum baseline requires external bias tees and no active electronics in vacuum"
@@ -1342,7 +1271,6 @@ def _parse_top_services(
     port_centers = [
         ("rotary", rotary.pivot_x_mm, rotary.pivot_z_mm),
         *[(port.name, port.center_x_mm, port.center_z_mm) for port in signal_ports],
-        (housekeeping.name, housekeeping.center_x_mm, housekeeping.center_z_mm),
     ]
     for name, x_mm, z_mm in port_centers:
         if abs(x_mm) > x_limit_mm or not (z_min_mm <= z_mm <= z_max_mm):
@@ -1405,7 +1333,7 @@ def load_config(path: str | None, overrides: Mapping[str, Any] | None = None) ->
         sectors,
     )
     compact_one: CompactOnePlatformConfig | None = None
-    if int(raw.get("schema_version", 1)) == 2:
+    if int(raw.get("schema_version", 1)) >= 2:
         compact_one = parse_compact_one_config(raw)
         vessel_raw = compact_one_vessel_mapping(compact_one)
         detector_raw = compact_one_detector_mapping(compact_one)

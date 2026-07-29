@@ -3,9 +3,9 @@ from __future__ import annotations
 import argparse
 from dataclasses import replace
 from datetime import datetime, timezone
+import json
 import os
 from pathlib import Path
-import sys
 from typing import Any
 
 try:
@@ -242,6 +242,7 @@ def main(argv: list[str] | None = None) -> int:
         validate_only = args.validate_only or str(build_cfg.get("mode", "build")).lower() == "validate_only"
         if not validate_only and report["status"] == "pass":
             from .assembly import build_assembly, build_compact_one_document
+            from .artifacts import document_geometry_metrics
             from .export import export_fcstd, export_step
 
             doc = (
@@ -254,6 +255,21 @@ def main(argv: list[str] | None = None) -> int:
                 artifacts["fcstd"] = export_fcstd(doc, str(output_dir), basename)
             if "step" in formats:
                 artifacts["step"] = export_step(doc, str(output_dir), basename)
+            metrics_path = output_dir / f"{basename}.geometry_metrics.json"
+            metrics_path.write_text(
+                json.dumps(
+                    document_geometry_metrics(
+                        cfg,
+                        doc,
+                        "deployment_assembly",
+                    ),
+                    ensure_ascii=False,
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            artifacts["geometry_metrics"] = str(metrics_path)
 
         status = report["status"]
         state = make_state(current_hash, status, artifacts)

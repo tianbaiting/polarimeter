@@ -40,8 +40,6 @@ def _interface_for_role(
     services = cfg.compact_one.services
     if role == "signal":
         return services.signal_interface
-    if role == "housekeeping":
-        return services.housekeeping_interface
     return None
 
 
@@ -69,7 +67,7 @@ def build_feedthrough_port(
     port: ServicePortPlacementSpec,
 ) -> FeedthroughPortGeometry:
     if cfg.compact_one is None:
-        raise ValueError("feedthrough geometry requires a CompactOne schema-v2 configuration")
+        raise ValueError("feedthrough geometry requires a CompactOne schema-v3 configuration")
     services = cfg.compact_one.services
     routing = services.routing
     wall_center = App.Vector(
@@ -101,11 +99,7 @@ def build_feedthrough_port(
         interface_outer_mm = interface_spec.module_outer_diameter_mm
         interface_thickness_mm = interface_spec.module_thickness_mm
         clear_bore_mm = interface_spec.nominal_clear_bore_mm
-        channel_count = (
-            services.channels_per_signal_feedthrough
-            if port.role == "signal"
-            else services.housekeeping_pin_capacity
-        )
+        channel_count = services.channels_per_signal_feedthrough
     interface_base = wall_center + App.Vector(0.0, port.collar_length_mm, 0.0)
     interface_envelope = Part.makeCylinder(
         0.5 * interface_outer_mm,

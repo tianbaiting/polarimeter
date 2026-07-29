@@ -1,316 +1,300 @@
-# CompactInVacuum Requirement Baseline v1
+# CompactInVacuum Requirement Baseline v2
 
 ## 1. Authority and scope
 
-This document is the requirement authority for the common CompactInVacuum detector platform and its two baseline instruments:
+This document is the requirement authority for the common CompactInVacuum detector platform and its two baseline deployments:
 
-1. `CompactInVacuum-afterSRC`, installed downstream of SRC.
-2. `CompactInVacuum-preSAMURAI`, installed before the SAMURAI terminal.
+1. `CompactInVacuum-afterSRC`, downstream of SRC.
+2. `CompactInVacuum-preSAMURAI`, upstream of the SAMURAI terminal.
 
-Both instruments place the scintillators, SiPM packages, local passive services, and detector supports inside vacuum. They share detector technology and engineering philosophy, but their chamber geometry, beamline interfaces, target integration, supports, and maintenance envelopes are site-specific.
+Both deployments place the compact plastic-scintillator detector heads, SiPM packages, passive internal services, and sector holders inside vacuum. Detector technology and common mechanical architecture are shared. Chamber geometry, purchased beamline interfaces, target integration, external supports, and installation envelopes remain deployment-specific.
 
-The previously developed afterSRC external-detector configuration in `afterSRC/` is retained as a legacy/fallback/reference route. It is not one of the two baseline instruments. The external-route mechanical baseline remains in `docs/specs/BLP_v1_requirement_baseline.md`; values from that baseline shall not become CompactInVacuum site requirements without independent evidence.
+The external-detector implementations in `afterSRC/` and `infrontofSamuraiMag/`, or their repository-preserved locations, are legacy/reference routes. They shall remain independently testable and shall not be modified, deleted, or silently promoted into this baseline.
 
-| Item | afterSRC compact | pre-SAMURAI compact | legacy afterSRC external |
-|---|---|---|---|
-| Baseline status | baseline | baseline | legacy/fallback |
-| Detector location | in vacuum | in vacuum | outside vacuum |
-| Detector platform | common CompactInVacuum platform | common CompactInVacuum platform | established external design |
-| Chamber geometry | site-specific / TBD | site-specific / TBD | existing reference geometry |
-| Beam interfaces | verify independently | verify independently | existing legacy assumptions |
+Compatibility labels containing `CompactOne` and the directory `compactInVacuum/` may remain in executable paths. The instrument names above are authoritative.
 
-```text
-SRC
- |
- +-- CompactInVacuum-afterSRC
- |
- |   beam transport
- |
- +-- CompactInVacuum-preSAMURAI
- |
-SAMURAI
+## 2. Decision and evidence states
 
-Both compact instruments:
-  common detector platform
-  site-specific mechanics and interfaces
+Engineering selections use:
 
-Legacy:
-  afterSRC external-detector design
-  reference/fallback only
-```
+- `FROZEN`: approved project requirement.
+- `PROVISIONAL`: current integration value requiring evidence.
+- `RECOMMENDED`: preferred prototype candidate; alternatives remain open.
+- `PLACEHOLDER`: architecture-only value that fails an applicable strict gate.
+- `PURCHASED-PART-CONTRACT`: governed by a supplier or certified drawing.
 
-Repository compatibility names such as `CompactOne-afterSRC`, `CompactOne-infrontSamurai`, and the directory `compactInVacuum/` may remain until a controlled API/path migration is justified.
+Unknown quantities remain `TBD` or unresolved. Exact-looking dimensions shall not be invented.
 
-### 1.1 Requirement levels
+Deployment interface claims use:
 
-Requirements shall be recorded at exactly one of these levels:
+- `A — EXTERNAL CONSTRAINT`
+- `B — LEGACY INHERITANCE`
+- `C — ENGINEERING ASSUMPTION`
+- `D — UNRESOLVED / TBD`
 
-- **COMMON PLATFORM REQUIREMENTS:** scintillator and SiPM technology, optical package, cassette, sector cartridge, detector services, electronics, calibration, thermal-path semantics, and common physics/response studies.
-- **AFTER-SRC SITE REQUIREMENTS:** actual available envelope, usable beam aperture, neighboring equipment, flange interfaces, support/alignment, target integration, and installation/maintenance access downstream of SRC.
-- **PRE-SAMURAI SITE REQUIREMENTS:** the same site categories, independently established for the location before the SAMURAI terminal.
-
-Unknown site quantities shall be `TBD` and shall name the drawing, survey, measurement, or beamline-owner decision needed to close them.
-
-## 2. Decision-state vocabulary
-
-Every engineering selection that can affect procurement or validation shall carry one of these states:
-
-- `FROZEN`: approved project requirement; change requires baseline revision.
-- `PROVISIONAL`: current engineering value used for integration; evidence is still required.
-- `RECOMMENDED`: preferred prototype candidate from study or report; alternatives remain allowed.
-- `PLACEHOLDER`: permits architecture/code development only and must fail an applicable strict gate.
-- `PURCHASED-PART-CONTRACT`: geometry and acceptance are governed by a supplier/certified drawing. Missing mandatory drawing data shall be explicit.
-
-Unknown values shall remain unresolved. Exact-looking dimensions shall not be invented.
-
-## 3. Frozen platform requirements
+## 3. Frozen common-platform requirements
 
 - Four sectors: LEFT, RIGHT, UP, DOWN.
-- Three physics channels per sector: D, P-small, P-large.
-- Total detector count: twelve.
-- CompactOne detectors, SiPMs, minimum passive services, and sector supports are inside vacuum.
-- Active electronics, bias tees, amplifiers, and digitizers remain outside vacuum by default.
-- One separately testable nominal 50-ohm coax signal path per detector; SiPM bias shares that coax through an external bias tee.
-- Temperature/housekeeping monitoring and spare service capacity are required.
-- Development hierarchy: single detector -> golden cassette -> golden three-channel sector -> four-sector polarimeter.
-- Legacy external-route code and evidence remain preserved and independently testable, without being promoted into the two-instrument baseline.
+- Three channels per sector: deuteron, small-angle proton, large-angle proton.
+- Twelve active detectors total.
+- Detector axes point toward the target center.
+- Configured radii refer to active-plastic centers.
+- One nominal 50-ohm signal path per detector; bias may share the coax through external bias tees.
+- Active amplifiers, bias tees, and digitizers remain outside vacuum by default.
+- One removable three-detector holder per sector.
+- Full target-region-to-complete-active-disc acceptance is preserved.
+- Coincidence geometry and per-channel active-acceptance metrics are exported.
+- Physical CAD is separated from keepouts, datums, service centerlines, and physics overlays.
+- Both baseline deployments generate independently.
+- Preserved external routes remain unchanged and independently regressible.
 
-## 4. Recommended prototype detector platform
+## 4. Temperature-monitoring disposition
 
-These values are recommendations, not frozen production requirements:
+A dedicated temperature-monitoring or thermometer-style subsystem is not a platform requirement.
 
-- Active medium: fast blue plastic scintillator.
-- Active diameter: approximately 20 mm for the compact prototype geometry.
-- First prototype active-thickness band: 5–6 mm, with the configuration able to represent other tested thicknesses.
-- SiPM baseline: NDL EQR15 11-6060D-S.
-- SiPM class: approximately 6 × 6 mm active area.
-- Measured total optical collection target: 2–5%. This is a system-level measurement target, not a supplier specification.
+The common platform shall not contain or require:
 
-The software shall keep the active plastic, optical package, SiPM, and cassette mechanical envelope independent.
+- a physical `TemperatureSensor`;
+- per-detector temperature channels;
+- temperature harnesses or centerlines;
+- wires-per-temperature-channel capacity;
+- a housekeeping feedthrough;
+- a housekeeping capacity gate;
+- a resolved temperature-sensor supplier model;
+- temperature manifests or generated metrics.
 
-## 5. Detector cassette
+These elements shall be removed rather than hidden. Schema version 3 rejects their former configuration keys with a migration error.
 
-Every detector channel shall expose engineering-envelope representations for:
+An optional deployment-level spare auxiliary interface may be introduced in a future revision only if justified. It shall default to disabled, create no physical feedthrough or cable when disabled, use neither “temperature” nor “housekeeping” terminology, and remain outside required validation.
 
-- active plastic;
-- optical coupling region;
-- reflector/light-treatment envelope;
-- SiPM;
-- removable sensor carrier;
-- thermal spreader/path;
-- light-tight shell;
-- mounting datum;
-- anti-rotation feature;
-- insertion stop;
-- detector-side cable strain relief;
-- cable/connector keep-out;
-- optional temperature sensor.
+## 5. Detector-head prototype
 
-The cassette shall be independently generated and validated. Microscopic conductor and semiconductor detail is out of scope.
+The semantic axial stack is:
 
-## 6. Sector cartridge
+1. fast plastic scintillator;
+2. thin reflector/light-treatment envelope;
+3. optical coupling layer;
+4. SiPM package;
+5. minimal sensor PCB or metallic carrier;
+6. shallow light-tight rear mounting face;
+7. short cable exit.
 
-The preferred internal structure is four removable sector cartridges. Each cartridge shall:
+The recommended starting prototype is:
 
-- carry D, P-small, and P-large cassettes;
-- define common mounting and survey datums;
-- provide a shared thermal path;
-- provide service routing and strain relief;
-- provide a chamber/service-structure interface;
-- have an explicit removal/service envelope;
-- preserve the full active acceptance of all three detectors.
+| Component | Default value | Status |
+|---|---:|---|
+| active plastic diameter | 20.0 mm | recommended |
+| active plastic thickness | 5.5 mm | recommended within 5–6 mm |
+| reflector radial envelope | 0.25 mm | placeholder material |
+| optical coupling thickness | 0.50 mm | provisional |
+| SiPM package depth | 1.50 mm | recommended candidate envelope |
+| sensor PCB/carrier depth | 1.20 mm | provisional |
+| rear internal clearance | 0.00 mm | provisional |
+| rear mounting-face thickness | 1.00 mm | provisional |
+| SiPM candidate | NDL EQR15 11-6060D-S | recommended |
+| SiPM active class | approximately 6 × 6 mm | recommended |
 
-The former twelve-arm support is a legacy scaffold, not the preferred architecture.
+The default physical housing depth is calculated, not independently specified:
 
-## 7. Target subsystem
+`5.50 + 0.50 + 1.50 + 1.20 + 0.00 + 1.00 = 9.70 mm`
 
-The target subsystem shall represent:
+The physical-depth gate is 18.0 mm maximum from active entrance face to rear physical housing. The 3.0 mm short cable exit and the 20.0 mm connector keepout are reported separately and do not increase this metric.
 
-- target foil and active target region;
-- removable frame/holder;
-- rotary arm, hub, shaft, and feedthrough interface;
-- WORK and PARK states;
-- mechanical hard stops;
-- target-center datum;
-- complete motion sweep between WORK and PARK.
+The reflector envelope surrounds the active plastic without covering its complete entrance face. The coupling contacts the active rear readout region. The SiPM is centered directly behind the coupling. The carrier contacts the SiPM and rear mounting face, providing a real passive conductive path without an artificial long thermal bridge.
 
-The motion sweep shall be checked against beam stay-clear, all cassettes, cartridges, cables, connector keep-outs, feedthrough/manifold structures, and chamber structures.
+The light-tight housing is a shallow sleeve and rear face. It shall not recreate the former 35 mm nose plus 44 mm rectangular package. Semiconductor microstructure and detailed connector internals are out of scope.
 
-## 8. Electrical, grounding, and thermal services
+The rear mounting face provides the insertion stop and mounting datum. A D-flat and matching nest land provide anti-rotation without protruding into a neighboring acceptance cone. Detector removal is axial and rearward after clamp release. The default sampled withdrawal distance is 12.0 mm, sufficient to clear the 3.0 mm nest.
 
-- Fast signal channels: 12 minimum.
-- Nominal impedance: 50 ohm.
-- Bias architecture: signal-coax sharing with external bias tees.
-- Active in-vacuum electronics: disabled by default.
-- Temperature channels: one optional sensor per cassette, with capacity for all twelve baseline cassettes.
-- Grounding: a dedicated protective/equipotential bond is required; signal shields shall not be the sole protective-earth path.
-- Spare capacity: at least one fast-signal spare per sector is recommended until feedthrough procurement is frozen.
-- CAD shall include feedthrough/manifold envelopes, coax route envelopes, connector keep-outs, and strain-relief locations.
+The carrier, cable exit, connector, reflector selection, and detailed PCB remain provisional until drawings or prototype measurements resolve them.
 
-The thermal conduction intent shall be:
+## 6. Sector holder
 
-`SiPM -> sensor carrier/copper spreader -> cassette -> sector cartridge -> chamber/service structure`
+Each sector uses one coherent fabricated or machined carrier containing exactly:
 
-Strict validation shall distinguish a declared, connected path from a floating or unresolved path. Full thermal FEA is a later gate.
+- one deuteron detector head;
+- one small-angle proton detector head;
+- one large-angle proton detector head.
 
-## 9. Materials
+The holder comprises:
 
-Components relevant to accepted particle paths shall support:
+- one connected carrier plate with three machined acceptance windows;
+- three rear cylindrical nest cradles;
+- three insertion stops at the detector rear faces;
+- three D-flat anti-rotation lands;
+- three removable clamp bridges;
+- two simplified M3-class fastener envelopes per clamp;
+- one rear cable-routing lane;
+- one common chamber-interface block;
+- one primary plane, one round locating pin, and one clocking slot;
+- three survey datums.
 
-- material name;
-- density when known;
-- vacuum-compatibility status;
-- physics-sensitive flag;
-- purchased/project-designed classification.
+M3 and locating-pin geometry demonstrates assembly access only. Fastener selection remains provisional and shall not be called fabrication-ready.
 
-Validation shall produce a nominal path-material inventory. The intended accepted path is approximately target -> vacuum -> active plastic. Structural material in that path is a failure unless explicitly reviewed.
+Detector heads are inserted axially from the rear, stopped on the rear mounting face, clocked by the D-flat, and retained by the removable bridge. Clamp fasteners are accessed from the rear. Releasing one bridge permits removal of one head without removing the other two.
 
-## 10. Chamber candidates
+The whole sector is located by a plane–pin–slot interface and extracted radially outward. Five exact solid poses sample the straight 70 mm extraction path. The displayed removal overlay is diagnostic only; collision validation uses the exact sampled holder solids.
 
-Both square and cylindrical cross-sections are valid engineering candidates.
+The plate, nests, clamps, and fastener envelopes shall clear every complete active-acceptance cone. The plate includes a common rear service-lane relief. Arbitrary per-detector wall rails, wall anchors, cylindrical thermal straps, and a synthesized wall backbone are prohibited.
 
-The preferred concept to evaluate is a short cylindrical external-pressure shell with a removable flat service plate/manifold and four internal sector cartridges. This is not yet a frozen fabrication choice.
+The holder is a provisional manufacturable concept, not a released drawing. Tool access, chamber closure, pin retention, tolerances, surface finish, and production fasteners remain to be resolved.
 
-Every candidate shall report:
+## 7. Physical and overlay roles
 
-- internal envelope;
-- shell material volume;
-- approximate mass using declared density;
-- service accessibility;
-- cartridge clearance and removal envelope;
-- target-motion clearance.
+Every generated object has one engineering role:
 
-CAD wall thickness is a screening input only. Fabrication thickness requires a later external-pressure/buckling FEA and weld-detail gate.
+- `physical`
+- `purchased_component_interface`
+- `keepout`
+- `datum`
+- `service_centerline`
+- `physics_acceptance`
+- `optional_reference_geometry`
 
-## 11. Purchased vacuum interfaces
+Default visibility is:
 
-Standard ICF/CF and JIS hardware shall be represented as purchased components governed by certified drawings. The configuration shall separate:
+| Role | Default |
+|---|---|
+| physical | visible |
+| purchased component/interface | visible |
+| keepout | hidden |
+| datum | hidden |
+| service centerline | hidden |
+| physics acceptance | hidden |
+| optional reference geometry | hidden |
 
-- purchased standard component;
-- project-designed welded transition/stub;
-- project-designed chamber or service plate.
+Generated documents use meaningful groups including `DetectorHead`, `SectorHolder`, `Target`, `Services`, `Chamber`, `Keepouts`, `Datums`, `PhysicsAcceptance`, and `OptionalReference` where applicable.
 
-Purchased interfaces shall support standard, supplier, part number, certified drawing reference, nominal clear bore, mating envelope, knife-edge protected zone, weld interface, and decision status.
+Material-based colors and transparency support inspection but are not geometry requirements. The active plastic, optical coupling, SiPM, PCB/carrier, housing, and holder shall remain visually distinguishable.
 
-The current 63.6 mm OD / 63.0 mm ID tube has a 0.30 mm radial wall. It is a non-fabricable placeholder and shall fail strict engineering validation.
+## 8. Services and passive thermal path
 
-Interface statements shall carry one evidence class:
+- Twelve signal channels are required.
+- Four sector-grouped signal feedthrough interfaces provide sixteen provisional slots.
+- One protective/equipotential bond per sector is required.
+- Signal shields are not the sole protective-earth path.
+- Cable routes, connector keepouts, bend envelopes, and centerlines are nonphysical overlays unless explicitly classified otherwise.
+- No dedicated temperature or housekeeping feedthrough is generated.
 
-- `A — EXTERNAL CONSTRAINT`: supported by an approved beamline/interface requirement, signed drawing, or responsible-owner decision.
-- `B — LEGACY INHERITANCE`: inherited from an external-detector or earlier design and not independently established for a compact instrument.
-- `C — ENGINEERING ASSUMPTION`: used for screening or integration studies, but not an external requirement.
-- `D — UNRESOLVED / TBD`: no justified selection exists yet.
+The conductive path contract is:
 
-Class `B` or `C` shall never be described as class `A`. A purchased-part contract may only become site-authoritative after the mating interface and certified drawing are both resolved.
+`SiPM package -> sensor PCB/carrier -> rear mounting face -> detector nest -> sector carrier plate -> chamber mounting interface`
 
-## 12. Deployment profiles
+The path represents contact connectivity. It is not thermal FEA and shall not be satisfied by adding a fictitious long bridge.
 
-### 12.1 CompactInVacuum-afterSRC
+## 9. Physics geometry
 
-- Location: after SRC.
-- Baseline status: current baseline compact instrument.
-- Detectors: inside vacuum, using the common CompactInVacuum platform.
-- Beamline mating interfaces: `D — UNRESOLVED / TBD`. Front/rear ICF114 values in the old afterSRC design are `B — LEGACY INHERITANCE`, not independently supported CompactInVacuum requirements.
-- Target rotary mounting interface: current ICF70 envelope is `C — ENGINEERING ASSUMPTION`; the actual site constraint, purchased rotary model, load case, and signed outline drawing are unresolved.
-- Chamber dimensions, detector radii, port layout, actual clear bore, transition/stub geometry, bellows/adapters, available envelope, pump/gauge requirements, external service envelope, support/alignment, and maintenance access are site-specific and remain TBD unless separately supported.
-- Closure evidence: approved afterSRC beamline interface drawing, local XYZ survey/envelope, neighboring-equipment model, beam-stay-clear definition, vacuum-services ownership, support datum definition, and installation/maintenance review.
-- Legacy route: `afterSRC/` remains available only as a legacy/fallback/reference alternative.
+The repository values remain:
 
-### 12.2 CompactInVacuum-preSAMURAI
+| Channel | Repository value | Previously supplied nominal | Disposition |
+|---|---:|---:|---|
+| proton large | 53.4° | approximately 55.9° | unresolved; do not change without evidence |
+| proton small | 11.2° | approximately 11.3° | unresolved; do not change without evidence |
 
-- Location: upstream of the SAMURAI terminal.
-- Baseline status: current baseline compact instrument.
-- Detectors: inside vacuum, using the common CompactInVacuum platform.
-- Beamline mating interfaces: `D — UNRESOLVED / TBD`.
-- Existing external-route evidence identifying a VF100 gate-valve boundary and an upstream VF100/downstream VG80 profile is `B — LEGACY INHERITANCE` until the compact instrument's actual mating chain and ownership are confirmed.
-- CompactOne shall not silently inherit a complete chamber from the external route.
-- Exact mating-chain ownership, usable bore, available XYZ envelope, straight length, pump/gauge requirements, target-feedthrough interface, support/alignment envelope, and service-removal envelope remain unresolved until beamline confirmation.
-- Closure evidence: approved pre-SAMURAI interface drawing, local survey/envelope, neighboring-equipment model, beam-stay-clear definition, vacuum-services ownership, support datum definition, and installation/maintenance review.
+This mechanical redesign does not resolve the discrepancy. Active-center radii and directions remain unchanged.
 
-Deployment profiles shall contain only site-specific constraints. Detector, cassette, cartridge, cabling philosophy, electronics interface, and calibration semantics shall remain common where feasible.
+Validation exports active-center angle/radius, active-face radius, angular extent, approximate solid angle, and eight configured coincidence pair metrics. It does not claim detector-response or Geant4 fidelity.
 
-## 13. Physics geometry and acceptance
+## 10. Acceptance and collision validation
 
-For every active detector face, export:
+The complete ruled volume from the active target region to each complete active disc is checked against:
 
-- center theta and phi;
-- active diameter and thickness;
-- active-center radius;
-- theta minimum and maximum;
-- azimuth coverage where meaningful;
-- approximate solid angle.
+- target hardware;
+- every other detector head;
+- carrier plates, nests, clamps, and interface blocks;
+- simplified purchased fastener envelopes;
+- cable and connector keepouts;
+- service hardware;
+- chamber hardware.
 
-For D/P-small/P-large coincidence combinations, export geometry-level acceptance-overlap descriptors without claiming detector-response or Geant4 fidelity.
+Validation also requires:
 
-The same resolved configuration and geometry metrics shall be consumable by future Geant4 construction.
+- twelve non-null, valid detector-head solids;
+- no detector-head overlap;
+- four non-overlapping three-head sector assemblies;
+- clear detector withdrawal after clamp release;
+- clear sampled radial sector removal;
+- clear target motion sweep;
+- clear signal routing;
+- a closed vacuum control volume;
+- all internal physical parts inside the selected chamber;
+- connected passive thermal paths.
 
-## 14. Full-path LOS
+## 11. Deployment profiles
 
-The full cone from the active target region to the complete active detector disc shall be checked against:
+### 11.1 CompactInVacuum-afterSRC
 
-- target frame, arm, hub, and shaft;
-- other cassettes;
-- sector cartridge material;
-- cables and connector keep-outs;
-- service/manifold structures;
-- chamber structures.
+- Baseline instrument downstream of SRC.
+- Selected screening chamber: cylindrical 440 mm internal diameter, provisional.
+- Front/rear ICF114 values are legacy/provisional evidence, not approved site requirements.
+- Available envelope, service-removal closure, purchased interface drawings, support datum, and pressure-vessel release remain unresolved.
+- The preserved external afterSRC route remains a legacy fallback/reference.
 
-Failures shall identify channel, sector, obstructing component, intersection volume or minimum margin, and material metadata. Internal components shall not be silently whitelisted.
+### 11.2 CompactInVacuum-preSAMURAI
 
-## 15. Validation categories and strict semantics
+- Baseline instrument upstream of the SAMURAI terminal.
+- Selected screening chamber: square 450 × 450 mm internal section, provisional.
+- VF100/VG80 evidence inherited from external work is not automatically authoritative for the compact deployment.
+- Available envelope, mating-chain ownership, service-removal closure, purchased interface drawings, support datum, and pressure-vessel release remain unresolved.
+- The preserved external SAMURAI-front route remains reference engineering work.
 
-Reports shall group checks under:
+## 12. Strict-validation semantics
 
-- `physics`
-- `beamline`
-- `detector`
-- `sector_cartridge`
-- `target`
-- `los`
-- `services`
-- `vacuum`
-- `mechanical`
-- `thermal`
+Non-strict mode permits explicit warnings for unresolved supplier, material, site-envelope, chamber-access, and pressure-vessel evidence. Geometry, capacity, acceptance, collision, and schema failures remain fatal.
 
-Non-strict mode may carry explicit warnings for unresolved supplier part numbers, prototype material choices, reflector choice, and temperature-sensor model.
+Strict mode converts applicable evidence warnings to failures. Strict validation shall not fail because a removed temperature sensor, temperature harness, housekeeping channel, or housekeeping feedthrough is absent.
 
-Strict mode shall fail for:
+Current legitimate strict gates include:
 
-- impossible structural tube/wall geometry;
-- conflated or absent active/cassette geometry;
-- incomplete target mechanism or colliding motion sweep;
-- insufficient signal or housekeeping capacity;
-- blocked full-acceptance LOS;
-- unresolved beam-aperture incompatibility;
-- invalid vacuum boundary;
-- missing cassette/cartridge mounting or removal semantics;
-- missing thermal conduction path.
+- reflector/optical and SiPM supplier evidence;
+- carrier/PCB definition;
+- purchased beam and signal-interface drawings;
+- vacuum material and cleaning evidence;
+- chamber external-pressure/buckling FEA;
+- site envelopes;
+- resolved sector-removal access closure.
 
-Strict mode shall not be a cosmetic exit-code flag.
+## 13. Schema migration
 
-## 16. Required artifacts and stable comparison metrics
+CompactInVacuum schema version 3 replaces:
 
-Reproducible outputs shall include, where practical:
+- `detector.cassette` with `detector.head`;
+- `sector_cartridge` with `sector_holder`;
+- arbitrary outer detector length with calculated stack depth;
+- protruding `anti_rotation_tab_mm` with `anti_rotation_flat_depth_mm`.
 
-- one detector cassette: FCStd, STEP, JSON;
-- one golden sector cartridge: FCStd, STEP, JSON;
-- four-sector internal assembly: FCStd, STEP, JSON;
-- CompactOne-afterSRC assembly: FCStd, STEP, JSON;
-- CompactOne-infrontSamurai assembly: FCStd, STEP, JSON.
+Schema version 3 rejects all former temperature and housekeeping fields. They are not ignored and no compatibility geometry is created. Deployment service-port roles are limited to `rotary` and `signal`.
 
-Cross-machine comparison shall use stable quantities: solid counts, bounding boxes, material volumes, detector centers/angles, target states/sweep, service capacities, and validation values. Byte-identical CAD files are not required.
+Legacy schema-1 compatibility profiles remain loadable for the preserved old entry point, but their dedicated housekeeping block has also been removed.
 
-## 17. Gates still requiring physical evidence
+## 14. Required artifacts
 
-- Signed purchased ICF/JIS component drawings and usable bores.
-- afterSRC and SAMURAI available installation envelopes and service-removal clearances.
-- Rotary-feedthrough load, torque, backlash, life, bake temperature, and outline.
-- Vacuum coax/feedthrough part numbers, installed bandwidth, connector gender, cable bend radius, and bake rating.
-- Prototype optical collection, uniformity, timing, SiPM saturation, temperature coefficient, and batch variation.
-- Vacuum material qualification and populated-detector bake limit.
-- Chamber external-pressure/buckling FEA, weld design, support loads, and transport loads.
-- Geant4 acceptance/background study using the authoritative CompactOne geometry.
+The redesign shall generate:
 
-## 18. Change history
+- isolated detector head: FCStd, STEP, geometry metrics JSON, PNG;
+- transparent/exploded detector head: FCStd, STEP, geometry metrics JSON, PNG;
+- three-channel sector holder: FCStd, STEP, geometry metrics JSON, PNG;
+- four-sector internal assembly: FCStd, STEP, geometry metrics JSON, validation JSON, PNG;
+- CompactInVacuum-afterSRC: FCStd, STEP, geometry metrics JSON, validation JSON, PNG;
+- CompactInVacuum-preSAMURAI: FCStd, STEP, geometry metrics JSON, validation JSON, PNG;
+- before/after comparisons for detector side, sector, and internal assembly;
+- separate diagnostic renders with keepouts and acceptance volumes visible.
 
-- 2026-07-27 v1.0: established CompactOne as a shared in-vacuum platform with afterSRC and in-front-of-SAMURAI deployment profiles while preserving both external routes.
+Runtime state, caches, and machine-specific files remain untracked.
+
+## 15. Evidence still required
+
+- Approved afterSRC and pre-SAMURAI site envelopes and interface drawings.
+- Certified purchased beam-interface and signal-feedthrough drawings.
+- Resolved PCB/carrier, connector, cable, strain-relief, reflector, and optical-pad choices.
+- Prototype optical collection, timing, uniformity, saturation, and vacuum/bake testing.
+- Sector-holder tolerances, tool access, pin retention, fasteners, finish, and fabrication drawings.
+- Chamber access closure and sector extraction demonstration.
+- Vacuum material/cleaning qualification.
+- Chamber external-pressure, weld, support, transport, and seismic/load analysis as applicable.
+- Evidence resolving 53.4° versus approximately 55.9°, and 11.2° versus approximately 11.3°.
+
+## 16. Change history
+
+- 2026-07-27 v1.0: established a common CompactInVacuum platform with two baseline deployments.
+- 2026-07-29 v2.0: removed temperature monitoring end-to-end; replaced the long cassette with a 9.70 mm calculated detector head; replaced arbitrary rails with one coherent sector carrier; added engineering display roles, removal validation, and schema-v3 migration.

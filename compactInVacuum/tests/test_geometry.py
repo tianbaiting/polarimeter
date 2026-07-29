@@ -118,7 +118,7 @@ def test_physics_channel_manifest_contract():
     assert manifest["physics"]["beam_kinetic_energy_mev"] == 380.0
     assert manifest["detector_model"]["active_medium_status"] == "undecided"
     assert manifest["detector_model"]["photosensor_status"] == "selected"
-    assert manifest["schema_version"] == 2
+    assert manifest["schema_version"] == 3
     assert manifest["electrical_services"]["signal_impedance_ohm"] == 50.0
     assert len(manifest["electrical_services"]["signal_ports"]) == 4
     assert all(
@@ -166,7 +166,7 @@ def test_top_service_interface_and_channel_capacity():
     assert services is not None
     assert services.icf70_interface.standard == "ICF70"
     assert services.rotary.mount_standard == "ICF70"
-    assert len(top_service_port_specs(cfg)) == 6
+    assert len(top_service_port_specs(cfg)) == 5
     assert {port.sector for port in services.electrical.signal_ports} == {
         "left",
         "right",
@@ -193,13 +193,14 @@ def test_rotary_target_work_and_park_centers():
     assert math.isclose(park.z, 70.0, rel_tol=0.0, abs_tol=1e-12)
 
 
-def test_housekeeping_temperature_pin_margin():
+def test_no_dedicated_monitoring_service_in_legacy_profile():
     cfg = _load_cfg()
-    housekeeping = cfg.top_services.electrical.housekeeping
-    required_pins = housekeeping.sensor_count * housekeeping.wires_per_sensor
-    assert required_pins == 24
-    assert housekeeping.feedthrough_pin_count == 32
-    assert housekeeping.feedthrough_pin_count - required_pins == 8
+    assert cfg.top_services is not None
+    assert not hasattr(cfg.top_services.electrical, "housekeeping")
+    assert {
+        port.role
+        for port in top_service_port_specs(cfg)
+    } == {"rotary", "signal"}
 
 
 def test_compact_analysis_config_matches_cad_source():

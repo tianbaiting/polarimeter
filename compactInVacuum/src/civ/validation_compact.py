@@ -9,15 +9,15 @@ import sys
 import FreeCAD as App
 import Part
 
-from .cassette import build_detector_cassette
 from .chamber import build_chamber, screen_chamber_candidate
 from .config import CIVConfig
-from .detector import build_active_acceptance_cone
+from .detector import build_active_acceptance_cone, detector_stack_metrics
 from .internal import build_internal_assembly
 from .layout import (
     DetectorPlacement,
     detector_center,
     norm,
+    scaled,
     target_facing_active_face_center,
 )
 from .services import build_services
@@ -239,7 +239,7 @@ def _coincidence_metrics(
     return pairs
 
 
-def _cassette_compounds(
+def _detector_head_compounds(
     internal,
 ) -> dict[str, Part.Shape]:
     compounds: dict[str, Part.Shape] = {}
@@ -250,7 +250,7 @@ def _cassette_compounds(
             for name, shape in internal.physical.items()
             if name.startswith(prefix)
             and not name.endswith(
-                ("CartridgeMountPad", "StructuralRail", "ThermalStrap")
+                ("DetectorNestCradle", "RemovableClampBridge")
             )
         ]
         compounds[placement.tag] = Part.makeCompound(shapes)
@@ -419,7 +419,7 @@ def validate_compact_one(
     output_path: str | Path | None = None,
 ) -> dict[str, object]:
     if cfg.compact_one is None:
-        raise ValueError("CompactOne validation requires schema version 2")
+        raise ValueError("CompactOne validation requires schema version 3")
     checks = _config_checks(cfg, strict)
     internal = build_internal_assembly(cfg)
     services = build_services(cfg, internal)
@@ -478,21 +478,27 @@ def validate_compact_one(
         )
     )
 
-    cassette_shapes = _cassette_compounds(internal)
-    cassette_collisions, cassette_min_clearance = _pair_collisions(cassette_shapes)
+    detector_head_shapes = _detector_head_compounds(internal)
+    detector_head_collisions, detector_head_min_clearance = _pair_collisions(
+        detector_head_shapes
+    )
     checks.append(
         _geometry_check(
             "detector",
-            "cassette_valid_and_noninterfering",
-            not cassette_collisions
-            and len(cassette_shapes) == 12
-            and all(shape.isValid() and not shape.isNull() for shape in cassette_shapes.values()),
-            (
-                f"count={len(cassette_shapes)}, collisions={len(cassette_collisions)}, "
-                f"minimum_clearance_mm={cassette_min_clearance:.6f}"
+            "detector_heads_valid_and_noninterfering",
+            not detector_head_collisions
+            and len(detector_head_shapes) == 12
+            and all(
+                shape.isValid() and not shape.isNull()
+                for shape in detector_head_shapes.values()
             ),
-            failures=cassette_collisions,
-            minimum_clearance_mm=cassette_min_clearance,
+            (
+                f"count={len(detector_head_shapes)}, "
+                f"collisions={len(detector_head_collisions)}, "
+                f"minimum_clearance_mm={detector_head_min_clearance:.6f}"
+            ),
+            failures=detector_head_collisions,
+            minimum_clearance_mm=detector_head_min_clearance,
         )
     )
     active_face_errors: list[dict[str, object]] = []
@@ -526,70 +532,206 @@ def validate_compact_one(
             failures=active_face_errors,
         )
     )
-
-    cartridge_compounds = {
-        sector: Part.makeCompound(list(item.physical.values()))
-        for sector, item in internal.cartridges.items()
-    }
-    cartridge_collisions, cartridge_min_clearance = _pair_collisions(
-        cartridge_compounds
+    required_head_components = (
+        "ActivePlastic",
+        "ReflectorEnvelope",
+        "OpticalCoupling",
+        "SiPMPackage",
+        "SensorPCBCarrier",
+        "LightTightSleeve",
+        "RearMountingFace",
     )
+    missing_head_components = [
+        f"{placement.tag}_{component}"
+        for placement in internal.placements
+        for component in required_head_components
+        if f"{placement.tag}_{component}" not in internal.physical
+    ]
     checks.append(
         _geometry_check(
-            "sector_cartridge",
-            "three_detector_mounting_and_cartridge_interference",
-            not cartridge_collisions
-            and all(len(item.placements) == 3 for item in internal.cartridges.values()),
+            "detector",
+            "detector_head_component_stack_present",
+            not missing_head_components,
+            f"missing={len(missing_head_components)}",
+            failures=missing_head_components,
+        )
+    )
+    sipm_alignment_errors: list[dict[str, object]] = []
+    for placement in internal.placements:
+        coupling = internal.physical[f"{placement.tag}_OpticalCoupling"]
+        sipm = internal.physical[f"{placement.tag}_SiPMPackage"]
+        delta = sipm.CenterOfMass - coupling.CenterOfMass
+        axial_mm = delta.dot(placement.direction)
+        transverse = delta - scaled(placement.direction, axial_mm)
+        if axial_mm <= 0.0 or transverse.Length > 1.0e-6:
+            sipm_alignment_errors.append(
+                {
+                    "channel": placement.tag,
+                    "axial_separation_mm": axial_mm,
+                    "transverse_misalignment_mm": transverse.Length,
+                }
+            )
+    checks.append(
+        _geometry_check(
+            "detector",
+            "sipm_behind_and_aligned_with_optical_coupling",
+            not sipm_alignment_errors,
+            f"errors={len(sipm_alignment_errors)}",
+            failures=sipm_alignment_errors,
+        )
+    )
+    stack = detector_stack_metrics(cfg)
+    checks.append(
+        _geometry_check(
+            "detector",
+            "physical_detector_head_depth_gate",
+            float(stack["calculated_physical_depth_mm"]) <= 18.0,
             (
-                f"cartridges={len(internal.cartridges)}, "
-                f"collisions={len(cartridge_collisions)}, "
-                f"minimum_clearance_mm={cartridge_min_clearance:.6f}"
+                f"calculated_mm={float(stack['calculated_physical_depth_mm']):.3f}, "
+                "gate_mm=18.000, cable_and_connector_keepouts_excluded=true"
             ),
-            failures=cartridge_collisions,
+            stack=stack,
+        )
+    )
+    removed_monitoring_objects = [
+        name
+        for name in (
+            *internal.physical,
+            *internal.keepouts,
+            *internal.interfaces,
+            *services.physical,
+            *services.keepouts,
+            *services.centerlines,
+        )
+        if "temperature" in name.lower() or "housekeeping" in name.lower()
+    ]
+    checks.append(
+        _geometry_check(
+            "services",
+            "removed_monitoring_subsystem_absent",
+            not removed_monitoring_objects,
+            f"removed_role_objects={len(removed_monitoring_objects)}",
+            failures=removed_monitoring_objects,
+        )
+    )
+
+    sector_holder_compounds = {
+        sector: Part.makeCompound(list(item.physical.values()))
+        for sector, item in internal.sector_holders.items()
+    }
+    sector_holder_collisions, sector_holder_min_clearance = _pair_collisions(
+        sector_holder_compounds
+    )
+    coherent_plate_names = [
+        name
+        for name in internal.physical
+        if name.endswith("_SectorCarrierPlate")
+    ]
+    obsolete_support_names = [
+        name
+        for name in internal.physical
+        if name.endswith(("StructuralRail", "CartridgeMountPad", "ThermalStrap"))
+    ]
+    checks.append(
+        _geometry_check(
+            "sector_holder",
+            "coherent_three_detector_sector_holders",
+            not sector_holder_collisions
+            and all(
+                len(item.placements) == 3
+                for item in internal.sector_holders.values()
+            )
+            and len(coherent_plate_names) == 4
+            and not obsolete_support_names,
+            (
+                f"holders={len(internal.sector_holders)}, "
+                f"carrier_plates={len(coherent_plate_names)}, "
+                f"obsolete_supports={len(obsolete_support_names)}, "
+                f"collisions={len(sector_holder_collisions)}, "
+                f"minimum_clearance_mm={sector_holder_min_clearance:.6f}"
+            ),
+            failures=[*sector_holder_collisions, *obsolete_support_names],
         )
     )
     removal_collisions: list[dict[str, object]] = []
-    for sector, cartridge in internal.cartridges.items():
-        removal = cartridge.keepouts[f"{sector}_CartridgeRemovalEnvelope"]
-        for other_sector, other_shape in cartridge_compounds.items():
-            if other_sector == sector:
-                continue
-            overlap_mm3 = _intersection_volume_mm3(removal, other_shape)
-            if overlap_mm3 > 1.0e-6:
-                removal_collisions.append(
-                    {
-                        "sector": sector,
-                        "obstacle_sector": other_sector,
-                        "intersection_volume_mm3": overlap_mm3,
-                    }
+    for sector, holder_geometry in internal.sector_holders.items():
+        for pose_index, removal_pose in enumerate(holder_geometry.removal_poses):
+            for other_sector, other_shape in sector_holder_compounds.items():
+                if other_sector == sector:
+                    continue
+                overlap_mm3 = _intersection_volume_mm3(
+                    removal_pose,
+                    other_shape,
                 )
+                if overlap_mm3 > 1.0e-6:
+                    removal_collisions.append(
+                        {
+                            "sector": sector,
+                            "pose_index": pose_index,
+                            "obstacle_sector": other_sector,
+                            "intersection_volume_mm3": overlap_mm3,
+                        }
+                    )
     checks.append(
         _geometry_check(
-            "sector_cartridge",
-            "internal_removal_envelope_clear",
+            "sector_holder",
+            "sector_radial_removal_envelope_clear",
             not removal_collisions,
             f"collisions={len(removal_collisions)}",
             failures=removal_collisions,
         )
     )
-    chamber_access_collisions = []
-    for sector, cartridge in internal.cartridges.items():
-        removal = cartridge.keepouts[f"{sector}_CartridgeRemovalEnvelope"]
-        overlap_mm3 = _intersection_volume_mm3(
-            removal,
-            chamber.physical["ProjectChamberBody"],
+    detector_removal_collisions: list[dict[str, object]] = []
+    for holder_geometry in internal.sector_holders.values():
+        holder_obstacles = {
+            name: holder_geometry.physical[name]
+            for name in holder_geometry.holder_physical_names
+        }
+        for placement in holder_geometry.placements:
+            envelope = holder_geometry.keepouts[
+                f"{placement.tag}_DetectorRemovalEnvelope"
+            ]
+            released_clamp = f"{placement.tag}_RemovableClampBridge"
+            for obstacle_name, obstacle in holder_obstacles.items():
+                if obstacle_name == released_clamp:
+                    continue
+                overlap_mm3 = _intersection_volume_mm3(envelope, obstacle)
+                if overlap_mm3 > 1.0e-6:
+                    detector_removal_collisions.append(
+                        {
+                            "channel": placement.tag,
+                            "obstacle": obstacle_name,
+                            "intersection_volume_mm3": overlap_mm3,
+                        }
+                    )
+    checks.append(
+        _geometry_check(
+            "sector_holder",
+            "detector_axial_removal_after_clamp_release_clear",
+            not detector_removal_collisions,
+            f"collisions={len(detector_removal_collisions)}",
+            failures=detector_removal_collisions,
         )
-        if overlap_mm3 > 1.0e-6:
-            chamber_access_collisions.append(
-                {
-                    "sector": sector,
-                    "intersection_volume_mm3": overlap_mm3,
-                }
+    )
+    chamber_access_collisions = []
+    for sector, holder_geometry in internal.sector_holders.items():
+        for pose_index, removal_pose in enumerate(holder_geometry.removal_poses):
+            overlap_mm3 = _intersection_volume_mm3(
+                removal_pose,
+                chamber.physical["ProjectChamberBody"],
             )
+            if overlap_mm3 > 1.0e-6:
+                chamber_access_collisions.append(
+                    {
+                        "sector": sector,
+                        "pose_index": pose_index,
+                        "intersection_volume_mm3": overlap_mm3,
+                    }
+                )
     checks.append(
         _geometry_check(
             "mechanical",
-            "cartridge_service_access_contract",
+            "sector_holder_service_access_contract",
             not chamber_access_collisions,
             (
                 f"shell_intersections={len(chamber_access_collisions)}; "
@@ -602,16 +744,13 @@ def validate_compact_one(
 
     cable_keepouts = {
         name: shape
-        for cartridge in internal.cartridges.values()
-        for name, shape in cartridge.keepouts.items()
+        for holder_geometry in internal.sector_holders.values()
+        for name, shape in holder_geometry.keepouts.items()
         if name.endswith(("SectorCableRoute", "ConnectorKeepout"))
     }
     service_routes = {
         name: services.keepouts[name]
-        for name in (
-            *services.fast_signal_paths,
-            *services.temperature_harnesses,
-        )
+        for name in services.fast_signal_paths
     }
     target_motion_obstacles = {
         **{
@@ -671,6 +810,7 @@ def validate_compact_one(
 
     los_obstacles = {
         **internal.physical,
+        **internal.purchased_interfaces,
         **services.physical,
         **chamber.physical,
         **cable_keepouts,
@@ -728,11 +868,9 @@ def validate_compact_one(
             "services",
             "cable_routing_and_connector_keepouts_clear",
             not route_collisions
-            and len(services.fast_signal_paths) == 12
-            and len(services.temperature_harnesses) == 4,
+            and len(services.fast_signal_paths) == 12,
             (
                 f"signal_paths={len(services.fast_signal_paths)}, "
-                f"temperature_harnesses={len(services.temperature_harnesses)}, "
                 f"collisions={len(route_collisions)}"
             ),
             failures=route_collisions,
@@ -812,7 +950,7 @@ def validate_compact_one(
     )
     selected_clearance_mm = _candidate_clearance_mm(
         chamber.candidate,
-        list(cartridge_compounds.values()),
+        list(sector_holder_compounds.values()),
     )
     checks.append(
         _geometry_check(
@@ -859,10 +997,10 @@ def validate_compact_one(
     chamber_candidates = []
     for candidate in cfg.compact_one.deployment.chamber_candidates:
         candidate_metrics = asdict(screen_chamber_candidate(candidate))
-        candidate_metrics["sector_cartridge_clearance_mm"] = (
+        candidate_metrics["sector_holder_clearance_mm"] = (
             _candidate_clearance_mm(
                 candidate,
-                list(cartridge_compounds.values()),
+                list(sector_holder_compounds.values()),
             )
         )
         candidate_metrics["target_motion_clearance_mm"] = (
@@ -880,7 +1018,7 @@ def validate_compact_one(
         "physics",
         "beamline",
         "detector",
-        "sector_cartridge",
+        "sector_holder",
         "target",
         "LOS",
         "services",
@@ -899,6 +1037,7 @@ def validate_compact_one(
     failures = [check for check in checks if check["status"] == "fail"]
     warnings = [check for check in checks if check["status"] == "warning"]
     report: dict[str, object] = {
+        "schema_version": 3,
         "status": "fail" if failures else "pass",
         "validation_mode": "strict_engineering" if strict else "prototype_non_strict",
         "strict": strict,
@@ -919,6 +1058,7 @@ def validate_compact_one(
                 "bounding_box": _shape_bounds(vacuum),
             },
             "detector_acceptance": acceptance,
+            "detector_head_stack": detector_stack_metrics(cfg),
             "coincidence_geometry": coincidence,
             "target": {
                 "work_center_mm": list(internal.target.work.target_center),
@@ -931,14 +1071,6 @@ def validate_compact_one(
                 "fast_signal_capacity": (
                     cfg.compact_one.services.signal_feedthrough_count
                     * cfg.compact_one.services.channels_per_signal_feedthrough
-                ),
-                "temperature_harnesses": len(services.temperature_harnesses),
-                "housekeeping_required_pins": (
-                    cfg.compact_one.services.temperature_channels
-                    * cfg.compact_one.services.wires_per_temperature_channel
-                ),
-                "housekeeping_capacity_pins": (
-                    cfg.compact_one.services.housekeeping_pin_capacity
                 ),
                 "grounding_connections": len(services.grounding_connections),
             },

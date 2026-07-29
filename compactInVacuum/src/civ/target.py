@@ -99,7 +99,7 @@ def _ray_to_chamber_wall_mm(
 
 def target_center_at_angle(cfg: CIVConfig, angle_deg: float) -> App.Vector:
     if cfg.compact_one is None:
-        raise ValueError("target kinematics require a CompactOne schema-v2 configuration")
+        raise ValueError("target kinematics require a CompactOne schema-v3 configuration")
     rotary = cfg.compact_one.target.rotary
     pivot = App.Vector(*rotary.pivot_mm)
     initial = pivot + App.Vector(-rotary.arm_length_mm, 0.0, 0.0)
@@ -184,7 +184,7 @@ def _holder_and_foil(cfg: CIVConfig) -> tuple[Part.Shape, Part.Shape]:
 
 def build_target_pose(cfg: CIVConfig, angle_deg: float) -> TargetPoseGeometry:
     if cfg.compact_one is None:
-        raise ValueError("target pose requires a CompactOne schema-v2 configuration")
+        raise ValueError("target pose requires a CompactOne schema-v3 configuration")
     target = cfg.compact_one.target
     rotary = target.rotary
     holder = target.holder
@@ -241,7 +241,7 @@ def _motion_angles(start_deg: float, end_deg: float, step_deg: float) -> tuple[f
 
 def build_target_system(cfg: CIVConfig) -> TargetSystemGeometry:
     if cfg.compact_one is None:
-        raise ValueError("target system requires a CompactOne schema-v2 configuration")
+        raise ValueError("target system requires a CompactOne schema-v3 configuration")
     target = cfg.compact_one.target
     rotary = target.rotary
     pivot = App.Vector(*rotary.pivot_mm)

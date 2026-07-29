@@ -1,68 +1,70 @@
 # CompactInVacuum Common Platform
 
-Two compact in-vacuum polarimeters are the current baseline:
+The baseline comprises:
 
-- `CompactInVacuum-afterSRC`, downstream of SRC;
-- `CompactInVacuum-preSAMURAI`, before the SAMURAI terminal.
+- `CompactInVacuum-afterSRC`
+- `CompactInVacuum-preSAMURAI`
 
-`compactInVacuum` is the compatibility directory and stateful entry point for their common detector platform. Existing runner/configuration labels `CompactOne-afterSRC` and `CompactOne-infrontSamurai` are retained temporarily to avoid breaking paths; they map to the two baseline instruments above.
+The `compactInVacuum/` and `CompactOne` names remain executable compatibility labels. External detector routes remain preserved legacy/reference implementations and are not modified by the common-platform redesign.
 
-The external afterSRC implementation in `afterSRC/` is retained as a legacy/fallback/reference route, not as a baseline instrument. The existing external SAMURAI-front work in `infrontofSamuraiMag/` is also preserved as reference engineering work. Neither external implementation is silently migrated into the compact platform.
+## Preferred hierarchy
 
-## Architecture
+`detector head -> three-channel sector holder -> four-sector internal assembly -> deployment chamber`
 
-The preferred subsystem hierarchy is:
+The old 35 mm nose, 44 mm cassette box, long cassette thermal bridge, independent wall rails, wall anchors, and temperature/housekeeping system are superseded.
 
-`active detector -> detector cassette -> three-channel sector cartridge -> four-sector internal machine -> deployment chamber`
+## Detector head
 
-Shared concepts include the active plastic, optical package, SiPM, cassette, sector cartridge, cabling philosophy, electronics, calibration, thermal path, physics acceptance, and validation rules. Beamline interfaces, target integration, chamber envelope, ports, support, and external service space belong to deployment profiles and require independent site evidence.
+The default prototype contains:
 
-The former 25 × 50 mm detector cylinder, annular clamp, and twelve independent arms are retained only as a legacy scaffold during migration.
+- 20.0 × 5.5 mm fast plastic active element;
+- 0.25 mm reflector envelope;
+- 0.50 mm optical coupling;
+- 1.50 mm NDL EQR15-class SiPM package;
+- 1.20 mm provisional sensor PCB/carrier;
+- 1.00 mm rear mounting face;
+- shallow light-tight sleeve;
+- 3.0 mm short cable exit;
+- separate 20.0 mm connector keepout.
 
-The current preferred geometry now contains an independently validated golden cassette, one D/P-small/P-large golden sector, four sector cartridges, the rotary target work/park sweep, twelve signal paths, four temperature harnesses, grounding bonds, and square/cylindrical chamber candidates.
+Calculated physical housing depth:
+
+`5.50 + 0.50 + 1.50 + 1.20 + 0.00 + 1.00 = 9.70 mm`
+
+Cable and connector keepouts do not increase this metric. The default gate is 18.0 mm.
+
+## Sector holder
+
+One coherent carrier holds deuteron, small-angle proton, and large-angle proton heads. Each nest has an insertion stop, D-flat anti-rotation land, removable clamp bridge, and two provisional M3 fastener envelopes. One common plate provides acceptance relief, a rear cable lane, survey datums, and a plane–pin–slot chamber interface.
+
+Heads remove rearward after clamp release. The sector removes radially outward. Both motions are checked with solid collision geometry.
+
+## Monitoring disposition
+
+Dedicated temperature monitoring is removed. There is no physical sensor, temperature harness, required temperature channel, housekeeping capacity rule, or housekeeping feedthrough. Schema version 3 rejects the removed fields.
+
+## Display roles
+
+Physical and purchased-component/interface objects are visible by default. Keepouts, datums, service centerlines, physics acceptance, and optional reference objects are hidden. Active plastic, coupling, SiPM, carrier, housing, and holder have distinct inspection colors when GUI state is available.
 
 ## Configuration
 
-Configuration values carry explicit status:
+- Common schema-v3 platform: `config/common_detector.yaml`
+- afterSRC deployment: `config/afterSRC_compact.yaml`
+- pre-SAMURAI deployment: `config/infrontSamurai_compact.yaml`
+- legacy entry-point compatibility: `config/default_compactInVacuum.yaml`
 
-- `FROZEN`
-- `PROVISIONAL`
-- `RECOMMENDED`
-- `PLACEHOLDER`
-- `PURCHASED-PART-CONTRACT`
+See `MIGRATION.md` for rejected fields and mappings.
 
-The common detector platform and the two deployment profiles are kept separate. Missing site or supplier facts stay unresolved rather than receiving invented dimensions.
-
-- Common detector/mechanics: `config/common_detector.yaml`
-- CompactInVacuum-afterSRC deployment: `config/afterSRC_compact.yaml`
-- CompactInVacuum-preSAMURAI deployment: `config/infrontSamurai_compact.yaml`
-- old scaffold: `config/default_compactInVacuum.yaml`
-
-See `MIGRATION.md` for old-to-new field and geometry mappings.
-
-## Validation
-
-Validation is organized by physics, beamline, detector, sector cartridge, target, LOS, services, vacuum, mechanical, and thermal categories.
-
-Non-strict mode supports architecture and prototype iteration with visible warnings. Strict mode is an engineering gate and rejects physically impossible tube walls, incomplete cassettes/targets/services, blocked acceptance cones, invalid apertures, missing thermal paths, and invalid vacuum boundaries.
-
-## Stateful generation
-
-The legacy-scaffold compatibility entry remains:
+## Generation and validation
 
 ```bash
-./compactInVacuum/run_compactInVacuum.sh \
-  --pipeline-index codex_targets.yaml \
-  --validate-only
-```
+./compactInVacuum/run_freecad_tests.sh
 
-Use `--strict-validation` for the engineering gate and `--force-rebuild` only when intentionally bypassing the state hash.
+./compactInVacuum/run_compactOne_prototypes.sh \
+  ./compactInVacuum/config/afterSRC_compact.yaml \
+  ./compactInVacuum/artifacts/prototypes
 
-Generated CAD and runtime state remain untracked. Validation reports and stable geometry metrics are the cross-machine comparison authority.
-
-The two baseline CompactInVacuum deployment entries are:
-
-```bash
 ./compactInVacuum/run_compactOne_afterSRC.sh \
   --pipeline-index codex_targets.yaml \
   --force-rebuild
@@ -72,16 +74,16 @@ The two baseline CompactInVacuum deployment entries are:
   --force-rebuild
 ```
 
-Their default targets use non-strict prototype validation. A geometry or capacity failure still fails and suppresses export. `--strict-validation` additionally activates supplier, vacuum-material, access-closure, site-envelope, and pressure-vessel evidence gates; the current provisional platform is expected to fail those unresolved release gates.
+Non-strict validation permits documented evidence warnings but never geometry, collision, capacity, or acceptance failures. Strict mode additionally requires supplier drawings, site envelopes, vacuum-material evidence, chamber-access closure, and pressure-vessel analysis. It does not require removed monitoring hardware.
 
-## Prototype maturity
+Generated CAD, screenshots, caches, and runtime state remain untracked unless intentionally selected as reference artifacts.
 
-Recommended first-prototype candidates are a fast blue plastic scintillator, approximately 20 mm active diameter, 5–6 mm active thickness, an NDL EQR15 11-6060D-S SiPM, and a measured 2–5% total optical collection target. These are not frozen manufacturing requirements.
+## Physics disposition
 
-The CAD/runtime golden-cassette, golden-sector, target-sweep, LOS, service-route, and thermal-connectivity gates pass. Physical optical/thermal/vacuum tests, a resolved cartridge access closure, signed beamline and purchased-component drawings, and chamber external-pressure FEA are still required.
+The redesign preserves 53.4° for the large-angle proton and 11.2° for the small-angle proton. Previously supplied nominal values of approximately 55.9° and 11.3° remain unresolved pending evidence.
 
-## Requirement authority
+## Authorities
 
-- CompactOne: `docs/specs/compact_one_requirement_baseline.md`
-- External detector mechanics: `docs/specs/BLP_v1_requirement_baseline.md`
-- Architecture migration audit: `docs/specs/compact_one_architecture_audit.md`
+- `docs/specs/compact_one_requirement_baseline.md`
+- `docs/specs/compact_one_architecture_audit.md`
+- `compactInVacuum/MIGRATION.md`
