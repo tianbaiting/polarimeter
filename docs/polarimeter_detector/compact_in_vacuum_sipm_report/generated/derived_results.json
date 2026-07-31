@@ -218,7 +218,7 @@
       "proton_small": 152.0
     }
   },
-  "git_commit": "7e748004667a6dd1b68a511c4b3f2682c015b3c1",
+  "git_commit": "13a2e736477e0a706276c78db6e64e5e06dd55b0",
   "instrument_interfaces": {
     "compact_after_src": {
       "classification": "D",

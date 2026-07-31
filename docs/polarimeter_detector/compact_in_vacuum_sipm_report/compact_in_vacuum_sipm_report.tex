@@ -22,6 +22,7 @@
 \usepackage{fancyhdr}
 \usepackage{siunitx}
 \usepackage{pgfplots}
+\usepackage[american]{circuitikz}
 \usepackage{fancyvrb}
 \usepackage{csquotes}
 \usepackage[
@@ -775,11 +776,196 @@ and shaping.
     protected broadband digitizer path with two calibrated gain ranges.
   \item Set the prototype low-gain integrated-charge range to at least
     \SI{\LowGainRangeNc}{\nano\coulomb}; revise it after carbon/quenching measurements.
-  \item Use programmable low-noise bias with temperature compensation. Store temperature
-    and bias in run metadata.
+  \item Use programmable low-noise bias. Characterize the operating point versus temperature
+    on the bench; this does not imply a required in-vacuum temperature-monitoring channel.
   \item Measure breakdown voltage, gain, dark count, crosstalk, afterpulsing, recovery,
     spatial response, saturation, and temperature coefficient for every production lot.
 \end{itemize}
+
+\subsection{Simplified Model of the SiPM and Readout Chain}
+
+For interpretation of bench and beam-test data, a SiPM is best treated as a parallel array
+of Geiger-mode avalanche-photodiode microcells rather than as a continuously variable
+photodiode. Each microcell contains an avalanche junction, an effective cell capacitance
+$C_{\mathrm{cell}}$, and a series quench resistor $R_q$. The device is operated above
+breakdown,
+\begin{equation}
+  V_{\mathrm{bias}} = V_{\mathrm{bd}} + V_{\mathrm{ov}},
+  \qquad
+  Q_{\mathrm{cell}} \simeq C_{\mathrm{cell}} V_{\mathrm{ov}},
+  \label{eq:sipm-cell-charge}
+\end{equation}
+so a triggered cell releases an approximately fixed charge before the avalanche is
+quenched. To first order, the integrated SiPM output is therefore proportional to the
+number of cells that fire. Figure~\ref{fig:sipm-microcell-model} is an interpretation-level
+equivalent circuit; package parasitics, correlated noise, and manufacturer-specific
+protection structures are intentionally omitted.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{adjustbox}{max width=\textwidth}
+    \begin{circuitikz}[
+      every node/.style={font=\sffamily\scriptsize}
+    ]
+      \draw[->,>=stealth,thick,ReportBlue]
+        (-0.45,4.2) node[left,align=right]{$V_{\mathrm{bias}}$\\
+        $=V_{\mathrm{bd}}+V_{\mathrm{ov}}$} -- (0.35,4.2);
+      \draw[thick] (0.35,4.2) -- (9.65,4.2);
+      \draw[thick] (0.35,0) -- (9.65,0);
+      \draw[->,>=stealth,thick,ReportBlue]
+        (9.65,0) -- (10.75,0) node[right,align=left]{SiPM output\\to readout};
+
+      \draw (1.65,4.2) to[R,l=$R_q$] (1.65,2.72)
+        to[D,l_=Geiger APD] (1.65,0);
+      \draw (1.65,2.72) -- (2.48,2.72)
+        to[C,l=$C_{\mathrm{cell}}$] (2.48,0);
+      \draw[ReportBlue!75!black,dashed,rounded corners=2pt]
+        (0.88,-0.34) rectangle (2.83,4.56);
+      \node[ReportDarkBlue] at (1.86,-0.64) {microcell 1};
+
+      \draw (4.65,4.2) to[R] (4.65,2.72)
+        to[D] (4.65,0);
+      \draw (4.65,2.72) -- (5.48,2.72)
+        to[C] (5.48,0);
+      \draw[ReportBlue!75!black,dashed,rounded corners=2pt]
+        (3.88,-0.34) rectangle (5.83,4.56);
+      \node[ReportDarkBlue] at (4.86,-0.64) {microcell 2};
+
+      \node[font=\Large] at (6.55,2.1) {$\cdots$};
+
+      \draw (8.05,4.2) to[R] (8.05,2.72)
+        to[D] (8.05,0);
+      \draw (8.05,2.72) -- (8.88,2.72)
+        to[C] (8.88,0);
+      \draw[ReportBlue!75!black,dashed,rounded corners=2pt]
+        (7.28,-0.34) rectangle (9.23,4.56);
+      \node[ReportDarkBlue] at (8.26,-0.64) {microcell $N_{\mathrm{cell}}$};
+
+      \node[align=center,ReportMuted] at (5.05,5.04)
+        {many nominally identical microcells connected in parallel};
+    \end{circuitikz}
+  \end{adjustbox}
+  \caption{Simplified microcell equivalent circuit and the parallel-array concept of a
+  SiPM. Each fired cell contributes an approximately quantized charge; the common output
+  sums the simultaneously fired cells.}
+  \label{fig:sipm-microcell-model}
+\end{figure}
+
+After an avalanche, $R_q$ terminates the discharge and recharges the cell capacitance.
+The characteristic recovery scale is
+\begin{equation}
+  \tau_{\mathrm{rec}} \sim R_q C_{\mathrm{cell}} .
+  \label{eq:sipm-recovery-time}
+\end{equation}
+Before recharge is complete, a second trigger produces reduced charge and generally has a
+reduced detection probability. Wide optical pulses and persistent background illumination
+can therefore leave a substantial fraction of the array only partially recovered, reducing
+the effective dynamic range even when the event rate alone appears acceptable.
+
+\subsection{Saturation, Nonlinearity, and the Effect of Ambient Light}
+
+The occupancy model used above can be written in terms of the effective number of
+photoelectrons $N_{\mathrm{pe}}$ as
+\begin{equation}
+  N_{\mathrm{fired}}
+    = N_{\mathrm{cell}}\left[
+      1-\exp\left(-\frac{N_{\mathrm{pe}}}{N_{\mathrm{cell}}}\right)
+      \right].
+  \label{eq:sipm-occupancy-npe}
+\end{equation}
+For $N_{\mathrm{pe}}\ll N_{\mathrm{cell}}$, the response is approximately linear,
+$N_{\mathrm{fired}}\simeq N_{\mathrm{pe}}$. At higher occupancy it becomes nonlinear and
+asymptotically approaches $N_{\mathrm{cell}}$. This is a finite-resource saturation, not
+the voltage clipping of an ordinary amplifier. Cable dispersion, cell-recovery dynamics,
+and downstream shaping may still produce a smooth pulse without an obvious flat top.
+Consequently, a waveform that looks visually regular is not evidence that the SiPM remains
+in its linear regime.
+
+Ambient light adds a persistent background count rate and an average photocurrent
+$I_{\mathrm{avg}}$. It reduces the number of fully recovered cells available to a physics
+pulse. In addition, any series resistance or finite bias-supply output impedance produces
+a bias drop,
+\begin{equation}
+  V_{\mathrm{SiPM}} = V_{\mathrm{supply}} - I_{\mathrm{avg}}R_{\mathrm{series}},
+  \qquad
+  V_{\mathrm{ov,eff}} = V_{\mathrm{SiPM}}-V_{\mathrm{bd}} .
+  \label{eq:sipm-background-bias-drop}
+\end{equation}
+The lower effective overvoltage reduces gain and normally reduces photon-detection
+efficiency as well. Poor light-tightness can thus suppress incremental pulse amplitude
+through both cell occupancy and bias sag: increasing the incident light may produce only a
+small additional excursion, or an amplitude that grows much more slowly than expected.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{adjustbox}{max width=\textwidth}
+    \begin{circuitikz}[
+      block/.style={
+        draw=ReportBlue!75!black,
+        fill=ReportLight,
+        rounded corners=2pt,
+        minimum height=1.05cm,
+        text width=2.05cm,
+        align=center,
+        font=\sffamily\scriptsize
+      },
+      signal/.style={->,>=stealth,thick,ReportBlue},
+      note/.style={font=\sffamily\scriptsize,align=center,text=ReportMuted}
+    ]
+      \node[block] (sipm) at (0,0) {SiPM\\microcell array};
+      \node[block] (tee) at (2.75,0) {bias tee\\signal node};
+      \node[block] (coupling) at (5.45,0) {AC coupling\\$C_{\mathrm{AC}}$};
+      \node[block] (preamp) at (8.15,0) {preamplifier\\TIA or voltage gain};
+      \node[block] (shape) at (10.95,0) {shaping/filter\\CR or high-pass};
+      \node[block,text width=2.35cm] (digit) at (14.0,0)
+        {oscilloscope / ADC / discriminator};
+      \node[block,text width=2.25cm] (bias) at (2.75,2.05)
+        {low-noise bias supply\\$V_{\mathrm{supply}}$};
+
+      \draw[signal] (sipm) -- (tee);
+      \draw[signal] (tee) -- (coupling);
+      \draw[signal] (coupling) -- (preamp);
+      \draw[signal] (preamp) -- (shape);
+      \draw[signal] (shape) -- (digit);
+      \draw[signal] (bias) -- node[right,font=\sffamily\scriptsize,align=left]
+        {$R_{\mathrm{series}}$\\bias injection} (tee);
+
+      \node[note,text=ReportBlue] at (1.38,0.78) {signal $+\,I_{\mathrm{avg}}$};
+      \node[note,text=ReportBlue] at (12.48,0.78) {fast component};
+      \node[note,text width=4.4cm] at (1.4,-1.42)
+        {$V_{\mathrm{SiPM}}=V_{\mathrm{supply}}-I_{\mathrm{avg}}R_{\mathrm{series}}$};
+      \node[note,text width=2.8cm] at (5.45,-1.42)
+        {DC and slow background\\strongly attenuated};
+      \node[note,text width=5.2cm] at (11.3,-1.42)
+        {onsets, fast fluctuations, and physics pulses are retained};
+      \draw[->,>=stealth,dashed,ReportMuted] (5.45,-0.55) -- (5.45,-1.06);
+      \draw[->,>=stealth,dashed,ReportMuted] (10.95,-0.55) -- (10.95,-1.06);
+    \end{circuitikz}
+  \end{adjustbox}
+  \caption{Interpretation-level SiPM readout chain. The bias path carries the average
+  photocurrent, while AC coupling and high-pass shaping reject DC and slow variations.
+  The digitizer therefore need not display the full effect of continuous illumination.}
+  \label{fig:sipm-readout-chain}
+\end{figure}
+
+Figure~\ref{fig:sipm-readout-chain} also explains why continuous illumination can be
+misleading on an oscilloscope. An AC-coupling capacitor, CR shaper, or other high-pass
+stage suppresses the DC and slowly varying components caused by steady light. The chain
+responds mainly when the light turns on or changes, so a step in illumination can appear as
+a short transient that returns toward baseline even though the SiPM continues to draw
+background current. Under poor light shielding, a stronger source may therefore yield only
+a small pulse segment without the visually obvious saturation signature of a flat-topped
+waveform. This observation does not exclude SiPM nonlinearity; it is consistent with
+microcell occupation and bias sag acting together with the high-pass response.
+
+\begin{notebox}{Experimental interpretation}
+  SiPM response is jointly limited by the finite microcell population, cell-recovery time,
+  and effective overvoltage. Saturation need not appear as waveform clipping. Ambient light
+  both occupies microcells and creates an average-current bias drop, while AC coupling can
+  hide the resulting steady component and leave only a brief oscilloscope transient.
+  Reliable light-tightness and a bias network designed for the expected average current are
+  therefore prerequisites for stable, interpretable readout.
+\end{notebox}
 
 \section{Vacuum electrical services, grounding, and passive conductive design}
 

@@ -25,6 +25,7 @@
 \usepackage{fancyhdr}
 \usepackage{siunitx}
 \usepackage{pgfplots}
+\usepackage[american]{circuitikz}
 \usepackage{fancyvrb}
 \usepackage{csquotes}
 \usepackage[
@@ -684,10 +685,182 @@ bias tee、终端和整形。
     两个已标定增益范围。
   \item 原型低增益积分电荷范围至少达到
     \SI{\LowGainRangeNc}{\nano\coulomb}，之后根据碳核淬灭测量修订。
-  \item 使用可编程低噪声偏置和温度补偿，在 run metadata 中保存温度与偏置。
+  \item 使用可编程低噪声偏置，并在台架上表征工作点随温度的变化；这不构成
+    真空内温度监测通道的要求。
   \item 每个生产批次测量击穿电压、增益、暗计数、串扰、后脉冲、恢复、
     空间响应、饱和与温度系数。
 \end{itemize}
+
+\subsection{SiPM 及后端读出电路的简化模型}
+
+为解释台架和束流测试数据，应把 SiPM 理解为大量 Geiger 模式雪崩光电二极管
+微胞的并联阵列，而不是响应连续可变的普通光电二极管。每个微胞包含雪崩结、
+等效微胞电容 $C_{\mathrm{cell}}$ 和串联淬灭电阻 $R_q$。器件工作在击穿电压
+以上：
+\begin{equation}
+  V_{\mathrm{bias}} = V_{\mathrm{bd}} + V_{\mathrm{ov}},
+  \qquad
+  Q_{\mathrm{cell}} \simeq C_{\mathrm{cell}} V_{\mathrm{ov}} .
+  \label{eq:sipm-cell-charge}
+\end{equation}
+微胞被触发后先释放近似固定的电荷，再由淬灭电阻终止雪崩。因此在一阶近似下，
+SiPM 的积分输出与同时击发的微胞数成正比。图~\ref{fig:sipm-microcell-model}
+给出面向实验读出的等效模型；封装寄生参数、相关噪声和厂商特定保护结构均有意
+省略。
+
+\begin{figure}[htbp]
+  \centering
+  \begin{adjustbox}{max width=\textwidth}
+    \begin{circuitikz}[
+      every node/.style={font=\sffamily\scriptsize}
+    ]
+      \draw[->,>=stealth,thick,ReportBlue]
+        (-0.45,4.2) node[left,align=right]{$V_{\mathrm{bias}}$\\
+        $=V_{\mathrm{bd}}+V_{\mathrm{ov}}$} -- (0.35,4.2);
+      \draw[thick] (0.35,4.2) -- (9.65,4.2);
+      \draw[thick] (0.35,0) -- (9.65,0);
+      \draw[->,>=stealth,thick,ReportBlue]
+        (9.65,0) -- (10.75,0) node[right,align=left]{SiPM 输出\\连接后级读出};
+
+      \draw (1.65,4.2) to[R,l=$R_q$] (1.65,2.72)
+        to[D,l_=Geiger APD] (1.65,0);
+      \draw (1.65,2.72) -- (2.48,2.72)
+        to[C,l=$C_{\mathrm{cell}}$] (2.48,0);
+      \draw[ReportBlue!75!black,dashed,rounded corners=2pt]
+        (0.88,-0.34) rectangle (2.83,4.56);
+      \node[ReportDarkBlue] at (1.86,-0.64) {微胞 1};
+
+      \draw (4.65,4.2) to[R] (4.65,2.72)
+        to[D] (4.65,0);
+      \draw (4.65,2.72) -- (5.48,2.72)
+        to[C] (5.48,0);
+      \draw[ReportBlue!75!black,dashed,rounded corners=2pt]
+        (3.88,-0.34) rectangle (5.83,4.56);
+      \node[ReportDarkBlue] at (4.86,-0.64) {微胞 2};
+
+      \node[font=\Large] at (6.55,2.1) {$\cdots$};
+
+      \draw (8.05,4.2) to[R] (8.05,2.72)
+        to[D] (8.05,0);
+      \draw (8.05,2.72) -- (8.88,2.72)
+        to[C] (8.88,0);
+      \draw[ReportBlue!75!black,dashed,rounded corners=2pt]
+        (7.28,-0.34) rectangle (9.23,4.56);
+      \node[ReportDarkBlue] at (8.26,-0.64) {微胞 $N_{\mathrm{cell}}$};
+
+      \node[align=center,ReportMuted] at (5.05,5.04)
+        {大量名义相同的微胞并联组成 SiPM};
+    \end{circuitikz}
+  \end{adjustbox}
+  \caption{单个微胞的简化等效电路及 SiPM 并联阵列概念。每个击发微胞贡献
+  近似量子化的电荷，公共输出端对同时击发的微胞求和。}
+  \label{fig:sipm-microcell-model}
+\end{figure}
+
+雪崩发生后，$R_q$ 终止放电并为微胞电容重新充电，其特征恢复时间可定性写为
+\begin{equation}
+  \tau_{\mathrm{rec}} \sim R_q C_{\mathrm{cell}} .
+  \label{eq:sipm-recovery-time}
+\end{equation}
+在恢复完成之前，同一微胞再次触发时释放的电荷较小，探测概率通常也降低。
+因此，较宽的入射光脉冲或持续背景光会使相当一部分微胞处于未完全恢复状态；
+即使事件计数率本身看似可接受，有效动态范围也会下降。
+
+\subsection{饱和、非线性与环境光影响}
+
+前述占用模型可用有效光电子数 $N_{\mathrm{pe}}$ 表示为
+\begin{equation}
+  N_{\mathrm{fired}}
+    = N_{\mathrm{cell}}\left[
+      1-\exp\left(-\frac{N_{\mathrm{pe}}}{N_{\mathrm{cell}}}\right)
+      \right].
+  \label{eq:sipm-occupancy-npe}
+\end{equation}
+当 $N_{\mathrm{pe}}\ll N_{\mathrm{cell}}$ 时，
+$N_{\mathrm{fired}}\simeq N_{\mathrm{pe}}$，响应近似线性；占用率升高后，响应
+逐渐偏离线性，并最终趋近 $N_{\mathrm{cell}}$。这种饱和来自可用微胞数目的
+有限性，不等同于普通放大器的电压削顶。线缆色散、微胞恢复过程和后端整形仍
+可能产生光滑且没有明显平顶的脉冲。因此，“波形外观看起来正常”不能证明
+SiPM 仍工作在线性区。
+
+环境光会引入持续背景计数和平均光电流 $I_{\mathrm{avg}}$，占用微胞并减少物理
+信号到达时可用的完全恢复单元。若偏置网络含有串联电阻或偏置电源具有有限输出
+阻抗，还会产生
+\begin{equation}
+  V_{\mathrm{SiPM}} = V_{\mathrm{supply}} - I_{\mathrm{avg}}R_{\mathrm{series}},
+  \qquad
+  V_{\mathrm{ov,eff}} = V_{\mathrm{SiPM}}-V_{\mathrm{bd}} .
+  \label{eq:sipm-background-bias-drop}
+\end{equation}
+有效过压下降会降低增益，通常也会降低光子探测效率（PDE）。因此遮光不良会
+通过“微胞占用”和“偏置跌落”两条途径压低增量脉冲幅度：继续增加入射光时，
+示波器上可能只增加一小段响应，或幅度增长明显慢于预期。
+
+\begin{figure}[htbp]
+  \centering
+  \begin{adjustbox}{max width=\textwidth}
+    \begin{circuitikz}[
+      block/.style={
+        draw=ReportBlue!75!black,
+        fill=ReportLight,
+        rounded corners=2pt,
+        minimum height=1.05cm,
+        text width=2.05cm,
+        align=center,
+        font=\sffamily\scriptsize
+      },
+      signal/.style={->,>=stealth,thick,ReportBlue},
+      note/.style={font=\sffamily\scriptsize,align=center,text=ReportMuted}
+    ]
+      \node[block] (sipm) at (0,0) {SiPM\\微胞阵列};
+      \node[block] (tee) at (2.75,0) {bias tee\\信号节点};
+      \node[block] (coupling) at (5.45,0) {AC 耦合\\$C_{\mathrm{AC}}$};
+      \node[block] (preamp) at (8.15,0) {前置放大器\\跨阻或电压放大};
+      \node[block] (shape) at (10.95,0) {整形/滤波\\CR 或高通};
+      \node[block,text width=2.35cm] (digit) at (14.0,0)
+        {示波器 / ADC / 鉴别器};
+      \node[block,text width=2.25cm] (bias) at (2.75,2.05)
+        {低噪声偏置电源\\$V_{\mathrm{supply}}$};
+
+      \draw[signal] (sipm) -- (tee);
+      \draw[signal] (tee) -- (coupling);
+      \draw[signal] (coupling) -- (preamp);
+      \draw[signal] (preamp) -- (shape);
+      \draw[signal] (shape) -- (digit);
+      \draw[signal] (bias) -- node[right,font=\sffamily\scriptsize,align=left]
+        {$R_{\mathrm{series}}$\\偏置注入} (tee);
+
+      \node[note,text=ReportBlue] at (1.38,0.78) {信号 $+\,I_{\mathrm{avg}}$};
+      \node[note,text=ReportBlue] at (12.48,0.78) {快速分量};
+      \node[note,text width=4.4cm] at (1.4,-1.42)
+        {$V_{\mathrm{SiPM}}=V_{\mathrm{supply}}-I_{\mathrm{avg}}R_{\mathrm{series}}$};
+      \node[note,text width=2.8cm] at (5.45,-1.42)
+        {直流和慢背景\\受到强烈抑制};
+      \node[note,text width=5.2cm] at (11.3,-1.42)
+        {开灯瞬间、快速涨落和物理脉冲得以保留};
+      \draw[->,>=stealth,dashed,ReportMuted] (5.45,-0.55) -- (5.45,-1.06);
+      \draw[->,>=stealth,dashed,ReportMuted] (10.95,-0.55) -- (10.95,-1.06);
+    \end{circuitikz}
+  \end{adjustbox}
+  \caption{面向实验解释的 SiPM 后端读出链。偏置支路承载平均光电流，AC 耦合
+  和高通整形抑制直流与慢变化，因此数字化设备未必显示持续照明的全部影响。}
+  \label{fig:sipm-readout-chain}
+\end{figure}
+
+图~\ref{fig:sipm-readout-chain} 也解释了为什么持续照明在示波器上可能具有
+误导性。AC 耦合电容、CR 整形或其他高通环节会抑制稳定光照造成的直流分量和
+慢变化分量；后端主要在光照开始或发生变化时响应。因此，阶跃式持续光照可能
+只表现为一小段瞬态脉冲，随后回到基线附近，而 SiPM 仍在持续吸收背景光并产生
+平均电流。遮光不良时，更强的光源可能仍只产生一小段增量响应，且没有平顶式
+饱和特征。这并不排除 SiPM 已经进入非线性区，反而与微胞占用、偏置跌落和
+高通读出的共同作用相符。
+
+\begin{notebox}{实验读出要点}
+  SiPM 响应同时受微胞总数、微胞恢复时间和有效过压限制；饱和不一定表现为
+  明显的波形削顶。环境光既占用微胞，又通过平均电流产生偏置跌落，而 AC 耦合
+  可能隐藏稳态分量，使示波器上只留下短暂响应。因此，可靠遮光和按预期平均
+  电流设计的偏置网络，是获得稳定且可解释读出的必要条件。
+\end{notebox}
 
 \section{真空电气服务、接地与被动导电设计}
 

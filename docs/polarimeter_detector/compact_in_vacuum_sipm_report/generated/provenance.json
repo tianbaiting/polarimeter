@@ -4,7 +4,7 @@
     "python": "3.10.19",
     "pyyaml": "6.0.3"
   },
-  "git_commit": "7e748004667a6dd1b68a511c4b3f2682c015b3c1",
+  "git_commit": "13a2e736477e0a706276c78db6e64e5e06dd55b0",
   "report_recommendation_state": {
     "active_medium": "fast blue plastic scintillator",
     "candidate_active_thickness_mm": 5.0,
@@ -77,11 +77,11 @@
     },
     "report_source_en": {
       "path": "docs/polarimeter_detector/compact_in_vacuum_sipm_report/compact_in_vacuum_sipm_report.tex",
-      "sha256": "95d5fc653f0ab3537a2d5377844163bf411995baaf9288f5490408ebc66cbd45"
+      "sha256": "a2842e41e696bb15004b17cb30cd143dd9bff9386e895e43abc47d215b78eb95"
     },
     "report_source_zh": {
       "path": "docs/polarimeter_detector/compact_in_vacuum_sipm_report/compact_in_vacuum_sipm_report_zh.tex",
-      "sha256": "43385693a5756fe77770be9fd3d7078189dfd0495713f864aa0df844334e7a60"
+      "sha256": "da254c898d58a37b6ac11a2829816829354ed4c315e5579adfef5ef805dadf1f"
     },
     "validation_report": {
       "path": "compactInVacuum/compactInVacuum.validation_report.json",
