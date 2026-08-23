@@ -1,0 +1,16 @@
+metadata:
+  status: illustrative_only
+  purpose: Demonstrate the file format without asserting the SRC-to-SAMURAI lattice.
+  missing_inputs:
+    - magnet_names_and_order
+    - signed_bend_angles_or_field_integrals
+    - field_axes_and_fringe_maps
+    - kinetic_energy_at_each_element
+    - reference_trajectory_and_optics_settings
+elements:
+  - name: illustrative_horizontal_dipole
+    type: dipole
+    bend_axis: y
+    orbit_bend_deg: 10.0
+    kinetic_energy_mev: 380.0
+    source: illustrative_single_dipole_not_RIKEN_lattice
