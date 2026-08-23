@@ -1,0 +1,59 @@
+{
+  "constants": {
+    "deuteron_mass_mev": 1875.612945,
+    "bmt_g": 1.7140254606421121,
+    "G": -0.14298726967894393,
+    "gamma_380MeV": 1.2026004357738105,
+    "G_gamma": -0.17195655282600533
+  },
+  "illustrative_30deg": {
+    "relative_spin_deg": -5.15869658478016,
+    "pyy_tensor": [
+      [
+        -0.4,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.8000000000000002,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        -0.4
+      ]
+    ],
+    "pzz_tensor": [
+      [
+        -0.39029842837339146,
+        -0.0,
+        -0.10746052977677006
+      ],
+      [
+        -0.0,
+        -0.4,
+        0.0
+      ],
+      [
+        -0.10746052977677006,
+        0.0,
+        0.7902984283733915
+      ]
+    ]
+  },
+  "analyzing_powers_at_68p6deg_cm": {
+    "a_y": -0.22747600606071258,
+    "a_xz": 0.2753960784034515,
+    "a_xx_minus_yy": -1.1604740410711478,
+    "a_zz": 0.21354624791833737
+  },
+  "fisher_at_1e7_normalization": {
+    "sigma_pT": 0.0006329637938296879,
+    "sigma_delta_deg": 0.019500351932761995,
+    "condition_number": 14073049361685.963
+  },
+  "steering_scan_rows": 80,
+  "lattice_status": "No sourced complete SRC-to-preSAMURAI magnet sequence or settings were found; real transport remains an input requirement."
+}
