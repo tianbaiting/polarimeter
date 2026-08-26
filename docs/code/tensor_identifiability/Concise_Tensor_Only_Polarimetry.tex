@@ -1,0 +1,238 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=24mm]{geometry}
+\usepackage{amsmath,amssymb,bm,booktabs,tabularx,array}
+\usepackage{hyperref}
+\hypersetup{hidelinks}
+
+\newcommand{\Tens}{\bm P}
+\newcommand{\vect}[1]{\bm{#1}}
+\newcommand{\Null}{\mathcal N}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\title{Tensor Polarimetry with One and Two L/R/U/D Stations}
+\author{DPOLAR analysis note}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Why a tensor-only description is appropriate}
+
+The magnetic transport of a deuteron is governed, to leading order, by a
+Hamiltonian linear in the spin,
+\begin{equation}
+ H(t)=-\vect\mu\cdot\vect B(t)\propto \vect B(t)\cdot\vect S.
+ \label{eq:hamiltonian}
+\end{equation}
+The corresponding evolution operator is a spin rotation.  Under such a rotation,
+irreducible spin tensors of different rank do not mix:
+\begin{equation}
+ U(R)\,\tau^{(k)}_q\,U^\dagger(R)
+ =\sum_{q'}D^{(k)}_{q'q}(R)\tau^{(k)}_{q'}.
+ \label{eq:irreducible-rotation}
+\end{equation}
+Vector polarization is rank one and tensor polarization is rank two.  Equation
+\eqref{eq:irreducible-rotation} therefore implies that a purely tensor-polarized
+beam remains purely tensor polarized during coherent magnetic transport.  The
+tensor rotates, but it does not generate a vector polarization.
+
+This separation remains true if different particles experience different
+magnetic rotations, provided the trajectory weights are spin independent:
+averaging rotation matrices within the beam ensemble still acts separately in
+each irreducible rank.  Rank mixing would require physics
+beyond Eq.~\eqref{eq:hamiltonian}, such as a relevant interaction quadratic in
+spin or spin-selective loss.  Neither is part of the present beam-transport model.
+It is therefore natural to restrict the polarimeter analysis to the five tensor
+degrees of freedom.
+
+In Cartesian form,
+\begin{equation}
+ \Tens=
+ \begin{pmatrix}
+ p_{xx}&p_{xy}&p_{xz}\\
+ p_{xy}&p_{yy}&p_{yz}\\
+ p_{xz}&p_{yz}&p_{zz}
+ \end{pmatrix},\qquad
+ p_{xx}+p_{yy}+p_{zz}=0.
+ \label{eq:tensor}
+\end{equation}
+A convenient physical coordinate set is
+\begin{equation}
+ \vect r=(p_{xx}-p_{yy},\ p_{xy},\ p_{xz},\ p_{yz},\ p_{zz})^{\mathsf T}.
+ \label{eq:physical-basis}
+\end{equation}
+
+\section{Information from one four-arm station}
+
+With vector polarization omitted, the polarized $d$--$p$ cross section is
+\begin{align}
+ \frac{\sigma(\theta,\phi)}{\sigma_0(\theta)}=1
+ &+\frac23(p_{xz}\cos\phi-p_{yz}\sin\phi)A_{xz}(\theta)\notag\\
+ &+\frac16\left[(p_{xx}-p_{yy})\cos2\phi
+ -2p_{xy}\sin2\phi\right][A_{xx}(\theta)-A_{yy}(\theta)]\notag\\
+ &+\frac12p_{zz}A_{zz}(\theta).
+ \label{eq:cross-section}
+\end{align}
+For ideal arms at
+$\phi=(0^\circ,90^\circ,180^\circ,270^\circ)$, define
+$B=A_{xx}-A_{yy}$.  Apart from the unpolarized rate and a common acceptance
+factor, the tensor response is
+\begin{equation}
+ H_{\rm ring}=
+ \begin{pmatrix}
+ B/6&0& 2A_{xz}/3&0&A_{zz}/2\\
+ -B/6&0&0&-2A_{xz}/3&A_{zz}/2\\
+ B/6&0&-2A_{xz}/3&0&A_{zz}/2\\
+ -B/6&0&0&2A_{xz}/3&A_{zz}/2
+ \end{pmatrix}.
+ \label{eq:ring-response}
+\end{equation}
+The measured combinations are transparent:
+\begin{align}
+ L-R&\propto p_{xz}A_{xz},\\
+ U-D&\propto-p_{yz}A_{xz},\\
+ (L+R)-(U+D)&\propto(p_{xx}-p_{yy})B.
+\end{align}
+
+The component $p_{xy}$ is absent because $\sin2\phi=0$ at all four cardinal
+azimuths.  It is an exact geometrical null direction, not a weak sensitivity.
+Symmetric finite detector openings do not change this conclusion.
+
+The $p_{zz}$ term is common to all four arms.  At a single polar angle it is
+indistinguishable from luminosity if the absolute normalization is free.  The
+rank is then three: one diagonal anisotropy and two off-diagonal components are
+measured.  If the absolute normalization is known, $p_{zz}$ supplies a fourth
+independent observable.
+
+A practical station contains more than one polar-angle group.  With one shared
+luminosity, $p_{zz}$ is separated from normalization when the
+acceptance-averaged $A_{zz}$ values differ between angular groups.  The station
+then determines
+\begin{equation}
+ p_{xx}-p_{yy},\qquad p_{xz},\qquad p_{yz},\qquad p_{zz},
+\end{equation}
+and has rank four out of five.  The remaining null is exactly $p_{xy}$.  If each
+angle has an independent unconstrained normalization, the $p_{zz}$ information
+is lost and the effective rank returns to three.
+
+For the planned two-angle proton geometry, the numerical response calculation
+gives rank $4/5$ after profiling one shared luminosity.  Its null singular vector
+is pure $p_{xy}$ to numerical precision.
+
+\section{Information from two stations}
+
+Let $\vect q_0$ denote the tensor at a common reference location.  Spin transport
+to station $s$ gives
+\begin{equation}
+ \Tens_s=R_s\Tens_0R_s^{\mathsf T},\qquad
+ \vect q_s=T^{(2)}(R_s)\vect q_0.
+\end{equation}
+The combined response of two stations is
+\begin{equation}
+ J_{\rm combined}=
+ \begin{pmatrix}
+ J_1T^{(2)}(R_1)\\
+ J_2T^{(2)}(R_2)
+ \end{pmatrix},
+\end{equation}
+and the unobservable tensor subspace is
+\begin{equation}
+ \boxed{
+ \Null_{\rm combined}
+ =\ker[J_1T^{(2)}(R_1)]\cap
+  \ker[J_2T^{(2)}(R_2)] }.
+ \label{eq:null-intersection}
+\end{equation}
+
+This equation contains the whole argument for a second polarimeter.
+\begin{itemize}
+ \item If the stations have the same response and the transport rotations are
+ aligned, both have the same $p_{xy}$ null.  The combined rank remains four.
+ The second station improves statistical precision but determines no new tensor
+ component.
+ \item If the relative spin rotation maps the first station's $p_{xy}$ null into
+ $p_{xx}-p_{yy}$, $p_{xz}$, $p_{yz}$, or $p_{zz}$ at the second station, the
+ intersection in Eq.~\eqref{eq:null-intersection} is empty.  The combined tensor
+ response has full rank five.
+ \item Special rotations can leave the null spaces aligned.  For example, under
+ a rotation by $\alpha$ about the beam axis,
+ \begin{equation}
+ p'_{xy}=\frac12\sin2\alpha\,(p_{xx}-p_{yy})
+          +\cos2\alpha\,p_{xy}.
+ \end{equation}
+ Generic angles mix $p_{xy}$ into the visible diagonal anisotropy.  At
+ $\alpha=0^\circ,90^\circ,180^\circ$, the $p_{xy}$ direction maps back onto
+ itself and no rank is gained.
+\end{itemize}
+
+The repository calculation shows the same behavior.  Two identical stations
+with identity transport remain rank four.  Generic relative rotations about
+$x$, $y$, or $z$ give rank five, except at symmetry angles where the transported
+nulls realign.  These rotation scans establish the mathematical condition; an
+actual beam-line conclusion requires the real spin-transfer map.
+
+\section{Different trajectories through the beam line}
+
+The rotation $R_s$ is an idealization.  A particle with phase-space coordinate
+$\xi$ follows its own orbit and sees a rotation $R_s(\xi)$.  The tensor delivered
+to the station is the ensemble average
+\begin{equation}
+ \overline{\Tens}_s
+ =\int d\xi\,f(\xi)R_s(\xi)\Tens_0R_s^{\mathsf T}(\xi)
+ =\overline{T}^{(2)}_s\vect q_0.
+ \label{eq:ensemble-map}
+\end{equation}
+The averaged map $\overline{T}^{(2)}_s$ acts only within tensor space, so the
+tensor-only description remains closed.  It is not generally an orthogonal
+rotation, however.  A spread of spin phases can reduce the tensor norm and
+attenuate different tensor harmonics by different amounts.
+
+For a Gaussian spread $\sigma_\psi$ of rotations about the beam axis,
+\begin{equation}
+ \langle e^{im\psi}\rangle
+ =e^{im\langle\psi\rangle}e^{-m^2\sigma_\psi^2/2}.
+\end{equation}
+The $m=1$ tensor components $(p_{xz},p_{yz})$ are reduced by
+$e^{-\sigma_\psi^2/2}$, while the $m=2$ pair
+$(p_{xx}-p_{yy},p_{xy})$ is reduced by $e^{-2\sigma_\psi^2}$.  The component
+$p_{zz}$ is unchanged by a rotation about $z$.  An observed loss of tensor
+polarization can therefore result from phase averaging even when every particle
+undergoes coherent spin motion.
+
+The detector acceptance adds a second effect.  Beam position, angle, and momentum
+change the local scattering angles, and the accepted trajectories need not have
+the same spin-phase distribution in L, R, U, and D.  The correct channel mean is
+then
+\begin{equation}
+ \mu_k=\int d\xi\,f(\xi)w_k(\xi)\,
+ \sigma_k\!\left[R_s(\xi)\Tens_0R_s^{\mathsf T}(\xi)\right],
+ \label{eq:channel-ensemble}
+\end{equation}
+where $w_k(\xi)$ contains orbit acceptance and detector efficiency.  A
+channel-dependent phase-space weight can imitate a tensor asymmetry or weaken the
+nominal rank-five complementarity of two stations.
+
+A quantitative two-station analysis therefore needs the orbit and spin transfer
+map over the measured beam phase space, beam-position and angle information at
+both stations, and finite-acceptance detector response.  Without these inputs,
+two polarimeters constrain only an effective averaged tensor; they do not
+separate the initial tensor from an arbitrary distribution of spin phases.
+
+\section{Conclusion}
+
+For magnetic transport generated by $\vect B\cdot\vect S$, vector and tensor
+polarizations evolve independently.  A tensor-only analysis is therefore a
+closed and physically appropriate description of the present beam.
+
+One multi-angle cardinal L/R/U/D station determines four of the five tensor
+components when a common normalization is controlled.  Its exact null direction
+is $p_{xy}$.  A second aligned station improves precision but not rank.  A second
+station after a known complementary spin rotation can remove the $p_{xy}$ null
+and determine the complete tensor polarization.  Path-dependent spin rotations
+do not create vector polarization, but their ensemble average can attenuate the
+tensor and introduce additional transport and acceptance uncertainties.  The
+case for two stations is consequently a statement about the transported
+null-space intersection and the beam's phase-space-dependent spin map.
+
+\end{document}
