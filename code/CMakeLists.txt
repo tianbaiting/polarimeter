@@ -8,7 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 option(DPOLAR_BUILD_TESTS "Build dpolar regression tests" ON)
 
-find_package(ROOT REQUIRED COMPONENTS Core Graf Gpad Hist Physics)
+find_package(ROOT REQUIRED COMPONENTS Core Graf Gpad Hist Matrix Physics)
 
 add_library(dpolar_core STATIC
     src/config.cpp
@@ -21,6 +21,8 @@ add_library(dpolar_core STATIC
     src/energy_loss.cpp
     src/plotting.cpp
     src/analysis.cpp
+    src/tensor.cpp
+    src/identifiability.cpp
 )
 
 target_include_directories(dpolar_core
@@ -39,6 +41,7 @@ target_link_libraries(dpolar_core
         ROOT::Graf
         ROOT::Gpad
         ROOT::Hist
+        ROOT::Matrix
         ROOT::Physics
 )
 
@@ -69,4 +72,7 @@ if(DPOLAR_BUILD_TESTS)
     add_executable(dpolar_tests tests/test_main.cpp)
     target_link_libraries(dpolar_tests PRIVATE dpolar_core ROOT::Core)
     add_test(NAME dpolar_tests COMMAND dpolar_tests)
+    add_executable(dpolar_tensor_tests tests/test_tensor_identifiability.cpp)
+    target_link_libraries(dpolar_tensor_tests PRIVATE dpolar_core ROOT::Core ROOT::Matrix)
+    add_test(NAME dpolar_tensor_tests COMMAND dpolar_tensor_tests)
 endif()

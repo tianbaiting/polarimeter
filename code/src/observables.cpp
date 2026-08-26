@@ -27,7 +27,7 @@ double clampAngle(const std::vector<double>& values, const double angle_deg) {
     return angle_deg;
 }
 
-}  // namespace
+} // namespace
 
 ObservableTableRepository::ObservableTableRepository(const ScenarioConfig& scenario) {
     {
@@ -39,8 +39,8 @@ ObservableTableRepository::ObservableTableRepository(const ScenarioConfig& scena
         std::string line;
         while (std::getline(input, line)) {
             std::istringstream row(line);
-            double angle_deg {};
-            double value_mb_per_sr {};
+            double angle_deg{};
+            double value_mb_per_sr{};
             if (row >> angle_deg >> value_mb_per_sr) {
                 cross_section_angles_deg_.push_back(angle_deg);
                 cross_section_values_mb_per_sr_.push_back(value_mb_per_sr);
@@ -68,10 +68,18 @@ ObservableTableRepository::ObservableTableRepository(const ScenarioConfig& scena
             }
 
             const double angle_deg = std::stod(tokens[0]);
+            if (tokens[1] != "null") {
+                vector_it11_angles_deg_.push_back(angle_deg);
+                vector_it11_values_.push_back(std::stod(tokens[1]));
+            }
             if (tokens[3] != "null" && tokens[4] != "null") {
                 tensor_angles_deg_.push_back(angle_deg);
                 tensor_t20_values_.push_back(std::stod(tokens[3]));
                 tensor_t20_errors_.push_back(std::stod(tokens[4]));
+            }
+            if (tokens[5] != "null") {
+                tensor_t21_angles_deg_.push_back(angle_deg);
+                tensor_t21_values_.push_back(std::stod(tokens[5]));
             }
             if (tokens[7] != "null" && tokens[8] != "null") {
                 tensor_t22_angles_deg_.push_back(angle_deg);
@@ -81,7 +89,8 @@ ObservableTableRepository::ObservableTableRepository(const ScenarioConfig& scena
         }
     }
 
-    if (cross_section_angles_deg_.empty() || tensor_angles_deg_.empty() || tensor_t22_values_.empty()) {
+    if (cross_section_angles_deg_.empty() || vector_it11_values_.empty() || tensor_angles_deg_.empty() || tensor_t21_values_.empty() ||
+        tensor_t22_values_.empty()) {
         throw std::runtime_error("Observable tables did not produce enough spline points");
     }
 
@@ -89,10 +98,18 @@ ObservableTableRepository::ObservableTableRepository(const ScenarioConfig& scena
         static_cast<int>(cross_section_angles_deg_.size()),
         cross_section_angles_deg_.data(),
         cross_section_values_mb_per_sr_.data());
+    vector_it11_graph_ = std::make_unique<TGraph>(
+        static_cast<int>(vector_it11_angles_deg_.size()),
+        vector_it11_angles_deg_.data(),
+        vector_it11_values_.data());
     tensor_t20_graph_ = std::make_unique<TGraph>(
         static_cast<int>(tensor_angles_deg_.size()),
         tensor_angles_deg_.data(),
         tensor_t20_values_.data());
+    tensor_t21_graph_ = std::make_unique<TGraph>(
+        static_cast<int>(tensor_t21_angles_deg_.size()),
+        tensor_t21_angles_deg_.data(),
+        tensor_t21_values_.data());
     tensor_t22_graph_ = std::make_unique<TGraph>(
         static_cast<int>(tensor_t22_angles_deg_.size()),
         tensor_t22_angles_deg_.data(),
@@ -107,7 +124,9 @@ ObservableTableRepository::ObservableTableRepository(const ScenarioConfig& scena
         tensor_t22_errors_.data());
 
     cross_section_spline_ = std::make_unique<TSpline3>("cross_section_spline", cross_section_graph_.get());
+    vector_it11_spline_ = std::make_unique<TSpline3>("vector_it11_spline", vector_it11_graph_.get());
     tensor_t20_spline_ = std::make_unique<TSpline3>("tensor_t20_spline", tensor_t20_graph_.get());
+    tensor_t21_spline_ = std::make_unique<TSpline3>("tensor_t21_spline", tensor_t21_graph_.get());
     tensor_t22_spline_ = std::make_unique<TSpline3>("tensor_t22_spline", tensor_t22_graph_.get());
     tensor_t20_error_spline_ = std::make_unique<TSpline3>("tensor_t20_error_spline", tensor_t20_error_graph_.get());
     tensor_t22_error_spline_ = std::make_unique<TSpline3>("tensor_t22_error_spline", tensor_t22_error_graph_.get());
@@ -119,8 +138,16 @@ double ObservableTableRepository::differentialCrossSectionMbPerSr(const double t
     return cross_section_spline_->Eval(clampAngle(cross_section_angles_deg_, theta_cm_deg));
 }
 
+double ObservableTableRepository::vectorIT11(const double theta_cm_deg) const {
+    return vector_it11_spline_->Eval(clampAngle(vector_it11_angles_deg_, theta_cm_deg));
+}
+
 double ObservableTableRepository::tensorT20(const double theta_cm_deg) const {
     return tensor_t20_spline_->Eval(clampAngle(tensor_angles_deg_, theta_cm_deg));
+}
+
+double ObservableTableRepository::tensorT21(const double theta_cm_deg) const {
+    return tensor_t21_spline_->Eval(clampAngle(tensor_t21_angles_deg_, theta_cm_deg));
 }
 
 double ObservableTableRepository::tensorT22(const double theta_cm_deg) const {
@@ -167,4 +194,4 @@ const std::vector<double>& ObservableTableRepository::tensorT22Errors() const no
     return tensor_t22_errors_;
 }
 
-}  // namespace dpolar
+} // namespace dpolar
