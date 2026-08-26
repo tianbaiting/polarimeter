@@ -1,0 +1,260 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=24mm]{geometry}
+\usepackage{amsmath,amssymb,bm,booktabs,tabularx,array}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\newcommand{\vect}[1]{\bm{#1}}
+\newcommand{\Tens}{\bm P}
+\newcommand{\rank}{\operatorname{rank}}
+\newcommand{\Null}{\mathcal N}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\title{What One and Two L/R/U/D Polarimeters Can Determine\\
+from a Spin--1 Beam}
+\author{Concise DPOLAR analysis note}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+A general spin--1 density matrix has eight real polarization degrees of freedom:
+three vector components and five tensor components.  A single ideal L/R/U/D
+polarimeter does not determine all eight.  With several polar scattering angles,
+controlled normalization, and non-degenerate analyzing powers, one station can
+determine at most six combinations.  Its exact cardinal-geometry nulls are the
+longitudinal vector polarization $p_z$ and the tensor component $p_{xy}$.  A
+second station can determine all eight only if known spin transport rotates both
+null directions into combinations observed at the other station.  If particles
+follow different paths, the transport is an ensemble of rotations rather than a
+single rotation; this can reduce polarization, mix components, and introduce
+additional nuisance parameters that lower identifiability.
+\end{abstract}
+
+\section{The short answer}
+
+The spin--1 density matrix can be written in terms of
+\begin{equation}
+ \vect p=(p_x,p_y,p_z),\qquad
+ \Tens=
+ \begin{pmatrix}
+ p_{xx}&p_{xy}&p_{xz}\\
+ p_{xy}&p_{yy}&p_{yz}\\
+ p_{xz}&p_{yz}&p_{zz}
+ \end{pmatrix},\qquad
+ p_{xx}+p_{yy}+p_{zz}=0.
+\end{equation}
+Thus there are $3+5=8$ real polarization degrees of freedom.
+
+\begin{table}[htbp]
+\centering
+\caption{Maximum structural information under ideal calibration.  ``Multiple
+$\theta$'' means at least two polar-angle groups whose analyzing powers have
+different angular dependence.}
+\small
+\begin{tabularx}{\linewidth}{YcYY}
+\toprule
+Configuration & Maximum rank & Determinable & Remaining exact nulls\\
+\midrule
+One station, one $\theta$, known normalization
+& $4/8$ & one common mode, two first harmonics, one diagonal harmonic
+& $p_z$, $p_{xy}$, and two vector--tensor first-harmonic mixtures\\
+One station, multiple $\theta$, shared normalization
+& $6/8$ & $p_x,p_y,p_{xz},p_{yz},p_{xx}-p_{yy},p_{zz}$
+& $p_z$ and $p_{xy}$\\
+Two identical stations, aligned transport
+& $6/8$ & the same six combinations with better precision
+& the same two null directions\\
+Two stations, generic non-longitudinal relative rotation
+& up to $8/8$ & all vector and tensor components
+& none, if the transported null spaces do not overlap\\
+Two stations, relative rotation only about $z$
+& up to $7/8$ & the tensor null may be lifted
+& $p_z$ remains invariant and invisible\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+These are upper bounds.  Unknown luminosities, independent detector efficiencies,
+backgrounds, or uncertain spin transport can reduce the effective rank.
+
+\section{Why one station has only six independent combinations}
+
+In the local beam frame, the repository cross-section convention is
+\begin{align}
+ \frac{\sigma(\theta,\phi)}{\sigma_0(\theta)}=1
+ &+\frac32(p_x\sin\phi+p_y\cos\phi)A_y(\theta)\notag\\
+ &+\frac23(p_{xz}\cos\phi-p_{yz}\sin\phi)A_{xz}(\theta)\notag\\
+ &+\frac16\left[(p_{xx}-p_{yy})\cos2\phi
+ -2p_{xy}\sin2\phi\right][A_{xx}(\theta)-A_{yy}(\theta)]\notag\\
+ &+\frac12p_{zz}A_{zz}(\theta).
+ \label{eq:response}
+\end{align}
+The four azimuthal harmonics have the interpretation
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Harmonic & Polarization combination & L/R/U/D information\\
+\midrule
+common & $p_{zz}A_{zz}$ & absolute or cross-angle rate\\
+$\cos\phi$ & $\frac32p_yA_y+\frac23p_{xz}A_{xz}$ & $L-R$\\
+$\sin\phi$ & $\frac32p_xA_y-\frac23p_{yz}A_{xz}$ & $U-D$\\
+$\cos2\phi$ & $(p_{xx}-p_{yy})(A_{xx}-A_{yy})/6$ & $(L+R)-(U+D)$\\
+$\sin2\phi$ & $-p_{xy}(A_{xx}-A_{yy})/3$ & zero at cardinal azimuths\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+At one polar angle, the first harmonics contain inseparable vector--tensor pairs:
+$(p_y,p_{xz})$ and $(p_x,p_{yz})$.  Several polar angles separate each pair if
+the angular responses are non-collinear, schematically
+\begin{equation}
+ \det
+ \begin{pmatrix}
+ A_y(\theta_1)&A_{xz}(\theta_1)\\
+ A_y(\theta_2)&A_{xz}(\theta_2)
+ \end{pmatrix}\neq0.
+ \label{eq:first-harmonic-condition}
+\end{equation}
+Similarly, $p_{zz}$ can be separated from one shared luminosity scale only if the
+acceptance-averaged $A_{zz}$ responses differ between angular groups.  Independent
+normalizations for every angle remove this information.
+
+Two directions remain invisible even with many polar angles:
+\begin{enumerate}
+ \item $p_z$ does not occur in Eq.~\eqref{eq:response}; the reaction is sensitive
+ only to transverse vector polarization.
+ \item $p_{xy}$ multiplies $\sin2\phi$, which is exactly zero for
+ $\phi=0^\circ,90^\circ,180^\circ,270^\circ$ and for symmetric finite openings
+ centered on those azimuths.
+\end{enumerate}
+
+For the repository's current tensor-only calculation, vector polarization is
+excluded from the fit.  The planned two-angle proton-singles response then has
+rank $4/5$: it determines $p_{xx}-p_{yy}$, $p_{xz}$, $p_{yz}$, and $p_{zz}$,
+while $p_{xy}$ is the exact null direction.  This is consistent with the general
+$6/8$ result after the two transverse vector components are restored.
+
+\section{What a second station adds}
+
+Let the upstream density-matrix parameters be a common reference vector
+$\vect x_0=(\vect p_0,\vect q_0)$, with three vector and five tensor coordinates.
+Known spin transport to station $s$ acts as
+\begin{equation}
+ \vect p_s=R_s\vect p_0,\qquad
+ \Tens_s=R_s\Tens_0R_s^{\mathsf T},\qquad
+ \vect q_s=T^{(2)}(R_s)\vect q_0.
+\end{equation}
+If $H_s$ is the local station response, the combined response is
+\begin{equation}
+ J_{\rm combined}=
+ \begin{pmatrix}
+ H_1M_1\\ H_2M_2
+ \end{pmatrix},\qquad
+ M_s=R_s\oplus T^{(2)}(R_s),
+\end{equation}
+and its null space is
+\begin{equation}
+ \boxed{\Null_{\rm combined}
+ =\ker(H_1M_1)\cap\ker(H_2M_2)}.
+ \label{eq:null-intersection}
+\end{equation}
+
+Equation~\eqref{eq:null-intersection} is the practical criterion.
+\begin{itemize}
+ \item If the two stations have the same geometry and aligned spin transport,
+ they measure the same six-dimensional subspace.  Counts increase, but rank does
+ not.
+ \item A relative rotation about $z$ can rotate the tensor $p_{xy}$ null into a
+ visible diagonal tensor component.  However, it leaves $p_z$ unchanged, so the
+ full density matrix still has at least one null direction.
+ \item A generic rotation containing an $x$ or $y$ component can rotate $p_z$
+ into $p_x$ or $p_y$ and can simultaneously rotate $p_{xy}$ into visible tensor
+ components.  Full rank eight is possible if both transported nulls are
+ complementary and the nuisance model does not absorb them.
+\end{itemize}
+
+For the immediate nominal pure-$p_{yy}$ experiment, the parameter space is much
+smaller than eight dimensions.  One after-SRC station is sufficient for tensor
+magnitude and stability monitoring and for the first-order tilt that generates
+$p_{yz}$.  The orthogonal tilt generates $p_{xy}$ and is invisible at one
+cardinal station.  A second station is justified when a known transport rotation
+makes that missing tilt or another contamination mode observable.
+
+\section{Particles following different paths}
+
+The single-rotation model assumes every particle samples the same magnetic fields
+and follows the same orbit.  A real beam has transverse position, angle, momentum,
+and time coordinates $\xi$.  Each trajectory may therefore have its own rotation
+$R(\xi)$.  The state measured at station 2 is an ensemble average,
+\begin{align}
+ \overline{\vect p}_2
+ &=\int d\xi\,f(\xi)R(\xi)\vect p_1,\\
+ \overline{\Tens}_2
+ &=\int d\xi\,f(\xi)R(\xi)\Tens_1R^{\mathsf T}(\xi).
+ \label{eq:ensemble-transport}
+\end{align}
+The averaged vector and tensor maps are generally not rotations: they need not be
+orthogonal and can contract the polarization.  Coherent rotation and phase spread
+are therefore different physical effects.
+
+For illustration, if all trajectories rotate about the local beam $z$ axis but
+their rotation angle has a Gaussian RMS spread $\sigma_\psi$, an azimuthal harmonic of order $m$
+is reduced by
+\begin{equation}
+ \left\langle e^{im\psi}\right\rangle
+ =e^{im\langle\psi\rangle}e^{-m^2\sigma_\psi^2/2}.
+\end{equation}
+Vector first harmonics are suppressed by $e^{-\sigma_\psi^2/2}$, while tensor
+second harmonics are suppressed more rapidly, by $e^{-2\sigma_\psi^2}$.  This can
+look like depolarization even though every individual particle undergoes a
+perfectly coherent spin rotation.
+
+Trajectory variation also affects the detector response itself:
+\begin{itemize}
+ \item beam offsets and angles shift the local detector azimuths and mix the
+ $\sin\phi$, $\cos\phi$, $\sin2\phi$, and $\cos2\phi$ harmonics;
+ \item momentum-dependent spin phase can correlate polarization with acceptance;
+ \item apertures and losses can change the trajectory weights between stations;
+ \item a trajectory-dependent efficiency can generate false L/R or U/D
+ asymmetries.
+\end{itemize}
+The measured channel mean is therefore more accurately written as
+\begin{equation}
+ \mu_k=\int d\xi\,f(\xi)\,w_k(\xi)\,
+ \sigma_k\!\left[R(\xi)\vect p_1,\,R(\xi)\Tens_1R^{\mathsf T}(\xi)\right],
+\end{equation}
+where $w_k(\xi)$ contains orbit acceptance and detector efficiency.
+
+If $f(\xi)$ and $R(\xi)$ are unknown, their parameters become nuisances and the
+effective polarization rank can decrease.  Two polarimeters alone cannot recover
+an arbitrary path distribution.  A defensible two-station analysis should use:
+\begin{enumerate}
+ \item an orbit and spin transfer map over the measured beam phase space;
+ \item beam-position, angle, and momentum diagnostics at both stations;
+ \item trajectory-binned or event-by-event response calculations where possible;
+ \item finite detector acceptance and calibrated relative efficiencies;
+ \item ensemble-transport parameters included in the Fisher or likelihood fit.
+\end{enumerate}
+
+\section{Practical conclusion}
+
+One well-calibrated, multi-angle L/R/U/D station does not reconstruct a general
+spin--1 density matrix.  Under favorable analyzing-power and normalization
+conditions it determines six of eight vector-plus-tensor degrees of freedom;
+$p_z$ and $p_{xy}$ remain exact nulls.  For the present tensor-focused pure-$p_{yy}$
+program, this is sufficient for the primary after-SRC magnitude and stability
+measurement.
+
+Two stations provide genuinely new information only when the known relative
+spin transport makes their null spaces complementary.  A generic rotation with
+a transverse axis can, in principle, give full eight-dimensional density-matrix
+rank.  Non-uniform particle paths replace that rotation by an ensemble map and
+can reduce polarization and identifiability.  The scientific case for a second
+station should therefore be based on a phase-space-dependent spin-transfer model
+and a quantified reduction of the combined null space, not only on increased
+statistics.
+
+\end{document}
