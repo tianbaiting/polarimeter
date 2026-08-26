@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "scenario": "current_tensor",
+  "scenario_path": "/home/tian/workspace/dpol/polarimeter/code/config/current_tensor.ini",
+  "dpol_tool": "/home/tian/workspace/dpol/polarimeter/code/build-tensor/dpol_tool",
+  "data_root": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/data",
+  "rotation_study_label": "generic sensitivity study; not a RIBF beamline prediction",
+  "figures": [
+    {
+      "stem": "01_one_station_singular_spectrum",
+      "caption": "One planned two-angle proton-singles station has one exact structural tensor null mode; singular values are normalized to the leading response mode.",
+      "png": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/01_one_station_singular_spectrum.png",
+      "pdf": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/01_one_station_singular_spectrum.pdf"
+    },
+    {
+      "stem": "02_one_station_null_directions",
+      "caption": "Physical Cartesian content of the one-station null basis. The ideal cardinal L/R/U/D geometry is insensitive to pxy.",
+      "png": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/02_one_station_null_directions.png",
+      "pdf": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/02_one_station_null_directions.pdf"
+    },
+    {
+      "stem": "03_one_theta_vs_multi_theta",
+      "caption": "A second polar-angle group changes the analyzing-power dependence and restores one polarization mode after global-normalization profiling.",
+      "png": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/03_one_theta_vs_multi_theta.png",
+      "pdf": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/03_one_theta_vs_multi_theta.pdf"
+    },
+    {
+      "stem": "04_normalization_profile_comparison",
+      "caption": "At one polar angle, profiling an unknown global normalization removes the common tensor mode that is available with known absolute normalization.",
+      "png": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/04_normalization_profile_comparison.png",
+      "pdf": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/04_normalization_profile_comparison.pdf"
+    },
+    {
+      "stem": "05_one_vs_two_station_singular_spectrum",
+      "caption": "A second station with a generic 22.5 degree z-axis spin rotation lifts the cardinal-ring pxy null direction; this is not a RIBF beamline prediction.",
+      "png": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/05_one_vs_two_station_singular_spectrum.png",
+      "pdf": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/05_one_vs_two_station_singular_spectrum.pdf"
+    },
+    {
+      "stem": "06_effective_rank_rotation_scan",
+      "caption": "Effective polarization rank versus a generic relative spin rotation. Rank gain depends on whether transport rotates a station null direction into an observable direction.",
+      "png": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/06_effective_rank_rotation_scan.png",
+      "pdf": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/06_effective_rank_rotation_scan.pdf"
+    },
+    {
+      "stem": "07_smallest_singular_rotation_scan",
+      "caption": "Smallest response singular value versus generic relative spin rotation. These sweeps are mathematical sensitivity studies, not RIBF transport predictions.",
+      "png": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/07_smallest_singular_rotation_scan.png",
+      "pdf": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/07_smallest_singular_rotation_scan.pdf"
+    },
+    {
+      "stem": "08_current_fisher_and_correlation",
+      "caption": "Profiled Fisher information and pseudoinverse correlation for the planned two-angle proton-singles response with global normalization treated as a nuisance.",
+      "png": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/08_current_fisher_and_correlation.png",
+      "pdf": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/08_current_fisher_and_correlation.pdf"
+    },
+    {
+      "stem": "09_nominal_pyy_fisher_ellipses",
+      "caption": "Local one-sigma covariance projections around nominal pure pyy. A generic transport-complementary second station recovers the first-order tilt direction missing at one station.",
+      "png": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/09_nominal_pyy_fisher_ellipses.png",
+      "pdf": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/09_nominal_pyy_fisher_ellipses.pdf"
+    },
+    {
+      "stem": "10_null_space_intersection_schematic",
+      "caption": "The combined null space is the intersection of transported station null spaces. An aligned duplicate improves counts but not rank; a complementary rotation can reduce the intersection.",
+      "png": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/10_null_space_intersection_schematic.png",
+      "pdf": "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/10_null_space_intersection_schematic.pdf"
+    }
+  ],
+  "generated_files": [
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/01_one_station_singular_spectrum.png",
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/01_one_station_singular_spectrum.pdf",
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/02_one_station_null_directions.png",
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/02_one_station_null_directions.pdf",
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/03_one_theta_vs_multi_theta.png",
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/03_one_theta_vs_multi_theta.pdf",
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/04_normalization_profile_comparison.png",
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/04_normalization_profile_comparison.pdf",
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/05_one_vs_two_station_singular_spectrum.png",
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/05_one_vs_two_station_singular_spectrum.pdf",
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/06_effective_rank_rotation_scan.png",
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/06_effective_rank_rotation_scan.pdf",
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/07_smallest_singular_rotation_scan.png",
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/07_smallest_singular_rotation_scan.pdf",
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/08_current_fisher_and_correlation.png",
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/08_current_fisher_and_correlation.pdf",
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/09_nominal_pyy_fisher_ellipses.png",
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/09_nominal_pyy_fisher_ellipses.pdf",
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/10_null_space_intersection_schematic.png",
+    "/home/tian/workspace/dpol/polarimeter/docs/code/tensor_identifiability/figures/10_null_space_intersection_schematic.pdf"
+  ]
+}

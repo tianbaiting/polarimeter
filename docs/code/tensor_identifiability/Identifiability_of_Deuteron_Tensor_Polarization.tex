@@ -1,0 +1,749 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[margin=25mm]{geometry}
+\usepackage{amsmath,amssymb,bm,booktabs,array,longtable,tabularx}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{siunitx}
+\usepackage{xcolor}
+
+\newcommand{\Tens}{\bm P}
+\newcommand{\vect}[1]{\bm{#1}}
+\newcommand{\Tr}{\operatorname{Tr}}
+\newcommand{\rank}{\operatorname{rank}}
+\newcommand{\diag}{\operatorname{diag}}
+\newcommand{\cond}{\operatorname{cond}}
+\newcommand{\pseudoDet}{\operatorname{pdet}}
+\newcommand{\Null}{\mathcal N}
+\newcommand{\Range}{\mathcal R}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+\newcommand{\generatedfigure}[3]{%
+  \begin{figure}[htbp]
+    \centering
+    \IfFileExists{figures/#1}{%
+      \includegraphics[width=0.88\linewidth]{figures/#1}%
+    }{%
+      \fbox{\parbox[c][45mm][c]{0.82\linewidth}{\centering
+      \textcolor{red!70!black}{\textsf{[generated input pending: }\nolinkurl{figures/#1}\textsf{]}}}}%
+    }
+    \caption{#2}
+    \label{#3}
+  \end{figure}%
+}
+
+\title{Identifiability of Deuteron Tensor Polarization\\
+with One and Two L/R/U/D Polarimeters}
+\author{DPOLAR analysis note}
+\date{Generated from repository conventions; numerical tables are reproducible analysis products}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This note separates three questions that are often conflated in discussions of
+deuteron polarimetry: whether a tensor component appears in the cross section,
+whether the detector geometry provides an independent response to it, and
+whether that response survives profiling of luminosity and detector nuisance
+parameters.  The analysis uses the Cartesian spin--1 convention already used
+by the repository.  An ideal single L/R/U/D ring has one exact tensor-geometry
+null direction, $p_{xy}$, when absolute normalization is known.  With unknown
+global normalization its common-mode $p_{zz}$ response is also lost at one
+polar angle.  Multiple polar angles can recover $p_{zz}$ only when their
+acceptance-averaged $A_{zz}$ responses differ and share a constrained
+normalization.  A second station increases structural rank only when known spin
+transport rotates one station's null space away from the other's.  Around an
+axial vertical $p_{yy}$ state, one infinitesimal tilt is visible at first order
+and the orthogonal tilt is invisible in a perfectly cardinal four-arm geometry.
+These results support an after-SRC polarimeter as a direct monitor of the tensor
+polarization delivered by the accelerator chain, while making the scientific
+case for a second station conditional on a specific spin-transport or
+contamination measurement.
+\end{abstract}
+
+\section{Scope, authority, and limitations}
+
+The source of truth for polarization normalization is the repository's
+Cartesian density-matrix convention.  The source of truth for the measured
+reaction response is the repository's polarized $d$--$p$ elastic-scattering
+formula.  The current tabulation contains $iT_{11}$, $T_{20}$, $T_{21}$, and
+$T_{22}$ as functions of deuteron center-of-mass scattering angle.  The legacy
+C++ scalar count path presently consumes only $T_{20}$ and $T_{22}$; the full
+response requires all four observables.
+
+All rank claims below are analytic unless explicitly labeled as generated
+results.  Scenario-specific singular values, Fisher eigenvalues, uncertainties,
+and figures must be inserted from the machine-readable output of the analysis
+executable.  Placeholders in this note are deliberate and must not be read as
+physics forecasts.
+
+The current repository does not contain a complete, sourceable, element-by-
+element spin-transfer map from the proposed after-SRC station to the proposed
+pre-SAMURAI station.  Rotation scans are therefore generic sensitivity studies,
+not predictions of the RIBF beam line.
+
+\section{Spin--1 tensor degrees of freedom}
+
+In the ordered $S_z$ basis, define the Hermitian Cartesian spin--1 tensor
+operators
+\begin{equation}
+ Q_{ij}=\frac{3}{2}(S_iS_j+S_jS_i)-2\delta_{ij}I,
+ \qquad
+ p_i=\Tr(\rho S_i),
+ \qquad
+ p_{ij}=\Tr(\rho Q_{ij}).
+\end{equation}
+The density matrix is expanded as
+\begin{equation}
+ \rho=\frac{I}{3}
+ +\frac12\sum_i p_iS_i
+ +\frac19\sum_i p_{ii}Q_{ii}
+ +\frac29\sum_{i<j}p_{ij}Q_{ij}.
+ \label{eq:rho-expansion}
+\end{equation}
+The tensor polarization is the real symmetric traceless matrix
+\begin{equation}
+ \Tens=
+ \begin{pmatrix}
+ p_{xx}&p_{xy}&p_{xz}\\
+ p_{xy}&p_{yy}&p_{yz}\\
+ p_{xz}&p_{yz}&p_{zz}
+ \end{pmatrix},
+ \qquad
+ p_{xx}+p_{yy}+p_{zz}=0.
+ \label{eq:tensor}
+\end{equation}
+It therefore has five independent degrees of freedom.  For a state diagonal in
+magnetic substates about an axis $a$,
+\begin{equation}
+ p_a=N_{+1}-N_{-1},
+ \qquad
+ p_{aa}=N_{+1}+N_{-1}-2N_0=1-3N_0.
+\end{equation}
+For zero vector polarization the axial tensor range is
+$-2\leq p_{aa}\leq1$.  The legacy scalar scan range $0\leq p\leq1$ is a
+scenario choice and must not be mistaken for the physical tensor range.
+
+\subsection{Orthonormal numerical basis and physical reporting basis}
+
+A well-conditioned internal basis is orthonormal under the Frobenius inner
+product, $\langle A,B\rangle=\Tr(A^{\mathsf T}B)$:
+\begin{align}
+ E_1&=\frac{1}{\sqrt2}\diag(1,-1,0),&
+ E_2&=\frac{1}{\sqrt2}
+ \begin{pmatrix}0&1&0\\1&0&0\\0&0&0\end{pmatrix},&
+ E_3&=\frac{1}{\sqrt2}
+ \begin{pmatrix}0&0&1\\0&0&0\\1&0&0\end{pmatrix},\\
+ E_4&=\frac{1}{\sqrt2}
+ \begin{pmatrix}0&0&0\\0&0&1\\0&1&0\end{pmatrix},&
+ E_5&=\frac{1}{\sqrt6}\diag(-1,-1,2).&&
+\end{align}
+Writing $q_a=\Tr(\Tens E_a)$ gives
+\begin{equation}
+ \vect q=
+ \begin{pmatrix}
+ (p_{xx}-p_{yy})/\sqrt2\\
+ \sqrt2\,p_{xy}\\
+ \sqrt2\,p_{xz}\\
+ \sqrt2\,p_{yz}\\
+ \sqrt{3/2}\,p_{zz}
+ \end{pmatrix}.
+ \label{eq:orthonormal-coordinates}
+\end{equation}
+The numerical basis must not replace the experiment-facing reporting basis
+\begin{equation}
+ \vect r=(p_{xx}-p_{yy},\ p_{xy},\ p_{xz},\ p_{yz},\ p_{zz})^{\mathsf T}.
+ \label{eq:physical-basis}
+\end{equation}
+The inverse relations are
+\begin{equation}
+ p_{xx}-p_{yy}=\sqrt2q_1,\qquad
+ (p_{xy},p_{xz},p_{yz})=\frac{1}{\sqrt2}(q_2,q_3,q_4),\qquad
+ p_{zz}=\sqrt{\frac23}q_5,
+\end{equation}
+with $p_{xx}=[(p_{xx}-p_{yy})-p_{zz}]/2$ and
+$p_{yy}=[-(p_{xx}-p_{yy})-p_{zz}]/2$.
+
+\section{Polarized elastic-scattering response}
+
+In the local incident-beam frame used by the repository,
+\begin{align}
+ \frac{\sigma(\theta,\phi)}{\sigma_0(\theta)}=1
+ &+\frac32(p_x\sin\phi+p_y\cos\phi)A_y(\theta)\notag\\
+ &+\frac23(p_{xz}\cos\phi-p_{yz}\sin\phi)A_{xz}(\theta)\notag\\
+ &+\frac16\left[(p_{xx}-p_{yy})\cos2\phi
+ -2p_{xy}\sin2\phi\right]
+ [A_{xx}(\theta)-A_{yy}(\theta)]\notag\\
+ &+\frac12p_{zz}A_{zz}(\theta).
+ \label{eq:cross-section}
+\end{align}
+The repository's spherical-to-Cartesian conversion is
+\begin{equation}
+ A_y=\frac{2}{\sqrt3}iT_{11},\qquad
+ A_{xz}=-\sqrt3T_{21},\qquad
+ A_{xx}-A_{yy}=2\sqrt3T_{22},\qquad
+ A_{zz}=\sqrt2T_{20}.
+ \label{eq:analyzing-conversion}
+\end{equation}
+Equations~\eqref{eq:cross-section} and \eqref{eq:analyzing-conversion}
+reproduce the maintained scalar weights
+\begin{align}
+ f_{p_{zz}}&=1+\frac{\sqrt2}{2}T_{20}p_{zz},\\
+ f_{LR/UD}&=1\mp\frac{\sqrt3}{2}T_{22}p_{yy}
+ -\frac{\sqrt2}{4}T_{20}p_{yy}
+\end{align}
+for a longitudinal axial tensor and a vertical axial tensor, respectively.
+
+An older displayed closed-form LR/UD inversion contains a factor-of-two error
+in its $A_{zz}$ denominator.  From Eq.~\eqref{eq:cross-section} and the
+maintained sector weights, the cardinal-ring result is
+\begin{equation}
+ R_{LRUD}=
+ \frac{N_L+N_R-N_U-N_D}{N_L+N_R+N_U+N_D}
+ =-\frac{p_{yy}(A_{xx}-A_{yy})}{4-p_{yy}A_{zz}}.
+ \label{eq:lrud-corrected}
+\end{equation}
+The forward-model likelihood follows the maintained sector weights and is not
+replaced by the obsolete analytic denominator.
+
+The signs of the $U/D$ first harmonics in an older expanded set of paper
+equations disagree with Eq.~\eqref{eq:cross-section}.  This analysis adopts the
+general equation and the maintained response implementation: $L,U,R,D$ are at
+$\phi=(0,\pi/2,\pi,3\pi/2)$, so $U-D$ has a negative $p_{yz}A_{xz}$ sign.
+Changing the experimental azimuth convention requires changing both channel
+metadata and interpretation, not only plot labels.
+
+\section{Acceptance-integrated channel means}
+
+For detector channel $k$, the expected Poisson mean is
+\begin{equation}
+ \mu_k(\vect q,\vect\eta)=
+ \mathcal L\,\epsilon_k
+ \int_{\Omega_k}d\Omega\,
+ \sigma_0(\theta)
+ \left[1+\sum_{a=1}^{5}c_a(\theta,\phi)q_a
+ +\sum_{v=1}^{3}d_v(\theta,\phi)p_v\right],
+ \label{eq:channel-mean}
+\end{equation}
+where $d\Omega=\sin\theta\,d\theta\,d\phi$, $\mathcal L$ contains beam dose
+and target areal density, $\epsilon_k$ is a channel efficiency, and the
+coefficient functions are obtained from Eq.~\eqref{eq:cross-section} and the
+basis conversion.  Define the unpolarized integral and tensor response
+coefficients
+\begin{align}
+ b_k&=\epsilon_k\int_{\Omega_k}d\Omega\,\sigma_0(\theta),\\
+ H_{ka}&=\epsilon_k\int_{\Omega_k}d\Omega\,
+ \sigma_0(\theta)c_a(\theta,\phi).
+\end{align}
+Then tensor-only means are linear,
+\begin{equation}
+ \vect\mu=\mathcal L(\vect b+H\vect q).
+ \label{eq:linear-means}
+\end{equation}
+The physical target is an integral over the actual detector face.  Center-angle
+evaluation is used only for the analytic ring check.  The numerical study in
+this note instead follows the maintained finite rectangular top-hat acceptance,
+including analytic integration of the azimuthal harmonics across each opening;
+the approximation is stated in every output.
+
+\subsection{Legacy acceptance caution}
+
+The maintained scalar C++ count integrator presently multiplies a midpoint
+sum in $\theta_{\rm cm}$ by a constant $\Delta\phi$ but omits the
+$\sin\theta_{\rm cm}$ solid-angle factor.  A separate coverage-map path does
+include $\sin\theta\,d\theta\,d\phi$, but that map is not used by scalar count
+inference.  Consequently:
+\begin{enumerate}
+ \item existing scalar numerical outputs remain regression anchors and must not
+ be changed silently;
+ \item the present general response deliberately preserves the legacy
+ $d\theta\,d\phi$ measure while adding finite-azimuth harmonics, so its absolute
+ rate forecasts are provisional;
+ \item absolute rates from the legacy and corrected measures must not be mixed;
+ \item a future exact circular-face integration with $\sin\theta$ must be a
+ separately named acceptance mode and reported with before-and-after regression
+ tests.
+\end{enumerate}
+
+\section{Response matrix and local identifiability}
+
+For parameters $\theta_a$, define
+\begin{equation}
+ J_{ka}=\frac{\partial\mu_k}{\partial\theta_a}.
+\end{equation}
+For tensor coordinates, $J_{ka}=\mathcal L H_{ka}$.  If the luminosity nuisance
+is parameterized as $\lambda=\log\mathcal L$, then
+$\partial\mu_k/\partial\lambda=\mu_k$.  A log parameter avoids scale-dependent
+finite differences and enforces positive luminosity.
+
+For the response in the orthonormal basis of Eq.~\eqref{eq:orthonormal-coordinates},
+with no additional column scaling, compute
+\begin{equation}
+ J=U\Sigma V^{\mathsf T}.
+\end{equation}
+The reported output must contain all singular values and right-singular vectors,
+not only an integer rank.  A singular value is counted when
+\begin{equation}
+ \sigma_i>\tau,\qquad
+ \tau=\max(\tau_{\rm abs},\tau_{\rm rel}\sigma_1).
+ \label{eq:rank-threshold}
+\end{equation}
+A suitable default after documented column scaling is
+$\tau_{\rm rel}=10^{-10}$ and $\tau_{\rm abs}=10^{-12}$, accompanied by a
+threshold scan.  Rank conclusions must be stable over at least two orders of
+magnitude around the chosen relative threshold.  Every null or near-null right
+singular vector must be converted from $\vect q$ to the physical basis
+\eqref{eq:physical-basis} and normalized with a stated sign convention.
+
+\section{Analytic sanity check: one ideal L/R/U/D ring}
+
+Let $B=A_{xx}-A_{yy}$ and use the physical tensor coordinates
+\eqref{eq:physical-basis}.  At a fixed polar angle, the polarization part of
+the response row at azimuth $\phi$ is
+\begin{equation}
+ h(\phi)=
+ \left(
+ \frac{B}{6}\cos2\phi,
+ -\frac{B}{3}\sin2\phi,
+ \frac{2A_{xz}}{3}\cos\phi,
+ -\frac{2A_{xz}}{3}\sin\phi,
+ \frac{A_{zz}}{2}
+ \right).
+ \label{eq:ideal-row}
+\end{equation}
+For $L,U,R,D$ this becomes
+\begin{equation}
+ H_{\rm ring}=C
+ \begin{pmatrix}
+ B/6&0&2A_{xz}/3&0&A_{zz}/2\\
+ -B/6&0&0&-2A_{xz}/3&A_{zz}/2\\
+ B/6&0&-2A_{xz}/3&0&A_{zz}/2\\
+ -B/6&0&0&2A_{xz}/3&A_{zz}/2
+ \end{pmatrix},
+ \label{eq:ring-matrix}
+\end{equation}
+where $C$ is the common unpolarized acceptance integral.
+
+\subsection{Geometry null and measured harmonics}
+
+Equation~\eqref{eq:ring-matrix} gives, without hard-coded null vectors,
+\begin{align}
+ L-R&\propto\frac43p_{xz}A_{xz},\\
+ U-D&\propto-\frac43p_{yz}A_{xz},\\
+ (L+R)-(U+D)&\propto\frac23(p_{xx}-p_{yy})B.
+\end{align}
+Because $\sin2\phi=0$ at all four cardinal azimuths, $p_{xy}$ is an exact
+geometry null.  If $B$, $A_{xz}$, and $A_{zz}$ are nonzero and absolute
+normalization is known, the tensor response rank is four.
+
+\subsection{Common mode and normalization}
+
+The $p_{zz}$ column is proportional to $(1,1,1,1)^{\mathsf T}$.  It is an
+independent observable if absolute normalization is externally known.  If a
+global normalization is free, the normalization derivative is the same common
+mode at the unpolarized point.  After profiling it, the effective tensor rank
+of a single ideal ring is three: $(p_{xx}-p_{yy})$, $p_{xz}$, and $p_{yz}$
+remain, while $p_{xy}$ is geometric-null and $p_{zz}$ is normalization-null.
+Away from the unpolarized point the local null is a state-dependent combination
+of scale and tensor common mode, but the physical conclusion is unchanged.
+
+This distinction is the simplest example of why raw response rank and profiled
+polarization rank must both be reported.
+
+\section{Multiple polar angles within one station}
+
+For ring $g$ at polar angle $\theta_g$, the common-mode response is
+$A_{zz}(\theta_g)/2$.  With a single shared luminosity, two angular settings
+separate $p_{zz}$ from luminosity if their normalized response vectors are not
+collinear.  In the point-ring limit this requires
+\begin{equation}
+ A_{zz}(\theta_1)\neq A_{zz}(\theta_2),
+ \label{eq:multi-theta-condition}
+\end{equation}
+and in the real detector it requires unequal acceptance-weighted averages,
+\begin{equation}
+ \frac{H^{(1)}_{p_{zz}}}{b_1}\neq
+ \frac{H^{(2)}_{p_{zz}}}{b_2}.
+\end{equation}
+If each angular group has its own unconstrained normalization, this recovery is
+lost.  Multiple $\theta$ values can also separate vector $A_y$ from tensor
+$A_{xz}$ first harmonics when their angular dependences are not proportional.
+They cannot recover $p_{xy}$ from perfectly cardinal, azimuth-symmetric arms,
+because the $\sin2\phi$ integral remains zero at every polar angle.
+
+The production study evaluates proton and deuteron singles separately and also
+evaluates proton--deuteron coincidences.  A union of inclusive singles and
+coincidences is deliberately not assigned an independent-Poisson rank because
+shared events and shared efficiencies require a consistent exclusive likelihood
+or covariance model.
+
+\begin{table}[htbp]
+\centering
+\caption{Three-hour, unpolarized-point response results for the planned compact
+geometry approximation, with one shared profiled global normalization.  Singular
+values are derivatives in counts per unit orthonormal tensor coordinate; the
+relative/absolute raw-rank thresholds are $10^{-10}/10^{-12}$.}
+\scriptsize
+\begin{tabularx}{\linewidth}{YYY}
+\toprule
+Configuration & Raw/profiled rank & Spectrum and dominant nulls\\
+\midrule
+One $\theta$, four azimuths & $4/3$ analytic & $p_{xy}$ geometry null; $p_{zz}$/scale profiled null\\
+Two-$\theta$ proton singles & $4/4$ & $(1.8603,1.8603,1.4074,1.0658,0)\times10^5$; $p_{xy}$ null\\
+Deuteron singles, branches summed & $4/3$ & $(5.7183,2.9425,2.9425,0.3166,0)\times10^5$; common mode profiled\\
+Deuteron branches, energy resolved & $4/4$ & $(5.0582,2.0818,2.0818,1.7427,0)\times10^5$; $p_{xy}$ null\\
+Forward/backward coincidences & $4/4$ & $(1.3879,1.3879,1.0460,0.8852,0)\times10^5$; $p_{xy}$ null\\
+Per-angle normalized proton singles & $4/3$ & $p_{zz}$ recovery is lost when each angle has a free scale\\
+\bottomrule
+\end{tabularx}
+\label{tab:scenario-ranks}
+\end{table}
+
+\section{Poisson Fisher information and nuisance profiling}
+
+For independent Poisson channels and full parameter vector
+$\vect\theta=(\vect q,\vect\eta)$,
+\begin{equation}
+ F_{ab}=\sum_k\frac{1}{\mu_k}
+ \frac{\partial\mu_k}{\partial\theta_a}
+ \frac{\partial\mu_k}{\partial\theta_b}.
+ \label{eq:fisher}
+\end{equation}
+Partitioning polarization and nuisance parameters gives
+\begin{equation}
+ F=
+ \begin{pmatrix}
+ F_{qq}&F_{q\eta}\\F_{\eta q}&F_{\eta\eta}
+ \end{pmatrix}.
+\end{equation}
+The effective polarization information after nuisance profiling is
+\begin{equation}
+ F_{\rm eff}=F_{qq}-F_{q\eta}F_{\eta\eta}^{+}F_{\eta q},
+ \label{eq:schur}
+\end{equation}
+where $+$ denotes a tolerance-controlled pseudoinverse.  Gaussian calibration
+priors add their precision matrix before the Schur complement.  The output must
+include the full Fisher matrix, $F_{\rm eff}$, its eigensystem, covariance
+$F_{\rm eff}^{+}$, and identifiable-subspace uncertainties.
+
+At minimum the nuisance model must support a global luminosity scale.  Useful
+stress tests add per-angle scales, four relative sector efficiencies, and
+analyzing-power modes.  Completely free per-channel efficiencies absorb every
+polarization response and eliminate identifiability; calibration priors or
+symmetry constraints are therefore part of the measurement definition.
+
+The present scalar code propagates pointwise $T_{20}/T_{22}$ uncertainties in
+quadrature rather than fitting analyzing-power nuisance parameters or a table
+covariance.  That legacy uncertainty band is not equivalent to
+Eq.~\eqref{eq:schur} and must be labeled separately.
+
+\section{Spin transport in the five-dimensional tensor space}
+
+For $R\in SO(3)$,
+\begin{equation}
+ \vect p_2=R\vect p_1,
+ \qquad
+ \Tens_2=R\Tens_1R^{\mathsf T}.
+ \label{eq:rotation}
+\end{equation}
+The induced five-dimensional representation in the orthonormal basis is
+\begin{equation}
+ T^{(2)}_{ab}(R)=\Tr\!\left[E_a^{\mathsf T}RE_bR^{\mathsf T}\right],
+ \qquad
+ \vect q_2=T^{(2)}(R)\vect q_1.
+ \label{eq:rank2-map}
+\end{equation}
+Because the basis is orthonormal and rotations preserve the Frobenius inner
+product, $T^{(2)}(R)$ is orthogonal.  Therefore
+\begin{equation}
+ \Tr(\Tens_2^2)=\Tr(\Tens_1^2),
+ \qquad
+ \lVert\vect q_2\rVert_2=\lVert\vect q_1\rVert_2.
+\end{equation}
+Tests must cover identity, rotations about each Cartesian axis, generic Euler
+rotations, composition, and norm preservation.  This layer depends only on
+$SO(3)$ and accepts future Thomas--BMT or transfer-map rotations without
+embedding a particular magnet lattice.
+
+\section{One station versus two stations}
+
+Let $\vect q_0$ be the tensor at a common reference point and $T_s$ the known
+rank--2 transport to station $s$.  The station response to the reference tensor
+is $J_sT_s$, so
+\begin{equation}
+ J_{\rm combined}=
+ \begin{pmatrix}
+ J_1T_1\\J_2T_2
+ \end{pmatrix}.
+ \label{eq:combined-response}
+\end{equation}
+The central geometric statement is
+\begin{equation}
+ \boxed{
+ \ker J_{\rm combined}
+ =\ker(J_1T_1)\cap\ker(J_2T_2)}.
+ \label{eq:kernel-intersection}
+\end{equation}
+A second station increases structural rank if and only if this intersection has
+smaller dimension than the first station's null space.  Equivalently, at least
+one direction invisible to station 1 must have a nonzero projection into the
+row space of $J_2T_2$.
+
+Two identical stations with $T_2=T_1$ have aligned null spaces.  Doubling their
+exposure improves nonzero Fisher eigenvalues and statistical precision but does
+not change rank.  A rotation may still fail to help if it leaves the null
+subspace invariant, if the relevant analyzing power vanishes, or if newly
+generated response is absorbed by independent station normalizations or
+efficiencies.  Thus ``more counts'' and ``more identifiable dimensions'' are
+different statements.
+
+With station-specific nuisances, the correct comparison is between profiled
+Fisher matrices, not only stacked polarization Jacobians.  Shared luminosity,
+common analyzing-power calibration, and independent station efficiencies must
+be encoded according to the actual experiment.
+
+\section{Generic rotation sweep and null-space complementarity}
+
+For a relative rotation $R_a(\alpha)$ about $a=x,y,z$, scan
+$0\leq\alpha\leq\pi$.  At each point report
+\begin{enumerate}
+ \item raw and profiled effective rank;
+ \item all singular values and the smallest nonzero singular value;
+ \item condition number restricted to the identifiable subspace;
+ \item Fisher determinant when full rank, otherwise pseudo-determinant;
+ \item covariance eigenvalues in the identifiable subspace;
+ \item principal angles between transported station null spaces.
+\end{enumerate}
+If $N_1$ and $N_2$ are orthonormal bases for the two null spaces, the cosines of
+their principal angles are the singular values of $N_1^{\mathsf T}N_2$.  A
+principal angle of zero identifies a shared null direction.  The dimension of
+the exact intersection must agree with Eq.~\eqref{eq:kernel-intersection}.
+
+Extrema in a rotation scan describe mathematical complementarity.  They are not
+preferred accelerator settings until a real transport map, acceptance model,
+beam phase space, and nuisance constraints are supplied.
+
+\begin{table}[htbp]
+\centering
+\caption{Generic two-station rotation scan for identical planned proton-channel
+geometry at the two stations, a shared global normalization, and a
+$\SI{2}{\degree}$ scan grid.  These are mathematical sensitivity rotations, not
+an RIBF transfer-map prediction.}
+\small
+\begin{tabularx}{\linewidth}{YYYY}
+\toprule
+Rotation family & Unchanged-degeneracy angles & Maximum complementarity & Profiled rank\\
+\midrule
+$R_x(\alpha)$ & $0^\circ,180^\circ$ & $90^\circ$: $\sigma_{\min}=1.6414\times10^5$ & five for sampled $2^\circ$--$178^\circ$\\
+$R_y(\alpha)$ & $0^\circ,180^\circ$ & $90^\circ$: $\sigma_{\min}=1.6414\times10^5$ & five for sampled $2^\circ$--$178^\circ$\\
+$R_z(\alpha)$ & $0^\circ,90^\circ,180^\circ$ & $44^\circ/46^\circ$: $\sigma_{\min}=1.0470\times10^5$ & five except listed angles\\
+\bottomrule
+\end{tabularx}
+\label{tab:rotation-summary}
+\end{table}
+
+\section{\texorpdfstring{Local analysis around nominal pure $p_{yy}$}{Local analysis around nominal pure pyy}}
+
+An axial tensor with magnitude $P_T$ and unit symmetry axis $\hat n$ is
+\begin{equation}
+ \Tens(P_T,\hat n)=\frac32P_T\hat n\hat n^{\mathsf T}-\frac12P_TI.
+ \label{eq:axial-tensor}
+\end{equation}
+This normalization is fixed by the repository convention: if $\hat n=\hat y$,
+then $p_{yy}=P_T$ and $p_{xx}=p_{zz}=-P_T/2$.
+
+Parameterize small tilts about the vertical direction as
+\begin{equation}
+ \hat n(\alpha,\beta)=
+ \left(\alpha,\sqrt{1-\alpha^2-\beta^2},\beta\right),
+\end{equation}
+where $\alpha$ tilts the axis toward $+x$ and $\beta$ tilts it toward $+z$.
+At $\alpha=\beta=0$,
+\begin{align}
+ \frac{\partial\Tens}{\partial P_T}
+ &=\diag(-1/2,1,-1/2),\\
+ \frac{\partial\Tens}{\partial\alpha}
+ &=\frac32P_T(\hat x\hat y^{\mathsf T}+\hat y\hat x^{\mathsf T}),\\
+ \frac{\partial\Tens}{\partial\beta}
+ &=\frac32P_T(\hat y\hat z^{\mathsf T}+\hat z\hat y^{\mathsf T}).
+ \label{eq:pyy-derivatives}
+\end{align}
+Thus the $x$-tilt generates $p_{xy}$ at first order and is exactly invisible to
+an ideal cardinal L/R/U/D ring.  The $z$-tilt generates $p_{yz}$ and appears in
+the $U-D$ first harmonic when $A_{xz}\neq0$.  Multiple polar angles do not lift
+the exact $p_{xy}$ null if every arm remains centered and azimuthally symmetric.
+Non-cardinal azimuths, known acceptance asymmetry, or a transported second
+station can make that tilt visible; uncontrolled asymmetry can instead mimic it.
+
+The local Fisher analysis in $(P_T,\alpha,\beta)$ must include normalization and
+efficiency nuisances.  At exactly $P_T=0$, orientation is undefined and both
+tilt derivatives vanish, so an axis ellipse is meaningful only around a
+nonzero nominal tensor state.  A second station helps when its transport maps
+the upstream $p_{xy}$ perturbation into a tensor harmonic observed by its local
+geometry.  Identity transport between identical stations cannot recover the
+missing tilt.
+
+Unwanted tensor contamination should be reported by projecting the
+five-dimensional covariance onto the three-dimensional tangent space of the
+axial model and its two-dimensional orthogonal complement.  This distinguishes
+uncertainty in magnitude/axis from non-axial contamination rather than forcing
+all deviations into a tilt.
+
+\begin{table}[htbp]
+\centering
+\caption{Nominal vertical-state local statistical sensitivity at $P_T=0.8$ and
+three hours for the planned two-$\theta$ proton channels, profiling one shared
+global normalization.  Analyzing-power, background, alignment, and efficiency
+systematics are not included.}
+\small
+\begin{tabularx}{\linewidth}{YcYY}
+\toprule
+Configuration & $\sigma(P_T)$ & Tilt covariance/ellipse & Contamination eigenmodes\\
+\midrule
+One station & $0.00378$ & $\alpha$ unidentifiable; $\sigma(\beta)=0.00180$ rad ($0.103^\circ$) & full-tensor $p_{xy}$ null\\
+Two stations, $R_y(20^\circ)$ & $0.00267$ & $\sigma(\alpha)=0.00721$ rad, $\sigma(\beta)=0.00180$ rad & no structural tensor null\\
+\bottomrule
+\end{tabularx}
+\label{tab:nominal-pyy}
+\end{table}
+
+\section{Detector scenarios and unresolved geometry values}
+
+Several repository artifacts preserve different historical detector values.
+The maintained default scalar configuration uses proton laboratory angles
+$\SI{53.4}{\degree}$ and $\SI{11.2}{\degree}$, whereas an older paper table
+uses $\SI{55.9}{\degree}$ and $\SI{11.3}{\degree}$.  Distances and active sizes
+also differ.  The compact common detector configuration currently uses
+$\SI{53.4}{\degree}$ at \SI{205}{mm}, $\SI{11.2}{\degree}$ at \SI{190}{mm},
+and a deuteron channel at $\SI{20.9}{\degree}$ and \SI{140}{mm}; its detector
+response and several mechanical inputs remain provisional.
+
+These values must not be averaged or silently ``corrected.''  Every generated
+result must record the exact source configuration, resolved channel manifest,
+angle convention, distance reference, active-face dimensions, beam energy,
+table checksums, and acceptance algorithm.  Results for the historical paper
+geometry and the current compact geometry are different named scenarios.
+The after-SRC and pre-SAMURAI compact configurations inherit the same common
+physics channel layout at present; their different chamber interfaces alone do
+not create a different polarization response matrix.
+The CLI selection named \texttt{current} denotes the planned two-angle proton
+singles response only.  Deuteron singles and coincidence samples are separate
+named studies; inclusive samples are not combined as independent Poisson bins.
+
+\section{Implication for an after-SRC polarimeter}
+
+The relevant conceptual chain is
+\begin{equation}
+ \begin{gathered}
+ \text{PIS}\rightarrow\text{Wien filter}\rightarrow\text{AVF}
+ \rightarrow\text{RRC}\rightarrow\text{SRC}\\
+ \rightarrow\boxed{\text{after-SRC polarimeter}}
+ \rightarrow\text{downstream beam line}\rightarrow\text{SAMURAI}.
+ \end{gathered}
+\end{equation}
+The source and Wien filter prepare the intended spin mode.  The cyclotrons and
+extraction system transport that state.  A post-SRC polarimeter independently
+anchors the tensor polarization actually delivered by the complete acceleration
+chain at final energy.
+
+This argument does not require, and must not be phrased as, an expectation of
+large SRC depolarization.  The defensible statement is: good polarization
+preservation is expected under proper accelerator operation, while a post-SRC
+measurement independently verifies the delivered tensor polarization and
+constrains polarization-related systematics.
+
+For the immediate nominal pure-$p_{yy}$ program, one after-SRC station can be
+sufficient for the primary task of magnitude and stability monitoring if the
+axial-state assumption, angular response, relative efficiencies, and relevant
+normalization are controlled.  That statement is narrower than arbitrary
+five-component tensor reconstruction.  A second station is scientifically
+justified when it addresses an additional quantified question, for example:
+\begin{enumerate}
+ \item measuring a transport-induced tensor-axis rotation predicted by a known
+ beam-line map;
+ \item lifting the first-order $p_{xy}$ tilt/contamination null through a
+ demonstrably complementary rotation;
+ \item separating coherent spin transport from non-axial contamination or
+ ensemble depolarization;
+ \item providing a downstream polarization anchor when intervening beam-line
+ elements introduce a systematic uncertainty relevant at SAMURAI.
+\end{enumerate}
+The justification must be expressed through the reduction of
+$\ker(J_1T_1)\cap\ker(J_2T_2)$ or through a specified improvement in profiled
+uncertainty, not merely through doubled event statistics.
+
+\section{Required machine-readable outputs and figures}
+
+For every scenario, the analysis product must include the parameter basis and
+conversion matrix, channel metadata, unpolarized vector $\vect b$, response
+matrix $H$, full Jacobian, nuisance definitions and priors, column scales,
+singular values and vectors, rank thresholds, null vectors in both bases,
+Fisher matrices, profiled Fisher matrix, covariance/pseudoinverse, uncertainty
+eigenvectors, spin rotation and $T^{(2)}(R)$, and software/configuration
+provenance.  JSON is the canonical structured summary and CSV stores matrices
+and scans without lossy formatting.
+
+The following figures are referenced only after generation from those products.
+
+\generatedfigure{01_one_station_singular_spectrum.pdf}{Singular-value spectrum for one station.  The caption in the generated figure states the orthonormal basis convention and rank threshold.}{fig:one-station-svd}
+
+\generatedfigure{02_one_station_null_directions.pdf}{Tensor null and near-null directions translated into the physical Cartesian reporting basis.}{fig:null-directions}
+
+\generatedfigure{03_one_theta_vs_multi_theta.pdf}{One-polar-angle versus multiple-polar-angle response, separating structural rank from conditioning.}{fig:multi-theta}
+
+\generatedfigure{04_normalization_profile_comparison.pdf}{Known-normalization and profiled-normalization comparison.  Loss of a common mode must not be labeled a detector-geometry null.}{fig:normalization}
+
+\generatedfigure{05_one_vs_two_station_singular_spectrum.pdf}{One-station and two-station singular spectra for a stated relative spin rotation.}{fig:two-station-svd}
+
+\generatedfigure{06_effective_rank_rotation_scan.pdf}{Effective rank versus generic relative rotation.  This is a sensitivity study, not a beam-line prediction.}{fig:rank-scan}
+
+\generatedfigure{07_smallest_singular_rotation_scan.pdf}{Smallest singular value and threshold versus relative rotation angle.}{fig:smin-scan}
+
+\generatedfigure{08_current_fisher_and_correlation.pdf}{Profiled Fisher/correlation matrix for the planned two-angle proton-singles scenario and nuisance model.}{fig:fisher-correlation}
+
+\generatedfigure{09_nominal_pyy_fisher_ellipses.pdf}{Profiled local covariance for $(P_T,\alpha,\beta)$ around the stated nonzero nominal vertical tensor state.}{fig:pyy-ellipse}
+
+\generatedfigure{10_null_space_intersection_schematic.pdf}{Null-space interpretation of Eq.~\eqref{eq:kernel-intersection}; overlapping null directions remain unobservable after combining stations.}{fig:null-intersection}
+
+\section{Validation requirements}
+
+The tensor layer must test symmetric/traceless round trips, Cartesian/internal
+basis round trips, $\Tens'=R\Tens R^{\mathsf T}$, identity rotation, generic
+rotation composition, and norm preservation.  The ideal ring test must obtain
+the $p_{xy}$ null and the three non-common harmonics from the constructed
+matrix, not from hard-coded conclusions.  A normalization test must show the
+single-angle profiled-rank loss and conditional recovery with two genuinely
+different angular responses.  Two-station tests must show that identical
+transport preserves rank, that exposure improves precision without changing
+rank, that a selected rotation reduces the null-space intersection, and that a
+direct numerical intersection agrees with Eq.~\eqref{eq:kernel-intersection}.
+
+Existing scalar $p_{zz}$ and $p_{yy}$ inference values are regression anchors.
+Any change caused by the solid-angle correction, interpolation method, or
+geometry resolution requires a focused test and an explicit before/after
+record; it must not enter as an incidental side effect of the rank analysis.
+
+\section{Conclusions}
+
+One ideal cardinal L/R/U/D ring supplies three normalization-independent tensor
+harmonics: diagonal transverse anisotropy, $p_{xz}$, and $p_{yz}$.  It has an
+exact $p_{xy}$ geometry null.  Its $p_{zz}$ common mode is measurable with known
+absolute normalization and degenerate with an unknown single-ring scale.
+Multiple polar angles can recover $p_{zz}$ when their acceptance-averaged
+$A_{zz}$ responses differ under a shared constrained normalization, but cannot
+recover $p_{xy}$ while exact cardinal azimuth symmetry remains.
+
+A second station is not automatically a new tensor measurement.  Its value is
+determined by the transported null-space intersection in
+Eq.~\eqref{eq:kernel-intersection} and by nuisance-aware Fisher information.
+For the nominal vertical axial state, magnitude and the tilt generating
+$p_{yz}$ are locally accessible to one ideal station, while the orthogonal tilt
+generating $p_{xy}$ is first-order invisible.  A known complementary spin
+rotation can make that missing direction observable at a second station.
+
+The after-SRC instrument is therefore well motivated as the direct final-energy
+anchor for the intended pure-$p_{yy}$ beam.  A second station should be pursued
+when a real transport map and a quantified null-space or uncertainty reduction
+show that it answers a scientifically distinct downstream question.
+
+\end{document}
