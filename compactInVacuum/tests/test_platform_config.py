@@ -14,6 +14,9 @@ from civ.validation_rules import evaluate_config_rules, rule_status
 
 
 CONFIG_DIR = pathlib.Path(__file__).parent.parent / "config"
+ACCESS_STUDY_CONFIG_DIR = (
+    pathlib.Path(__file__).parent.parent / "studies" / "access_port" / "config"
+)
 
 
 def test_two_compact_deployment_profiles_load() -> None:
@@ -26,6 +29,10 @@ def test_two_compact_deployment_profiles_load() -> None:
     assert samurai.compact_one.deployment.instrument_name == "CompactInVacuum-preSAMURAI"
     assert aftersrc.compact_one.deployment.external_route_module == "afterSRC"
     assert samurai.compact_one.deployment.external_route_module == "infrontofSamuraiMag"
+    assert aftersrc.compact_one.deployment.maintenance_access is not None
+    assert samurai.compact_one.deployment.maintenance_access is None
+    assert samurai.compact_one.deployment.sector_mount("up").wall == "positive_y"
+    assert samurai.compact_one.deployment.sector_mount("up").wall_standoff_mm == 16.0
     assert len(aftersrc.channels) * len(aftersrc.sectors) == 12
     assert len(samurai.channels) * len(samurai.sectors) == 12
 
@@ -116,7 +123,7 @@ def test_aftersrc_uses_only_square_while_samurai_retains_screening_choices() -> 
     assert samurai is not None
 
     assert aftersrc.deployment.selected_chamber_candidate == (
-        "aftersrc_square_service_plate"
+        "aftersrc_square_icf305_access"
     )
     assert {
         item.cross_section for item in aftersrc.deployment.chamber_candidates
@@ -127,6 +134,87 @@ def test_aftersrc_uses_only_square_while_samurai_retains_screening_choices() -> 
     }
     assert aftersrc.deployment.chamber.cross_section == "square"
     assert samurai.deployment.chamber.cross_section == "square"
+
+
+def test_aftersrc_all_metal_maintenance_access_contract() -> None:
+    platform = load_config(str(CONFIG_DIR / "afterSRC_compact.yaml")).compact_one
+    assert platform is not None
+    access = platform.deployment.maintenance_access
+    assert access is not None and access.enabled
+    assert access.selected_candidate == "ICF305"
+    assert access.selected.chamber_candidate == "aftersrc_square_icf305_access"
+    assert access.selected.clear_bore_diameter_mm == pytest.approx(251.0)
+    assert access.seal_type == "conflat_knife_edge_metal_gasket"
+    assert access.seal_material == "oxygen_free_copper"
+    assert not access.elastomer_seal_allowed
+    assert access.helium_leak_rate_max_pa_m3_s == pytest.approx(1.0e-10)
+    assert {candidate.standard for candidate in access.candidates} == {
+        "ICF253",
+        "ICF305",
+        "ICF356",
+    }
+    mounts = {
+        sector: platform.deployment.sector_mount(sector)
+        for sector in ("left", "right", "up", "down")
+    }
+    assert mounts["up"].wall == "negative_x"
+    assert mounts["up"].tangent_coordinate_mm == pytest.approx(180.0)
+    assert mounts["up"].wall_standoff_mm == pytest.approx(75.0)
+    assert mounts["up"].release_clearance_mm == pytest.approx(12.0)
+    assert all(mount.wall != "positive_y" for mount in mounts.values())
+
+
+@pytest.mark.parametrize(
+    ("profile", "standard", "chamber", "length_mm", "clear_bore_mm"),
+    (
+        (
+            "afterSRC_access_icf253.yaml",
+            "ICF253",
+            "aftersrc_square_icf253_access",
+            360.0,
+            198.5,
+        ),
+        (
+            "afterSRC_access_icf305.yaml",
+            "ICF305",
+            "aftersrc_square_icf305_access",
+            420.0,
+            251.0,
+        ),
+        (
+            "afterSRC_access_icf356.yaml",
+            "ICF356",
+            "aftersrc_square_icf356_access",
+            480.0,
+            301.8,
+        ),
+    ),
+)
+def test_aftersrc_access_study_profiles_select_matching_chambers(
+    profile: str,
+    standard: str,
+    chamber: str,
+    length_mm: float,
+    clear_bore_mm: float,
+) -> None:
+    platform = load_config(str(ACCESS_STUDY_CONFIG_DIR / profile)).compact_one
+    assert platform is not None
+    access = platform.deployment.maintenance_access
+    assert access is not None
+    assert access.selected.standard == standard
+    assert platform.deployment.chamber.name == chamber
+    assert platform.deployment.chamber.length_mm == pytest.approx(length_mm)
+    assert access.selected.clear_bore_diameter_mm == pytest.approx(clear_bore_mm)
+
+
+def test_aftersrc_maintenance_access_rejects_elastomer_contract() -> None:
+    cfg = load_config(
+        str(CONFIG_DIR / "afterSRC_compact.yaml"),
+        overrides={"deployment.maintenance_access.elastomer_seal_allowed": True},
+    )
+    rule = _rule_by_name(cfg, "maintenance_access_all_metal_contract")
+    assert not rule.passed
+    assert rule_status(rule, strict=False) == "fail"
 
 
 def test_inherited_config_dependencies_are_hashed(tmp_path: pathlib.Path) -> None:

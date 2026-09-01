@@ -1,0 +1,20 @@
+schema_version: 1
+module: compactOneAfterSRCICF305Study
+intent:
+  description: CompactInVacuum-afterSRC all-metal top maintenance-port recommended prototype using ICF305.
+build:
+  config: ../config/afterSRC_access_icf305.yaml
+  overrides: []
+  doc_name: CompactOne_afterSRC_access_ICF305
+  mode: build
+validation:
+  strict: false
+  angle_tolerance_deg: 0.05
+  radius_tolerance_mm: 0.2
+output:
+  output_dir: ../../../artifacts/access_port_study/icf305
+  basename: CompactOne_afterSRC_access_ICF305
+  formats: [fcstd, step]
+artifacts:
+  report_json: ../../../artifacts/access_port_study/icf305/CompactOne_afterSRC_access_ICF305.validation_report.json
+  channel_manifest_json: ../../../artifacts/access_port_study/icf305/CompactOne_afterSRC_access_ICF305.channel_manifest.json

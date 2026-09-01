@@ -21,6 +21,7 @@ from .layout import (
     placement_from_direction,
     scaled,
 )
+from .support import build_sector_mount
 
 
 @dataclass(frozen=True)
@@ -36,6 +37,9 @@ class SectorHolderGeometry:
     materials: dict[str, str]
     thermal_connections: tuple[tuple[str, str], ...]
     holder_physical_names: tuple[str, ...]
+    stationary_physical_names: tuple[str, ...]
+    stationary_purchased_interface_names: tuple[str, ...]
+    loaded_maintenance_bounds_mm: tuple[float, float, float, float, float, float]
     removal_poses: tuple[Part.Shape, ...]
 
 
@@ -50,6 +54,16 @@ def _segment_keepout(
     return Part.makeCylinder(radius_mm, delta.Length, start, delta)
 
 
+def _physical_solids_only(shape: Part.Shape) -> Part.Shape:
+    solids = [solid.copy() for solid in shape.Solids]
+    if not solids:
+        return shape
+    if len(solids) == 1:
+        return solids[0]
+    # [EN] Boolean cuts against ruled acceptance lofts can retain non-solid cutter residue in an OCC compound; manufactured geometry and its bounds must contain solids only. / [CN] OCC 对规则接收放样体做布尔切除时可能在复合体中残留非实体刀具；制造几何及其边界必须只包含实体。
+    return Part.makeCompound(solids)
+
+
 def _sector_outward(sector: str) -> App.Vector:
     return {
         "left": App.Vector(-1.0, 0.0, 0.0),
@@ -57,6 +71,21 @@ def _sector_outward(sector: str) -> App.Vector:
         "up": App.Vector(0.0, 1.0, 0.0),
         "down": App.Vector(0.0, -1.0, 0.0),
     }[sector]
+
+
+def _aggregate_bounds_mm(
+    shapes: tuple[Part.Shape, ...] | list[Part.Shape],
+) -> tuple[float, float, float, float, float, float]:
+    if not shapes:
+        raise ValueError("loaded sector maintenance envelope requires physical shapes")
+    return (
+        min(float(shape.BoundBox.XMin) for shape in shapes),
+        max(float(shape.BoundBox.XMax) for shape in shapes),
+        min(float(shape.BoundBox.YMin) for shape in shapes),
+        max(float(shape.BoundBox.YMax) for shape in shapes),
+        min(float(shape.BoundBox.ZMin) for shape in shapes),
+        max(float(shape.BoundBox.ZMax) for shape in shapes),
+    )
 
 
 def _sector_tangent(sector: str) -> App.Vector:
@@ -89,27 +118,6 @@ def _web_between(
     ]
     wire = Part.makePolygon([*points, points[0]])
     return Part.Face(wire).extrude(scaled(tangent, thickness_mm))
-
-
-def _oriented_interface_block(
-    center: App.Vector,
-    outward: App.Vector,
-    tangent: App.Vector,
-    radial_depth_mm: float,
-    tangent_width_mm: float,
-    height_mm: float,
-) -> Part.Shape:
-    half_radial = scaled(outward, 0.5 * radial_depth_mm)
-    half_tangent = scaled(tangent, 0.5 * tangent_width_mm)
-    lower_center = center - App.Vector(0.0, 0.0, 0.5 * height_mm)
-    points = [
-        lower_center - half_radial - half_tangent,
-        lower_center + half_radial - half_tangent,
-        lower_center + half_radial + half_tangent,
-        lower_center - half_radial + half_tangent,
-    ]
-    wire = Part.makePolygon([*points, points[0]])
-    return Part.Face(wire).extrude(App.Vector(0.0, 0.0, height_mm))
 
 
 def _placed_local_shape(
@@ -255,116 +263,26 @@ def _local_nest_shapes(
     return cradle, clamp, (fasteners[0], fasteners[1])
 
 
-def _interface_features(
-    cfg: CIVConfig,
-    sector: str,
-    interface_center: App.Vector,
-) -> tuple[
-    Part.Shape,
-    Part.Shape,
-    dict[str, Part.Shape],
-    dict[str, Part.Shape],
-]:
-    holder = cfg.compact_one.sector_holder
-    outward = _sector_outward(sector)
-    tangent = _sector_tangent(sector)
-    radial_depth_mm, tangent_width_mm, height_mm = holder.interface_block_mm
-    block = _oriented_interface_block(
-        interface_center,
-        outward,
-        tangent,
-        radial_depth_mm,
-        tangent_width_mm,
-        height_mm,
-    )
-    bore_start = (
-        interface_center
-        - scaled(outward, 0.5 * radial_depth_mm + 0.2)
-    )
-    pin_center = bore_start - scaled(tangent, 10.0) - App.Vector(0.0, 0.0, 12.0)
-    slot_center = bore_start + scaled(tangent, 10.0) + App.Vector(0.0, 0.0, 12.0)
-    round_bore = Part.makeCylinder(
-        0.5 * holder.locating_pin_diameter_mm,
-        radial_depth_mm + 0.4,
-        pin_center,
-        outward,
-    )
-    slot_delta_mm = max(
-        0.0,
-        holder.locating_slot_length_mm - holder.locating_slot_width_mm,
-    )
-    slot_a = Part.makeCylinder(
-        0.5 * holder.locating_slot_width_mm,
-        radial_depth_mm + 0.4,
-        slot_center - App.Vector(0.0, 0.0, 0.5 * slot_delta_mm),
-        outward,
-    )
-    slot_b = Part.makeCylinder(
-        0.5 * holder.locating_slot_width_mm,
-        radial_depth_mm + 0.4,
-        slot_center + App.Vector(0.0, 0.0, 0.5 * slot_delta_mm),
-        outward,
-    )
-    slot_bore = slot_a.fuse(slot_b)
-    block = block.cut(round_bore).cut(slot_bore)
-
-    plane_center = interface_center + scaled(outward, 0.5 * radial_depth_mm)
-    plane = _oriented_interface_block(
-        plane_center,
-        outward,
-        tangent,
-        0.05,
-        tangent_width_mm,
-        height_mm,
-    )
-    purchased = {
-        f"{sector}_RoundLocatingPinEnvelope": Part.makeCylinder(
-            0.5 * holder.locating_pin_diameter_mm - 0.1,
-            radial_depth_mm,
-            pin_center + scaled(outward, 0.2),
-            outward,
-        ),
-        f"{sector}_SlotLocatingPinEnvelope": Part.makeCylinder(
-            0.5 * holder.locating_slot_width_mm - 0.2,
-            radial_depth_mm,
-            slot_center + scaled(outward, 0.2),
-            outward,
-        ),
-    }
-    datums = {
-        f"{sector}_PrimaryPlaneDatum": plane.copy(),
-        f"{sector}_RoundPinAxisDatum": round_bore.copy(),
-        f"{sector}_ClockingSlotDatum": slot_bore.copy(),
-        f"{sector}_SurveyDatumA": Part.makeSphere(
-            1.0,
-            interface_center - scaled(tangent, 0.35 * tangent_width_mm),
-        ),
-        f"{sector}_SurveyDatumB": Part.makeSphere(
-            1.0,
-            interface_center + scaled(tangent, 0.35 * tangent_width_mm),
-        ),
-        f"{sector}_SurveyDatumC": Part.makeSphere(
-            1.0,
-            interface_center + App.Vector(0.0, 0.0, 0.35 * height_mm),
-        ),
-    }
-    return block, plane, purchased, datums
-
-
 def _sector_removal_poses(
     physical: dict[str, Part.Shape],
-    sector: str,
+    release_direction: App.Vector,
     clearance_mm: float,
 ) -> tuple[Part.Shape, ...]:
-    compound = Part.makeCompound(list(physical.values()))
     sample_count = 4
     samples: list[Part.Shape] = []
     for index in range(sample_count + 1):
         distance_mm = clearance_mm * float(index) / float(sample_count)
-        sample = compound.copy()
-        sample.translate(scaled(_sector_outward(sector), distance_mm))
-        samples.append(sample)
-    # [EN] Five exact solid poses audit the straight radial extraction without the false corner occupancy of a swept axis-aligned bounding box; the motion is purely translational between poses. / [CN] 五个精确实体姿态用于检查直线径向抽出，避免轴对齐扫掠包围盒造成虚假角部占位；姿态之间为纯平移运动。
+        offset = scaled(release_direction, distance_mm)
+        placed_components: list[Part.Shape] = []
+        for shape in physical.values():
+            placed = shape.copy()
+            placed.Placement = App.Placement(
+                offset,
+                App.Rotation(),
+            ).multiply(shape.Placement)
+            placed_components.append(placed)
+        samples.append(Part.makeCompound(placed_components))
+    # [EN] Rebuilding every pose from independent component copies prevents OpenCASCADE compound placement from mutating the source holder; the first motion disengages the fixed-wall locating interface inward before any top-port reorientation. / [CN] 每个姿态都由独立零件副本重建，避免 OpenCASCADE 复合体位姿反向修改源支架；第一阶段先向内脱离固定壁定位接口，再进行顶口转向。
     return tuple(samples)
 
 
@@ -413,6 +331,8 @@ def build_sector_holder(
     materials: dict[str, str] = {}
     thermal_connections: list[tuple[str, str]] = []
     holder_physical_names: list[str] = []
+    stationary_physical_names: list[str] = []
+    stationary_purchased_interface_names: list[str] = []
     route_starts: dict[str, App.Vector] = {}
     node_centers: list[App.Vector] = []
 
@@ -446,6 +366,14 @@ def build_sector_holder(
 
     outward = _sector_outward(sector)
     tangent = _sector_tangent(sector)
+    mount = cfg.compact_one.deployment.sector_mount(sector)
+    mount_geometry = build_sector_mount(
+        cfg,
+        sector,
+        sum(point.z for point in node_centers) / len(node_centers),
+    )
+    mount_outward = mount_geometry.outward
+    mount_tangent = mount_geometry.tangent
     plate_parts: list[Part.Shape] = [
         Part.makeCylinder(
             holder.carrier_node_radius_mm,
@@ -470,22 +398,7 @@ def build_sector_holder(
             )
         )
 
-    transverse_half_size_mm = (
-        0.5
-        * (
-            cfg.vessel.inner_size_x_mm
-            if sector in {"left", "right"}
-            else cfg.vessel.inner_size_y_mm
-        )
-    )
-    interface_center = (
-        scaled(outward, transverse_half_size_mm - routing.wall_clearance_mm)
-        + App.Vector(
-            0.0,
-            0.0,
-            sum(point.z for point in node_centers) / len(node_centers),
-        )
-    )
+    interface_center = mount_geometry.interface_center
     outer_node = max(
         node_centers,
         key=lambda point: point.dot(outward),
@@ -494,7 +407,11 @@ def build_sector_holder(
         _web_between(
             outer_node,
             interface_center,
-            tangent,
+            (
+                tangent
+                if (mount_outward - outward).Length <= 1.0e-9
+                else App.Vector(0.0, 0.0, 1.0)
+            ),
             holder.common_bracket_width_mm,
             holder.carrier_plate_thickness_mm,
         )
@@ -502,24 +419,29 @@ def build_sector_holder(
     carrier_plate = plate_parts[0]
     for part in plate_parts[1:]:
         carrier_plate = carrier_plate.fuse(part)
+    carrier_plate_maintenance_envelope = carrier_plate.copy()
 
     # [EN] Machine the detector withdrawal bores and expanded acceptance windows into the one-piece plate; this keeps the carrier coherent without placing material in any full-disc particle cone. / [CN] 在整体载板上加工探测器抽出孔和扩张后的接收窗；既保持载板连贯，又避免材料进入任何完整灵敏圆面的粒子锥。
     for placement in placements:
-        carrier_plate = carrier_plate.cut(
-            keepouts[f"{placement.tag}_DetectorRemovalEnvelope"]
-        )
-        carrier_plate = carrier_plate.cut(
-            build_active_acceptance_cone(
-                cfg,
-                placement,
-                radial_clearance_mm=holder.acceptance_clearance_mm,
-                extend_past_active_mm=(
-                    detector.physical_depth_mm
-                    + holder.nest_axial_depth_mm
-                    + holder.acceptance_clearance_mm
-                ),
+        removal_envelope = keepouts[f"{placement.tag}_DetectorRemovalEnvelope"]
+        if carrier_plate.distToShape(removal_envelope)[0] <= 1.0e-7:
+            carrier_plate = _physical_solids_only(
+                carrier_plate.cut(removal_envelope)
             )
+        acceptance_window = build_active_acceptance_cone(
+            cfg,
+            placement,
+            radial_clearance_mm=holder.acceptance_clearance_mm,
+            extend_past_active_mm=(
+                detector.physical_depth_mm
+                + holder.nest_axial_depth_mm
+                + holder.acceptance_clearance_mm
+            ),
         )
+        if carrier_plate.distToShape(acceptance_window)[0] <= 1.0e-7:
+            carrier_plate = _physical_solids_only(
+                carrier_plate.cut(acceptance_window)
+            )
 
     plate_name = f"{sector}_SectorCarrierPlate"
     physical[plate_name] = carrier_plate
@@ -552,24 +474,51 @@ def build_sector_holder(
             )
         )
 
-    interface_block, mount_plane, purchased, interface_datums = _interface_features(
-        cfg,
-        sector,
-        interface_center,
-    )
+    interface_block = mount_geometry.interface_block
+    holder_dock_plane = mount_geometry.holder_dock_plane
+    stationary_support = mount_geometry.stationary_support
+    chamber_mount_plane = mount_geometry.chamber_mount_plane
+    purchased = mount_geometry.stationary_purchased_interfaces
+    interface_datums = mount_geometry.datums
     block_name = f"{sector}_SectorInterfaceBlock"
+    dock_name = f"{sector}_HolderDockInterface"
+    support_name = f"{sector}_PermanentWallSupport"
     interface_name = f"{sector}_ChamberMountInterface"
     physical[block_name] = interface_block
+    physical[support_name] = stationary_support
     materials[block_name] = "aluminum_6061_provisional"
+    materials[support_name] = "stainless_304L"
     holder_physical_names.append(block_name)
-    interfaces[interface_name] = mount_plane
+    stationary_physical_names.append(support_name)
+    interfaces[dock_name] = holder_dock_plane
+    interfaces[interface_name] = chamber_mount_plane
     purchased_interfaces.update(purchased)
+    stationary_purchased_interface_names.extend(purchased)
     datums.update(interface_datums)
     thermal_connections.extend(
         (
             (plate_name, block_name),
-            (block_name, interface_name),
+            (block_name, dock_name),
+            (dock_name, support_name),
+            (support_name, interface_name),
         )
+    )
+
+    # [EN] Capture the complete loaded holder before acceptance-window Booleans; subtraction can only reduce this conservative envelope, and the metadata remains stable across OCC residual-edge behavior. / [CN] 在接收窗布尔切除前记录装载完整探测器的支架包络；减法只会缩小这一保守包络，且该元数据不受 OCC 残余边行为影响。
+    loaded_maintenance_bounds_mm = _aggregate_bounds_mm(
+        [
+            *(
+                shape
+                for name, shape in physical.items()
+                if name != plate_name and name not in stationary_physical_names
+            ),
+            carrier_plate_maintenance_envelope,
+            *(
+                shape
+                for name, shape in purchased_interfaces.items()
+                if name not in stationary_purchased_interface_names
+            ),
+        ]
     )
 
     # [EN] Every nest and clamp is machined against all three complete-disc acceptance windows in its sector, so nearby channels cannot be shadowed by a generous raw stock profile. / [CN] 每个巢座和压桥均按本扇区三个完整灵敏圆面接收窗加工避让，避免宽裕毛坯轮廓遮挡相邻通道。
@@ -589,13 +538,14 @@ def build_sector_holder(
     for name in holder_physical_names:
         shape = physical[name]
         for window in expanded_acceptance:
-            shape = shape.cut(window)
+            if shape.distToShape(window)[0] <= 1.0e-7:
+                shape = _physical_solids_only(shape.cut(window))
         physical[name] = shape
 
     service_junction = (
         interface_center
-        - scaled(outward, 0.5 * holder.interface_block_mm[0] + 6.0)
-        + scaled(tangent, holder.service_lane_offset_mm)
+        - scaled(mount_outward, 0.5 * holder.interface_block_mm[0] + 6.0)
+        + scaled(mount_tangent, holder.service_lane_offset_mm)
     )
     cable_radius_mm = 0.5 * routing.cable_keepout_diameter_mm
     for index, placement in enumerate(placements):
@@ -644,16 +594,26 @@ def build_sector_holder(
     keepouts[f"{sector}_RearCableLane"] = rear_cable_lane
     # [EN] A common rear lane is cut through the carrier at the service junction; twelve independent rails are not recreated as cable supports. / [CN] 在服务汇合点为公共后部走线槽加工载板避让；不会以电缆支撑之名重新生成十二根独立导轨。
     for name in holder_physical_names:
-        physical[name] = physical[name].cut(rear_cable_lane)
+        shape = physical[name]
+        if shape.distToShape(rear_cable_lane)[0] <= 1.0e-7:
+            physical[name] = _physical_solids_only(shape.cut(rear_cable_lane))
+        # [EN] A disjoint Boolean cut is skipped because some FreeCAD/OpenCASCADE builds return a compound carrying the cutter envelope, corrupting the part bounds used for access sizing. / [CN] 对不相交实体跳过布尔切除，因为部分 FreeCAD/OpenCASCADE 版本会返回携带刀具体包络的复合体，进而污染操作口定尺寸所用的零件边界。
 
     removal_poses = _sector_removal_poses(
         {
-            name: shape
-            for name, shape in physical.items()
-            if name in holder_physical_names
+            **{
+                name: shape
+                for name, shape in physical.items()
+                if name not in stationary_physical_names
+            },
+            **{
+                name: shape
+                for name, shape in purchased_interfaces.items()
+                if name not in stationary_purchased_interface_names
+            },
         },
-        sector,
-        holder.sector_removal_clearance_mm,
+        mount_geometry.release_direction,
+        mount.release_clearance_mm,
     )
     keepouts[f"{sector}_SectorRemovalEnvelope"] = _sector_removal_envelope(
         removal_poses
@@ -661,8 +621,11 @@ def build_sector_holder(
     keepouts[f"{sector}_ToolAccessEnvelope"] = Part.makeCylinder(
         0.5 * holder.interface_block_mm[1],
         holder.tool_clearance_mm,
-        interface_center + scaled(outward, 0.5 * holder.interface_block_mm[0]),
-        outward,
+        interface_center - scaled(
+            mount_outward,
+            0.5 * holder.interface_block_mm[0],
+        ),
+        scaled(mount_outward, -1.0),
     )
     return SectorHolderGeometry(
         sector=sector,
@@ -676,6 +639,11 @@ def build_sector_holder(
         materials=materials,
         thermal_connections=tuple(thermal_connections),
         holder_physical_names=tuple(holder_physical_names),
+        stationary_physical_names=tuple(stationary_physical_names),
+        stationary_purchased_interface_names=tuple(
+            stationary_purchased_interface_names
+        ),
+        loaded_maintenance_bounds_mm=loaded_maintenance_bounds_mm,
         removal_poses=removal_poses,
     )
 

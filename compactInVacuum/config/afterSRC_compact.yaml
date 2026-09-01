@@ -10,11 +10,11 @@ deployment:
   detector_location: in_vacuum
   external_route_module: afterSRC
   external_route_status: legacy_fallback_reference
-  selected_chamber_candidate: aftersrc_square_service_plate
+  selected_chamber_candidate: aftersrc_square_icf305_access
   chamber_candidates:
-    - name: aftersrc_square_service_plate
+    - name: aftersrc_square_icf253_access
       cross_section: square
-      status: recommended
+      status: provisional
       inner_size_x_mm: 440.0
       inner_size_y_mm: 440.0
       length_mm: 360.0
@@ -22,8 +22,32 @@ deployment:
       wall_thickness_mm: 8.0
       wall_thickness_status: provisional
       material: stainless_304L
-      service_accessibility: removable_top_service_manifold
-      service_plate_concept: flat_top_wall_with_removable_bought_out_feedthroughs
+      service_accessibility: top_icf253_metal_seal_access_study
+      service_plate_concept: circular_icf_port_with_removable_blind_flange
+    - name: aftersrc_square_icf305_access
+      cross_section: square
+      status: recommended
+      inner_size_x_mm: 440.0
+      inner_size_y_mm: 440.0
+      length_mm: 420.0
+      center_z_mm: 160.0
+      wall_thickness_mm: 8.0
+      wall_thickness_status: provisional
+      material: stainless_304L
+      service_accessibility: top_icf305_metal_seal_access
+      service_plate_concept: circular_icf_port_with_removable_blind_flange
+    - name: aftersrc_square_icf356_access
+      cross_section: square
+      status: provisional
+      inner_size_x_mm: 440.0
+      inner_size_y_mm: 440.0
+      length_mm: 480.0
+      center_z_mm: 190.0
+      wall_thickness_mm: 8.0
+      wall_thickness_status: provisional
+      material: stainless_304L
+      service_accessibility: top_icf356_metal_seal_access_study
+      service_plate_concept: circular_icf_port_with_removable_blind_flange
   beam_stay_clear_diameter_mm: 20.0
   beam_stay_clear_status: provisional
   available_envelope_mm:
@@ -93,6 +117,103 @@ deployment:
     - unresolved_site_gauge_and_safety_connection
   support_alignment_status: placeholder
   external_service_envelope_status: placeholder
+  maintenance_access:
+    enabled: true
+    status: recommended
+    wall: positive_y_top
+    selected_candidate: ICF305
+    supplier: unresolved
+    fixed_flange_part_number: unresolved
+    blank_flange_part_number: unresolved
+    certified_drawing_reference: unresolved
+    dimensions_status: provisional
+    seal_type: conflat_knife_edge_metal_gasket
+    seal_material: oxygen_free_copper
+    elastomer_seal_allowed: false
+    helium_leak_rate_max_pa_m3_s: 1.0e-10
+    flange_edge_margin_mm: 15.0
+    service_port_clearance_mm: 10.0
+    passage_diametral_clearance_mm: 10.0
+    complete_extraction_status: placeholder
+    candidates:
+      - standard: ICF253
+        status: placeholder
+        disposition: rejected_insufficient_passage_with_fixed_support
+        chamber_candidate: aftersrc_square_icf253_access
+        center_x_mm: 0.0
+        center_z_mm: 160.0
+        flange_outer_diameter_mm: 253.0
+        clear_bore_diameter_mm: 198.5
+        counterbore_diameter_mm: 203.5
+        counterbore_depth_mm: 12.5
+        pipe_outer_diameter_mm: 203.0
+        flange_thickness_mm: 25.0
+        bolt_circle_diameter_mm: 231.8
+        bolt_count: 24
+        bolt_hole_diameter_mm: 8.4
+        gasket_outer_diameter_mm: 222.1
+        gasket_inner_diameter_mm: 203.2
+        gasket_thickness_mm: 2.0
+        weld_neck_length_mm: 25.0
+      - standard: ICF305
+        status: recommended
+        disposition: active_prototype
+        chamber_candidate: aftersrc_square_icf305_access
+        center_x_mm: 0.0
+        center_z_mm: 190.0
+        flange_outer_diameter_mm: 305.0
+        clear_bore_diameter_mm: 251.0
+        counterbore_diameter_mm: 254.5
+        counterbore_depth_mm: 12.7
+        pipe_outer_diameter_mm: 254.0
+        flange_thickness_mm: 25.9
+        bolt_circle_diameter_mm: 284.0
+        bolt_count: 32
+        bolt_hole_diameter_mm: 8.4
+        gasket_outer_diameter_mm: 272.9
+        gasket_inner_diameter_mm: 254.2
+        gasket_thickness_mm: 2.0
+        weld_neck_length_mm: 25.0
+      - standard: ICF356
+        status: provisional
+        disposition: enlarged_envelope_comparison
+        chamber_candidate: aftersrc_square_icf356_access
+        center_x_mm: 0.0
+        center_z_mm: 230.0
+        flange_outer_diameter_mm: 356.0
+        clear_bore_diameter_mm: 301.8
+        counterbore_diameter_mm: 305.3
+        counterbore_depth_mm: 12.7
+        pipe_outer_diameter_mm: 305.0
+        flange_thickness_mm: 28.5
+        bolt_circle_diameter_mm: 325.4
+        bolt_count: 30
+        bolt_hole_diameter_mm: 10.5
+        gasket_outer_diameter_mm: 313.0
+        gasket_inner_diameter_mm: 300.0
+        gasket_thickness_mm: 2.0
+        weld_neck_length_mm: 25.0
+  sector_mounts:
+    - sector: left
+      wall: negative_x
+      tangent_coordinate_mm: 0.0
+      wall_standoff_mm: 16.0
+      release_clearance_mm: 12.0
+    - sector: right
+      wall: positive_x
+      tangent_coordinate_mm: 0.0
+      wall_standoff_mm: 16.0
+      release_clearance_mm: 12.0
+    - sector: up
+      wall: negative_x
+      tangent_coordinate_mm: 180.0
+      wall_standoff_mm: 75.0
+      release_clearance_mm: 12.0
+    - sector: down
+      wall: negative_y
+      tangent_coordinate_mm: 0.0
+      wall_standoff_mm: 16.0
+      release_clearance_mm: 12.0
   service_ports:
     - name: rotary_target
       role: rotary
@@ -104,32 +225,32 @@ deployment:
     - name: sector_left
       role: signal
       sector: left
-      center_x_mm: -155.0
-      center_z_mm: 140.0
+      center_x_mm: -175.0
+      center_z_mm: 10.0
       bore_diameter_mm: 38.0
       collar_outer_diameter_mm: 42.0
       collar_length_mm: 8.0
     - name: sector_right
       role: signal
       sector: right
-      center_x_mm: 155.0
-      center_z_mm: 140.0
+      center_x_mm: 175.0
+      center_z_mm: 10.0
       bore_diameter_mm: 38.0
       collar_outer_diameter_mm: 42.0
       collar_length_mm: 8.0
     - name: sector_up
       role: signal
       sector: up
-      center_x_mm: -70.0
-      center_z_mm: 255.0
+      center_x_mm: -175.0
+      center_z_mm: 90.0
       bore_diameter_mm: 38.0
       collar_outer_diameter_mm: 42.0
       collar_length_mm: 8.0
     - name: sector_down
       role: signal
       sector: down
-      center_x_mm: 70.0
-      center_z_mm: 255.0
+      center_x_mm: 175.0
+      center_z_mm: 90.0
       bore_diameter_mm: 38.0
       collar_outer_diameter_mm: 42.0
       collar_length_mm: 8.0

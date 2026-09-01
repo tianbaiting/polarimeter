@@ -133,11 +133,13 @@ M3 and locating-pin geometry demonstrates assembly access only. Fastener selecti
 
 Detector heads are inserted axially from the rear, stopped on the rear mounting face, clocked by the D-flat, and retained by the removable bridge. Clamp fasteners are accessed from the rear. Releasing one bridge permits removal of one head without removing the other two.
 
-The whole sector is located by a plane–pin–slot interface and extracted radially outward. Five exact solid poses sample the straight 70 mm extraction path. The displayed removal overlay is diagnostic only; collision validation uses the exact sampled holder solids.
+The whole sector is located by a plane–pin–slot interface. For the afterSRC fixed-wall support study, five exact solid poses sample an initial `12 mm` translation inward from the configured stationary mounting wall to disengage the pins; this is only the release stage. The subsequent translation, reorientation, and lift through the top access port remain a separate unresolved continuous motion. The former straight `70 mm` radial path shall not be used as evidence of complete extraction.
 
 The plate, nests, clamps, and fastener envelopes shall clear every complete active-acceptance cone. The plate includes a common rear service-lane relief. Arbitrary per-detector wall rails, wall anchors, cylindrical thermal straps, and a synthesized wall backbone are prohibited.
 
 The holder is a provisional manufacturable concept, not a released drawing. Tool access, chamber closure, pin retention, tolerances, surface finish, and production fasteners remain to be resolved.
+
+Every removable sector-holder structural interface shall contact either a permanent chamber wall or a separately defined stationary load-bearing pad/pedestal with zero geometric gap. Every stationary pad/pedestal shall in turn contact a permanent chamber wall with zero gap. A protective-ground strap is electrical bonding only and shall never be used to bridge a structural mounting gap or satisfy the load path.
 
 ## 7. Physical and overlay roles
 
@@ -173,6 +175,7 @@ Material-based colors and transparency support inspection but are not geometry r
 - Four sector-grouped signal feedthrough interfaces provide sixteen provisional slots.
 - One protective/equipotential bond per sector is required.
 - Signal shields are not the sole protective-earth path.
+- Each protective bond shall have nonzero physical length and contact both the removable holder/block and the stationary support/permanent chamber. A zero-length marker, virtual datum, locating pin, or coax shield does not satisfy this requirement.
 - Cable routes, connector keepouts, bend envelopes, and centerlines are nonphysical overlays unless explicitly classified otherwise.
 - No dedicated temperature or housekeeping feedthrough is generated.
 
@@ -219,16 +222,23 @@ Validation also requires:
 - a closed vacuum control volume;
 - all internal physical parts inside the selected chamber;
 - connected passive thermal paths.
+- zero-gap removable-holder-to-stationary-support and stationary-support-to-permanent-wall structural paths;
+- no detector support, locating pin, ground bond, or permanent support inside the removable access-closure lift corridor.
 
 ## 11. Deployment profiles
 
 ### 11.1 CompactInVacuum-afterSRC
 
 - Baseline instrument downstream of SRC.
-- Selected screening chamber: square 440 × 440 mm internal section, provisional.
+- Selected screening chamber: square 440 × 440 mm internal section, provisional. The active ICF305 maintenance-access integration study length is 420 mm with the upstream outer face retained at `z=-50 mm`; the former 360 mm body remains the ICF253 comparison envelope and is not silently treated as the active access-port design.
 - A cylindrical afterSRC chamber is not part of the selected CompactInVacuum-afterSRC profile.
 - Front/rear ICF114 values are legacy/provisional evidence, not approved site requirements.
-- Available envelope, service-removal closure, purchased interface drawings, support datum, and pressure-vessel release remain unresolved.
+- The maintenance opening is a top-wall circular ICF port with a removable ICF blank flange. Elastomer/O-ring sealing is prohibited for this deployment; the screening seal is an oxygen-free-copper metal gasket. The maximum allowable helium leak rate is `1.0e-10 Pa m^3/s`, based on the user-supplied Toshiba inspection sheet; document identity and applicability to the complete compact chamber remain to be closed before fabrication release.
+- The access-port comparison family is `ICF253`, `ICF305`, and `ICF356`. Vendor-catalog screening dimensions distinguish the flange hole from the applicable pipe outside diameter: ICF253 uses a `198.5 mm` flange bore / `203 mm` pipe OD, ICF305 uses `251.0 mm` / `254 mm`, and ICF356 uses `301.8 mm` / `305 mm`. ICF305 is the active recommended prototype; ICF253 is retained as a rejected comparison because the corrected removable UP holder plus allowance does not pass even the edge-on screen, and ICF356 remains the enlarged-envelope comparison.
+- A top access flange alone does not close the sector-removal requirement. Validation shall separately report: flange-to-chamber fit, flange-to-service-port clearance, detached-holder passage screening, and the complete installed-holder release/reorientation/lift path. The existing straight `70 mm` radial release path shall not be re-labelled as a successful top-port extraction path.
+- The removable ICF fixed/blank closure owns no detector support, locating datum, structural fastener, thermal sink, protective-ground termination, cable clamp, or target-mechanism load. Removing the blank flange shall leave all internal detector supports positioned on permanent chamber structure.
+- The afterSRC ICF305 integration routes LEFT to the permanent `-X` wall, RIGHT to `+X`, DOWN to `-Y`, and relocates the UP-sector structural interface to a stationary `-X` side-wall pedestal near `y=180 mm`, adjacent to the UP-sector signal-service side. The long wall-reaching member belongs to the stationary chamber structure, not the removable UP holder; the removable holder docks to the inner pad and shall still pass the ICF305 bore. All stationary wall supports shall physically contact their permanent wall and their removable holder interface rather than leave a gap bridged only by an electrical ground strap.
+- Available envelope, the complete service-removal motion, purchased ICF305 interface drawing, support datum, and pressure-vessel release remain unresolved.
 - The preserved external afterSRC route remains a legacy fallback/reference.
 
 ### 11.2 CompactInVacuum-preSAMURAI
@@ -254,6 +264,7 @@ Current legitimate strict gates include:
 - chamber external-pressure/buckling FEA;
 - site envelopes;
 - resolved sector-removal access closure.
+- afterSRC maintenance-port metal-seal evidence, helium-leak acceptance, flange/service clearances, and complete extraction motion.
 
 ## 13. Schema migration
 
@@ -300,3 +311,5 @@ Runtime state, caches, and machine-specific files remain untracked.
 - 2026-07-27 v1.0: established a common CompactInVacuum platform with two baseline deployments.
 - 2026-07-29 v2.0: removed temperature monitoring end-to-end; replaced the long cassette with a 9.70 mm calculated detector head; replaced arbitrary rails with one coherent sector carrier; added engineering display roles, removal validation, and schema-v3 migration.
 - 2026-07-29 v2.1: selected the square 440 × 440 mm screening chamber for CompactInVacuum-afterSRC and removed its cylindrical chamber candidate.
+- 2026-08-30 v2.2: froze the afterSRC maintenance opening as an all-metal top ICF port with an oxygen-free-copper gasket and `1.0e-10 Pa m^3/s` helium-leak criterion; added ICF253/305/356 comparison candidates, selected ICF305 for the active prototype, and kept complete sector extraction as an independently validated unresolved motion.
+- 2026-08-30 v2.3: prohibited all detector support/datum/ground ownership on the removable ICF closure; required zero-gap removable-holder-to-stationary-pad-to-permanent-wall load paths; and moved the afterSRC UP-sector mount from the opened `+Y` wall to a stationary `-X` side-wall pedestal while keeping the long wall-reaching member out of the removable holder.

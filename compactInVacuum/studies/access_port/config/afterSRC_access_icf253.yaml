@@ -1,0 +1,7 @@
+extends: ../../../config/afterSRC_compact.yaml
+doc_name: CompactOne_afterSRC_access_ICF253
+
+deployment:
+  selected_chamber_candidate: aftersrc_square_icf253_access
+  maintenance_access:
+    selected_candidate: ICF253

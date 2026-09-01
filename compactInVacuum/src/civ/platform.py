@@ -309,6 +309,74 @@ class ChamberCandidateSpec:
 
 
 @dataclass(frozen=True)
+class MaintenanceAccessFlangeSpec:
+    standard: str
+    status: str
+    disposition: str
+    chamber_candidate: str
+    center_x_mm: float
+    center_z_mm: float
+    flange_outer_diameter_mm: float
+    clear_bore_diameter_mm: float
+    counterbore_diameter_mm: float
+    counterbore_depth_mm: float
+    pipe_outer_diameter_mm: float
+    flange_thickness_mm: float
+    bolt_circle_diameter_mm: float
+    bolt_count: int
+    bolt_hole_diameter_mm: float
+    gasket_outer_diameter_mm: float
+    gasket_inner_diameter_mm: float
+    gasket_thickness_mm: float
+    weld_neck_length_mm: float
+
+
+@dataclass(frozen=True)
+class MaintenanceAccessSpec:
+    enabled: bool
+    status: str
+    wall: str
+    selected_candidate: str
+    supplier: str
+    fixed_flange_part_number: str
+    blank_flange_part_number: str
+    certified_drawing_reference: str
+    dimensions_status: str
+    seal_type: str
+    seal_material: str
+    elastomer_seal_allowed: bool
+    helium_leak_rate_max_pa_m3_s: float
+    flange_edge_margin_mm: float
+    service_port_clearance_mm: float
+    passage_diametral_clearance_mm: float
+    complete_extraction_status: str
+    candidates: tuple[MaintenanceAccessFlangeSpec, ...]
+
+    @property
+    def selected(self) -> MaintenanceAccessFlangeSpec:
+        matches = [
+            candidate
+            for candidate in self.candidates
+            if candidate.standard == self.selected_candidate
+        ]
+        if len(matches) != 1:
+            raise ValueError(
+                "deployment.maintenance_access.selected_candidate must identify "
+                "exactly one flange candidate"
+            )
+        return matches[0]
+
+
+@dataclass(frozen=True)
+class SectorMountSpec:
+    sector: str
+    wall: str
+    tangent_coordinate_mm: float
+    wall_standoff_mm: float
+    release_clearance_mm: float
+
+
+@dataclass(frozen=True)
 class ServicePortPlacementSpec:
     name: str
     role: str
@@ -340,6 +408,8 @@ class DeploymentSpec:
     pump_gauge_requirements: tuple[str, ...]
     support_alignment_status: str
     external_service_envelope_status: str
+    maintenance_access: MaintenanceAccessSpec | None
+    sector_mounts: tuple[SectorMountSpec, ...]
     service_ports: tuple[ServicePortPlacementSpec, ...]
 
     @property
@@ -354,6 +424,28 @@ class DeploymentSpec:
                 "deployment.selected_chamber_candidate must identify exactly one candidate"
             )
         return matches[0]
+
+    def sector_mount(self, sector: str) -> SectorMountSpec:
+        matches = [item for item in self.sector_mounts if item.sector == sector]
+        if len(matches) == 1:
+            return matches[0]
+        if matches:
+            raise ValueError(f"deployment.sector_mounts duplicates sector {sector!r}")
+        default_wall = {
+            "left": "negative_x",
+            "right": "positive_x",
+            "up": "positive_y",
+            "down": "negative_y",
+        }.get(sector)
+        if default_wall is None:
+            raise ValueError(f"unsupported sector mount: {sector!r}")
+        return SectorMountSpec(
+            sector=sector,
+            wall=default_wall,
+            tangent_coordinate_mm=0.0,
+            wall_standoff_mm=16.0,
+            release_clearance_mm=12.0,
+        )
 
 
 @dataclass(frozen=True)
@@ -1267,6 +1359,264 @@ def _parse_chamber_candidate(raw: Mapping[str, Any], prefix: str) -> ChamberCand
     return spec
 
 
+def _parse_maintenance_access(
+    raw: Mapping[str, Any] | None,
+) -> MaintenanceAccessSpec | None:
+    if raw is None:
+        return None
+    prefix = "deployment.maintenance_access"
+    candidates: list[MaintenanceAccessFlangeSpec] = []
+    for idx, item in enumerate(_items(raw.get("candidates"), f"{prefix}.candidates")):
+        entry_prefix = f"{prefix}.candidates[{idx}]"
+        entry = _mapping(item, entry_prefix)
+        candidate = MaintenanceAccessFlangeSpec(
+            standard=_text(entry.get("standard"), f"{entry_prefix}.standard"),
+            status=_state(entry.get("status"), f"{entry_prefix}.status"),
+            disposition=_text(
+                entry.get("disposition"),
+                f"{entry_prefix}.disposition",
+            ),
+            chamber_candidate=_text(
+                entry.get("chamber_candidate"),
+                f"{entry_prefix}.chamber_candidate",
+            ),
+            center_x_mm=_number(
+                entry.get("center_x_mm"),
+                f"{entry_prefix}.center_x_mm",
+            ),
+            center_z_mm=_number(
+                entry.get("center_z_mm"),
+                f"{entry_prefix}.center_z_mm",
+            ),
+            flange_outer_diameter_mm=_positive(
+                _number(
+                    entry.get("flange_outer_diameter_mm"),
+                    f"{entry_prefix}.flange_outer_diameter_mm",
+                ),
+                f"{entry_prefix}.flange_outer_diameter_mm",
+            ),
+            clear_bore_diameter_mm=_positive(
+                _number(
+                    entry.get("clear_bore_diameter_mm"),
+                    f"{entry_prefix}.clear_bore_diameter_mm",
+                ),
+                f"{entry_prefix}.clear_bore_diameter_mm",
+            ),
+            counterbore_diameter_mm=_positive(
+                _number(
+                    entry.get("counterbore_diameter_mm"),
+                    f"{entry_prefix}.counterbore_diameter_mm",
+                ),
+                f"{entry_prefix}.counterbore_diameter_mm",
+            ),
+            counterbore_depth_mm=_positive(
+                _number(
+                    entry.get("counterbore_depth_mm"),
+                    f"{entry_prefix}.counterbore_depth_mm",
+                ),
+                f"{entry_prefix}.counterbore_depth_mm",
+            ),
+            pipe_outer_diameter_mm=_positive(
+                _number(
+                    entry.get("pipe_outer_diameter_mm"),
+                    f"{entry_prefix}.pipe_outer_diameter_mm",
+                ),
+                f"{entry_prefix}.pipe_outer_diameter_mm",
+            ),
+            flange_thickness_mm=_positive(
+                _number(
+                    entry.get("flange_thickness_mm"),
+                    f"{entry_prefix}.flange_thickness_mm",
+                ),
+                f"{entry_prefix}.flange_thickness_mm",
+            ),
+            bolt_circle_diameter_mm=_positive(
+                _number(
+                    entry.get("bolt_circle_diameter_mm"),
+                    f"{entry_prefix}.bolt_circle_diameter_mm",
+                ),
+                f"{entry_prefix}.bolt_circle_diameter_mm",
+            ),
+            bolt_count=_integer(
+                entry.get("bolt_count"),
+                f"{entry_prefix}.bolt_count",
+            ),
+            bolt_hole_diameter_mm=_positive(
+                _number(
+                    entry.get("bolt_hole_diameter_mm"),
+                    f"{entry_prefix}.bolt_hole_diameter_mm",
+                ),
+                f"{entry_prefix}.bolt_hole_diameter_mm",
+            ),
+            gasket_outer_diameter_mm=_positive(
+                _number(
+                    entry.get("gasket_outer_diameter_mm"),
+                    f"{entry_prefix}.gasket_outer_diameter_mm",
+                ),
+                f"{entry_prefix}.gasket_outer_diameter_mm",
+            ),
+            gasket_inner_diameter_mm=_positive(
+                _number(
+                    entry.get("gasket_inner_diameter_mm"),
+                    f"{entry_prefix}.gasket_inner_diameter_mm",
+                ),
+                f"{entry_prefix}.gasket_inner_diameter_mm",
+            ),
+            gasket_thickness_mm=_positive(
+                _number(
+                    entry.get("gasket_thickness_mm"),
+                    f"{entry_prefix}.gasket_thickness_mm",
+                ),
+                f"{entry_prefix}.gasket_thickness_mm",
+            ),
+            weld_neck_length_mm=_positive(
+                _number(
+                    entry.get("weld_neck_length_mm"),
+                    f"{entry_prefix}.weld_neck_length_mm",
+                ),
+                f"{entry_prefix}.weld_neck_length_mm",
+            ),
+        )
+        if candidate.bolt_count <= 0:
+            raise ValueError(f"{entry_prefix}.bolt_count must be > 0")
+        if not (
+            candidate.clear_bore_diameter_mm
+            < candidate.counterbore_diameter_mm
+            < candidate.flange_outer_diameter_mm
+        ):
+            raise ValueError(
+                f"{entry_prefix} requires clear bore < counterbore < flange OD"
+            )
+        if candidate.counterbore_depth_mm >= candidate.flange_thickness_mm:
+            raise ValueError(
+                f"{entry_prefix}.counterbore_depth_mm must be less than flange thickness"
+            )
+        if not (
+            candidate.gasket_inner_diameter_mm
+            < candidate.gasket_outer_diameter_mm
+            < candidate.flange_outer_diameter_mm
+        ):
+            raise ValueError(
+                f"{entry_prefix} requires gasket ID < gasket OD < flange OD"
+            )
+        candidates.append(candidate)
+    spec = MaintenanceAccessSpec(
+        enabled=_boolean(raw.get("enabled"), f"{prefix}.enabled"),
+        status=_state(raw.get("status"), f"{prefix}.status"),
+        wall=_text(raw.get("wall"), f"{prefix}.wall"),
+        selected_candidate=_text(
+            raw.get("selected_candidate"),
+            f"{prefix}.selected_candidate",
+        ),
+        supplier=_text(raw.get("supplier"), f"{prefix}.supplier"),
+        fixed_flange_part_number=_text(
+            raw.get("fixed_flange_part_number"),
+            f"{prefix}.fixed_flange_part_number",
+        ),
+        blank_flange_part_number=_text(
+            raw.get("blank_flange_part_number"),
+            f"{prefix}.blank_flange_part_number",
+        ),
+        certified_drawing_reference=_text(
+            raw.get("certified_drawing_reference"),
+            f"{prefix}.certified_drawing_reference",
+        ),
+        dimensions_status=_state(
+            raw.get("dimensions_status"),
+            f"{prefix}.dimensions_status",
+        ),
+        seal_type=_text(raw.get("seal_type"), f"{prefix}.seal_type"),
+        seal_material=_text(raw.get("seal_material"), f"{prefix}.seal_material"),
+        elastomer_seal_allowed=_boolean(
+            raw.get("elastomer_seal_allowed"),
+            f"{prefix}.elastomer_seal_allowed",
+        ),
+        helium_leak_rate_max_pa_m3_s=_positive(
+            _number(
+                raw.get("helium_leak_rate_max_pa_m3_s"),
+                f"{prefix}.helium_leak_rate_max_pa_m3_s",
+            ),
+            f"{prefix}.helium_leak_rate_max_pa_m3_s",
+        ),
+        flange_edge_margin_mm=_positive(
+            _number(
+                raw.get("flange_edge_margin_mm"),
+                f"{prefix}.flange_edge_margin_mm",
+            ),
+            f"{prefix}.flange_edge_margin_mm",
+        ),
+        service_port_clearance_mm=_positive(
+            _number(
+                raw.get("service_port_clearance_mm"),
+                f"{prefix}.service_port_clearance_mm",
+            ),
+            f"{prefix}.service_port_clearance_mm",
+        ),
+        passage_diametral_clearance_mm=_positive(
+            _number(
+                raw.get("passage_diametral_clearance_mm"),
+                f"{prefix}.passage_diametral_clearance_mm",
+            ),
+            f"{prefix}.passage_diametral_clearance_mm",
+        ),
+        complete_extraction_status=_state(
+            raw.get("complete_extraction_status"),
+            f"{prefix}.complete_extraction_status",
+        ),
+        candidates=tuple(candidates),
+    )
+    if spec.wall != "positive_y_top":
+        raise ValueError(f"{prefix}.wall must be positive_y_top")
+    standards = [candidate.standard for candidate in spec.candidates]
+    if len(standards) != len(set(standards)):
+        raise ValueError(f"{prefix}.candidates standards must be unique")
+    _ = spec.selected
+    return spec
+
+
+def _parse_sector_mounts(value: Any) -> tuple[SectorMountSpec, ...]:
+    if value is None:
+        return ()
+    mounts: list[SectorMountSpec] = []
+    for idx, item in enumerate(_items(value, "deployment.sector_mounts")):
+        prefix = f"deployment.sector_mounts[{idx}]"
+        entry = _mapping(item, prefix)
+        sector = _text(entry.get("sector"), f"{prefix}.sector")
+        wall = _text(entry.get("wall"), f"{prefix}.wall")
+        if sector not in {"left", "right", "up", "down"}:
+            raise ValueError(f"{prefix}.sector is unsupported: {sector!r}")
+        if wall not in {"negative_x", "positive_x", "positive_y", "negative_y"}:
+            raise ValueError(f"{prefix}.wall is unsupported: {wall!r}")
+        mounts.append(
+            SectorMountSpec(
+                sector=sector,
+                wall=wall,
+                tangent_coordinate_mm=_number(
+                    entry.get("tangent_coordinate_mm"),
+                    f"{prefix}.tangent_coordinate_mm",
+                ),
+                wall_standoff_mm=_positive(
+                    _number(
+                        entry.get("wall_standoff_mm"),
+                        f"{prefix}.wall_standoff_mm",
+                    ),
+                    f"{prefix}.wall_standoff_mm",
+                ),
+                release_clearance_mm=_positive(
+                    _number(
+                        entry.get("release_clearance_mm"),
+                        f"{prefix}.release_clearance_mm",
+                    ),
+                    f"{prefix}.release_clearance_mm",
+                ),
+            )
+        )
+    sectors = [item.sector for item in mounts]
+    if len(sectors) != len(set(sectors)):
+        raise ValueError("deployment.sector_mounts sectors must be unique")
+    return tuple(mounts)
+
+
 def _parse_deployment(raw: Mapping[str, Any]) -> DeploymentSpec:
     candidates = tuple(
         _parse_chamber_candidate(
@@ -1397,9 +1747,36 @@ def _parse_deployment(raw: Mapping[str, Any]) -> DeploymentSpec:
             raw.get("external_service_envelope_status"),
             "deployment.external_service_envelope_status",
         ),
+        maintenance_access=_parse_maintenance_access(
+            None
+            if raw.get("maintenance_access") is None
+            else _mapping(
+                raw.get("maintenance_access"),
+                "deployment.maintenance_access",
+            )
+        ),
+        sector_mounts=_parse_sector_mounts(raw.get("sector_mounts")),
         service_ports=tuple(ports),
     )
     _ = spec.chamber
+    if spec.maintenance_access is not None and spec.maintenance_access.enabled:
+        access_candidate = spec.maintenance_access.selected
+        chamber_names = {candidate.name for candidate in spec.chamber_candidates}
+        unresolved_chambers = {
+            candidate.chamber_candidate
+            for candidate in spec.maintenance_access.candidates
+            if candidate.chamber_candidate not in chamber_names
+        }
+        if unresolved_chambers:
+            raise ValueError(
+                "maintenance-access candidates reference unknown chamber candidates: "
+                f"{sorted(unresolved_chambers)}"
+            )
+        if access_candidate.chamber_candidate != spec.selected_chamber_candidate:
+            raise ValueError(
+                "selected maintenance-access candidate must reference the selected "
+                "chamber candidate"
+            )
     return spec
 
 

@@ -91,6 +91,23 @@ def _shape_bounds(shape: Part.Shape) -> dict[str, float]:
     }
 
 
+def _aggregate_lengths_mm(shapes: list[Part.Shape]) -> tuple[float, float, float]:
+    if not shapes:
+        return (0.0, 0.0, 0.0)
+    xmin = min(float(shape.BoundBox.XMin) for shape in shapes)
+    xmax = max(float(shape.BoundBox.XMax) for shape in shapes)
+    ymin = min(float(shape.BoundBox.YMin) for shape in shapes)
+    ymax = max(float(shape.BoundBox.YMax) for shape in shapes)
+    zmin = min(float(shape.BoundBox.ZMin) for shape in shapes)
+    zmax = max(float(shape.BoundBox.ZMax) for shape in shapes)
+    return (xmax - xmin, ymax - ymin, zmax - zmin)
+
+
+def _top_projection_diagonal_mm(shapes: list[Part.Shape]) -> float:
+    x_length_mm, _, z_length_mm = _aggregate_lengths_mm(shapes)
+    return math.hypot(x_length_mm, z_length_mm)
+
+
 def _candidate_clearance_mm(candidate, shapes: list[Part.Shape]) -> float:
     wall_mm = candidate.wall_thickness_mm
     z_min_mm = (
@@ -616,7 +633,13 @@ def validate_compact_one(
     )
 
     sector_holder_compounds = {
-        sector: Part.makeCompound(list(item.physical.values()))
+        sector: Part.makeCompound(
+            [
+                shape
+                for name, shape in item.physical.items()
+                if name not in item.stationary_physical_names
+            ]
+        )
         for sector, item in internal.sector_holders.items()
     }
     sector_holder_collisions, sector_holder_min_clearance = _pair_collisions(
@@ -675,9 +698,12 @@ def validate_compact_one(
     checks.append(
         _geometry_check(
             "sector_holder",
-            "sector_radial_removal_envelope_clear",
+            "sector_mount_release_envelope_clear",
             not removal_collisions,
-            f"collisions={len(removal_collisions)}",
+            (
+                f"initial_inward_release_collisions={len(removal_collisions)}; "
+                "complete reorientation/top-lift is a separate evidence gate"
+            ),
             failures=removal_collisions,
         )
     )
@@ -732,15 +758,479 @@ def validate_compact_one(
         _geometry_check(
             "mechanical",
             "sector_holder_service_access_contract",
-            not chamber_access_collisions,
+            not chamber_access_collisions
+            and (
+                cfg.compact_one.deployment.maintenance_access is None
+                or cfg.compact_one.deployment.maintenance_access.complete_extraction_status
+                == "frozen"
+            ),
             (
-                f"shell_intersections={len(chamber_access_collisions)}; "
-                "a resolved removable service/access closure is required"
+                f"initial_release_shell_intersections={len(chamber_access_collisions)}; "
+                "complete release/reorientation/top-lift evidence status="
+                f"{('not_applicable' if cfg.compact_one.deployment.maintenance_access is None else cfg.compact_one.deployment.maintenance_access.complete_extraction_status)}"
             ),
             strict_only=True,
             failures=chamber_access_collisions,
         )
     )
+
+    support_structure_metrics: list[dict[str, object]] = []
+    holder_support_failures: list[dict[str, object]] = []
+    support_wall_failures: list[dict[str, object]] = []
+    ground_bond_failures: list[dict[str, object]] = []
+    access_support_failures: list[dict[str, object]] = []
+    chamber_body = chamber.physical["ProjectChamberBody"]
+    access_lift_corridor = chamber.keepouts.get(
+        "MaintenanceAccessInternalLiftCorridor"
+    )
+    for sector, holder_geometry in internal.sector_holders.items():
+        mount = cfg.compact_one.deployment.sector_mount(sector)
+        block = holder_geometry.physical[f"{sector}_SectorInterfaceBlock"]
+        support = holder_geometry.physical[f"{sector}_PermanentWallSupport"]
+        ground = services.physical[f"{sector}_ProtectiveGroundStrap"]
+        pins = {
+            name: holder_geometry.purchased_interfaces[name]
+            for name in holder_geometry.stationary_purchased_interface_names
+        }
+        block_support_gap_mm = float(block.distToShape(support)[0])
+        support_wall_gap_mm = float(support.distToShape(chamber_body)[0])
+        pin_support_gaps_mm = {
+            name: float(shape.distToShape(support)[0])
+            for name, shape in pins.items()
+        }
+        ground_block_gap_mm = float(ground.distToShape(block)[0])
+        ground_support_gap_mm = float(ground.distToShape(support)[0])
+        ground_wall_gap_mm = float(ground.distToShape(chamber_body)[0])
+        ground_extent_mm = max(
+            float(ground.BoundBox.XLength),
+            float(ground.BoundBox.YLength),
+            float(ground.BoundBox.ZLength),
+        )
+        other_holder_overlaps: list[dict[str, object]] = []
+        for other_sector, other_holder in sector_holder_compounds.items():
+            if other_sector == sector:
+                continue
+            overlap_mm3 = _intersection_volume_mm3(support, other_holder)
+            if overlap_mm3 > 1.0e-6:
+                other_holder_overlaps.append(
+                    {
+                        "other_sector": other_sector,
+                        "intersection_volume_mm3": overlap_mm3,
+                    }
+                )
+        if (
+            block_support_gap_mm > 1.0e-6
+            or not support.isValid()
+            or support.isNull()
+            or other_holder_overlaps
+        ):
+            holder_support_failures.append(
+                {
+                    "sector": sector,
+                    "block_support_gap_mm": block_support_gap_mm,
+                    "support_valid": support.isValid() and not support.isNull(),
+                    "other_holder_overlaps": other_holder_overlaps,
+                }
+            )
+        if support_wall_gap_mm > 1.0e-6 or any(
+            gap_mm > 1.0e-6 for gap_mm in pin_support_gaps_mm.values()
+        ):
+            support_wall_failures.append(
+                {
+                    "sector": sector,
+                    "support_wall_gap_mm": support_wall_gap_mm,
+                    "pin_support_gaps_mm": pin_support_gaps_mm,
+                }
+            )
+        if (
+            ground.Volume <= 100.0
+            or ground_extent_mm <= 5.0
+            or ground_block_gap_mm > 1.0e-6
+            or ground_support_gap_mm > 1.0e-6
+            or ground_wall_gap_mm > 1.0e-6
+        ):
+            ground_bond_failures.append(
+                {
+                    "sector": sector,
+                    "volume_mm3": float(ground.Volume),
+                    "maximum_extent_mm": ground_extent_mm,
+                    "block_gap_mm": ground_block_gap_mm,
+                    "support_gap_mm": ground_support_gap_mm,
+                    "wall_gap_mm": ground_wall_gap_mm,
+                }
+            )
+        support_lift_overlap_mm3 = (
+            0.0
+            if access_lift_corridor is None
+            else _intersection_volume_mm3(support, access_lift_corridor)
+        )
+        pin_lift_overlap_mm3 = sum(
+            0.0
+            if access_lift_corridor is None
+            else _intersection_volume_mm3(shape, access_lift_corridor)
+            for shape in pins.values()
+        )
+        ground_lift_overlap_mm3 = (
+            0.0
+            if access_lift_corridor is None
+            else _intersection_volume_mm3(ground, access_lift_corridor)
+        )
+        if (
+            mount.wall == "positive_y"
+            or support_lift_overlap_mm3 > 1.0e-6
+            or pin_lift_overlap_mm3 > 1.0e-6
+            or ground_lift_overlap_mm3 > 1.0e-6
+        ):
+            access_support_failures.append(
+                {
+                    "sector": sector,
+                    "mount_wall": mount.wall,
+                    "support_lift_overlap_mm3": support_lift_overlap_mm3,
+                    "pin_lift_overlap_mm3": pin_lift_overlap_mm3,
+                    "ground_lift_overlap_mm3": ground_lift_overlap_mm3,
+                }
+            )
+        support_structure_metrics.append(
+            {
+                "sector": sector,
+                "mount_wall": mount.wall,
+                "tangent_coordinate_mm": mount.tangent_coordinate_mm,
+                "wall_standoff_mm": mount.wall_standoff_mm,
+                "block_support_gap_mm": block_support_gap_mm,
+                "support_wall_gap_mm": support_wall_gap_mm,
+                "pin_support_gaps_mm": pin_support_gaps_mm,
+                "ground_volume_mm3": float(ground.Volume),
+                "ground_maximum_extent_mm": ground_extent_mm,
+                "ground_wall_gap_mm": ground_wall_gap_mm,
+                "support_lift_overlap_mm3": support_lift_overlap_mm3,
+                "pin_lift_overlap_mm3": pin_lift_overlap_mm3,
+                "ground_lift_overlap_mm3": ground_lift_overlap_mm3,
+            }
+        )
+    checks.append(
+        _geometry_check(
+            "mechanical",
+            "holder_to_stationary_support_load_path",
+            not holder_support_failures,
+            f"failures={len(holder_support_failures)}",
+            failures=holder_support_failures,
+        )
+    )
+    checks.append(
+        _geometry_check(
+            "mechanical",
+            "stationary_support_to_permanent_chamber_contact",
+            not support_wall_failures,
+            f"failures={len(support_wall_failures)}",
+            failures=support_wall_failures,
+        )
+    )
+    checks.append(
+        _geometry_check(
+            "services",
+            "protective_ground_bond_to_permanent_chamber",
+            not ground_bond_failures,
+            f"failures={len(ground_bond_failures)}",
+            failures=ground_bond_failures,
+        )
+    )
+    checks.append(
+        _geometry_check(
+            "mechanical",
+            "maintenance_access_closure_load_free",
+            not access_support_failures,
+            f"failures={len(access_support_failures)}",
+            failures=access_support_failures,
+        )
+    )
+
+    maintenance_access_metrics: dict[str, object] | None = None
+    access = cfg.compact_one.deployment.maintenance_access
+    if access is not None and access.enabled:
+        access_spec = access.selected
+        chamber_candidate = chamber.candidate
+        outer_half_x_mm = (
+            0.5 * chamber_candidate.inner_size_x_mm
+            + chamber_candidate.wall_thickness_mm
+        )
+        z_min_mm = (
+            chamber_candidate.center_z_mm
+            - 0.5 * chamber_candidate.length_mm
+        )
+        z_max_mm = (
+            chamber_candidate.center_z_mm
+            + 0.5 * chamber_candidate.length_mm
+        )
+        access_radius_mm = 0.5 * access_spec.flange_outer_diameter_mm
+        edge_margins_mm = {
+            "negative_x": access_spec.center_x_mm
+            - access_radius_mm
+            + outer_half_x_mm,
+            "positive_x": outer_half_x_mm
+            - access_spec.center_x_mm
+            - access_radius_mm,
+            "front_z": access_spec.center_z_mm - access_radius_mm - z_min_mm,
+            "rear_z": z_max_mm - access_spec.center_z_mm - access_radius_mm,
+        }
+        minimum_edge_margin_mm = min(edge_margins_mm.values())
+        checks.append(
+            _geometry_check(
+                "mechanical",
+                "maintenance_access_flange_within_top_face",
+                minimum_edge_margin_mm >= access.flange_edge_margin_mm,
+                (
+                    f"standard={access_spec.standard}, minimum_edge_margin_mm="
+                    f"{minimum_edge_margin_mm:.6f}, required_mm="
+                    f"{access.flange_edge_margin_mm:.6f}"
+                ),
+                edge_margins_mm=edge_margins_mm,
+            )
+        )
+
+        port_clearances: list[dict[str, object]] = []
+        minimum_port_clearance_mm = float("inf")
+        for port in cfg.compact_one.deployment.service_ports:
+            port_outer_diameter_mm = (
+                cfg.compact_one.services.signal_interface.module_outer_diameter_mm
+                if port.role == "signal"
+                else (
+                    70.0
+                    if cfg.compact_one.deployment.target_feedthrough_standard == "ICF70"
+                    else port.collar_outer_diameter_mm
+                )
+            )
+            center_distance_mm = math.hypot(
+                access_spec.center_x_mm - port.center_x_mm,
+                access_spec.center_z_mm - port.center_z_mm,
+            )
+            clearance_mm = center_distance_mm - 0.5 * (
+                access_spec.flange_outer_diameter_mm
+                + port_outer_diameter_mm
+            )
+            minimum_port_clearance_mm = min(
+                minimum_port_clearance_mm,
+                clearance_mm,
+            )
+            port_clearances.append(
+                {
+                    "port": port.name,
+                    "role": port.role,
+                    "clearance_mm": clearance_mm,
+                }
+            )
+        checks.append(
+            _geometry_check(
+                "mechanical",
+                "maintenance_access_service_ports_clear",
+                minimum_port_clearance_mm >= access.service_port_clearance_mm,
+                (
+                    f"minimum_clearance_mm={minimum_port_clearance_mm:.6f}, "
+                    f"required_mm={access.service_port_clearance_mm:.6f}"
+                ),
+                port_clearances=port_clearances,
+            )
+        )
+
+        holder_dimensions_mm: dict[str, tuple[float, float, float]] = {}
+        holder_projection_diagonals_mm: dict[str, float] = {}
+        holder_edge_on_diagonals_mm: dict[str, float] = {}
+        for sector, holder in internal.sector_holders.items():
+            xmin, xmax, ymin, ymax, zmin, zmax = (
+                holder.loaded_maintenance_bounds_mm
+            )
+            dimensions = (xmax - xmin, ymax - ymin, zmax - zmin)
+            holder_dimensions_mm[sector] = dimensions
+            holder_projection_diagonals_mm[sector] = math.hypot(
+                dimensions[0],
+                dimensions[2],
+            )
+            two_smallest = sorted(dimensions)[:2]
+            holder_edge_on_diagonals_mm[sector] = math.hypot(*two_smallest)
+        required_passage_mm = (
+            max(holder_projection_diagonals_mm.values())
+            + access.passage_diametral_clearance_mm
+        )
+        passage_margin_mm = (
+            access_spec.clear_bore_diameter_mm - required_passage_mm
+        )
+        checks.append(
+            _geometry_check(
+                "mechanical",
+                "maintenance_access_detached_holder_passage_screen",
+                passage_margin_mm >= 0.0,
+                (
+                    f"standard={access_spec.standard}, clear_bore_mm="
+                    f"{access_spec.clear_bore_diameter_mm:.6f}, "
+                    f"required_conservative_top_projection_mm={required_passage_mm:.6f}, "
+                    f"margin_mm={passage_margin_mm:.6f}"
+                ),
+                strict_only=True,
+                holder_dimensions_mm=holder_dimensions_mm,
+                holder_projection_diagonals_mm=holder_projection_diagonals_mm,
+                holder_edge_on_diagonals_mm=holder_edge_on_diagonals_mm,
+                passage_margin_mm=passage_margin_mm,
+            )
+        )
+
+        closure_names = {
+            "MaintenanceAccessProjectWeldNeck",
+            "MaintenanceAccessProjectWeldBead",
+            "MaintenanceAccessFixedICFFlange",
+            "MaintenanceAccessCopperGasket",
+            "MaintenanceAccessBlindFlange",
+        }
+        generated_access_names = {
+            *chamber.physical,
+            *chamber.purchased_interfaces,
+        }
+        fixed_flange = chamber.purchased_interfaces.get(
+            "MaintenanceAccessFixedICFFlange"
+        )
+        gasket = chamber.purchased_interfaces.get("MaintenanceAccessCopperGasket")
+        blind = chamber.purchased_interfaces.get("MaintenanceAccessBlindFlange")
+        neck = chamber.physical.get("MaintenanceAccessProjectWeldNeck")
+        weld_bead = chamber.physical.get("MaintenanceAccessProjectWeldBead")
+        contact_gaps_mm = {
+            "neck_to_weld_bead": (
+                float("inf")
+                if neck is None or weld_bead is None
+                else float(neck.distToShape(weld_bead)[0])
+            ),
+            "weld_bead_to_fixed_flange": (
+                float("inf")
+                if weld_bead is None or fixed_flange is None
+                else float(weld_bead.distToShape(fixed_flange)[0])
+            ),
+            "fixed_flange_to_gasket": (
+                float("inf")
+                if fixed_flange is None or gasket is None
+                else float(fixed_flange.distToShape(gasket)[0])
+            ),
+            "gasket_to_blind": (
+                float("inf")
+                if gasket is None or blind is None
+                else float(gasket.distToShape(blind)[0])
+            ),
+        }
+        closure_complete = (
+            closure_names <= generated_access_names
+            and max(contact_gaps_mm.values()) <= 1.0e-6
+            and access.seal_type == "conflat_knife_edge_metal_gasket"
+            and access.seal_material == "oxygen_free_copper"
+            and not access.elastomer_seal_allowed
+        )
+        checks.append(
+            _geometry_check(
+                "vacuum",
+                "maintenance_access_nominal_metal_seal_topology",
+                closure_complete,
+                (
+                    f"components={len(closure_names & generated_access_names)}/"
+                    f"{len(closure_names)}, max_contact_gap_mm="
+                    f"{max(contact_gaps_mm.values()):.6g}, "
+                    f"seal={access.seal_material}"
+                    "; purchased knife-edge detail and leak performance remain evidence gates"
+                ),
+                contact_gaps_mm=contact_gaps_mm,
+            )
+        )
+        candidate_comparison: list[dict[str, object]] = []
+        chamber_by_name = {
+            item.name: item
+            for item in cfg.compact_one.deployment.chamber_candidates
+        }
+        flat_required_mm = (
+            max(holder_projection_diagonals_mm.values())
+            + access.passage_diametral_clearance_mm
+        )
+        edge_on_required_mm = (
+            max(holder_edge_on_diagonals_mm.values())
+            + access.passage_diametral_clearance_mm
+        )
+        for option in access.candidates:
+            option_chamber = chamber_by_name[option.chamber_candidate]
+            option_half_x_mm = (
+                0.5 * option_chamber.inner_size_x_mm
+                + option_chamber.wall_thickness_mm
+            )
+            option_z_min_mm = (
+                option_chamber.center_z_mm - 0.5 * option_chamber.length_mm
+            )
+            option_z_max_mm = (
+                option_chamber.center_z_mm + 0.5 * option_chamber.length_mm
+            )
+            option_radius_mm = 0.5 * option.flange_outer_diameter_mm
+            option_edge_margins = (
+                option.center_x_mm - option_radius_mm + option_half_x_mm,
+                option_half_x_mm - option.center_x_mm - option_radius_mm,
+                option.center_z_mm - option_radius_mm - option_z_min_mm,
+                option_z_max_mm - option.center_z_mm - option_radius_mm,
+            )
+            option_port_clearances: list[float] = []
+            for port in cfg.compact_one.deployment.service_ports:
+                port_outer_diameter_mm = (
+                    cfg.compact_one.services.signal_interface.module_outer_diameter_mm
+                    if port.role == "signal"
+                    else (
+                        70.0
+                        if cfg.compact_one.deployment.target_feedthrough_standard
+                        == "ICF70"
+                        else port.collar_outer_diameter_mm
+                    )
+                )
+                option_port_clearances.append(
+                    math.hypot(
+                        option.center_x_mm - port.center_x_mm,
+                        option.center_z_mm - port.center_z_mm,
+                    )
+                    - 0.5
+                    * (
+                        option.flange_outer_diameter_mm
+                        + port_outer_diameter_mm
+                    )
+                )
+            candidate_comparison.append(
+                {
+                    "standard": option.standard,
+                    "disposition": option.disposition,
+                    "chamber_candidate": option.chamber_candidate,
+                    "chamber_length_mm": option_chamber.length_mm,
+                    "clear_bore_diameter_mm": option.clear_bore_diameter_mm,
+                    "minimum_flange_edge_margin_mm": min(option_edge_margins),
+                    "minimum_service_port_clearance_mm": min(
+                        option_port_clearances
+                    ),
+                    "flat_lift_passage_margin_mm": (
+                        option.clear_bore_diameter_mm - flat_required_mm
+                    ),
+                    "edge_on_passage_margin_mm": (
+                        option.clear_bore_diameter_mm - edge_on_required_mm
+                    ),
+                    "flat_lift_screen_passed": (
+                        option.clear_bore_diameter_mm >= flat_required_mm
+                    ),
+                    "edge_on_screen_passed": (
+                        option.clear_bore_diameter_mm >= edge_on_required_mm
+                    ),
+                }
+            )
+        maintenance_access_metrics = {
+            "selected_candidate": asdict(access_spec),
+            "seal_type": access.seal_type,
+            "seal_material": access.seal_material,
+            "elastomer_seal_allowed": access.elastomer_seal_allowed,
+            "helium_leak_rate_max_pa_m3_s": access.helium_leak_rate_max_pa_m3_s,
+            "edge_margins_mm": edge_margins_mm,
+            "minimum_service_port_clearance_mm": minimum_port_clearance_mm,
+            "port_clearances": port_clearances,
+            "holder_projection_diagonals_mm": holder_projection_diagonals_mm,
+            "holder_edge_on_diagonals_mm": holder_edge_on_diagonals_mm,
+            "required_passage_mm": required_passage_mm,
+            "passage_margin_mm": passage_margin_mm,
+            "contact_gaps_mm": contact_gaps_mm,
+            "complete_extraction_status": access.complete_extraction_status,
+            "candidate_comparison": candidate_comparison,
+        }
 
     cable_keepouts = {
         name: shape
@@ -1051,6 +1541,8 @@ def validate_compact_one(
         "engineering_metrics": {
             "deployment": cfg.compact_one.deployment.name,
             "selected_chamber": asdict(chamber.metrics),
+            "support_structure": support_structure_metrics,
+            "maintenance_access": maintenance_access_metrics,
             "chamber_candidates": chamber_candidates,
             "vacuum_control_volume": {
                 "solid_count": len(vacuum.Solids),

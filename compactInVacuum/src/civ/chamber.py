@@ -6,9 +6,17 @@ import math
 import FreeCAD as App
 import Part
 
+from .access import (
+    annular_tube,
+    build_maintenance_access_boundary,
+    build_maintenance_access_components,
+)
 from .config import CIVConfig
 from .feedthrough import service_wall_y_mm
-from .platform import ChamberCandidateSpec, PurchasedBeamInterfaceSpec
+from .platform import (
+    ChamberCandidateSpec,
+    PurchasedBeamInterfaceSpec,
+)
 
 
 @dataclass(frozen=True)
@@ -101,23 +109,6 @@ def screen_chamber_candidate(
     )
 
 
-def _annular_tube(
-    outer_diameter_mm: float,
-    inner_diameter_mm: float,
-    length_mm: float,
-    base: App.Vector,
-    axis: App.Vector,
-) -> Part.Shape:
-    outer = Part.makeCylinder(0.5 * outer_diameter_mm, length_mm, base, axis)
-    inner = Part.makeCylinder(
-        0.5 * inner_diameter_mm,
-        length_mm + 0.4,
-        base - axis * 0.2,
-        axis,
-    )
-    return outer.cut(inner)
-
-
 def _beam_interface_envelope(
     interface: PurchasedBeamInterfaceSpec,
     base: App.Vector,
@@ -196,6 +187,11 @@ def _selected_body_and_vacuum(cfg: CIVConfig) -> tuple[Part.Shape, Part.Shape]:
     body = body.cut(front_bore).cut(rear_bore)
     vacuum = vacuum.fuse(front_bore).fuse(rear_bore)
 
+    access_boundary = build_maintenance_access_boundary(cfg)
+    if access_boundary is not None:
+        body = body.cut(access_boundary.body_cut)
+        vacuum = vacuum.fuse(access_boundary.vacuum_extension)
+
     for port in deployment.service_ports:
         wall_center = App.Vector(
             port.center_x_mm,
@@ -221,7 +217,7 @@ def build_chamber(cfg: CIVConfig) -> ChamberGeometry:
     body, vacuum = _selected_body_and_vacuum(cfg)
     z_min_mm = candidate.center_z_mm - 0.5 * candidate.length_mm
     z_max_mm = candidate.center_z_mm + 0.5 * candidate.length_mm
-    front_transition = _annular_tube(
+    front_transition = annular_tube(
         deployment.front_interface.transition_outer_diameter_mm,
         deployment.front_interface.transition_inner_diameter_mm,
         deployment.front_interface.transition_length_mm,
@@ -232,7 +228,7 @@ def build_chamber(cfg: CIVConfig) -> ChamberGeometry:
         ),
         App.Vector(0.0, 0.0, 1.0),
     )
-    rear_transition = _annular_tube(
+    rear_transition = annular_tube(
         deployment.rear_interface.transition_outer_diameter_mm,
         deployment.rear_interface.transition_inner_diameter_mm,
         deployment.rear_interface.transition_length_mm,
@@ -244,6 +240,14 @@ def build_chamber(cfg: CIVConfig) -> ChamberGeometry:
         "FrontProjectWeldTransition": front_transition,
         "RearProjectWeldTransition": rear_transition,
     }
+    (
+        access_physical,
+        access_purchased,
+        access_keepouts,
+        access_datums,
+        access_materials,
+    ) = build_maintenance_access_components(cfg)
+    physical.update(access_physical)
     front_interface_base = App.Vector(
         0.0,
         0.0,
@@ -268,6 +272,7 @@ def build_chamber(cfg: CIVConfig) -> ChamberGeometry:
             App.Vector(0.0, 0.0, 1.0),
         ),
     }
+    purchased.update(access_purchased)
     beam_clear_diameter_mm = deployment.beam_stay_clear_diameter_mm
     beam_keepout = Part.makeCylinder(
         0.5 * beam_clear_diameter_mm,
@@ -286,15 +291,19 @@ def build_chamber(cfg: CIVConfig) -> ChamberGeometry:
         candidate=candidate,
         physical=physical,
         purchased_interfaces=purchased,
-        keepouts={"BeamStayClear": beam_keepout},
+        keepouts={"BeamStayClear": beam_keepout, **access_keepouts},
         datums={
             "BeamAxisDatum": Part.makeLine(
                 App.Vector(0.0, 0.0, z_min_mm),
                 App.Vector(0.0, 0.0, z_max_mm),
             ),
             "TargetCenterDatum": Part.makeSphere(0.75, App.Vector(0.0, 0.0, 0.0)),
+            **access_datums,
         },
-        materials={name: candidate.material for name in physical},
+        materials={
+            **{name: candidate.material for name in physical},
+            **access_materials,
+        },
         vacuum_control_volume=vacuum,
         metrics=screen_chamber_candidate(candidate),
     )

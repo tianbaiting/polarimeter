@@ -165,7 +165,10 @@ def build_sector_holder_document(
 ) -> App.Document:
     doc = _new_document(f"{cfg.doc_name}_SectorHolder_{sector}")
     geometry = build_sector_holder(cfg, sector)
-    holder_names = set(geometry.holder_physical_names)
+    holder_names = {
+        *geometry.holder_physical_names,
+        *geometry.stationary_physical_names,
+    }
     for name, shape in geometry.physical.items():
         add_feature(
             doc,
@@ -214,7 +217,10 @@ def _add_internal_geometry(
     holder_names = {
         name
         for holder in geometry.sector_holders.values()
-        for name in holder.holder_physical_names
+        for name in (
+            *holder.holder_physical_names,
+            *holder.stationary_physical_names,
+        )
     }
     for name, shape in geometry.physical.items():
         if name.startswith("Target"):

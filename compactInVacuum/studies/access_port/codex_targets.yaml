@@ -1,0 +1,11 @@
+schema_version: 1
+active_modules:
+  - name: compactOneAfterSRCICF253Study
+    target: targets/icf253.yaml
+    state: state/icf253.state.json
+  - name: compactOneAfterSRCICF305Study
+    target: targets/icf305.yaml
+    state: state/icf305.state.json
+  - name: compactOneAfterSRCICF356Study
+    target: targets/icf356.yaml
+    state: state/icf356.state.json

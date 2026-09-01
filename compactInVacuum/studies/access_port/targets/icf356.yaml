@@ -1,0 +1,20 @@
+schema_version: 1
+module: compactOneAfterSRCICF356Study
+intent:
+  description: CompactInVacuum-afterSRC all-metal top maintenance-port enlarged-envelope comparison using ICF356.
+build:
+  config: ../config/afterSRC_access_icf356.yaml
+  overrides: []
+  doc_name: CompactOne_afterSRC_access_ICF356
+  mode: build
+validation:
+  strict: false
+  angle_tolerance_deg: 0.05
+  radius_tolerance_mm: 0.2
+output:
+  output_dir: ../../../artifacts/access_port_study/icf356
+  basename: CompactOne_afterSRC_access_ICF356
+  formats: [fcstd, step]
+artifacts:
+  report_json: ../../../artifacts/access_port_study/icf356/CompactOne_afterSRC_access_ICF356.validation_report.json
+  channel_manifest_json: ../../../artifacts/access_port_study/icf356/CompactOne_afterSRC_access_ICF356.channel_manifest.json

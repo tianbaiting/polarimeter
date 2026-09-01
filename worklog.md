@@ -14,6 +14,186 @@ Entry Template:
 
 ## Entries
 
+- Timestamp UTC: 2026-08-31T02:57:10Z
+- Timestamp Local: 2026-08-31 11:57:10 JST
+- Module/Scope: CompactInVacuum repository/source organization and cleanup
+- Command(s): moved access studies under `compactInVacuum/studies/access_port/`; extracted `civ.access` and `civ.support`; `uv run --with pytest --with pyyaml pytest -q compactInVacuum/tests/test_platform_config.py compactInVacuum/tests/test_geometry.py`; `./compactInVacuum/run_freecad_tests.sh`; three study-local validate-only runs; canonical force rebuild; explicit `trash-put` cleanup.
+- Key Parameters/Overrides: canonical root target unchanged; study-local index/state ownership; no geometry configuration changes during module extraction.
+- Validation Result: pure-Python `41/41` pass; all FreeCAD runtime groups pass; ICF253/305/356 study states pass (`46/11/0`, `47/10/0`, `47/10/0`); canonical `47/10/0` pass. Canonical and pre-refactor ICF305 STEP share `214` solids, equal volume/area, and equal bounds.
+- Artifacts/State: generated LaTeX build, review meshes, stale study states/backups, redundant GUI renderer, and Python caches moved to system trash and remain recoverable; formal FCStd/STEP/JSON/screenshots retained.
+- Next Action: stage only the organized CompactInVacuum change set; keep unrelated physics/docs/supplier changes separate.
+
+- Timestamp UTC: 2026-08-31T02:52:23Z
+- Timestamp Local: 2026-08-31 11:52:23 JST
+- Module/Scope: canonical afterSRC rebuild after repository/source reorganization
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: root index contains canonical modules only; maintenance-access geometry moved to `civ.access`; stationary wall-mount geometry moved to `civ.support`; no configuration change.
+- Validation Result: prototype non-strict pass (`47` pass, `10` warnings, `0` fail). Canonical and pre-refactor ICF305 study STEP both reopen valid with `214` solids, identical volume `12329451.8262 mm3`, area `2960800.541735 mm2`, and bounds `456.0 x 534.8 x 615.0 mm`.
+- Artifacts/State: canonical FCStd/STEP/report/manifest/metrics regenerated; canonical state pass.
+- Next Action: finalize cleanup audit and commit grouping.
+
+- Timestamp UTC: 2026-08-31T02:47:37Z
+- Timestamp Local: 2026-08-31 11:47:37 JST
+- Module/Scope: reorganized afterSRC access-port ICF356 study validate-only
+- Command(s): `compactInVacuum/studies/access_port/run_icf356.sh --validate-only --force-rebuild`
+- Key Parameters/Overrides: study-local pipeline index/target/config/state; comparison output location unchanged.
+- Validation Result: prototype non-strict pass (`47` pass, `10` warnings, `0` fail).
+- Artifacts/State: new ignored state written to `compactInVacuum/studies/access_port/state/icf356.state.json`; all three reorganized study states are now current.
+- Next Action: move obsolete root study states to trash and force-rebuild canonical ICF305.
+
+- Timestamp UTC: 2026-08-31T02:43:31Z
+- Timestamp Local: 2026-08-31 11:43:31 JST
+- Module/Scope: reorganized afterSRC access-port ICF305 study validate-only
+- Command(s): `compactInVacuum/studies/access_port/run_icf305.sh --validate-only --force-rebuild`
+- Key Parameters/Overrides: study-local pipeline index/target/config/state; canonical geometry contract unchanged after access/support module extraction.
+- Validation Result: prototype non-strict pass (`47` pass, `10` warnings, `0` fail).
+- Artifacts/State: new ignored state written to `compactInVacuum/studies/access_port/state/icf305.state.json`; central report/manifest paths unchanged.
+- Next Action: validate reorganized ICF356 study path.
+
+- Timestamp UTC: 2026-08-31T02:39:23Z
+- Timestamp Local: 2026-08-31 11:39:23 JST
+- Module/Scope: reorganized afterSRC access-port ICF253 study validate-only
+- Command(s): `compactInVacuum/studies/access_port/run_icf253.sh --validate-only --force-rebuild`
+- Key Parameters/Overrides: study-local pipeline index/target/config/state tree; core geometry imported through new `civ.access` and `civ.support` modules.
+- Validation Result: prototype non-strict pass (`46` pass, `11` warnings, `0` fail); rejected ICF253 passage warning retained.
+- Artifacts/State: new ignored state written to `compactInVacuum/studies/access_port/state/icf253.state.json`; central report/manifest paths unchanged.
+- Next Action: validate reorganized ICF305 study path.
+
+- Timestamp UTC: 2026-08-30T14:00:55Z
+- Timestamp Local: 2026-08-30 23:00:55 JST
+- Module/Scope: corrected afterSRC permanent-support visual and artifact QA
+- Command(s): `uv run --with pytest --with pyyaml pytest -q compactInVacuum/tests/test_platform_config.py compactInVacuum/tests/test_geometry.py`; `./compactInVacuum/run_freecad_tests.sh`; headless support-group mesh export/render; FreeCAD canonical STEP reopen; report/geometry-metrics audit.
+- Key Parameters/Overrides: stationary supports rendered blue, ICF closure translucent red; UP pedestal bounds `x=[-220,-145], y=[160,200], z=[125.191,175.191] mm`.
+- Validation Result: pure-Python `41/41` pass; all FreeCAD runtime groups pass; canonical report `47` pass / `10` warning / `0` fail; STEP reopens valid with `214` solids. All four holder-to-support and support-to-wall gaps are zero; support/pins/ground lift-corridor overlaps are zero.
+- Artifacts/State: corrected standard views and comparison PNG regenerated; canonical state remains pass; no unrelated dirty worktree changes modified.
+- Next Action: supplier/fabricator review of pedestal ribbing/fasteners and completion of the staged six-DOF extraction proof.
+
+- Timestamp UTC: 2026-08-30T13:58:09Z
+- Timestamp Local: 2026-08-30 22:58:09 JST
+- Module/Scope: canonical corrected CompactInVacuum-afterSRC ICF305 fixed-support full export
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: same corrected canonical configuration as the preceding validate-only run; removable closure carries no detector support/datum/ground ownership.
+- Validation Result: prototype non-strict pass (`47` pass, `10` warnings, `0` fail). Load paths, permanent-wall contacts, ground bonds, lift-corridor clearance, LOS, target sweep, cable routing, and initial mount release pass; complete six-DOF extraction remains unresolved.
+- Artifacts/State: canonical FCStd `1421433` bytes (`sha256=b0e09666...`), STEP `3151449` bytes (`sha256=84eadb4b...`, `55419` transfer entities), report/manifest/metrics regenerated under `compactInVacuum/artifacts/afterSRC/`; state pass.
+- Next Action: render and inspect corrected support-focused views before handoff.
+
+- Timestamp UTC: 2026-08-30T13:53:51Z
+- Timestamp Local: 2026-08-30 22:53:51 JST
+- Module/Scope: canonical corrected CompactInVacuum-afterSRC ICF305 fixed-support validate-only
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --validate-only --force-rebuild`
+- Key Parameters/Overrides: canonical ICF305 with independent stationary wall supports, UP `-X` pedestal, holder-side dock, stationary locating pins, nonzero OFHC bonds, inward cable detours, and `12 mm` mount release.
+- Validation Result: prototype non-strict pass (`47` pass, `10` warnings, `0` fail). All new structural/load-ownership checks and initial pin release pass; complete reorientation/top-lift remains an explicit strict-only warning.
+- Artifacts/State: canonical validation report/manifest refreshed; `compactInVacuum/compactOne_afterSRC.state.json` pass.
+- Next Action: perform the canonical full FCStd/STEP rebuild.
+
+- Timestamp UTC: 2026-08-30T13:49:48Z
+- Timestamp Local: 2026-08-30 22:49:48 JST
+- Module/Scope: corrected CompactInVacuum-afterSRC ICF356 fixed-support comparison full export
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC_access_icf356.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: same stationary-pad support and nonzero ground-bond topology as corrected ICF305; ICF356 chamber remains `480 mm` long.
+- Validation Result: prototype non-strict pass (`47` pass, `10` warnings, `0` fail); all structural/support/access ownership checks pass and detached-holder passage margin is `+74.561 mm`.
+- Artifacts/State: corrected FCStd `1421852` bytes and STEP `3144289` bytes (`55263` transfer entities) exported under `compactInVacuum/artifacts/access_port_study/icf356/`; state pass.
+- Next Action: validate and rebuild the canonical ICF305 artifact last.
+
+- Timestamp UTC: 2026-08-30T13:45:42Z
+- Timestamp Local: 2026-08-30 22:45:42 JST
+- Module/Scope: corrected CompactInVacuum-afterSRC ICF305 fixed-support study full export
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC_access_icf305.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: removable UP holder ends at the inner dock near `x=-145 mm, y=180 mm`; stationary 75 mm `-X` wall pedestal remains with the chamber; LEFT/RIGHT/DOWN receive stationary 16 mm wall pads; all signal routes detour inward around the fixed supports.
+- Validation Result: prototype non-strict pass (`47` pass, `10` warnings, `0` fail). Holder-to-pad, pad-to-real-wall, nonzero PE bond, access load ownership, cable clearance, `12 mm` inward release, and ICF305 passage (`+23.761 mm`) pass; continuous reorientation/top-lift remains unresolved.
+- Artifacts/State: corrected FCStd `1421408` bytes and STEP `3151449` bytes (`55419` transfer entities) exported under `compactInVacuum/artifacts/access_port_study/icf305/`; state pass.
+- Next Action: rebuild the corrected ICF356 comparison.
+
+- Timestamp UTC: 2026-08-30T13:41:25Z
+- Timestamp Local: 2026-08-30 22:41:25 JST
+- Module/Scope: corrected CompactInVacuum-afterSRC ICF253 fixed-support comparison full export
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC_access_icf253.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: stationary wall supports added for all sectors; UP removable holder docks at `x=-145 mm, y=180 mm` to a stationary `-X` pedestal; nonzero OFHC ground bonds; `12 mm` inward pin-release stage.
+- Validation Result: prototype non-strict pass (`46` pass, `11` warnings, `0` fail). Structural holder-to-support, support-to-wall, ground-to-wall, and load-free access checks pass; ICF253 remains rejected by the `-28.739 mm` flat-lift passage warning and also lacks the required supported-holder edge-on allowance.
+- Artifacts/State: corrected FCStd `1419617` bytes and STEP `3122121` bytes (`54795` transfer entities) exported under `compactInVacuum/artifacts/access_port_study/icf253/`; state pass.
+- Next Action: rebuild the corrected ICF305 study artifact.
+
+- Timestamp UTC: 2026-08-30T09:10:32Z
+- Timestamp Local: 2026-08-30 18:10:32 JST
+- Module/Scope: CompactInVacuum-afterSRC access-port regression and visual QA
+- Command(s): `uv run --with pytest --with pyyaml pytest -q compactInVacuum/tests/test_platform_config.py compactInVacuum/tests/test_geometry.py`; `./compactInVacuum/run_freecad_tests.sh`; headless FCStd mesh export and four-view rendering through `export_access_port_review_meshes.py` / `render_access_port_review_meshes.py`; FreeCAD STEP reopen audit.
+- Key Parameters/Overrides: ICF253/305/356 candidate comparison; physical/purchased roles only in review images; keepouts remain in FCStd/JSON.
+- Validation Result: pure-Python `41/41` pass; all FreeCAD runtime groups pass; four STEP files reopen as valid non-null compounds with `209` solids each; visual review confirms ICF305 is the balanced active layout and ICF356 has the tightest service margin.
+- Artifacts/State: twelve standard-view PNGs plus `compactInVacuum/artifacts/access_port_study/afterSRC_access_port_comparison.png`; canonical ICF305 state remains pass and was not overwritten by rendering.
+- Next Action: supplier review of the ICF305 fixed/blank flange drawings, weld-neck detail, structural analysis, and a continuous sector extraction demonstration.
+
+- Timestamp UTC: 2026-08-30T08:57:37Z
+- Timestamp Local: 2026-08-30 17:57:37 JST
+- Module/Scope: canonical CompactInVacuum-afterSRC ICF305 maintenance-access full export
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: active ICF305 all-metal access port; `251.0 mm` clear bore; OFHC copper gasket; `420 mm` chamber; helium leak acceptance target `<=1.0e-10 Pa m^3/s`; no elastomer seal.
+- Validation Result: prototype non-strict pass (`41` pass, `10` warnings, `0` fail). Access flange fit, `14.056 mm` service clearance, `23.761 mm` conservative passage margin, nominal metal-seal topology, closed vacuum control volume, LOS, target sweep, and services pass; strict engineering release remains open on evidence gates.
+- Artifacts/State: canonical FCStd `1399170` bytes (`sha256=ab9e1bf7...`), STEP `3132420` bytes (`sha256=b325736c...`, `55046` transfer entities), geometry metrics/report/manifest regenerated under `compactInVacuum/artifacts/afterSRC/`; `compactOne_afterSRC.state.json` pass.
+- Next Action: render and visually inspect ICF253/305/356 standard comparison views, then audit final diffs and states.
+
+- Timestamp UTC: 2026-08-30T08:54:22Z
+- Timestamp Local: 2026-08-30 17:54:22 JST
+- Module/Scope: canonical CompactInVacuum-afterSRC ICF305 maintenance-access validate-only
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --validate-only --force-rebuild`
+- Key Parameters/Overrides: canonical profile now selects the all-metal top ICF305 port, OFHC copper gasket, `420 mm` chamber, and relocated top signal services.
+- Validation Result: prototype non-strict pass (`41` pass, `10` warnings, `0` fail); all access integration geometry checks pass, while purchased drawings, structural release, materials, site envelope, and continuous extraction remain evidence warnings.
+- Artifacts/State: `compactInVacuum/compactOne_afterSRC.state.json` is pass; canonical validation report and channel manifest refreshed under `compactInVacuum/artifacts/afterSRC/`.
+- Next Action: run the canonical full build/export and retain ICF305 as the final active state.
+
+- Timestamp UTC: 2026-08-30T08:51:26Z
+- Timestamp Local: 2026-08-30 17:51:26 JST
+- Module/Scope: CompactInVacuum-afterSRC ICF356 enlarged maintenance-access comparison full export
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC_access_icf356.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: same ICF356 all-metal enlarged-envelope comparison as the preceding validate-only run.
+- Validation Result: prototype non-strict pass (`41` pass, `10` warnings, `0` fail); passage is roomy but service clearance is only `11.109 mm` and chamber length is `480 mm`.
+- Artifacts/State: FCStd `1397226` bytes (`sha256=ca49df4a...`), STEP `3125258` bytes (`sha256=b3eb8322...`, `54890` transfer entities), geometry metrics/report/manifest exported under `compactInVacuum/artifacts/access_port_study/icf356/`; state pass.
+- Next Action: rebuild the canonical afterSRC artifact with ICF305 selected.
+
+- Timestamp UTC: 2026-08-30T08:48:15Z
+- Timestamp Local: 2026-08-30 17:48:15 JST
+- Module/Scope: CompactInVacuum-afterSRC ICF356 enlarged maintenance-access comparison validate-only
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC_access_icf356.sh --pipeline-index codex_targets.yaml --validate-only --force-rebuild`
+- Key Parameters/Overrides: top `ICF356`, `301.8 mm` clear bore, OFHC copper gasket, `480 mm` chamber length, access center `(x,z)=(0,230) mm`, common relocated signal-port layout.
+- Validation Result: prototype non-strict pass (`41` pass, `10` warnings, `0` fail); conservative flat-lift passage margin `+74.561 mm`, minimum service-port clearance `11.109 mm`; complete extraction remains unresolved.
+- Artifacts/State: `compactInVacuum/compactOne_afterSRC_access_icf356.state.json` is pass; report and manifest refreshed under `compactInVacuum/artifacts/access_port_study/icf356/`.
+- Next Action: run the ICF356 comparison full build/export.
+
+- Timestamp UTC: 2026-08-30T08:45:20Z
+- Timestamp Local: 2026-08-30 17:45:20 JST
+- Module/Scope: CompactInVacuum-afterSRC ICF305 recommended maintenance-access full export
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC_access_icf305.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: same selected ICF305 all-metal access configuration as the preceding validate-only run.
+- Validation Result: prototype non-strict pass (`41` pass, `10` warnings, `0` fail); access fit, service clearance, conservative passage, nominal metal-seal topology, and vacuum-control-volume closure pass.
+- Artifacts/State: FCStd `1399025` bytes (`sha256=63ade0b8...`), STEP `3132420` bytes (`sha256=ec3110d0...`, `55046` transfer entities), geometry metrics/report/manifest exported under `compactInVacuum/artifacts/access_port_study/icf305/`; state pass.
+- Next Action: validate the enlarged ICF356 comparison.
+
+- Timestamp UTC: 2026-08-30T08:42:02Z
+- Timestamp Local: 2026-08-30 17:42:02 JST
+- Module/Scope: CompactInVacuum-afterSRC ICF305 recommended maintenance-access validate-only
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC_access_icf305.sh --pipeline-index codex_targets.yaml --validate-only --force-rebuild`
+- Key Parameters/Overrides: top `ICF305`, `251.0 mm` clear bore, OFHC copper gasket, `420 mm` chamber length with upstream face retained, access center `(x,z)=(0,190) mm`, relocated signal ports.
+- Validation Result: prototype non-strict pass (`41` pass, `10` warnings, `0` fail); conservative flat-lift passage margin `+23.761 mm`, minimum service-port clearance `14.056 mm`; continuous extraction remains unresolved.
+- Artifacts/State: `compactInVacuum/compactOne_afterSRC_access_icf305.state.json` is pass; report and manifest refreshed under `compactInVacuum/artifacts/access_port_study/icf305/`.
+- Next Action: run the ICF305 study full build/export.
+
+- Timestamp UTC: 2026-08-30T08:39:05Z
+- Timestamp Local: 2026-08-30 17:39:05 JST
+- Module/Scope: CompactInVacuum-afterSRC ICF253 maintenance-access comparison full export
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC_access_icf253.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: same ICF253 all-metal comparison configuration as the preceding validate-only run.
+- Validation Result: prototype non-strict pass (`40` pass, `11` warnings, `0` fail); ICF253 remains constrained by the `-28.739 mm` flat-lift screen.
+- Artifacts/State: FCStd `1393591` bytes (`sha256=24cc4480...`), STEP `3103088` bytes (`sha256=67f09efa...`, `54422` transfer entities), geometry metrics/report/manifest exported under `compactInVacuum/artifacts/access_port_study/icf253/`; state pass.
+- Next Action: validate the recommended ICF305 study profile.
+
+- Timestamp UTC: 2026-08-30T08:35:22Z
+- Timestamp Local: 2026-08-30 17:35:22 JST
+- Module/Scope: CompactInVacuum-afterSRC ICF253 maintenance-access comparison validate-only
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC_access_icf253.sh --pipeline-index codex_targets.yaml --validate-only --force-rebuild`
+- Key Parameters/Overrides: top `ICF253`, `198.5 mm` clear bore, OFHC copper gasket, `360 mm` chamber length, relocated signal ports, elastomer seal prohibited, helium leak requirement `<=1.0e-10 Pa m^3/s`.
+- Validation Result: prototype non-strict pass (`40` pass, `11` warnings, `0` fail); flat-lift passage warning with `-28.739 mm` margin, while continuous reorientation/lift remains unresolved.
+- Artifacts/State: `compactInVacuum/compactOne_afterSRC_access_icf253.state.json` is pass; validation report and channel manifest refreshed under `compactInVacuum/artifacts/access_port_study/icf253/`.
+- Next Action: run the stateful full build/export for the ICF253 comparison artifact.
+
 - Timestamp UTC: 2026-03-06T06:42:26Z
 - Timestamp Local: 2026-03-06 15:42:26 JST
 - Module/Scope: infrontofSamuraiMag (strict validate-only gate)

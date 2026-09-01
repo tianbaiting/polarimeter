@@ -1,0 +1,20 @@
+schema_version: 1
+module: compactOneAfterSRCICF253Study
+intent:
+  description: CompactInVacuum-afterSRC all-metal top maintenance-port comparison using ICF253; constrained passage study only.
+build:
+  config: ../config/afterSRC_access_icf253.yaml
+  overrides: []
+  doc_name: CompactOne_afterSRC_access_ICF253
+  mode: build
+validation:
+  strict: false
+  angle_tolerance_deg: 0.05
+  radius_tolerance_mm: 0.2
+output:
+  output_dir: ../../../artifacts/access_port_study/icf253
+  basename: CompactOne_afterSRC_access_ICF253
+  formats: [fcstd, step]
+artifacts:
+  report_json: ../../../artifacts/access_port_study/icf253/CompactOne_afterSRC_access_ICF253.validation_report.json
+  channel_manifest_json: ../../../artifacts/access_port_study/icf253/CompactOne_afterSRC_access_ICF253.channel_manifest.json

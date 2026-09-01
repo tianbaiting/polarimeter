@@ -338,6 +338,98 @@ def evaluate_config_rules(cfg: CIVConfig) -> tuple[ConfigRule, ...]:
             strict_only=True,
         )
     )
+    access = deployment.maintenance_access
+    if access is not None and access.enabled:
+        selected_access = access.selected
+        rules.append(
+            _rule(
+                "vacuum",
+                "maintenance_access_all_metal_contract",
+                access.wall == "positive_y_top"
+                and access.seal_type == "conflat_knife_edge_metal_gasket"
+                and access.seal_material == "oxygen_free_copper"
+                and not access.elastomer_seal_allowed
+                and access.helium_leak_rate_max_pa_m3_s <= 1.0e-10,
+                (
+                    f"standard={selected_access.standard}, wall={access.wall}, "
+                    f"seal={access.seal_type}/{access.seal_material}, "
+                    f"elastomer_allowed={access.elastomer_seal_allowed}, "
+                    "helium_leak_rate_max_pa_m3_s="
+                    f"{access.helium_leak_rate_max_pa_m3_s:.3e}"
+                ),
+            )
+        )
+        rules.append(
+            _rule(
+                "vacuum",
+                "maintenance_access_purchased_interface_resolved",
+                access.dimensions_status in {"frozen", "purchased-part-contract"}
+                and access.supplier != "unresolved"
+                and access.fixed_flange_part_number != "unresolved"
+                and access.blank_flange_part_number != "unresolved"
+                and access.certified_drawing_reference != "unresolved",
+                (
+                    f"dimensions={access.dimensions_status}, supplier={access.supplier}, "
+                    f"fixed={access.fixed_flange_part_number}, "
+                    f"blank={access.blank_flange_part_number}, "
+                    f"drawing={access.certified_drawing_reference}"
+                ),
+                strict_only=True,
+            )
+        )
+        rules.append(
+            _rule(
+                "mechanical",
+                "maintenance_access_complete_extraction_evidence",
+                access.complete_extraction_status == "frozen",
+                (
+                    f"status={access.complete_extraction_status}; radial release, "
+                    "in-chamber reorientation, and top lift require one continuous "
+                    "validated motion"
+                ),
+                strict_only=True,
+            )
+        )
+    sector_mounts = tuple(deployment.sector_mount(sector) for sector in cfg.sectors)
+    mount_tangent_limit_mm = {
+        "negative_x": 0.5 * deployment.chamber.inner_size_y_mm
+        - 0.5 * holder.interface_block_mm[1],
+        "positive_x": 0.5 * deployment.chamber.inner_size_y_mm
+        - 0.5 * holder.interface_block_mm[1],
+        "positive_y": 0.5 * deployment.chamber.inner_size_x_mm
+        - 0.5 * holder.interface_block_mm[1],
+        "negative_y": 0.5 * deployment.chamber.inner_size_x_mm
+        - 0.5 * holder.interface_block_mm[1],
+    }
+    rules.append(
+        _rule(
+            "mechanical",
+            "stationary_sector_support_configuration",
+            all(
+                mount.wall_standoff_mm > 0.0
+                and mount.release_clearance_mm
+                >= holder.locating_slot_length_mm
+                and abs(mount.tangent_coordinate_mm)
+                <= mount_tangent_limit_mm[mount.wall]
+                for mount in sector_mounts
+            ),
+            ", ".join(
+                f"{mount.sector}:{mount.wall}@{mount.tangent_coordinate_mm:.1f} mm/"
+                f"standoff={mount.wall_standoff_mm:.1f} mm/"
+                f"release={mount.release_clearance_mm:.1f} mm"
+                for mount in sector_mounts
+            ),
+        )
+    )
+    if access is not None and access.enabled:
+        rules.append(
+            _rule(
+                "mechanical",
+                "maintenance_access_has_no_top_wall_sector_mount",
+                all(mount.wall != "positive_y" for mount in sector_mounts),
+                f"mount_walls={tuple(mount.wall for mount in sector_mounts)}",
+            )
+        )
     return tuple(rules)
 
 

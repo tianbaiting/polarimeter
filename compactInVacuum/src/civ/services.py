@@ -74,14 +74,33 @@ def _ground_strap(
     sector: str,
     start: App.Vector,
 ) -> Part.Shape:
-    if sector == "left":
-        end = App.Vector(-0.5 * cfg.vessel.inner_size_x_mm, start.y, start.z)
-    elif sector == "right":
-        end = App.Vector(0.5 * cfg.vessel.inner_size_x_mm, start.y, start.z)
-    elif sector == "up":
-        end = App.Vector(start.x, 0.5 * cfg.vessel.inner_size_y_mm, start.z)
+    mount = cfg.compact_one.deployment.sector_mount(sector)
+    wall = mount.wall
+    if wall == "negative_x":
+        end = App.Vector(
+            -0.5 * cfg.vessel.inner_size_x_mm,
+            start.y + 12.0,
+            start.z,
+        )
+    elif wall == "positive_x":
+        end = App.Vector(
+            0.5 * cfg.vessel.inner_size_x_mm,
+            start.y + 12.0,
+            start.z,
+        )
+    elif wall == "positive_y":
+        end = App.Vector(
+            start.x + 12.0,
+            0.5 * cfg.vessel.inner_size_y_mm,
+            start.z,
+        )
     else:
-        end = App.Vector(start.x, -0.5 * cfg.vessel.inner_size_y_mm, start.z)
+        end = App.Vector(
+            start.x + 12.0,
+            -0.5 * cfg.vessel.inner_size_y_mm,
+            start.z,
+        )
+    # [EN] The bond follows the configured permanent mount wall and remains electrical only; structural contact is supplied by the interface block itself. / [CN] 等电位连接跟随配置的永久安装壁且仅承担电气作用；结构接触由接口块本体提供。
     return _segment_tube(start, end, 2.5)
 
 
@@ -140,10 +159,18 @@ def build_services(
             holder.service_junction.y,
             service_lane_z_mm,
         )
+        approach_y_mm = (
+            signal_lane.y - 2.5 * routing.minimum_static_bend_radius_mm
+        )
         port_high_lane = App.Vector(
             signal_lane.x,
-            signal_lane.y,
+            approach_y_mm,
             service_lane_z_mm,
+        )
+        port_low_lane = App.Vector(
+            signal_lane.x,
+            approach_y_mm,
+            signal_lane.z,
         )
         tangent = _sector_tangent(sector)
         for index, placement in enumerate(holder.placements):
@@ -152,6 +179,7 @@ def build_services(
                 holder.service_junction + offset,
                 sector_high_lane + offset,
                 port_high_lane + offset,
+                port_low_lane + offset,
                 signal_lane + offset,
                 signal_port.channel_entry_points[index],
             )
@@ -161,11 +189,11 @@ def build_services(
             centerlines[f"{name}_Centerline"] = centerline
             signal_paths.append(name)
 
-        mount_interface = holder.interfaces[f"{sector}_ChamberMountInterface"]
+        mount_block = holder.physical[f"{sector}_SectorInterfaceBlock"]
         start = App.Vector(
-            mount_interface.BoundBox.Center.x,
-            mount_interface.BoundBox.Center.y,
-            mount_interface.BoundBox.Center.z,
+            mount_block.BoundBox.Center.x,
+            mount_block.BoundBox.Center.y,
+            mount_block.BoundBox.Center.z,
         )
         ground_name = f"{sector}_ProtectiveGroundStrap"
         physical[ground_name] = _ground_strap(cfg, sector, start)

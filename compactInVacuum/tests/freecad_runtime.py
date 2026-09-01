@@ -10,19 +10,26 @@ import Part
 
 
 MODULE_ROOT = Path(__file__).resolve().parents[1]
+ACCESS_STUDY_CONFIG_DIR = MODULE_ROOT / "studies" / "access_port" / "config"
 sys.path.insert(0, str(MODULE_ROOT / "src"))
 
 from civ.assembly import (
     build_sector_holder_document,
     build_transparent_detector_head_document,
 )
+from civ.access import (
+    build_maintenance_access_boundary,
+    build_maintenance_access_components,
+)
 from civ.cassette import build_detector_head, detector_head_compound
 from civ.cartridge import build_sector_holder, sector_holder_compound
+from civ.chamber import build_chamber
 from civ.config import load_config
 from civ.detector import detector_stack_metrics
 from civ.internal import build_internal_assembly, internal_compound
 from civ.layout import build_detector_placements
 from civ.services import build_services
+from civ.support import build_sector_mount
 from civ.thermal import evaluate_thermal_paths
 from civ.validation_compact import (
     find_acceptance_obstructions,
@@ -164,6 +171,16 @@ def test_sector_holder_runtime() -> dict[str, object]:
     } <= set(geometry.datums)
     assert "left_SectorRemovalEnvelope" in geometry.keepouts
     assert "left_RearCableLane" in geometry.keepouts
+    assert geometry.stationary_physical_names == (
+        "left_PermanentWallSupport",
+    )
+    assert set(geometry.stationary_purchased_interface_names) == {
+        "left_RoundLocatingPinEnvelope",
+        "left_SlotLocatingPinEnvelope",
+    }
+    assert geometry.physical["left_SectorInterfaceBlock"].distToShape(
+        geometry.physical["left_PermanentWallSupport"]
+    )[0] <= 1.0e-6
     assert all(
         shape.isValid() and not shape.isNull()
         for shape in (
@@ -200,6 +217,7 @@ def test_internal_and_services_runtime() -> dict[str, object]:
     cfg = load_config(str(MODULE_ROOT / "config" / "afterSRC_compact.yaml"))
     internal = build_internal_assembly(cfg)
     services = build_services(cfg, internal)
+    chamber = build_chamber(cfg)
     compound = internal_compound(internal)
     assert compound.isValid() and not compound.isNull()
     assert len(internal.placements) == 12
@@ -238,6 +256,35 @@ def test_internal_and_services_runtime() -> dict[str, object]:
     assert thermal.status == "pass"
     assert len(thermal.channels) == 12
     assert all(item.connected for item in thermal.channels)
+    chamber_body = chamber.physical["ProjectChamberBody"]
+    lift_corridor = chamber.keepouts["MaintenanceAccessInternalLiftCorridor"]
+    for sector, holder in internal.sector_holders.items():
+        block = holder.physical[f"{sector}_SectorInterfaceBlock"]
+        support = holder.physical[f"{sector}_PermanentWallSupport"]
+        ground = services.physical[f"{sector}_ProtectiveGroundStrap"]
+        assert block.distToShape(support)[0] <= 1.0e-6
+        assert support.distToShape(chamber_body)[0] <= 1.0e-6
+        assert ground.Volume > 100.0
+        assert max(
+            ground.BoundBox.XLength,
+            ground.BoundBox.YLength,
+            ground.BoundBox.ZLength,
+        ) > 5.0
+        assert ground.distToShape(block)[0] <= 1.0e-6
+        assert ground.distToShape(support)[0] <= 1.0e-6
+        assert ground.distToShape(chamber_body)[0] <= 1.0e-6
+        assert _intersection_volume_mm3(support, lift_corridor) <= 1.0e-6
+        assert _intersection_volume_mm3(ground, lift_corridor) <= 1.0e-6
+        mount_geometry = build_sector_mount(
+            cfg,
+            sector,
+            block.BoundBox.Center.z,
+        )
+        assert mount_geometry.interface_block.distToShape(block)[0] <= 1.0e-6
+        assert mount_geometry.stationary_support.distToShape(support)[0] <= 1.0e-6
+        assert set(mount_geometry.stationary_purchased_interfaces) == set(
+            holder.stationary_purchased_interface_names
+        )
 
     configured = {
         (placement.channel_name, placement.sector_name): (
@@ -328,6 +375,95 @@ def test_document_roles_runtime() -> dict[str, object]:
     }
 
 
+def test_maintenance_access_runtime() -> dict[str, object]:
+    observed: dict[str, object] = {}
+    for profile in (
+        "afterSRC_access_icf253.yaml",
+        "afterSRC_access_icf305.yaml",
+        "afterSRC_access_icf356.yaml",
+    ):
+        cfg = load_config(str(ACCESS_STUDY_CONFIG_DIR / profile))
+        access = cfg.compact_one.deployment.maintenance_access
+        assert access is not None and access.enabled
+        spec = access.selected
+        chamber = build_chamber(cfg)
+        boundary = build_maintenance_access_boundary(cfg)
+        assert boundary is not None
+        (
+            access_physical,
+            access_purchased,
+            access_keepouts,
+            access_datums,
+            access_materials,
+        ) = build_maintenance_access_components(cfg)
+        assert {
+            "MaintenanceAccessProjectWeldNeck",
+            "MaintenanceAccessProjectWeldBead",
+        } <= set(access_physical) <= set(chamber.physical)
+        assert {
+            "MaintenanceAccessFixedICFFlange",
+            "MaintenanceAccessCopperGasket",
+            "MaintenanceAccessBlindFlange",
+        } <= set(access_purchased) <= set(chamber.purchased_interfaces)
+        assert {
+            "MaintenanceAccessOpenPassage",
+            "MaintenanceAccessBlindRemovalEnvelope",
+        } <= set(access_keepouts) <= set(chamber.keepouts)
+        assert "MaintenanceAccessSealPlaneDatum" in access_datums
+        assert set(access_materials) == set(access_physical)
+        assert all(
+            shape.isValid() and not shape.isNull()
+            for shape in (
+                chamber.physical["MaintenanceAccessProjectWeldNeck"],
+                chamber.purchased_interfaces["MaintenanceAccessFixedICFFlange"],
+                chamber.purchased_interfaces["MaintenanceAccessCopperGasket"],
+                chamber.purchased_interfaces["MaintenanceAccessBlindFlange"],
+            )
+        )
+        fixed = chamber.purchased_interfaces["MaintenanceAccessFixedICFFlange"]
+        gasket = chamber.purchased_interfaces["MaintenanceAccessCopperGasket"]
+        blank = chamber.purchased_interfaces["MaintenanceAccessBlindFlange"]
+        neck = chamber.physical["MaintenanceAccessProjectWeldNeck"]
+        weld_bead = chamber.physical["MaintenanceAccessProjectWeldBead"]
+        assert math.isclose(
+            fixed.BoundBox.XLength,
+            spec.flange_outer_diameter_mm,
+            rel_tol=0.0,
+            abs_tol=1.0e-6,
+        )
+        assert math.isclose(
+            fixed.BoundBox.ZLength,
+            spec.flange_outer_diameter_mm,
+            rel_tol=0.0,
+            abs_tol=1.0e-6,
+        )
+        assert neck.distToShape(weld_bead)[0] <= 1.0e-6
+        assert weld_bead.distToShape(fixed)[0] <= 1.0e-6
+        assert fixed.distToShape(gasket)[0] <= 1.0e-6
+        assert gasket.distToShape(blank)[0] <= 1.0e-6
+        assert chamber.vacuum_control_volume.isValid()
+        assert len(chamber.vacuum_control_volume.Solids) == 1
+        expected_seal_plane_y_mm = (
+            0.5 * chamber.candidate.inner_size_y_mm
+            + chamber.candidate.wall_thickness_mm
+            + spec.weld_neck_length_mm
+            + spec.flange_thickness_mm
+            + spec.gasket_thickness_mm
+        )
+        assert math.isclose(
+            chamber.vacuum_control_volume.BoundBox.YMax,
+            expected_seal_plane_y_mm,
+            rel_tol=0.0,
+            abs_tol=1.0e-6,
+        )
+        observed[spec.standard] = {
+            "clear_bore_diameter_mm": spec.clear_bore_diameter_mm,
+            "flange_outer_diameter_mm": spec.flange_outer_diameter_mm,
+            "chamber_length_mm": chamber.candidate.length_mm,
+        }
+    return {"status": "pass", "candidates": observed}
+
+
 def test_categorized_validation_runtime() -> dict[str, object]:
     cfg = load_config(str(MODULE_ROOT / "config" / "afterSRC_compact.yaml"))
     report = validate_compact_one(
@@ -343,10 +479,21 @@ def test_categorized_validation_runtime() -> dict[str, object]:
         "sipm_behind_and_aligned_with_optical_coupling",
         "physical_detector_head_depth_gate",
         "coherent_three_detector_sector_holders",
-        "sector_radial_removal_envelope_clear",
+        "sector_mount_release_envelope_clear",
         "detector_axial_removal_after_clamp_release_clear",
         "full_active_acceptance_clear",
         "cable_routing_and_connector_keepouts_clear",
+        "maintenance_access_all_metal_contract",
+        "maintenance_access_flange_within_top_face",
+        "maintenance_access_service_ports_clear",
+        "maintenance_access_detached_holder_passage_screen",
+        "maintenance_access_nominal_metal_seal_topology",
+        "holder_to_stationary_support_load_path",
+        "stationary_support_to_permanent_chamber_contact",
+        "protective_ground_bond_to_permanent_chamber",
+        "maintenance_access_closure_load_free",
+        "stationary_sector_support_configuration",
+        "maintenance_access_has_no_top_wall_sector_mount",
     }
     assert all(
         _check_by_name(report, name)["status"] == "pass"
@@ -356,6 +503,19 @@ def test_categorized_validation_runtime() -> dict[str, object]:
     assert len(metrics["detector_acceptance"]) == 12
     assert len(metrics["coincidence_geometry"]) == 8
     assert metrics["detector_head_stack"]["calculated_physical_depth_mm"] == 9.7
+    assert metrics["maintenance_access"]["selected_candidate"]["standard"] == "ICF305"
+    comparison = {
+        item["standard"]: item
+        for item in metrics["maintenance_access"]["candidate_comparison"]
+    }
+    assert not comparison["ICF253"]["flat_lift_screen_passed"]
+    assert not comparison["ICF253"]["edge_on_screen_passed"]
+    assert comparison["ICF305"]["flat_lift_screen_passed"]
+    assert comparison["ICF356"]["flat_lift_screen_passed"]
+    assert _check_by_name(
+        report,
+        "maintenance_access_complete_extraction_evidence",
+    )["status"] == "warning"
 
     return {
         "status": "pass",
@@ -391,6 +551,10 @@ def main() -> int:
                 "categorized_validation": run_case(
                     "categorized_validation",
                     test_categorized_validation_runtime,
+                ),
+                "maintenance_access": run_case(
+                    "maintenance_access",
+                    test_maintenance_access_runtime,
                 ),
                 "document_roles": run_case(
                     "document_roles",
