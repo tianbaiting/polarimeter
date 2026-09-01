@@ -1,46 +1,58 @@
 {
   "chamber": {
     "assembly_helium_leak_rate_max_pa_m3_s": 1e-10,
-    "beam_bore_mm": 63.0,
-    "closed_shell_material_volume_l": 10.352,
+    "beam_bore_mm": 60.2,
+    "closed_shell_material_volume_l": 9.11872,
     "icf114_reference_clear_bore_mm": 60.2,
-    "icf114_stay_clear_deficit_mm": 2.799999999999997,
-    "length_mm": 360.0,
-    "outer_size_x_mm": 460.0,
-    "outer_size_y_mm": 460.0,
-    "pipe_inner_mm": 63.0,
-    "pipe_outer_mm": 63.6,
-    "pipe_radial_wall_mm": 0.3000000000000007,
-    "screening_mass_kg": 81.7808
+    "icf114_stay_clear_deficit_mm": 0.0,
+    "inner_size_x_mm": 440.0,
+    "inner_size_y_mm": 440.0,
+    "length_mm": 420.0,
+    "maintenance_access": {
+      "clear_bore_diameter_mm": 251.0,
+      "complete_extraction_status": "placeholder",
+      "elastomer_seal_allowed": false,
+      "flange_outer_diameter_mm": 305.0,
+      "passage_margin_mm": 23.760715671936794,
+      "seal_material": "oxygen_free_copper",
+      "standard": "ICF305"
+    },
+    "outer_size_x_mm": 456.0,
+    "outer_size_y_mm": 456.0,
+    "pipe_inner_mm": 60.2,
+    "pipe_outer_mm": 63.5,
+    "pipe_radial_wall_mm": 1.6499999999999986,
+    "screening_mass_kg": 72.037888,
+    "wall_thickness_mm": 8.0
   },
   "electronics": {
-    "average_current_a": 0.009952851935325475,
+    "average_current_a": 0.01081191724400153,
     "effective_charge_window_ns": 20.0,
-    "eqr15_legacy_10mm_charge_nc": 0.5545441889015565,
-    "eqr15_legacy_10mm_nonlinearity_percent": 2.605232106442612,
-    "eqr15_normal_charge_nc": 0.19905703870650948,
+    "eqr15_legacy_10mm_charge_nc": 0.5065172718289244,
+    "eqr15_legacy_10mm_nonlinearity_percent": 2.3777534350784446,
+    "eqr15_normal_charge_nc": 0.21623834488003058,
     "recommended_low_gain_range_nc": 1.5,
     "termination_ohm": 50.0,
-    "voltage_scale_v": 0.49764259676627376
+    "voltage_scale_v": 0.5405958622000765
   },
   "energy_deposition": [
     {
       "all_stopped": false,
       "branch": "branch1",
       "deposit_range_mev": [
-        2.915791929087902,
-        3.186781603927102
+        3.2073711219967436,
+        3.4711265383401724
       ],
       "incident_range_mev": [
-        252.08532388850335,
-        289.68677517678725
+        256.01843675063765,
+        286.1304357308145
       ],
       "key": "forward_dp_deuteron",
       "lab_range_deg": [
-        19.040956450000003,
-        22.679090125000002
+        19.416494250000003,
+        22.329804375000002
       ],
-      "maximum_particle_range_mm": 286.6148820731548,
+      "maximum_particle_range_mm": 280.5164711912007,
       "particle": "deuteron",
       "reaction": "d-p forward",
       "significance": "Clean timing and charge signal",
@@ -51,19 +63,19 @@
       "all_stopped": false,
       "branch": "proton",
       "deposit_range_mev": [
-        3.160738080836623,
-        4.153748070089904
+        3.570501168527656,
+        4.417860227143549
       ],
       "incident_range_mev": [
-        90.31230758489187,
-        127.91553467287258
+        93.86769374484561,
+        123.98382645308538
       ],
       "key": "forward_dp_proton",
       "lab_range_deg": [
-        49.910697549999995,
-        56.889293349999996
+        50.60748925,
+        56.19250165
       ],
-      "maximum_particle_range_mm": 115.25128867037219,
+      "maximum_particle_range_mm": 109.06368626833273,
       "particle": "proton",
       "reaction": "d-p forward",
       "significance": "Normal proton coincidence branch",
@@ -74,19 +86,19 @@
       "all_stopped": false,
       "branch": "branch2",
       "deposit_range_mev": [
-        9.691447761421891,
-        13.934194584147903
+        11.142387609294474,
+        15.149218152710588
       ],
       "incident_range_mev": [
-        45.71403487653561,
-        65.28368480562517
+        46.86350724575982,
+        62.76412233751603
       ],
       "key": "backward_dp_deuteron",
       "lab_range_deg": [
-        15.797938375,
-        25.4371127
+        16.832669600000003,
+        24.744548025
       ],
-      "maximum_particle_range_mm": 19.735027203482794,
+      "maximum_particle_range_mm": 18.372132875420856,
       "particle": "deuteron",
       "reaction": "d-p backward",
       "significance": "Maximum normal d-p light-load case",
@@ -97,19 +109,19 @@
       "all_stopped": false,
       "branch": "proton",
       "deposit_range_mev": [
-        1.7071255420123634,
-        1.7649758198313066
+        1.8778380962135657,
+        1.9414734018143918
       ],
       "incident_range_mev": [
-        314.71548240394236,
-        334.2857033143141
+        317.23541622378684,
+        333.13663701800783
       ],
       "key": "backward_dp_proton",
       "lab_range_deg": [
-        7.58260405,
-        14.9638796
+        8.1872911,
+        14.212581525
       ],
-      "maximum_particle_range_mm": 595.8953964372945,
+      "maximum_particle_range_mm": 592.5298961620431,
       "particle": "proton",
       "reaction": "d-p backward",
       "significance": "Lowest normal signal; trigger/noise case",
@@ -119,19 +131,19 @@
     {
       "all_stopped": false,
       "deposit_range_mev": [
-        2.418379685610603,
-        2.4619626766458396
+        2.6602176541716744,
+        2.708158944310412
       ],
       "incident_range_mev": [
-        366.0638568830909,
-        374.73712072589115
+        367.0971270660184,
+        374.048603599922
       ],
       "key": "dc_deuteron",
       "lab_range_deg": [
-        15.797834747641808,
-        26.00216525235819
+        16.81438322002512,
+        24.985616779974876
       ],
-      "maximum_particle_range_mm": 448.63399710077994,
+      "maximum_particle_range_mm": 447.2104879428387,
       "particle": "deuteron",
       "reaction": "d-C elastic",
       "significance": "Coincidence geometry remains essential",
@@ -141,19 +153,19 @@
     {
       "all_stopped": true,
       "deposit_range_mev": [
-        182.8837694458598,
-        192.75054007993458
+        184.14662664667776,
+        192.05219621885226
       ],
       "incident_range_mev": [
-        182.8837694458598,
-        192.75054007993458
+        184.14662664667776,
+        192.05219621885226
       ],
       "key": "dc_carbon_small",
       "lab_range_deg": [
-        7.435965135094282,
-        14.964034864905717
+        8.18721249581666,
+        14.21278750418334
       ],
-      "maximum_particle_range_mm": 0.9228896900541518,
+      "maximum_particle_range_mm": 0.9168252719645129,
       "particle": "carbon",
       "reaction": "d-C elastic",
       "significance": "Conservative high-load background",
@@ -163,19 +175,19 @@
     {
       "all_stopped": true,
       "deposit_range_mev": [
-        58.14817607472287,
-        80.89362493100089
+        60.332894752649736,
+        78.55354494528365
       ],
       "incident_range_mev": [
-        58.14817607472287,
-        80.89362493100089
+        60.332894752649736,
+        78.55354494528365
       ],
       "key": "dc_carbon_large",
       "lab_range_deg": [
-        49.91067509420361,
-        56.889324905796386
+        50.60729763428672,
+        56.19270236571328
       ],
-      "maximum_particle_range_mm": 0.2102724659385539,
+      "maximum_particle_range_mm": 0.20041643905204384,
       "particle": "carbon",
       "reaction": "d-C elastic",
       "significance": "High-load background",
@@ -184,41 +196,35 @@
     }
   ],
   "geometry": {
-    "active_diameter_mm": 25.0,
-    "active_length_mm": 50.0,
+    "active_diameter_mm": 20.0,
+    "active_length_mm": 5.5,
     "beam_energy_mev": 380.0,
     "channel_acceptance_lab_deg": {
       "deuteron": [
-        15.797834747641808,
-        26.00216525235819
+        16.81438322002512,
+        24.985616779974876
       ],
       "proton_large": [
-        49.91067509420361,
-        56.889324905796386
+        50.60729763428672,
+        56.19270236571328
       ],
       "proton_small": [
-        7.435965135094282,
-        14.964034864905717
+        8.18721249581666,
+        14.21278750418334
       ]
     },
     "coincidence_cm_overlap_deg": {
       "backward": [
-        147.59544903950248,
-        163.53067719822872
+        149.21037429039743,
+        162.22006885007897
       ],
       "forward": [
-        61.916698359563014,
-        75.49919696766767
+        63.26147332196236,
+        74.13128505794886
       ]
-    },
-    "compact_v2_active_diameter_mm": 20.0,
-    "compact_v2_scaled_radii_mm": {
-      "deuteron": 112.0,
-      "proton_large": 164.0,
-      "proton_small": 152.0
     }
   },
-  "git_commit": "13a2e736477e0a706276c78db6e64e5e06dd55b0",
+  "git_commit": "cb57cdf88ebb66067e5f42d8f10175e0d6fe3afd",
   "instrument_interfaces": {
     "compact_after_src": {
       "classification": "D",
@@ -230,18 +236,18 @@
       "front": "TBD",
       "rear": "TBD"
     },
+    "current_provisional_cad_envelope": {
+      "adapters_and_bellows_allowed": true,
+      "classification": "C",
+      "front": "ICF114",
+      "rear": "ICF114"
+    },
     "legacy_after_src_external": {
       "classification": "B",
       "extra_side_vacuum_ports": false,
       "front": "ICF114",
       "rear": "ICF114",
       "rotary_feedthrough": "ICF70"
-    },
-    "legacy_numerical_reference_cad": {
-      "adapters_and_bellows_allowed": true,
-      "classification": "C",
-      "front": "ICF114",
-      "rear": "ICF114"
     },
     "vacuum_boundary": {
       "assembly_helium_leak_rate_max_pa_m3_s": 1e-10,
@@ -341,7 +347,7 @@
       "installation and maintenance access"
     ]
   },
-  "schema_version": 2,
+  "schema_version": 3,
   "sipm": [
     {
       "carbon_5pct": {
@@ -354,16 +360,16 @@
       "name": "NDL EQR15 11-6060D-S",
       "normal": {
         "2pct": {
-          "charge_nc": 0.08007009624280592,
-          "fired_cells": 1249.3955807310497,
-          "nonlinearity_percent": 0.3733367192474968,
-          "seed_photoelectrons": 1254.0775125733114
+          "charge_nc": 0.08702362113831177,
+          "fired_cells": 1357.8968025680213,
+          "nonlinearity_percent": 0.4058024733362031,
+          "seed_photoelectrons": 1363.429633743953
         },
         "5pct": {
-          "charge_nc": 0.19905703870650948,
-          "fired_cells": 3106.040783554916,
-          "nonlinearity_percent": 0.9298627105924773,
-          "seed_photoelectrons": 3135.193781433278
+          "charge_nc": 0.21623834488003058,
+          "fired_cells": 3374.133979537717,
+          "nonlinearity_percent": 1.0103962527965304,
+          "seed_photoelectrons": 3408.574084359883
         }
       },
       "ten_percent_limit_mev": 159.76011211277637
@@ -379,16 +385,16 @@
       "name": "NDL EQR20 11-6060D-S",
       "normal": {
         "2pct": {
-          "charge_nc": 0.16957896098647485,
-          "fired_cells": 1323.035779793388,
-          "nonlinearity_percent": 0.6811171184838205,
-          "seed_photoelectrons": 1332.1090022445396
+          "charge_nc": 0.18425607823602874,
+          "fired_cells": 1437.544980418407,
+          "nonlinearity_percent": 0.7402148840317757,
+          "seed_photoelectrons": 1448.2652553991322
         },
         "5pct": {
-          "charge_nc": 0.41963569715205296,
-          "fired_cells": 3273.950014677759,
-          "nonlinearity_percent": 1.6912276949915928,
-          "seed_photoelectrons": 3330.2725056113486
+          "charge_nc": 0.4555508361416773,
+          "fired_cells": 3554.1558470705836,
+          "nonlinearity_percent": 1.836881501625709,
+          "seed_photoelectrons": 3620.663138497831
         }
       },
       "ten_percent_limit_mev": 87.3879250138756
@@ -404,16 +410,16 @@
       "name": "Hamamatsu S13360-6025CS",
       "normal": {
         "2pct": {
-          "charge_nc": 0.0776669799997162,
-          "fired_cells": 692.5130863631302,
-          "nonlinearity_percent": 0.6023516922950445,
-          "seed_photoelectrons": 696.7097292073952
+          "charge_nc": 0.08439490369634119,
+          "fired_cells": 752.502224655651,
+          "nonlinearity_percent": 0.6546453988440559,
+          "seed_photoelectrons": 757.4609076355295
         },
         "5pct": {
-          "charge_nc": 0.1924201367728357,
-          "fired_cells": 1715.7028996809074,
-          "nonlinearity_percent": 1.4968313054700921,
-          "seed_photoelectrons": 1741.7743230184878
+          "charge_nc": 0.2089244712691133,
+          "fired_cells": 1862.862833290125,
+          "nonlinearity_percent": 1.625928704086399,
+          "seed_photoelectrons": 1893.6522690888237
         }
       },
       "ten_percent_limit_mev": 98.8672855778285
@@ -429,16 +435,16 @@
       "name": "Ray-Quant JSP-TP6050",
       "normal": {
         "2pct": {
-          "charge_nc": 0.31689020655172406,
-          "fired_cells": 941.844333238253,
-          "nonlinearity_percent": 3.439563980485738,
-          "seed_photoelectrons": 975.3936208903532
+          "charge_nc": 0.34347901156266547,
+          "fired_cells": 1020.870175026281,
+          "nonlinearity_percent": 3.731931930604915,
+          "seed_photoelectrons": 1060.4452706897412
         },
         "5pct": {
-          "charge_nc": 0.7522877370018154,
-          "fired_cells": 2235.9098748106585,
-          "nonlinearity_percent": 8.307381679626392,
-          "seed_photoelectrons": 2438.484052225883
+          "charge_nc": 0.8118225465420488,
+          "fired_cells": 2412.8560909971634,
+          "nonlinearity_percent": 8.987058259865533,
+          "seed_photoelectrons": 2651.113176724353
         }
       },
       "ten_percent_limit_mev": 16.983006446231155
@@ -447,12 +453,12 @@
   "thickness_study": {
     "candidate_all_particles_stopped": false,
     "candidate_all_protons_stopped": false,
-    "candidate_maximum_deposit_mev": 13.934194584147903,
-    "candidate_minimum_deposit_mev": 1.7071255420123634,
-    "candidate_thickness_mm": 5.0,
-    "legacy_maximum_deposit_mev": 39.48640799223403,
+    "candidate_maximum_deposit_mev": 15.149218152710588,
+    "candidate_minimum_deposit_mev": 1.8778380962135657,
+    "candidate_thickness_mm": 5.5,
+    "legacy_maximum_deposit_mev": 35.98260141326039,
     "legacy_reference_thickness_mm": 10.0,
-    "maximum_deposit_reduction_percent": 64.71141516116532,
+    "maximum_deposit_reduction_percent": 57.89849105482472,
     "primary_range_model": "atima_1_2_ls",
     "range_model_envelope": [
       "hubert_1990",
@@ -465,19 +471,19 @@
       {
         "all_models_stopped": false,
         "all_protons_stopped": false,
-        "maximum_model_range_mm": 598.1642534627578,
+        "maximum_model_range_mm": 594.7864581781358,
         "primary_results": {
           "backward_dp_deuteron": {
             "all_stopped": false,
             "deposit_range_mev": [
-              1.8486851227064705,
-              2.486365261497788
+              1.9068319685622797,
+              2.426313533918403
             ],
             "incident_range_mev": [
-              45.71403487653561,
-              65.28368480562517
+              46.86350724575982,
+              62.76412233751603
             ],
-            "maximum_particle_range_mm": 19.735027203482794
+            "maximum_particle_range_mm": 18.372132875420856
           },
           "backward_dp_proton": {
             "all_stopped": false,
@@ -486,10 +492,10 @@
               0.35299516396628405
             ],
             "incident_range_mev": [
-              314.71548240394236,
-              334.2857033143141
+              317.23541622378684,
+              333.13663701800783
             ],
-            "maximum_particle_range_mm": 595.8953964372945
+            "maximum_particle_range_mm": 592.5298961620431
           },
           "forward_dp_deuteron": {
             "all_stopped": false,
@@ -498,22 +504,22 @@
               0.6311139160618495
             ],
             "incident_range_mev": [
-              252.08532388850335,
-              289.68677517678725
+              256.01843675063765,
+              286.1304357308145
             ],
-            "maximum_particle_range_mm": 286.6148820731548
+            "maximum_particle_range_mm": 280.5164711912007
           },
           "forward_dp_proton": {
             "all_stopped": false,
             "deposit_range_mev": [
-              0.6307556452630223,
-              0.8200258024920117
+              0.6491820306413842,
+              0.7991305459659941
             ],
             "incident_range_mev": [
-              90.31230758489187,
-              127.91553467287258
+              93.86769374484561,
+              123.98382645308538
             ],
-            "maximum_particle_range_mm": 115.25128867037219
+            "maximum_particle_range_mm": 109.06368626833273
           }
         },
         "thickness_mm": 1.0
@@ -521,19 +527,19 @@
       {
         "all_models_stopped": false,
         "all_protons_stopped": false,
-        "maximum_model_range_mm": 598.1642534627578,
+        "maximum_model_range_mm": 594.7864581781358,
         "primary_results": {
           "backward_dp_deuteron": {
             "all_stopped": false,
             "deposit_range_mev": [
-              3.7195492320318806,
-              5.0922132491727226
+              3.854630955706803,
+              4.965716647632206
             ],
             "incident_range_mev": [
-              45.71403487653561,
-              65.28368480562517
+              46.86350724575982,
+              62.76412233751603
             ],
-            "maximum_particle_range_mm": 19.735027203482794
+            "maximum_particle_range_mm": 18.372132875420856
           },
           "backward_dp_proton": {
             "all_stopped": false,
@@ -542,10 +548,10 @@
               0.7059903279325113
             ],
             "incident_range_mev": [
-              314.71548240394236,
-              334.2857033143141
+              317.23541622378684,
+              333.13663701800783
             ],
-            "maximum_particle_range_mm": 595.8953964372945
+            "maximum_particle_range_mm": 592.5298961620431
           },
           "forward_dp_deuteron": {
             "all_stopped": false,
@@ -554,22 +560,22 @@
               1.262227832123699
             ],
             "incident_range_mev": [
-              252.08532388850335,
-              289.68677517678725
+              256.01843675063765,
+              286.1304357308145
             ],
-            "maximum_particle_range_mm": 286.6148820731548
+            "maximum_particle_range_mm": 280.5164711912007
           },
           "forward_dp_proton": {
             "all_stopped": false,
             "deposit_range_mev": [
-              1.2615112905260446,
-              1.6534563693914919
+              1.2983640612827827,
+              1.5982610919319882
             ],
             "incident_range_mev": [
-              90.31230758489187,
-              127.91553467287258
+              93.86769374484561,
+              123.98382645308538
             ],
-            "maximum_particle_range_mm": 115.25128867037219
+            "maximum_particle_range_mm": 109.06368626833273
           }
         },
         "thickness_mm": 2.0
@@ -577,19 +583,19 @@
       {
         "all_models_stopped": false,
         "all_protons_stopped": false,
-        "maximum_model_range_mm": 598.1642534627578,
+        "maximum_model_range_mm": 594.7864581781358,
         "primary_results": {
           "backward_dp_deuteron": {
             "all_stopped": false,
             "deposit_range_mev": [
-              5.667348219176411,
-              7.840076783152952
+              5.8609682728640635,
+              7.653630311185296
             ],
             "incident_range_mev": [
-              45.71403487653561,
-              65.28368480562517
+              46.86350724575982,
+              62.76412233751603
             ],
-            "maximum_particle_range_mm": 19.735027203482794
+            "maximum_particle_range_mm": 18.372132875420856
           },
           "backward_dp_proton": {
             "all_stopped": false,
@@ -598,10 +604,10 @@
               1.0589854918987953
             ],
             "incident_range_mev": [
-              314.71548240394236,
-              334.2857033143141
+              317.23541622378684,
+              333.13663701800783
             ],
-            "maximum_particle_range_mm": 595.8953964372945
+            "maximum_particle_range_mm": 592.5298961620431
           },
           "forward_dp_deuteron": {
             "all_stopped": false,
@@ -610,22 +616,22 @@
               1.8933417481855486
             ],
             "incident_range_mev": [
-              252.08532388850335,
-              289.68677517678725
+              256.01843675063765,
+              286.1304357308145
             ],
-            "maximum_particle_range_mm": 286.6148820731548
+            "maximum_particle_range_mm": 280.5164711912007
           },
           "forward_dp_proton": {
             "all_stopped": false,
             "deposit_range_mev": [
-              1.892266935789067,
-              2.486886936290958
+              1.947546091924167,
+              2.397391637897968
             ],
             "incident_range_mev": [
-              90.31230758489187,
-              127.91553467287258
+              93.86769374484561,
+              123.98382645308538
             ],
-            "maximum_particle_range_mm": 115.25128867037219
+            "maximum_particle_range_mm": 109.06368626833273
           }
         },
         "thickness_mm": 3.0
@@ -633,19 +639,19 @@
       {
         "all_models_stopped": false,
         "all_protons_stopped": false,
-        "maximum_model_range_mm": 598.1642534627578,
+        "maximum_model_range_mm": 594.7864581781358,
         "primary_results": {
           "backward_dp_deuteron": {
             "all_stopped": false,
             "deposit_range_mev": [
-              7.63383459269761,
-              10.783093287307928
+              7.918581441588344,
+              10.493082513723309
             ],
             "incident_range_mev": [
-              45.71403487653561,
-              65.28368480562517
+              46.86350724575982,
+              62.76412233751603
             ],
-            "maximum_particle_range_mm": 19.735027203482794
+            "maximum_particle_range_mm": 18.372132875420856
           },
           "backward_dp_proton": {
             "all_stopped": false,
@@ -654,34 +660,34 @@
               1.4119806558650225
             ],
             "incident_range_mev": [
-              314.71548240394236,
-              334.2857033143141
+              317.23541622378684,
+              333.13663701800783
             ],
-            "maximum_particle_range_mm": 595.8953964372945
+            "maximum_particle_range_mm": 592.5298961620431
           },
           "forward_dp_deuteron": {
             "all_stopped": false,
             "deposit_range_mev": [
               2.332633543270333,
-              2.537262248250329
+              2.524455664247398
             ],
             "incident_range_mev": [
-              252.08532388850335,
-              289.68677517678725
+              256.01843675063765,
+              286.1304357308145
             ],
-            "maximum_particle_range_mm": 286.6148820731548
+            "maximum_particle_range_mm": 280.5164711912007
           },
           "forward_dp_proton": {
             "all_stopped": false,
             "deposit_range_mev": [
-              2.523022581052089,
-              3.3203175031904237
+              2.5967281225655654,
+              3.196522183863962
             ],
             "incident_range_mev": [
-              90.31230758489187,
-              127.91553467287258
+              93.86769374484561,
+              123.98382645308538
             ],
-            "maximum_particle_range_mm": 115.25128867037219
+            "maximum_particle_range_mm": 109.06368626833273
           }
         },
         "thickness_mm": 4.0
@@ -689,19 +695,19 @@
       {
         "all_models_stopped": false,
         "all_protons_stopped": false,
-        "maximum_model_range_mm": 598.1642534627578,
+        "maximum_model_range_mm": 594.7864581781358,
         "primary_results": {
           "backward_dp_deuteron": {
             "all_stopped": false,
             "deposit_range_mev": [
-              9.691447761421891,
-              13.934194584147903
+              10.050505750911555,
+              13.540932648816565
             ],
             "incident_range_mev": [
-              45.71403487653561,
-              65.28368480562517
+              46.86350724575982,
+              62.76412233751603
             ],
-            "maximum_particle_range_mm": 19.735027203482794
+            "maximum_particle_range_mm": 18.372132875420856
           },
           "backward_dp_proton": {
             "all_stopped": false,
@@ -710,34 +716,34 @@
               1.7649758198313066
             ],
             "incident_range_mev": [
-              314.71548240394236,
-              334.2857033143141
+              317.23541622378684,
+              333.13663701800783
             ],
-            "maximum_particle_range_mm": 595.8953964372945
+            "maximum_particle_range_mm": 592.5298961620431
           },
           "forward_dp_deuteron": {
             "all_stopped": false,
             "deposit_range_mev": [
               2.915791929087902,
-              3.186781603927102
+              3.1555695803092476
             ],
             "incident_range_mev": [
-              252.08532388850335,
-              289.68677517678725
+              256.01843675063765,
+              286.1304357308145
             ],
-            "maximum_particle_range_mm": 286.6148820731548
+            "maximum_particle_range_mm": 280.5164711912007
           },
           "forward_dp_proton": {
             "all_stopped": false,
             "deposit_range_mev": [
-              3.160738080836623,
-              4.153748070089904
+              3.2459101532069496,
+              4.0011449436938165
             ],
             "incident_range_mev": [
-              90.31230758489187,
-              127.91553467287258
+              93.86769374484561,
+              123.98382645308538
             ],
-            "maximum_particle_range_mm": 115.25128867037219
+            "maximum_particle_range_mm": 109.06368626833273
           }
         },
         "thickness_mm": 5.0
@@ -745,19 +751,75 @@
       {
         "all_models_stopped": false,
         "all_protons_stopped": false,
-        "maximum_model_range_mm": 598.1642534627578,
+        "maximum_model_range_mm": 594.7864581781358,
         "primary_results": {
           "backward_dp_deuteron": {
             "all_stopped": false,
             "deposit_range_mev": [
-              11.777592752378908,
-              17.386161269026523
+              11.142387609294474,
+              15.149218152710588
             ],
             "incident_range_mev": [
-              45.71403487653561,
-              65.28368480562517
+              46.86350724575982,
+              62.76412233751603
             ],
-            "maximum_particle_range_mm": 19.735027203482794
+            "maximum_particle_range_mm": 18.372132875420856
+          },
+          "backward_dp_proton": {
+            "all_stopped": false,
+            "deposit_range_mev": [
+              1.8778380962135657,
+              1.9414734018143918
+            ],
+            "incident_range_mev": [
+              317.23541622378684,
+              333.13663701800783
+            ],
+            "maximum_particle_range_mm": 592.5298961620431
+          },
+          "forward_dp_deuteron": {
+            "all_stopped": false,
+            "deposit_range_mev": [
+              3.2073711219967436,
+              3.4711265383401724
+            ],
+            "incident_range_mev": [
+              256.01843675063765,
+              286.1304357308145
+            ],
+            "maximum_particle_range_mm": 280.5164711912007
+          },
+          "forward_dp_proton": {
+            "all_stopped": false,
+            "deposit_range_mev": [
+              3.570501168527656,
+              4.417860227143549
+            ],
+            "incident_range_mev": [
+              93.86769374484561,
+              123.98382645308538
+            ],
+            "maximum_particle_range_mm": 109.06368626833273
+          }
+        },
+        "thickness_mm": 5.5
+      },
+      {
+        "all_models_stopped": false,
+        "all_protons_stopped": false,
+        "maximum_model_range_mm": 594.7864581781358,
+        "primary_results": {
+          "backward_dp_deuteron": {
+            "all_stopped": false,
+            "deposit_range_mev": [
+              12.2342694676774,
+              16.829297452453538
+            ],
+            "incident_range_mev": [
+              46.86350724575982,
+              62.76412233751603
+            ],
+            "maximum_particle_range_mm": 18.372132875420856
           },
           "backward_dp_proton": {
             "all_stopped": false,
@@ -766,34 +828,34 @@
               2.117970983797534
             ],
             "incident_range_mev": [
-              314.71548240394236,
-              334.2857033143141
+              317.23541622378684,
+              333.13663701800783
             ],
-            "maximum_particle_range_mm": 595.8953964372945
+            "maximum_particle_range_mm": 592.5298961620431
           },
           "forward_dp_deuteron": {
             "all_stopped": false,
             "deposit_range_mev": [
               3.498950314905528,
-              3.8363009596039035
+              3.786683496371097
             ],
             "incident_range_mev": [
-              252.08532388850335,
-              289.68677517678725
+              256.01843675063765,
+              286.1304357308145
             ],
-            "maximum_particle_range_mm": 286.6148820731548
+            "maximum_particle_range_mm": 280.5164711912007
           },
           "forward_dp_proton": {
             "all_stopped": false,
             "deposit_range_mev": [
-              3.8099201114780215,
-              4.98717863698937
+              3.895092183848348,
+              4.834575510593282
             ],
             "incident_range_mev": [
-              90.31230758489187,
-              127.91553467287258
+              93.86769374484561,
+              123.98382645308538
             ],
-            "maximum_particle_range_mm": 115.25128867037219
+            "maximum_particle_range_mm": 109.06368626833273
           }
         },
         "thickness_mm": 6.0
@@ -801,19 +863,19 @@
       {
         "all_models_stopped": false,
         "all_protons_stopped": false,
-        "maximum_model_range_mm": 598.1642534627578,
+        "maximum_model_range_mm": 594.7864581781358,
         "primary_results": {
           "backward_dp_deuteron": {
             "all_stopped": false,
             "deposit_range_mev": [
-              16.187713215198237,
-              25.675499922822926
+              16.865548160454914,
+              24.60138440378402
             ],
             "incident_range_mev": [
-              45.71403487653561,
-              65.28368480562517
+              46.86350724575982,
+              62.76412233751603
             ],
-            "maximum_particle_range_mm": 19.735027203482794
+            "maximum_particle_range_mm": 18.372132875420856
           },
           "backward_dp_proton": {
             "all_stopped": false,
@@ -822,34 +884,34 @@
               2.823961311730045
             ],
             "incident_range_mev": [
-              314.71548240394236,
-              334.2857033143141
+              317.23541622378684,
+              333.13663701800783
             ],
-            "maximum_particle_range_mm": 595.8953964372945
+            "maximum_particle_range_mm": 592.5298961620431
           },
           "forward_dp_deuteron": {
             "all_stopped": false,
             "deposit_range_mev": [
               4.665267086540666,
-              5.1353396709575065
+              5.048911328494796
             ],
             "incident_range_mev": [
-              252.08532388850335,
-              289.68677517678725
+              256.01843675063765,
+              286.1304357308145
             ],
-            "maximum_particle_range_mm": 286.6148820731548
+            "maximum_particle_range_mm": 280.5164711912007
           },
           "forward_dp_proton": {
             "all_stopped": false,
             "deposit_range_mev": [
-              5.108284172760804,
-              6.715604930274367
+              5.230740630359136,
+              6.5014366443922285
             ],
             "incident_range_mev": [
-              90.31230758489187,
-              127.91553467287258
+              93.86769374484561,
+              123.98382645308538
             ],
-            "maximum_particle_range_mm": 115.25128867037219
+            "maximum_particle_range_mm": 109.06368626833273
           }
         },
         "thickness_mm": 8.0
@@ -857,60 +919,60 @@
       {
         "all_models_stopped": false,
         "all_protons_stopped": false,
-        "maximum_model_range_mm": 598.1642534627578,
+        "maximum_model_range_mm": 594.7864581781358,
         "primary_results": {
           "backward_dp_deuteron": {
             "all_stopped": false,
             "deposit_range_mev": [
-              20.950980985036793,
-              39.48640799223403
+              21.942912800322794,
+              35.98260141326039
             ],
             "incident_range_mev": [
-              45.71403487653561,
-              65.28368480562517
+              46.86350724575982,
+              62.76412233751603
             ],
-            "maximum_particle_range_mm": 19.735027203482794
+            "maximum_particle_range_mm": 18.372132875420856
           },
           "backward_dp_proton": {
             "all_stopped": false,
             "deposit_range_mev": [
-              3.414251084024727,
+              3.4187981860533796,
               3.5299516396625563
             ],
             "incident_range_mev": [
-              314.71548240394236,
-              334.2857033143141
+              317.23541622378684,
+              333.13663701800783
             ],
-            "maximum_particle_range_mm": 595.8953964372945
+            "maximum_particle_range_mm": 592.5298961620431
           },
           "forward_dp_deuteron": {
             "all_stopped": false,
             "deposit_range_mev": [
               5.831583858175861,
-              6.43437838231111
+              6.319675363663521
             ],
             "incident_range_mev": [
-              252.08532388850335,
-              289.68677517678725
+              256.01843675063765,
+              286.1304357308145
             ],
-            "maximum_particle_range_mm": 286.6148820731548
+            "maximum_particle_range_mm": 280.5164711912007
           },
           "forward_dp_proton": {
             "all_stopped": false,
             "deposit_range_mev": [
-              6.406648234043587,
-              8.458949711571762
+              6.569124130767349,
+              8.16829777819116
             ],
             "incident_range_mev": [
-              90.31230758489187,
-              127.91553467287258
+              93.86769374484561,
+              123.98382645308538
             ],
-            "maximum_particle_range_mm": 115.25128867037219
+            "maximum_particle_range_mm": 109.06368626833273
           }
         },
         "thickness_mm": 10.0
       }
     ],
-    "worst_case_normal_particle_range_mm": 598.1642534627578
+    "worst_case_normal_particle_range_mm": 594.7864581781358
   }
 }

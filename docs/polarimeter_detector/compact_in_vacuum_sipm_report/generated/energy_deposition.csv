@@ -1,8 +1,8 @@
 key,reaction,particle,station,lab_angle_min_deg,lab_angle_max_deg,deposit_min_mev,deposit_max_mev,status
-forward_dp_deuteron,d-p forward,deuteron,D,19.040956,22.679090,2.915792,3.186782,derived; atima_1_2_ls
-forward_dp_proton,d-p forward,proton,P-large,49.910698,56.889293,3.160738,4.153748,derived; atima_1_2_ls
-backward_dp_deuteron,d-p backward,deuteron,D,15.797938,25.437113,9.691448,13.934195,derived; atima_1_2_ls
-backward_dp_proton,d-p backward,proton,P-small,7.582604,14.963880,1.707126,1.764976,derived; atima_1_2_ls
-dc_deuteron,d-C elastic,deuteron,D,15.797835,26.002165,2.418380,2.461963,derived; atima_1_2_ls
-dc_carbon_small,d-C elastic,carbon,P-small,7.435965,14.964035,182.883769,192.750540,"derived, unquenched; atima_1_2_ls"
-dc_carbon_large,d-C elastic,carbon,P-large,49.910675,56.889325,58.148176,80.893625,"derived, unquenched; atima_1_2_ls"
+forward_dp_deuteron,d-p forward,deuteron,D,19.416494,22.329804,3.207371,3.471127,derived; atima_1_2_ls
+forward_dp_proton,d-p forward,proton,P-large,50.607489,56.192502,3.570501,4.417860,derived; atima_1_2_ls
+backward_dp_deuteron,d-p backward,deuteron,D,16.832670,24.744548,11.142388,15.149218,derived; atima_1_2_ls
+backward_dp_proton,d-p backward,proton,P-small,8.187291,14.212582,1.877838,1.941473,derived; atima_1_2_ls
+dc_deuteron,d-C elastic,deuteron,D,16.814383,24.985617,2.660218,2.708159,derived; atima_1_2_ls
+dc_carbon_small,d-C elastic,carbon,P-small,8.187212,14.212788,184.146627,192.052196,"derived, unquenched; atima_1_2_ls"
+dc_carbon_large,d-C elastic,carbon,P-large,50.607298,56.192702,60.332895,78.553545,"derived, unquenched; atima_1_2_ls"

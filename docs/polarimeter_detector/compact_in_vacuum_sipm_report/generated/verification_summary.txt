@@ -1,33 +1,39 @@
 CompactInVacuum common-platform report numerical verification
 OVERALL: PASS
-Git commit: 13a2e736477e0a706276c78db6e64e5e06dd55b0
+Git commit: cb57cdf88ebb66067e5f42d8f10175e0d6fe3afd
 Source validation status: pass
-CAD detector decision state: active_medium=placeholder (undecided), photosensor=SiPM_device_model_provisional (selected)
-Report detector proposal: fast blue plastic scintillator + NDL EQR15 11-6060D-S
-Thickness study: primary=atima_1_2_ls, candidate=5.0 mm, candidate deposit=1.7071-13.9342 MeV, legacy maximum=39.4864 MeV
+Source validation mode: prototype_non_strict (strict=False)
+CAD detector decision state: active_medium=fast_blue_plastic (selected), photosensor=NDL EQR15 11-6060D-S (selected)
+Canonical detector prototype: fast blue plastic scintillator + NDL EQR15 11-6060D-S
+Thickness study: primary=atima_1_2_ls, candidate=5.5 mm, candidate deposit=1.8778-15.1492 MeV, legacy maximum=35.9826 MeV
 Project baseline: CompactInVacuum-afterSRC + CompactInVacuum-preSAMURAI; legacy afterSRC external=reference/fallback
-Compact beam interfaces: afterSRC=D/TBD; preSAMURAI=D/TBD; legacy numerical reference CAD=ICF114/ICF114
+Compact beam interfaces: afterSRC=D/TBD; preSAMURAI=D/TBD; current provisional CAD envelope=ICF114/ICF114
+afterSRC maintenance access: ICF305, metal seal, passage screen margin=23.761 mm, complete extraction=placeholder
 
 Checks:
-PASS | CAD strict validation | validation status=pass
-PASS | Target strict mode | target.validation.strict=True
+PASS | CAD validation pass | validation status=pass
+PASS | Target/validation mode agreement | target.strict=False, artifact.strict=False
+PASS | Target artifact paths match report inputs | manifest=compactInVacuum/artifacts/afterSRC/CompactOne_afterSRC.channel_manifest.json, report=compactInVacuum/artifacts/afterSRC/CompactOne_afterSRC.validation_report.json
 PASS | deuteron geometry source agreement | delta_angle=0 deg, delta_radius=0 mm
 PASS | proton_small geometry source agreement | delta_angle=0 deg, delta_radius=0 mm
 PASS | proton_large geometry source agreement | delta_angle=0 deg, delta_radius=0 mm
-PASS | Candidate thickness agrees with the detailed energy table | computed=13.9342 MeV
-PASS | Carbon energy upper bound | computed=192.7505 MeV, reference=192.8 MeV
-PASS | Candidate minimum normal d-p deposit | minimum=1.7071 MeV, threshold=1.5000 MeV
-PASS | Candidate is treated as a delta-E counter rather than a stopping calorimeter | thickness=5.0 mm, maximum accepted-particle range=598.16 mm
-PASS | Candidate reduces the maximum normal deposit relative to 10 mm | candidate=13.9342 MeV, legacy=39.4864 MeV
-PASS | Legacy 10 mm maximum normal deposit | computed=39.4864 MeV, reference=39.5000 MeV
-PASS | EQR15 candidate-thickness nonlinearity at 5 percent collection | computed=0.9299%, limit=2.0000%
+PASS | Report thickness matches canonical CAD active thickness | report=5.500 mm, CAD=5.500 mm
+PASS | Candidate thickness agrees with the detailed energy table | computed=15.1492 MeV
+PASS | Carbon energy remains below the conservative report bound | computed=192.0522 MeV, upper_bound=192.8 MeV
+PASS | Candidate minimum normal d-p deposit | minimum=1.8778 MeV, threshold=1.5000 MeV
+PASS | Candidate is treated as a delta-E counter rather than a stopping calorimeter | thickness=5.5 mm, maximum accepted-particle range=594.79 mm
+PASS | Candidate reduces the maximum normal deposit relative to 10 mm | candidate=15.1492 MeV, legacy=35.9826 MeV
+PASS | EQR15 candidate-thickness nonlinearity at 5 percent collection | computed=1.0104%, limit=2.0000%
 PASS | EQR15 conservative carbon nonlinearity | computed=11.8949%
-PASS | Current beam pipe radial wall arithmetic | radial_wall=0.300 mm
+PASS | Beam transition pipe has a positive radial wall | outer=63.500 mm, inner=60.200 mm, radial_wall=1.650 mm
+PASS | Beam transition bore matches the resolved vessel bore | pipe_inner=60.200 mm, vessel_bore=60.200 mm
 PASS | Two CompactInVacuum baseline instruments are declared | CompactInVacuum-afterSRC=baseline, CompactInVacuum-preSAMURAI=baseline
 PASS | External afterSRC design is legacy/fallback/reference | status=legacy/fallback/reference, interface_class=B
 PASS | Compact deployment beam interfaces remain independently unresolved | afterSRC=D/TBD; preSAMURAI=D/TBD
-PASS | Legacy numerical CAD interface is labelled as a reference assumption | reference CAD front=ICF114, rear=ICF114; not a compact deployment contract
-PASS | ICF114 purchased-part bore conflict is explicitly detected | CAD stay-clear exceeds reference purchased-part clear bore by 2.800 mm in the legacy numerical reference geometry; no compact deployment interface is inferred
+PASS | Provisional CAD beam interfaces remain labelled as reference envelopes | reference CAD front=ICF114, rear=ICF114; not a compact deployment contract
+PASS | Reference ICF114 bore does not reduce the resolved transition bore | resolved transition bore=60.200 mm, reference clear bore=60.200 mm; site-interface approval remains independent
+PASS | afterSRC maintenance opening is the all-metal ICF305 prototype | standard=ICF305, seal=oxygen_free_copper, elastomer_allowed=False
+PASS | Complete holder extraction remains explicitly unresolved | status=placeholder
 PASS | ICF-class assembly helium-leak target | acceptance<=1.000e-10 Pa m^3/s
 
 Reproduction command:
