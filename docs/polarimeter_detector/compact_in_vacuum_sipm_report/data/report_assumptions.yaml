@@ -3,8 +3,8 @@ schema_version: 3
 report:
   title: CompactInVacuum Common Detector Platform
   subtitle: Engineering Report for the afterSRC and pre-SAMURAI In-Vacuum Polarimeters
-  issue_date: 2026-07-29
-  status: Compact-head and square-chamber preliminary engineering study
+  issue_date: 2026-09-01
+  status: Canonical afterSRC ICF305-access and common detector preliminary engineering study
   procurement_region: People's Republic of China preferred
 
 source_files:
@@ -12,10 +12,9 @@ source_files:
   compact_platform_common: compactInVacuum/config/common_detector.yaml
   compact_after_src_profile: compactInVacuum/config/afterSRC_compact.yaml
   compact_pre_samurai_profile: compactInVacuum/config/infrontSamurai_compact.yaml
-  compact_config: compactInVacuum/config/default_compactInVacuum.yaml
-  compact_target: compactInVacuum/target.yaml
-  channel_manifest: compactInVacuum/compactInVacuum.channel_manifest.json
-  validation_report: compactInVacuum/compactInVacuum.validation_report.json
+  compact_target: compactInVacuum/target_compact_one_afterSRC.yaml
+  channel_manifest: compactInVacuum/artifacts/afterSRC/CompactOne_afterSRC.channel_manifest.json
+  validation_report: compactInVacuum/artifacts/afterSRC/CompactOne_afterSRC.validation_report.json
   analysis_scenario: code/config/compact_in_vacuum.ini
   energy_model: code/data/energy_lise/dp_dc_kinematics.py
   lise_range_model: code/data/energy_lise/lise_range.py
@@ -102,11 +101,10 @@ calculation:
   saturation_curve_efficiency: 0.05
   saturation_curve_energy_max_mev: 210.0
   saturation_curve_points: 421
-  legacy_10mm_normal_dp_upper_deposit_mev: 39.5
   conservative_carbon_upper_deposit_mev: 192.75
-  scintillator_candidate_thickness_mm: 5.0
+  scintillator_candidate_thickness_mm: 5.5
   legacy_reference_thickness_mm: 10.0
-  thickness_scan_mm: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0]
+  thickness_scan_mm: [1.0, 2.0, 3.0, 4.0, 5.0, 5.5, 6.0, 8.0, 10.0]
   lise_primary_range_model: atima_1_2_ls
   lise_range_envelope_models:
     - hubert_1990
@@ -122,7 +120,6 @@ calculation:
   effective_charge_window_ns: 20.0
   termination_ohm: 50.0
   minimum_low_gain_charge_range_nc: 1.5
-  compact_v2_geometric_scale: 0.8
 
 icf_screening:
   icf114_reference_clear_bore_mm: 60.2

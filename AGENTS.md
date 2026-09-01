@@ -1,72 +1,68 @@
 # Repository Guidelines
 
-## Codex Terminal Mandatory Rules
-All Codex terminals working in this repository MUST follow this protocol.
+## Stateful CAD Mandatory Rules
 
-1. Always use stateful entry when working on `infrontofSamuraiMag`:
-   - `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml`
-2. Follow this fixed pipeline:
-   - User intent -> `target.yaml` (Spec) -> Generator -> Validator -> Artifacts -> `state.json`
-3. `target.yaml` is human-edited. `state.json` is machine-written only.
-4. Never hand-edit `state.json` or `state.lock`.
-5. If target/spec changes, update `target.yaml` first, then rerun pipeline.
-6. Default acceptance gate is strict validation (`status=pass`).
-7. Use `--force-rebuild` only when you intentionally bypass skip optimization.
-8. Respect lock files. If locked, wait or retry; do not bypass lock behavior.
+All Codex terminals working on CAD in this repository MUST use the module selected in
+`codex_targets.yaml`; no root-level `afterSRC/` or `infrontofSamuraiMag/` module exists.
 
-## Mechanical Requirement Baseline
-- Canonical requirement document for current mechanical design work:
-  - `docs/specs/BLP_v1_requirement_baseline.md`
-- Any Codex terminal working on chamber/clamp/plate/target/stand mechanics MUST read this file first.
-- If implementation or discussion diverges from this baseline, update the baseline first, then implement.
+| Workstream | Role | Target | Runner | Requirement authority | Module worklog |
+|---|---|---|---|---|---|
+| `compactOneAfterSRC` | current baseline | `compactInVacuum/target_compact_one_afterSRC.yaml` | `compactInVacuum/run_compactOne_afterSRC.sh` | `docs/specs/compact_one_requirement_baseline.md` | `compactInVacuum/worklog.md` |
+| `compactOneInfrontSamurai` | current baseline | `compactInVacuum/target_compact_one_infrontSamurai.yaml` | `compactInVacuum/run_compactOne_infrontSamurai.sh` | `docs/specs/compact_one_requirement_baseline.md` | `compactInVacuum/worklog.md` |
+| `compactInVacuum` | compatibility scaffold | `compactInVacuum/target.yaml` | `compactInVacuum/run_compactInVacuum.sh` | `docs/specs/compact_one_requirement_baseline.md` | `compactInVacuum/worklog.md` |
+| `afterSRC` | legacy external reference | `external_version/afterSRC/target.yaml` | `external_version/afterSRC/run_afterSRC.sh` | `docs/specs/BLP_v1_requirement_baseline.md` | `external_version/afterSRC/worklog.md` |
+| `infrontofSamuraiMag` | legacy external reference | `external_version/infrontofSamuraiMag/target.yaml` | `external_version/infrontofSamuraiMag/run_infrontofSamuraiMag.sh` | `docs/specs/BLP_v1_requirement_baseline.md` | `external_version/infrontofSamuraiMag/worklog.md` |
 
-## Stateful Files (Source of Truth)
-- Root index: `codex_targets.yaml`
-- Active module target: `infrontofSamuraiMag/target.yaml`
-- Cross-terminal worklog index: `worklog.md`
-- Module execution worklog: `infrontofSamuraiMag/worklog.md`
-- Active module runtime state: `infrontofSamuraiMag/state.json` (gitignored)
-- Active module lock file: `infrontofSamuraiMag/state.lock` (gitignored)
+For every selected workstream:
 
-Ownership rules:
-- Human-owned: `codex_targets.yaml`, `target.yaml`, `worklog.md`, `infrontofSamuraiMag/worklog.md`
-- Machine-owned: `state.json`, `state.lock`, validation report JSON
+1. Follow `user intent -> target.yaml -> generator -> validator -> artifacts -> state.json`.
+2. Treat targets/configuration/worklogs as human-owned and state/lock/validation outputs as machine-owned.
+3. Never hand-edit `state.json`, `state.lock`, or generated validation reports.
+4. Put requirement or parameter changes in the selected baseline and target/config before code edits.
+5. Respect lock files. Wait or retry; never bypass the lock.
+6. Use `--force-rebuild` only to intentionally bypass hash-skip optimization.
+7. Append both the root and selected module worklogs after every stateful run, including validate-only runs.
 
-## Progress and Status Reading (Mandatory)
-- Always read progress in this order:
-  1) `codex_targets.yaml` (resolve active module/paths)
-  2) `target.yaml` (intent + frozen spec/config refs)
-  3) `worklog.md` (cross-terminal context and handoff summary)
-  4) `infrontofSamuraiMag/worklog.md` (module-level command/result timeline)
-  5) `state.json` (latest run status)
-  6) validation report JSON path from `state.json.validation.report_json`
-- `state.json.run.status` semantics:
-  - `pass`: current run executed and passed strict gate
-  - `fail`: current run executed but validation failed
-  - `error`: pipeline aborted with runtime/config error
-  - `skipped`: hash-skip path reused previous valid artifacts
-- Treat `skipped + validation.status=pass` as "currently acceptable and up-to-date for unchanged target hash", not as failure.
+## Progress and Status Reading
 
-## Standard Commands
-- Standard run:
-  - `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml`
-- Force rebuild:
-  - `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --force-rebuild`
-- Validate-only gate:
-  - `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
+Read progress in this order:
+
+1. `codex_targets.yaml` to resolve the selected module.
+2. The selected requirement baseline.
+3. The selected target and referenced configuration.
+4. `worklog.md`.
+5. The selected module worklog.
+6. The selected state file.
+7. The validation report referenced by the state file.
+
+Interpret validation using all of `validation.status`, `validation.strict`, and the report summary.
+A non-strict `pass` is an acceptable prototype geometry result, not a fabrication/release pass.
+Only `strict=true` with `status=pass` may be described as passing a strict release gate. A
+hash-skipped invocation may leave the previous successful state intact; verify the target hash and
+stored validation result before calling it current.
+
+## Standard CAD Commands
+
+Current baselines:
+
+- `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml`
+- `./compactInVacuum/run_compactOne_infrontSamurai.sh --pipeline-index codex_targets.yaml`
+
+Preserved legacy references:
+
+- `./external_version/afterSRC/run_afterSRC.sh --pipeline-index codex_targets.yaml`
+- `./external_version/infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml`
+
+Add `--validate-only` for a validation-only run and `--strict-validation` only when intentionally
+evaluating the strict evidence/release gate.
 
 ## Change and Delivery Policy
-- Any requirement/parameter change MUST be represented in `target.yaml` and/or config before code edits.
-- Any code behavior change SHOULD include tests under `infrontofSamuraiMag/tests/`.
-- Do not commit generated CAD artifacts (`*.FCStd`, `*.step`) or runtime state files.
-- After every stateful pipeline run (including `--validate-only`), append one entry to:
-  - `worklog.md`
-  - `infrontofSamuraiMag/worklog.md`
-- Each worklog entry must include: timestamp (UTC+local), command, key overrides/parameters, validation result, and next action.
-- Final report from a Codex terminal must include:
-  - commands executed,
-  - validation result,
-  - updated files.
+
+- Add tests under the selected module's tests directory when behavior changes.
+- Do not commit generated CAD (`*.FCStd`, `*.step`), runtime state, locks, caches, or build trees.
+- Every stateful-run worklog entry must include timestamp (UTC and local), command, key parameters,
+  validation mode/result, and next action.
+- Final handoff must list commands executed, validation result, and updated files.
 
 ## `code/` Reconstruction and Analysis Module
 - Scope: `code/` contains ROOT-based reconstruction / plotting / analysis code for the polarimeter, separate from the stateful FreeCAD pipeline.
@@ -111,19 +107,22 @@ Ownership rules:
   1) parametric model generation,
   2) geometry validation,
   3) drawing / screenshot generation for review.
-- The authoritative build path for `infrontofSamuraiMag` remains the stateful pipeline; ad-hoc GUI drawing must not bypass target/config ownership rules.
+- Resolve the selected workstream through `codex_targets.yaml`; ad-hoc GUI drawing must not bypass its target/config ownership rules.
 - Before producing review drawings or screenshots, first confirm the geometry source:
-  - stateful pipeline output (`infrontofSamuraiMag`)
-  - deprecated ad-hoc macro previews are removed; do not bypass the stateful target/config path for review geometry
+  - current CompactInVacuum baseline output,
+  - compatibility scaffold output, or
+  - preserved external-reference output.
+- Deprecated ad-hoc macro previews are not authoritative review geometry.
 - Use beam-axis-consistent standard views when sharing geometry snapshots:
   - `Isometric`
   - `Front`
   - `Top`
   - `Right`
 - When a user asks to “画图” / make FreeCAD visuals, default to screenshots or view captures unless they explicitly ask for a dimensioned engineering drawing.
-- Do not present screenshots as manufacturing drawings; if dimensions or fabrication intent matter, validate against `docs/specs/BLP_v1_requirement_baseline.md` and the parametric config first.
+- Do not present screenshots as manufacturing drawings; if dimensions or fabrication intent matter, validate against the selected module's requirement authority and resolved configuration first.
 - For interactive review, prefer object-focused captures of the changed subsystem rather than whole-assembly clutter.
 
 ## Module Scope
-- Current active stateful module: `infrontofSamuraiMag`.
-- `upstreamBLP` is reserved for next phase. When activated, it must adopt the same target/state contract and be registered in `codex_targets.yaml`.
+- Current baseline stateful modules are `compactOneAfterSRC` and `compactOneInfrontSamurai`.
+- `compactInVacuum` is a compatibility scaffold; the two modules under `external_version/` are preserved references.
+- Any future module must adopt the same target/state contract and be registered in `codex_targets.yaml`.

@@ -34,16 +34,16 @@ dpolarization_archive/post_placement_observables/outputs_data/theta_comparison*.
 **/__pycache__/
 
 # Stateful pipeline runtime state (machine-written).
-infrontofSamuraiMag/state.json
-infrontofSamuraiMag/state.lock
-infrontofSamuraiMag/*.validation_report.json
-infrontofSamuraiMag/reports/archive/
-infrontofSamuraiMag/.venv-pytest/
-infrontofSamuraiMag/.pytest_cache/
-afterSRC/state.json
-afterSRC/state.lock
-afterSRC/*.validation_report.json
-afterSRC/reports/archive/
+external_version/infrontofSamuraiMag/state.json
+external_version/infrontofSamuraiMag/state.lock
+external_version/infrontofSamuraiMag/*.validation_report.json
+external_version/infrontofSamuraiMag/reports/archive/
+external_version/infrontofSamuraiMag/.venv-pytest/
+external_version/infrontofSamuraiMag/.pytest_cache/
+external_version/afterSRC/state.json
+external_version/afterSRC/state.lock
+external_version/afterSRC/*.validation_report.json
+external_version/afterSRC/reports/archive/
 compactInVacuum/state.json
 compactInVacuum/state.lock
 compactInVacuum/*.validation_report.json
@@ -58,7 +58,7 @@ compactInVacuum/artifacts/
 # Generated build trees and numerical study outputs under the polarimeter code module.
 code/build/
 code/output/
-
+build/
 skills/
 polar_infrontSamurai.pdf
 

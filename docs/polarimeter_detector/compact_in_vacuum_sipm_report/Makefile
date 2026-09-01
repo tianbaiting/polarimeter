@@ -3,7 +3,7 @@ LATEXMK := latexmk
 REPORT_EN := compact_in_vacuum_sipm_report
 REPORT_ZH := compact_in_vacuum_sipm_report_zh
 
-.PHONY: all data check-data test report report-en report-zh verify-pdf verify-pdf-en verify-pdf-zh verify help
+.PHONY: all data check-data test report report-en report-zh verify-pdf verify-pdf-en verify-pdf-zh verify clean help
 
 all: verify
 
@@ -36,8 +36,11 @@ verify-pdf-en: report-en
 	pdftotext -layout build/$(REPORT_EN).pdf - | rg -q 'LISE.. thickness scan'
 	pdftotext -layout build/$(REPORT_EN).pdf - | rg -q 'RFQ checklist for Shanghai PrMat'
 	pdftotext -layout build/$(REPORT_EN).pdf - | rg -q 'Data and calculation verification'
+	pdftotext -layout build/$(REPORT_EN).pdf - | rg -q 'ICF305'
+	pdftotext -layout build/$(REPORT_EN).pdf - | rg -q 'complete.*extraction'
 	if pdftotext -layout build/$(REPORT_EN).pdf - | rg -q 'ICF152'; then exit 1; fi
 	if pdftotext -layout build/$(REPORT_EN).pdf - | rg -q 'The project contains two distinct polarimeters'; then exit 1; fi
+	if pdftotext -layout build/$(REPORT_EN).pdf - | rg -q 'removable top service manifold'; then exit 1; fi
 
 verify-pdf-zh: report-zh
 	pdfinfo build/$(REPORT_ZH).pdf | rg '^(Pages|Page size|File size)'
@@ -49,12 +52,18 @@ verify-pdf-zh: report-zh
 	pdftotext -layout build/$(REPORT_ZH).pdf - | rg -q 'LISE.. 厚度扫描'
 	pdftotext -layout build/$(REPORT_ZH).pdf - | rg -q '上海谱幂'
 	pdftotext -layout build/$(REPORT_ZH).pdf - | rg -q '数据与计算验证'
+	pdftotext -layout build/$(REPORT_ZH).pdf - | rg -q 'ICF305'
+	pdftotext -layout build/$(REPORT_ZH).pdf - | rg -q '完整.*取出'
 	if pdftotext -layout build/$(REPORT_ZH).pdf - | rg -q 'ICF152'; then exit 1; fi
 	if pdftotext -layout build/$(REPORT_ZH).pdf - | rg -q '本项目包含两台不同用途的极化仪'; then exit 1; fi
+	if pdftotext -layout build/$(REPORT_ZH).pdf - | rg -q '可拆顶部服务歧管'; then exit 1; fi
 
 verify-pdf: verify-pdf-en verify-pdf-zh
 
 verify: check-data test verify-pdf
+
+clean:
+	test ! -d build || trash-put -- build
 
 help:
 	@echo "make data       Regenerate CSV, JSON, and LaTeX numerical fragments"
@@ -64,3 +73,4 @@ help:
 	@echo "make report-en  Compile the English report"
 	@echo "make report-zh  Compile the Chinese report"
 	@echo "make verify     Run the complete data, test, and bilingual PDF checks"
+	@echo "make clean      Move the generated build tree to the desktop trash"

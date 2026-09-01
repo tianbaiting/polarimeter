@@ -1,4 +1,4 @@
-# CompactInVacuum Requirement Baseline v2
+# CompactInVacuum Requirement Baseline v2.4
 
 ## 1. Authority and scope
 
@@ -9,7 +9,9 @@ This document is the requirement authority for the common CompactInVacuum detect
 
 Both deployments place the compact plastic-scintillator detector heads, SiPM packages, passive internal services, and sector holders inside vacuum. Detector technology and common mechanical architecture are shared. Chamber geometry, purchased beamline interfaces, target integration, external supports, and installation envelopes remain deployment-specific.
 
-The external-detector implementations in `afterSRC/` and `infrontofSamuraiMag/`, or their repository-preserved locations, are legacy/reference routes. They shall remain independently testable and shall not be modified, deleted, or silently promoted into this baseline.
+The external-detector implementations in `external_version/afterSRC/` and
+`external_version/infrontofSamuraiMag/` are legacy/reference routes. They shall remain independently
+testable and shall not be modified, deleted, or silently promoted into this baseline.
 
 Compatibility labels containing `CompactOne` and the directory `compactInVacuum/` may remain in executable paths. The instrument names above are authoritative.
 
@@ -216,7 +218,7 @@ Validation also requires:
 - no detector-head overlap;
 - four non-overlapping three-head sector assemblies;
 - clear detector withdrawal after clamp release;
-- clear sampled radial sector removal;
+- clear sampled configured holder-release poses, without treating them as proof of complete extraction;
 - clear target motion sweep;
 - clear signal routing;
 - a closed vacuum control volume;
@@ -308,6 +310,9 @@ Runtime state, caches, and machine-specific files remain untracked.
 
 ## 16. Change history
 
+- 2026-09-01 v2.4: clarified that sampled holder-release poses do not constitute proof of the
+  complete extraction path; aligned downstream documentation and validation terminology with the
+  ICF305 fixed-wall support design.
 - 2026-07-27 v1.0: established a common CompactInVacuum platform with two baseline deployments.
 - 2026-07-29 v2.0: removed temperature monitoring end-to-end; replaced the long cassette with a 9.70 mm calculated detector head; replaced arbitrary rails with one coherent sector carrier; added engineering display roles, removal validation, and schema-v3 migration.
 - 2026-07-29 v2.1: selected the square 440 × 440 mm screening chamber for CompactInVacuum-afterSRC and removed its cylindrical chamber candidate.

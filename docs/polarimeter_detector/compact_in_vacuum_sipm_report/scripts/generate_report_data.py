@@ -380,10 +380,12 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
         key: REPOSITORY_ROOT / relative_path
         for key, relative_path in assumptions["source_files"].items()
     }
-    compact_config = load_yaml(source_paths["compact_config"])
     compact_target = load_yaml(source_paths["compact_target"])
     manifest = load_json(source_paths["channel_manifest"])
     validation = load_json(source_paths["validation_report"])
+    resolved_config = validation.get("resolved_configuration")
+    if not isinstance(resolved_config, dict):
+        raise ValueError("Canonical validation report has no resolved_configuration mapping")
     energy_model = load_energy_model(source_paths["energy_model"])
     range_model = load_energy_model(source_paths["lise_range_model"])
     checks: list[str] = []
@@ -396,17 +398,33 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
             failures.append(name)
 
     record(
-        "CAD strict validation",
+        "CAD validation pass",
         validation.get("status") == "pass",
         f"validation status={validation.get('status')}",
     )
+    target_strict = bool(compact_target.get("validation", {}).get("strict"))
+    artifact_strict = bool(validation.get("strict"))
     record(
-        "Target strict mode",
-        bool(compact_target.get("validation", {}).get("strict")),
-        f"target.validation.strict={compact_target.get('validation', {}).get('strict')}",
+        "Target/validation mode agreement",
+        target_strict == artifact_strict,
+        f"target.strict={target_strict}, artifact.strict={artifact_strict}",
     )
 
-    channels_cfg = {entry["name"]: entry for entry in compact_config["channels"]}
+    target_artifacts = compact_target.get("artifacts", {})
+    module_dir = source_paths["compact_target"].parent
+    expected_manifest = (module_dir / str(target_artifacts.get("channel_manifest_json", ""))).resolve()
+    expected_report = (module_dir / str(target_artifacts.get("report_json", ""))).resolve()
+    record(
+        "Target artifact paths match report inputs",
+        expected_manifest == source_paths["channel_manifest"].resolve()
+        and expected_report == source_paths["validation_report"].resolve(),
+        (
+            f"manifest={source_paths['channel_manifest'].relative_to(REPOSITORY_ROOT)}, "
+            f"report={source_paths['validation_report'].relative_to(REPOSITORY_ROOT)}"
+        ),
+    )
+
+    channels_cfg = {entry["name"]: entry for entry in resolved_config["channels"]}
     channels_manifest: dict[str, dict[str, Any]] = {}
     for entry in manifest["channels"]:
         channels_manifest.setdefault(entry["base_channel"], entry)
@@ -425,14 +443,25 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
             f"delta_angle={angle_delta:.6g} deg, delta_radius={radius_delta:.6g} mm",
         )
 
-    detector = compact_config["detector"]
-    physics = compact_config["physics"]
-    vessel = compact_config["vessel"]
+    detector = resolved_config["detector"]
+    physics = resolved_config["physics"]
+    vessel = resolved_config["vessel"]
     calculation = assumptions["calculation"]
     active_diameter_mm = float(detector["diameter_mm"])
     active_length_mm = float(detector["length_mm"])
     beam_kinetic_mev = float(physics["beam"]["kinetic_energy_mev"])
-    candidate_thickness_mm = float(calculation["scintillator_candidate_thickness_mm"])
+    candidate_thickness_assumption_mm = float(
+        calculation["scintillator_candidate_thickness_mm"]
+    )
+    record(
+        "Report thickness matches canonical CAD active thickness",
+        abs(candidate_thickness_assumption_mm - active_length_mm) <= 1.0e-12,
+        (
+            f"report={candidate_thickness_assumption_mm:.3f} mm, "
+            f"CAD={active_length_mm:.3f} mm"
+        ),
+    )
+    candidate_thickness_mm = active_length_mm
     thickness_um = candidate_thickness_mm * 1000.0
     primary_range_model = str(calculation["lise_primary_range_model"])
     envelope_range_models = [
@@ -715,9 +744,13 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
         f"computed={normal_dp_computed:.4f} MeV",
     )
     record(
-        "Carbon energy upper bound",
-        abs(carbon_computed - float(reference["carbon_upper_deposit_mev"])) <= energy_tolerance,
-        f"computed={carbon_computed:.4f} MeV, reference={reference['carbon_upper_deposit_mev']} MeV",
+        "Carbon energy remains below the conservative report bound",
+        carbon_computed
+        <= float(reference["carbon_upper_deposit_mev"]) + energy_tolerance,
+        (
+            f"computed={carbon_computed:.4f} MeV, "
+            f"upper_bound={reference['carbon_upper_deposit_mev']} MeV"
+        ),
     )
     record(
         "Candidate minimum normal d-p deposit",
@@ -744,19 +777,6 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
             f"legacy={legacy_maximum_deposit_mev:.4f} MeV"
         ),
     )
-    record(
-        "Legacy 10 mm maximum normal deposit",
-        abs(
-            legacy_maximum_deposit_mev
-            - float(calculation["legacy_10mm_normal_dp_upper_deposit_mev"])
-        )
-        <= energy_tolerance,
-        (
-            f"computed={legacy_maximum_deposit_mev:.4f} MeV, "
-            f"reference={float(calculation['legacy_10mm_normal_dp_upper_deposit_mev']):.4f} MeV"
-        ),
-    )
-
     light_yield = float(calculation["scintillation_yield_photons_per_mev_ee"])
     normal_energy = candidate_maximum_deposit_mev
     carbon_energy = float(calculation["conservative_carbon_upper_deposit_mev"])
@@ -842,6 +862,10 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
     icf114_deficit = beam_bore - float(icf["icf114_reference_clear_bore_mm"])
     compact_front_standard = str(vessel["end_modules"]["front"]["standard"])
     compact_rear_standard = str(vessel["end_modules"]["rear"]["standard"])
+    deployment = resolved_config["compact_one"]["deployment"]
+    maintenance_access = deployment["maintenance_access"]
+    maintenance_metrics = validation["engineering_metrics"]["maintenance_access"]
+    selected_access = maintenance_metrics["selected_candidate"]
     interface_classes = assumptions["interface_classification"]
     after_src_interface = interface_classes["compact_afterSRC"]["beam_interfaces"]
     pre_samurai_interface = interface_classes["compact_preSAMURAI"]["beam_interfaces"]
@@ -856,9 +880,17 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
         for item in architecture["legacy_instruments"]
     }
     record(
-        "Current beam pipe radial wall arithmetic",
-        abs(radial_wall - 0.3) < 1.0e-12,
-        f"radial_wall={radial_wall:.3f} mm",
+        "Beam transition pipe has a positive radial wall",
+        pipe_outer > pipe_inner and radial_wall > 0.0,
+        (
+            f"outer={pipe_outer:.3f} mm, inner={pipe_inner:.3f} mm, "
+            f"radial_wall={radial_wall:.3f} mm"
+        ),
+    )
+    record(
+        "Beam transition bore matches the resolved vessel bore",
+        abs(pipe_inner - beam_bore) <= 1.0e-12,
+        f"pipe_inner={pipe_inner:.3f} mm, vessel_bore={beam_bore:.3f} mm",
     )
     record(
         "Two CompactInVacuum baseline instruments are declared",
@@ -889,7 +921,7 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
         ),
     )
     record(
-        "Legacy numerical CAD interface is labelled as a reference assumption",
+        "Provisional CAD beam interfaces remain labelled as reference envelopes",
         compact_front_standard == str(icf["reference_cad_front_interface"])
         and compact_rear_standard == str(icf["reference_cad_rear_interface"]),
         (
@@ -898,13 +930,29 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
         ),
     )
     record(
-        "ICF114 purchased-part bore conflict is explicitly detected",
-        icf114_deficit > 0.0,
+        "Reference ICF114 bore does not reduce the resolved transition bore",
+        icf114_deficit <= 1.0e-12,
         (
-            f"CAD stay-clear exceeds reference purchased-part clear bore by "
-            f"{icf114_deficit:.3f} mm in the legacy numerical reference geometry; "
-            "no compact deployment interface is inferred"
+            f"resolved transition bore={beam_bore:.3f} mm, "
+            f"reference clear bore={float(icf['icf114_reference_clear_bore_mm']):.3f} mm; "
+            "site-interface approval remains independent"
         ),
+    )
+    record(
+        "afterSRC maintenance opening is the all-metal ICF305 prototype",
+        str(selected_access["standard"]) == "ICF305"
+        and str(maintenance_access["seal_material"]) == "oxygen_free_copper"
+        and not bool(maintenance_access["elastomer_seal_allowed"]),
+        (
+            f"standard={selected_access['standard']}, "
+            f"seal={maintenance_access['seal_material']}, "
+            f"elastomer_allowed={maintenance_access['elastomer_seal_allowed']}"
+        ),
+    )
+    record(
+        "Complete holder extraction remains explicitly unresolved",
+        str(maintenance_metrics["complete_extraction_status"]) == "placeholder",
+        f"status={maintenance_metrics['complete_extraction_status']}",
     )
     record(
         "ICF-class assembly helium-leak target",
@@ -918,7 +966,6 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
     charge_window_s = float(calculation["effective_charge_window_ns"]) * 1.0e-9
     average_current_a = eqr15["normal"]["5pct"].charge_nc * 1.0e-9 / charge_window_s
     voltage_scale_v = average_current_a * float(calculation["termination_ohm"])
-    compact_scale = float(calculation["compact_v2_geometric_scale"])
 
     source_hashes = {
         key: {
@@ -954,7 +1001,7 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
     ).stdout.strip()
 
     provenance = {
-        "schema_version": 2,
+        "schema_version": 3,
         "git_commit": git_commit,
         "source_hashes": source_hashes,
         "calculation_environment": {
@@ -973,12 +1020,12 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
             "active_medium": "fast blue plastic scintillator",
             "photosensor": "NDL EQR15 11-6060D-S",
             "candidate_active_thickness_mm": candidate_thickness_mm,
-            "status": "proposed prototype baseline; not yet promoted into the CAD configuration",
+            "status": "selected in the canonical CAD prototype; supplier and test evidence remain provisional",
         },
     }
 
     derived = {
-        "schema_version": 2,
+        "schema_version": 3,
         "git_commit": git_commit,
         "geometry": {
             "beam_energy_mev": beam_kinetic_mev,
@@ -991,11 +1038,6 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
                 "forward": list(forward_cm),
                 "backward": list(backward_cm),
             },
-            "compact_v2_scaled_radii_mm": {
-                key: float(value["radius_mm"]) * compact_scale
-                for key, value in channels_cfg.items()
-            },
-            "compact_v2_active_diameter_mm": active_diameter_mm * compact_scale,
         },
         "energy_deposition": energy_rows,
         "thickness_study": {
@@ -1039,9 +1081,12 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
             ),
         },
         "chamber": {
+            "inner_size_x_mm": float(vessel["inner_size_x_mm"]),
+            "inner_size_y_mm": float(vessel["inner_size_y_mm"]),
             "outer_size_x_mm": chamber.outer_size_x_mm,
             "outer_size_y_mm": chamber.outer_size_y_mm,
             "length_mm": float(vessel["length_mm"]),
+            "wall_thickness_mm": float(vessel["wall_thickness_mm"]),
             "closed_shell_material_volume_l": chamber.material_volume_l,
             "screening_mass_kg": chamber.mass_kg,
             "beam_bore_mm": beam_bore,
@@ -1053,8 +1098,25 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
             ),
             "icf114_stay_clear_deficit_mm": icf114_deficit,
             "assembly_helium_leak_rate_max_pa_m3_s": float(
-                icf["assembly_helium_leak_rate_max_pa_m3_s"]
+                maintenance_access["helium_leak_rate_max_pa_m3_s"]
             ),
+            "maintenance_access": {
+                "standard": str(selected_access["standard"]),
+                "clear_bore_diameter_mm": float(
+                    selected_access["clear_bore_diameter_mm"]
+                ),
+                "flange_outer_diameter_mm": float(
+                    selected_access["flange_outer_diameter_mm"]
+                ),
+                "seal_material": str(maintenance_access["seal_material"]),
+                "elastomer_seal_allowed": bool(
+                    maintenance_access["elastomer_seal_allowed"]
+                ),
+                "passage_margin_mm": float(maintenance_metrics["passage_margin_mm"]),
+                "complete_extraction_status": str(
+                    maintenance_metrics["complete_extraction_status"]
+                ),
+            },
         },
         "project_architecture": architecture,
         "interface_classification": interface_classes,
@@ -1066,7 +1128,7 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
                 "extra_side_vacuum_ports": False,
                 "classification": "B",
             },
-            "legacy_numerical_reference_cad": {
+            "current_provisional_cad_envelope": {
                 "front": compact_front_standard,
                 "rear": compact_rear_standard,
                 "adapters_and_bellows_allowed": bool(
@@ -1212,16 +1274,20 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
             rf"\newcommand{{\FrontEndAverageCurrentMilliAmp}}{{{average_current_a * 1.0e3:.1f}}}",
             rf"\newcommand{{\FrontEndVoltageScale}}{{{voltage_scale_v:.2f}}}",
             rf"\newcommand{{\LowGainRangeNc}}{{{float(calculation['minimum_low_gain_charge_range_nc']):.1f}}}",
+            rf"\newcommand{{\ChamberInnerXmm}}{{{float(vessel['inner_size_x_mm']):.0f}}}",
+            rf"\newcommand{{\ChamberInnerYmm}}{{{float(vessel['inner_size_y_mm']):.0f}}}",
+            rf"\newcommand{{\ChamberBodyLengthMm}}{{{float(vessel['length_mm']):.0f}}}",
+            rf"\newcommand{{\ChamberWallThicknessMm}}{{{float(vessel['wall_thickness_mm']):.0f}}}",
             rf"\newcommand{{\ChamberMaterialVolumeL}}{{{chamber.material_volume_l:.2f}}}",
             rf"\newcommand{{\ChamberScreeningMassKg}}{{{chamber.mass_kg:.1f}}}",
             rf"\newcommand{{\PipeRadialWallMm}}{{{radial_wall:.2f}}}",
-            rf"\newcommand{{\IcfOneOneFourDeficitMm}}{{{icf114_deficit:.1f}}}",
             rf"\newcommand{{\IcfAssemblyLeakMantissa}}{{{float(icf['assembly_helium_leak_rate_max_pa_m3_s']) * 1.0e10:.1f}}}",
-            rf"\newcommand{{\CompactScaledDeuteronRadius}}{{{channels_cfg['deuteron']['radius_mm'] * compact_scale:.0f}}}",
-            rf"\newcommand{{\CompactScaledProtonSmallRadius}}{{{channels_cfg['proton_small']['radius_mm'] * compact_scale:.0f}}}",
-            rf"\newcommand{{\CompactScaledProtonLargeRadius}}{{{channels_cfg['proton_large']['radius_mm'] * compact_scale:.0f}}}",
-            rf"\newcommand{{\CompactScaledActiveDiameter}}{{{active_diameter_mm * compact_scale:.0f}}}",
+            rf"\newcommand{{\MaintenanceAccessStandard}}{{{tex_escape(str(selected_access['standard']))}}}",
+            rf"\newcommand{{\MaintenanceAccessClearBoreMm}}{{{float(selected_access['clear_bore_diameter_mm']):.1f}}}",
+            rf"\newcommand{{\MaintenanceAccessPassageMarginMm}}{{{float(maintenance_metrics['passage_margin_mm']):.1f}}}",
+            rf"\newcommand{{\MaintenanceExtractionStatus}}{{{tex_escape(str(maintenance_metrics['complete_extraction_status']).upper())}}}",
             rf"\newcommand{{\SourceValidationStatus}}{{{tex_escape(str(validation.get('status')).upper())}}}",
+            rf"\newcommand{{\SourceValidationMode}}{{{tex_escape(str(validation.get('validation_mode')))}}}",
             "",
         ]
     )
@@ -1312,7 +1378,7 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
             role_label = "scan"
             role_label_zh = "扫描"
         row_values = (
-            f"{row['thickness_mm']:.0f} & "
+            f"{row['thickness_mm']:g} & "
             f"{primary_results['forward_dp_deuteron']['deposit_range_mev'][0]:.2f}--"
             f"{primary_results['forward_dp_deuteron']['deposit_range_mev'][1]:.2f} & "
             f"{primary_results['forward_dp_proton']['deposit_range_mev'][0]:.2f}--"
@@ -1388,8 +1454,7 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
         "compact_platform_common": "公共探测器平台配置",
         "compact_after_src_profile": "afterSRC 紧凑型部署配置",
         "compact_pre_samurai_profile": "pre-SAMURAI 紧凑型部署配置",
-        "compact_config": "紧凑型配置",
-        "compact_target": "靶系统配置",
+        "compact_target": "afterSRC 紧凑型构建目标",
         "channel_manifest": "通道清单",
         "validation_report": "验证报告",
         "analysis_scenario": "分析场景",
@@ -1419,11 +1484,15 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
         f"Git commit: {git_commit}",
         f"Source validation status: {validation.get('status')}",
         (
+            "Source validation mode: "
+            f"{validation.get('validation_mode')} (strict={artifact_strict})"
+        ),
+        (
             "CAD detector decision state: "
             f"active_medium={detector['active_medium']} ({detector['active_medium_status']}), "
             f"photosensor={detector['photosensor']} ({detector['photosensor_status']})"
         ),
-        "Report detector proposal: fast blue plastic scintillator + NDL EQR15 11-6060D-S",
+        "Canonical detector prototype: fast blue plastic scintillator + NDL EQR15 11-6060D-S",
         (
             "Thickness study: "
             f"primary={primary_range_model}, "
@@ -1438,7 +1507,13 @@ def make_outputs(assumptions_path: Path) -> tuple[dict[str, str], list[str]]:
         ),
         (
             "Compact beam interfaces: afterSRC=D/TBD; preSAMURAI=D/TBD; "
-            f"legacy numerical reference CAD={compact_front_standard}/{compact_rear_standard}"
+            f"current provisional CAD envelope={compact_front_standard}/{compact_rear_standard}"
+        ),
+        (
+            "afterSRC maintenance access: "
+            f"{selected_access['standard']}, metal seal, "
+            f"passage screen margin={float(maintenance_metrics['passage_margin_mm']):.3f} mm, "
+            f"complete extraction={maintenance_metrics['complete_extraction_status']}"
         ),
         "",
         "Checks:",

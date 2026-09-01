@@ -1,5 +1,9 @@
 # CompactInVacuum Architecture Audit
 
+> Status: dated implementation snapshot from 2026-07-29. It is not a requirement authority.
+> `compact_one_requirement_baseline.md` and the current resolved deployment configuration supersede
+> any conflicting dimension, access, support, or extraction statement below.
+
 ## Audit scope
 
 Audit date: 2026-07-29
@@ -43,7 +47,7 @@ The protruding anti-rotation key initially shadowed a neighboring proton accepta
 
 Each sector now has one connected carrier plate, three rear nests, three insertion stops, three removable clamp bridges, six simplified M3 fastener envelopes, a common rear cable lane, and one plane–pin–slot chamber interface.
 
-The carrier is relieved against all three complete-disc acceptance volumes. Fasteners are oriented along the local azimuthal tangent so they do not enter a neighboring channel’s cone. Each detector has a 12 mm sampled rearward withdrawal path after clamp release. Each sector has five exact solid poses along a 70 mm radial extraction path.
+The carrier is relieved against all three complete-disc acceptance volumes. Fasteners are oriented along the local azimuthal tangent so they do not enter a neighboring channel’s cone. Each detector has a 12 mm sampled rearward withdrawal path after clamp release. At the audit date, each sector also had five exact solid poses along a 70 mm radial comparison path. That path has since been superseded for the afterSRC fixed-wall/ICF305 design: current exact poses establish only the first 12 mm support-release stage, not complete translation, reorientation, or lift through the maintenance port.
 
 The displayed extraction boxes are diagnostic overlays. Exact holder solids are used for collision validation.
 
@@ -101,7 +105,8 @@ The redesigned test intent includes:
 - exactly three heads per coherent sector holder;
 - no obsolete rails or thermal straps;
 - no head/head or holder/holder overlap;
-- clear detector and sector removal;
+- clear detector-head withdrawal and sampled initial holder release; complete holder extraction is
+  deployment-specific and remains unresolved where the current baseline says so;
 - no full-acceptance obstruction, including provisional fastener envelopes;
 - clear cable/service routes;
 - valid solids;
@@ -116,7 +121,7 @@ The redesigned test intent includes:
 - Connector, cable exit, and strain-relief selection.
 - Reflector and optical-coupling material.
 - Final fasteners, tolerances, surface treatment, and survey tooling.
-- Chamber closure and tool access for radial sector extraction.
+- Chamber closure, tool access, and the complete holder reorientation/lift path.
 - Purchased interface drawings, site envelopes, vacuum qualification, and chamber FEA.
 
 The current carrier is a provisional, mechanically defensible concept. It is not a fabrication release.

@@ -1,5 +1,9 @@
 # Sub-2 Visual Review Notes
 
+> **ARCHIVED HISTORICAL REVIEW (2026-04-24).** The FCStd paths and commands below refer to the former
+> root layout of the external H+V+V models. This evidence is not a review of either current
+> CompactInVacuum baseline instrument; use `codex_targets.yaml` for current locations.
+
 - **Reviewed FCStd**: `afterSRC/afterSRC.FCStd`, `infrontofSamuraiMag/infrontofSamuraiMag.FCStd`
 - **Reviewer**: automated (artifact + Document.xml inventory); pending human GUI sign-off
 - **Date**: 2026-04-24

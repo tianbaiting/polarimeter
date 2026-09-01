@@ -1,0 +1,6 @@
+ARCHIVED 2026-09-01
+
+The DOCX and its generator are a frozen 2026-07-29 snapshot. They contain superseded
+mechanical and interface statements and must not be distributed, regenerated, or used for
+fabrication/procurement. The maintained bilingual report sources are the LaTeX files one
+directory above; current mechanical authority is docs/specs/compact_one_requirement_baseline.md.

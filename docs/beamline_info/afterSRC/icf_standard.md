@@ -1,8 +1,10 @@
 # ICF / CF Flange Standard Reference (UHV Optimized)
 
-> **File name:** `icf_standard.md`  
-> **Scope:** Quick engineering reference for ICF/CF (ConFlat) vacuum flanges in beamline and detector chamber design.  
-> **Target:** High Vacuum (HV) to Ultra-High Vacuum (UHV) systems.
+> **Status:** General screening reference only; not an afterSRC/pre-SAMURAI site-interface,
+> purchased-part, torque, material, welding, or fabrication contract. Product dimensions and
+> assembly instructions vary by manufacturer and shall be taken from the selected part's signed
+> drawing and current manual. The current afterSRC ICF305 maintenance-access decision is governed
+> by `docs/specs/compact_one_requirement_baseline.md`, not by this summary.
 
 ---
 
@@ -21,7 +23,8 @@ In Japanese industrial contexts (e.g., ULVAC, Cosmo), naming often uses the **Fl
 ---
 
 ## 2. Dimensional Data: ICF114 / DN63CF
-This is the workhorse size for beamline diagnostic ports and pump interfaces.
+The values below are a historical screening example. They do not select ICF114 for either current
+CompactInVacuum deployment.
 
 | Parameter | Metric Value (mm) | Imperial Value (in) |
 | :--- | :--- | :--- |
@@ -54,6 +57,10 @@ CF flanges use a "Knife-Edge" to plastically deform an OFHC copper gasket.
 ## 4. Assembly: Bolt Torque Guide
 Over-tightening can damage knife-edges; under-tightening causes leaks after bakeout.
 
+The table is retained as an approximate historical checklist only. Use the selected flange,
+fastener, lubricant/coating, gasket, and manufacturer's controlled tightening procedure for actual
+assembly.
+
 | Size | Bolt Size | Torque (N·m) | Torque (ft-lb) |
 | :--- | :--- | :--- | :--- |
 | DN16 (ICF34) | M4 | 4 N·m | 3 ft-lb |
@@ -81,8 +88,9 @@ To avoid **Virtual Leaks** (trapped gas pockets):
 [ Pipe: OD 63.5mm / V2.5" ]
           ||
 [ Chamber Wall: 316L/LN ]
+```
 
-## references
+## References
 
 https://www.lesker.com/newweb/flanges/flanges_technicalnotes_conflat_1.cfm
 

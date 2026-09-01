@@ -175,14 +175,14 @@
   \renewcommand{\arraystretch}{1.35}
   \begin{tabularx}{\textwidth}{>{\sffamily\bfseries}L{0.23\textwidth}Y}
     \toprule
-    Status & Compact-head and square-chamber preliminary engineering study \\
-    Issue date & 29 July 2026 \\
+    Status & Canonical afterSRC ICF305-access and common-detector preliminary study \\
+    Issue date & 1 September 2026 \\
     CAD reference & Polarimeter commit \texttt{\ReportGitCommit} \\
     Architecture authority & \path{docs/specs/compact_one_requirement_baseline.md} \\
     Deployment profiles & \path{compactInVacuum/config/afterSRC_compact.yaml};
       \path{compactInVacuum/config/infrontSamurai_compact.yaml} \\
-    Numerical reference & \path{compactInVacuum/config/default_compactInVacuum.yaml} \\
-    Source validation & \SourceValidationStatus \\
+    Numerical reference & Canonical afterSRC target, manifest, and resolved validation configuration \\
+    Source validation & \SourceValidationStatus; \SourceValidationMode \\
     Procurement region & People's Republic of China preferred \\
     Primary integration candidate & Shanghai PrMat Precision Instrument Technology Co., Ltd. (conditional qualification) \\
     \bottomrule
@@ -227,12 +227,9 @@
 \begin{decisionbox}{Recommended first-prototype baseline}
   \begin{itemize}
     \item Use a fast blue plastic scintillator, not a high-light-yield inorganic crystal.
-    \item Use a \SI{\CompactScaledActiveDiameter}{\milli\meter} diameter by
-      \SI{\ActiveThicknessMm}{\milli\meter} active element as the first 0.8-scale candidate,
-      and test \SIrange{5}{6}{\milli\meter} before freezing production thickness.
-      If the legacy reference radii are retained for a study, keep the
-      \SI{\ActiveDiameterMm}{\milli\meter}
-      diameter and use the same active thickness.
+    \item Use the canonical \SI{\ActiveDiameterMm}{\milli\meter} diameter by
+      \SI{\ActiveThicknessMm}{\milli\meter} active element as the first prototype, while
+      retaining \SIrange{5}{6}{\milli\meter} coupons until production thickness is frozen.
     \item Use the NDL EQR15 11-6060D-S as the baseline SiPM. Keep the NDL EQR20 as a
       higher-gain backup and a Hamamatsu S13360-6025CS as an imported reference.
     \item Design and measure the total optical collection into the SiPM active area in the
@@ -264,22 +261,22 @@ describes custom vacuum-component design and manufacturing capability
 purchase route must require a formal RFQ, design-for-manufacture review, weld and inspection
 plans, dimensional inspection, cleaning records, and helium-leak acceptance.
 
-\begin{warningbox}{Reference CAD aperture conflict; no compact site interface is yet fixed}
+\begin{warningbox}{Current afterSRC access selection; beam and service interfaces remain evidence-qualified}
   The old afterSRC external-detector design used ICF114 front/rear beam interfaces and an
   ICF70 rotary mount. These are class B legacy inheritance. The current CompactInVacuum
   reference CAD also contains ICF114/ICF70 envelope assumptions; these are class C engineering
   assumptions. Neither statement is independent class A evidence for CompactInVacuum-afterSRC,
   and the CompactInVacuum-preSAMURAI interface is likewise unresolved.
 
-  The legacy numerical CAD configuration uses a \SI{63.6}{\milli\meter} pipe outside diameter and a
-  \SI{63.0}{\milli\meter} inside diameter. The calculated radial wall is only
-  \SI{\PipeRadialWallMm}{\milli\meter}. A reference ICF114 half nipple has approximately
-  \SI{60.2}{\milli\meter} clear bore, so the present \SI{63}{\milli\meter} stay-clear exceeds
-  that reference by \SI{\IcfOneOneFourDeficitMm}{\milli\meter}
-  \cite{cosmotec_icf}. This remains a valid warning about the reference geometry, but it
-  does not select ICF114 for either compact deployment. Each site must first supply an
-  approved mating-interface drawing and usable aperture; the CAD can then be corrected
-  against the selected certified components.
+  The canonical afterSRC prototype now uses a \MaintenanceAccessStandard\ top maintenance
+  opening with a \SI{\MaintenanceAccessClearBoreMm}{\milli\meter} screening bore, an OFHC
+  copper gasket, and no elastomer/O-ring seal. Its detached-holder passage screen has
+  \SI{\MaintenanceAccessPassageMarginMm}{\milli\meter} nominal margin, but the complete
+  installed-holder release, reorientation, and lift remains \MaintenanceExtractionStatus.
+  The removable blank flange carries no detector, support, locating datum, protective-ground
+  termination, or permanent cable restraint. Front/rear beam standards, pumping, gauge,
+  isolation-valve, rotary, and signal-feedthrough selections still require approved site and
+  purchased-part evidence.
 \end{warningbox}
 
 \begin{table}[htbp]
@@ -294,10 +291,11 @@ plans, dimensional inspection, cleaning records, and helium-leak acceptance.
       Source/beam timing, threshold, light-output, and thickness-comparison data \\
     SiPM & EQR15 baseline; EQR20 backup; Hamamatsu reference &
       Bench linearity, gain, dark rate, temperature coefficient, and lot screening \\
-    Chamber & Separate square service-plate chambers: \SI{440}{\milli\meter} by
-      \SI{440}{\milli\meter} afterSRC and \SI{450}{\milli\meter} by
-      \SI{450}{\milli\meter} pre-SAMURAI & Port map, external-pressure FEA, handling mass,
-      and access review for each deployment \\
+    Chamber & Separate square chambers: \SI{440}{\milli\meter} by
+      \SI{440}{\milli\meter} afterSRC with all-metal ICF305 maintenance access, and
+      \SI{450}{\milli\meter} by \SI{450}{\milli\meter} pre-SAMURAI & Port map,
+      complete extraction motion, external-pressure FEA, handling mass, and access review
+      for each deployment \\
     Site interfaces & afterSRC compact and pre-SAMURAI compact defined independently; current
       beam interfaces TBD & Approved beamline drawings, site surveys, selected purchased
       components, vacuum-boundary definition, and leak acceptance \\
@@ -437,11 +435,12 @@ active entrance face to the rear housing and excluding the cable exit, connector
 and removal envelope. Supplier drawings, reflector material, optical-pad material, PCB,
 connector, and production tolerances remain provisional.
 
-\subsection{Square chamber baseline and legacy mass screen}
+\subsection{Square chamber baseline and current mass screen}
 
 The selected CompactInVacuum-afterSRC screening chamber is square with a provisional
-\SI{440}{\milli\meter} by \SI{440}{\milli\meter} internal section,
-\SI{360}{\milli\meter} body length, and \SI{8}{\milli\meter} wall. The selected
+\SI{\ChamberInnerXmm}{\milli\meter} by \SI{\ChamberInnerYmm}{\milli\meter} internal section,
+\SI{\ChamberBodyLengthMm}{\milli\meter} body length, and
+\SI{\ChamberWallThicknessMm}{\milli\meter} wall. The selected
 pre-SAMURAI screening chamber is independently defined as
 \SI{450}{\milli\meter} by \SI{450}{\milli\meter}, \SI{380}{\milli\meter} long, with a
 provisional \SI{8}{\milli\meter} wall. Neither wall is released without external-pressure,
@@ -450,45 +449,46 @@ penetration, weld, support, and handling analysis.
 \begin{table}[htbp]
   \centering
   \small
-  \caption{Earlier \SI{10}{\milli\meter}-wall square-vessel arithmetic retained only as a
-  legacy mass screen. It is not the selected afterSRC wall model and ignores ports, weld
-  preparations, local reinforcements, and removed material.}
+  \caption{Current afterSRC closed-square-shell mass screen. It ignores ports, weld
+  preparations, local reinforcements, and removed material and is not a structural release.}
   \begin{tabularx}{\textwidth}{L{0.26\textwidth}L{0.23\textwidth}Y}
     \toprule
     Parameter & Current model / calculation & Engineering interpretation \\
     \midrule
-    Inner cross-section & \SI{440}{\milli\meter} by \SI{440}{\milli\meter} &
+    Inner cross-section & \SI{\ChamberInnerXmm}{\milli\meter} by
+      \SI{\ChamberInnerYmm}{\milli\meter} &
       Larger than the internal detector sectors require; drives transport volume \\
-    Nominal wall thickness & \SI{10}{\milli\meter} historical screen &
-      Superseded by the provisional \SI{8}{\milli\meter} deployment profiles; neither value
-      is releasable without external-pressure buckling analysis and weld details \\
-    Body length & \SI{360}{\milli\meter} &
-      A short body, but detector services and target access still dominate packaging \\
+    Nominal wall thickness & \SI{\ChamberWallThicknessMm}{\milli\meter} provisional &
+      Not releasable without external-pressure buckling analysis and weld details \\
+    Body length & \SI{\ChamberBodyLengthMm}{\milli\meter} &
+      Active ICF305 integration envelope; the former 360 mm body belongs to the rejected
+      ICF253 comparison \\
     Closed-shell material volume & \SI{\ChamberMaterialVolumeL}{\liter} &
       Arithmetic screening value before subtracting ports \\
     Stainless screening mass & \SI{\ChamberScreeningMassKg}{\kilogram} &
-      Confirms that the legacy square body is inconvenient for manual transport \\
+      Screening value for handling and support planning, not an as-built mass \\
     Detector count & 12 operating channels &
       Three stations in each of four sectors; purchase plan must include spares \\
     \bottomrule
   \end{tabularx}
-  \datatag{compactInVacuum/config/default_compactInVacuum.yaml; generated/derived_results.json}
+  \datatag{compactInVacuum/artifacts/afterSRC/CompactOne_afterSRC.validation_report.json;
+  generated/derived_results.json}
 \end{table}
 
-\subsection{Compact v2 direction}
+\subsection{Current integration direction}
 
 \begin{itemize}
-  \item Evaluate a 0.8 geometric scale first: D, P-small, and P-large active-center radii
-    near \SI{\CompactScaledDeuteronRadius}{\milli\meter},
-    \SI{\CompactScaledProtonSmallRadius}{\milli\meter}, and
-    \SI{\CompactScaledProtonLargeRadius}{\milli\meter}, with a
-    \SI{\CompactScaledActiveDiameter}{\milli\meter} active diameter.
+  \item Retain the canonical channel angles, active-center radii, and
+    \SI{\ActiveDiameterMm}{\milli\meter} active diameter until physics evidence supports a
+    controlled geometry change.
   \item Use a square chamber with planar service walls for both current deployment profiles.
     CompactInVacuum-afterSRC uses the \SI{440}{\milli\meter} square screening profile; a
     cylindrical afterSRC candidate is not retained.
-  \item Use a removable top service manifold and planar chamber datums. Group the four
-    signal interfaces so that sector extraction, tool access, cable routing, and weld
-    distortion can be reviewed directly.
+  \item Use the all-metal top ICF305 blank-flange opening for afterSRC maintenance. Keep every
+    detector support and locating datum on stationary structure attached to permanent chamber
+    walls; do not mount a holder or support on the removable closure.
+  \item Treat the validated 12 mm holder release as only the first motion stage. Validate the
+    complete translation, reorientation, and lift path separately in the installed STEP model.
   \item Validate each square chamber for external-pressure buckling and local penetration
     loads; the selected shape does not waive pressure-vessel engineering.
   \item Use removable beamline spools, knife-edge covers, lifting points, and a stated
@@ -506,8 +506,8 @@ penetration, weld, support, and handling analysis.
 
 \section{Detector physics and active thickness}
 
-The elastic coincidence acceptance is recalculated from the legacy numerical reference
-diameter, active-center radii, and laboratory angles. The forward and backward common center-of-mass
+The elastic coincidence acceptance is recalculated from the canonical detector diameter,
+active-center radii, and laboratory angles. The forward and backward common center-of-mass
 windows are \ForwardCmLow--\ForwardCmHigh\si{\degree} and
 \BackwardCmLow--\BackwardCmHigh\si{\degree}, respectively. Energy deposition is then
 calculated with the repository's relativistic two-body kinematics and C8H8 range tables.
@@ -1003,17 +1003,18 @@ and spare quantities. Public web data are screening evidence only.
 
 Both current CompactInVacuum deployment profiles use square screening chambers. afterSRC
 uses the \SI{440}{\milli\meter} by \SI{440}{\milli\meter} profile and pre-SAMURAI uses the
-\SI{450}{\milli\meter} by \SI{450}{\milli\meter} profile. This is a deliberate integration
-choice: planar walls provide direct service-manifold mounting, survey datums, tool access,
-and radial sector-removal clearance. A cylindrical chamber is not retained for the afterSRC
-compact version.
+\SI{450}{\milli\meter} by \SI{450}{\milli\meter} profile. Planar permanent walls provide
+stationary support datums and service-port mounting. The afterSRC top wall contains the selected
+all-metal ICF305 maintenance opening; a cylindrical chamber is not retained for that deployment.
 
 The selected architecture is:
 \begin{itemize}
   \item a square external-pressure chamber validated for the actual penetrations, welds,
     supports, and handling loads;
-  \item a removable top service manifold for signal feedthroughs and cable routing;
-  \item four deterministic sector-holder interfaces with radial extraction and tool clearance;
+  \item a removable afterSRC ICF305 blank flange that closes the vacuum boundary but carries no
+    detector support, locating datum, ground termination, or permanent cable restraint;
+  \item four deterministic holder interfaces on stationary wall supports, with a validated
+    initial 12 mm release and a still-unresolved complete extraction path;
   \item purchased beam-port components selected from each site's approved mating standard; and
   \item a site-specific rotary-feedthrough interface and purchased unit, with shaft loads,
     torque, backlash, lifetime, bake limit, and maintenance envelope resolved independently.
@@ -1034,8 +1035,9 @@ weld efficiencies, local reinforcement, handling loads, and imperfection sensiti
     Instrument & Beam interfaces & Other vacuum interfaces & Current authority \\
     \midrule
     CompactInVacuum-afterSRC & Front/rear standard and bore TBD &
-      Rotary, signal, pumping, and gauge ports TBD &
-      Beam class D; current ICF70 rotary/service envelopes class C \\
+      ICF305 maintenance access selected; rotary, signal, pumping, gauge, and full-bore
+      isolation-valve interfaces TBD &
+      Access recommended/provisional; beam class D; current ICF70 rotary/service envelopes class C \\
     CompactInVacuum-preSAMURAI & Mating chain, standard, and bore TBD &
       Rotary, signal, pumping, and gauge ports TBD &
       Beam and rotary class D; service capacity concept common, placement class C \\
@@ -1302,9 +1304,9 @@ traveler.
   Risk & Likelihood & Impact & Control / exit condition \\
   \midrule
   \endhead
-  Legacy numerical \SI{63}{\milli\meter} stay-clear is incompatible with a reference ICF114 bore &
-    High & High & Treat this as a reference-geometry conflict, not a site contract; obtain each
-    site's approved interface and certified component bore before resolving its stay-clear \\
+  ICF305 detached-holder passage screening is mistaken for a complete installed extraction path &
+    High & High & Validate release, translation, reorientation, lift, tooling, and cable handling
+    as a continuous installed motion before access closure \\
   Legacy ICF114/ICF70 assumptions are propagated into CompactInVacuum-afterSRC &
     Medium & High & Keep them class B/C until an approved compact-site drawing promotes the
     actual interface to class A \\
@@ -1312,7 +1314,7 @@ traveler.
     Medium & High & Close Site Gates 0A and 0B independently and release separate chamber/interface
     configurations \\
   Scintillator thickness selected from a single LISE++ column or treated as a calorimeter &
-    Medium & High & Use the five-model CSV envelope, test 5/6 mm first, retain 4/8/10 mm
+    Medium & High & Use the five-model CSV envelope, test 5/5.5/6 mm first, retain 4/8/10 mm
     coupons, and freeze only after timing/threshold and Geant4 validation \\
   SiPM or front-end saturation on unquenched high-load events &
     Medium & High & EQR15, controlled optical collection, \SI{\LowGainRangeNc}{\nano\coulomb}
@@ -1327,7 +1329,7 @@ traveler.
   Optical response varies across SiPM area &
     Medium & Medium & Controlled coupling, diffuser/taper variants, 2D scan, per-channel correction \\
   Organic materials outgas or degrade in vacuum &
-    Medium & High & Material evidence, witness coupon, vacuum soak, bake plan, removable cartridge \\
+    Medium & High & Material evidence, witness coupon, vacuum soak, bake plan, removable detector head/sector holder \\
   \bottomrule
 \end{longtable}
 
@@ -1337,7 +1339,7 @@ Before any production purchase:
     beamline drawings, site surveys, and the certified components selected for each site;
   \item approve a site-supported compact geometry; retain the legacy radii and
     \SI{25}{\milli\meter} acceptance only as a controlled comparison case;
-  \item approve 5-mm and 6-mm active-thickness detector heads for Gate 1 and the comparison coupons;
+  \item approve 5-mm, 5.5-mm, and 6-mm active-thickness detector heads/coupons for Gate 1;
   \item approve the site-appropriate vacuum boundary and assembly leak limit, then define operating
     pressure, gas load, populated-system bake temperature, pump-down time, cleaning class,
     and residual-gas requirement;
@@ -1445,8 +1447,8 @@ The report separates four classes of information:
       CSV/JSON output, unit tests, and stale-file check \\
     \provisional & Engineering screening input not yet measured or frozen &
       Explicit entry in \path{data/report_assumptions.yaml} \\
-    \proposal & Recommended choice not yet promoted into authoritative CAD configuration &
-      Design review and controlled configuration update \\
+    \proposal & Recommended prototype choice whose supplier/test/release evidence is still open &
+      Design review, evidence closure, and controlled release \\
     \bottomrule
   \end{tabularx}
 \end{table}
@@ -1461,15 +1463,14 @@ make verify
 The command performs all of the following:
 \begin{enumerate}
   \item loads the common-platform requirement/configuration files, both deployment profiles,
-    and the preserved legacy numerical reference configuration, target, channel manifest,
-    and validation report;
+    and the canonical afterSRC target, generated channel manifest, and resolved validation report;
   \item checks detector angles and active-center radii against the generated CAD manifest;
   \item reuses \path{code/data/energy_lise/dp_dc_kinematics.py} for kinematics and
     \path{code/data/energy_lise/lise_range.py} for explicit LISE++ model selection, then
-    recalculates the 1/2/3/4/5/6/8/10-mm energy-deposition scan;
+    recalculates the 1/2/3/4/5/5.5/6/8/10-mm energy-deposition scan;
   \item recalculates every SiPM saturation, charge, and 10\%-nonlinearity result;
-  \item recalculates legacy chamber screening volume/mass and reference ICF arithmetic
-    without promoting that reference to a deployment contract;
+  \item recalculates current afterSRC chamber screening volume/mass, transition-pipe arithmetic,
+    and ICF305 access metrics without promoting provisional interfaces to site contracts;
   \item compares regenerated CSV, JSON, and LaTeX fragments byte-for-byte against the files
     included by this report;
   \item runs the independent unit tests; and
@@ -1513,10 +1514,10 @@ make report
 \end{longtable}
 
 \begin{notebox}{Configuration-state warning}
-  The legacy numerical CAD source still says \enquote{active medium: placeholder/undecided} and
-  \enquote{photosensor: placeholder/undecided}. This report deliberately records the plastic
-  scintillator and EQR15 as a proposed prototype baseline. The verification tool reports both
-  states so the recommendation cannot be mistaken for an already-frozen CAD requirement.
+  The canonical CAD prototype selects fast blue plastic and an EQR15-class SiPM, but supplier,
+  optical-coupling, PCB, material, and bench-test evidence remains provisional. The source CAD
+  validation is \SourceValidationMode, not a fabrication/release gate. ICF305 passage screening
+  does not close the complete holder extraction motion.
 \end{notebox}
 
 \subsection{Limits of the current verification}

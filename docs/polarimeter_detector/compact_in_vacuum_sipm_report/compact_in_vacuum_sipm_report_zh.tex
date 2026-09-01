@@ -177,14 +177,14 @@
   \renewcommand{\arraystretch}{1.35}
   \begin{tabularx}{\textwidth}{>{\sffamily\bfseries}L{0.23\textwidth}Y}
     \toprule
-    状态 & 短探测器头与方形靶室初步工程研究 \\
-    发布日期 & 2026 年 7 月 29 日 \\
+    状态 & afterSRC ICF305 检修口与公共探测器初步工程研究 \\
+    发布日期 & 2026 年 9 月 1 日 \\
     CAD 基准 & Polarimeter commit \texttt{\ReportGitCommit} \\
     架构权威文件 & \path{docs/specs/compact_one_requirement_baseline.md} \\
     部署配置 & \path{compactInVacuum/config/afterSRC_compact.yaml}；
       \path{compactInVacuum/config/infrontSamurai_compact.yaml} \\
-    数值参考配置 & \path{compactInVacuum/config/default_compactInVacuum.yaml} \\
-    源数据验证 & \SourceValidationStatus \\
+    数值参考 & afterSRC canonical target、通道清单与 resolved validation configuration \\
+    源数据验证 & \SourceValidationStatus；\SourceValidationMode \\
     优先采购区域 & 中华人民共和国境内 \\
     主要集成候选方 & 上海谱幂精密仪器科技有限公司（需完成供应商资格验证） \\
     \bottomrule
@@ -228,11 +228,9 @@
 \begin{decisionbox}{首轮原型推荐基线}
   \begin{itemize}
     \item 首轮紧凑型探测器采用快速蓝光塑料闪烁体，不采用高光产额无机晶体。
-    \item 0.8 比例几何首先采用直径
-      \SI{\CompactScaledActiveDiameter}{\milli\meter}、有效厚度
-      \SI{\ActiveThicknessMm}{\milli\meter} 的候选方案；量产厚度冻结前必须比较
-      \SIrange{5}{6}{\milli\meter}。若保留现有半径，则保持
-      \SI{\ActiveDiameterMm}{\milli\meter} 直径并测试相同厚度。
+    \item 首个原型采用 canonical \SI{\ActiveDiameterMm}{\milli\meter} 直径和
+      \SI{\ActiveThicknessMm}{\milli\meter} 有效厚度；量产厚度冻结前保留
+      \SIrange{5}{6}{\milli\meter} 比较样片。
     \item SiPM 基准采用 NDL EQR15 11-6060D-S；NDL EQR20 作为高增益备选，
       Hamamatsu S13360-6025CS 作为进口参考器件。
     \item SiPM 有效面积上的总光收集效率按 2--5\% 设计并实测；
@@ -265,19 +263,18 @@ EQR15 在该点的计算非线性为 \EqrCarbonNonlinearity\%。
 这些资料只构成候选证据，不等同于已经完成资格认证。采购前必须要求正式 RFQ、
 可制造性评审、焊接与检验计划、尺寸报告、清洗记录和氦检漏报告。
 
-\begin{warningbox}{参考 CAD 孔径冲突；紧凑型站点接口尚未固定}
+\begin{warningbox}{afterSRC 当前检修口选择；束流与服务接口仍需证据}
   旧 afterSRC 外置探测器设计采用前后 ICF114 和顶部 ICF70，这属于 B 类
   legacy 继承。当前 CompactInVacuum 参考 CAD 也含 ICF114/ICF70 外形假设，
   但它们只是 C 类工程假设，不能作为 CompactInVacuum-afterSRC 的独立 A 类
   束线证据；CompactInVacuum-preSAMURAI 接口同样未关闭。
 
-  旧数值参考 CAD 使用 \SI{63.6}{\milli\meter} 管外径和
-  \SI{63.0}{\milli\meter} 内径，径向壁厚仅为
-  \SI{\PipeRadialWallMm}{\milli\meter}。参考 ICF114 半接管净孔约为
-  \SI{60.2}{\milli\meter}，当前 \SI{63}{\milli\meter} stay-clear 超出约
-  \SI{\IcfOneOneFourDeficitMm}{\milli\meter}\cite{cosmotec_icf}。
-  这仍是参考几何中的有效警告，但不能据此为两台 compact 仪器选择 ICF114。
-  每个站点应先提供已批准的配合接口图和可用孔径，再依据选定采购件修正 CAD。
+  canonical afterSRC 原型当前采用顶部 \MaintenanceAccessStandard\ 检修口，
+  筛选净孔为 \SI{\MaintenanceAccessClearBoreMm}{\milli\meter}，使用 OFHC 铜垫片，
+  禁止弹性体/O 形圈密封。脱离后载架的孔径屏蔽余量为
+  \SI{\MaintenanceAccessPassageMarginMm}{\milli\meter}，但安装状态下的释放、平移、转姿和提出连续动作仍为
+  \MaintenanceExtractionStatus。可拆盲板不承载探测器、支撑、定位基准、保护接地端或永久线缆固定件。
+  前后束流接口、抽气、规管、全通径隔离阀、旋转和信号馈通仍需批准的站点与采购件证据。
 \end{warningbox}
 
 \section{范围、基准配置与决策状态}
@@ -387,38 +384,37 @@ NDL EQR15 11-6060D-S。由灵敏塑料、光学垫、SiPM 封装、PCB/载板和
 \begin{table}[htbp]
   \centering
   \small
-  \caption{旧数值参考配置中三类探测通道的几何。}
+  \caption{canonical afterSRC 配置中三类探测通道的几何。}
   \begin{tabular}{lcccc}
     \toprule
     站位 & 粒子 & 中心角（度） & 中心半径（mm） & 实验室角覆盖（度） \\
     \midrule
     \input{generated/geometry_table_zh.tex}
   \end{tabular}
-  \datatag{compactInVacuum/compactInVacuum.channel\_manifest.json}
+  \datatag{compactInVacuum/artifacts/afterSRC/CompactOne\_afterSRC.channel\_manifest.json}
 \end{table}
 
 当前 CompactInVacuum-afterSRC 选定的筛选靶室为方形，暂定内截面
-$440\times440$ mm、轴向长度 \SI{360}{\milli\meter}、壁厚
-\SI{8}{\milli\meter}。pre-SAMURAI 独立采用 $450\times450$ mm、
+\SI{\ChamberInnerXmm}{\milli\meter}$\times$\SI{\ChamberInnerYmm}{\milli\meter}、轴向长度
+\SI{\ChamberBodyLengthMm}{\milli\meter}、壁厚
+\SI{\ChamberWallThicknessMm}{\milli\meter}。pre-SAMURAI 独立采用 $450\times450$ mm、
 \SI{380}{\milli\meter} 长、暂定 \SI{8}{\milli\meter} 壁厚的方形方案。
-afterSRC 配置不再保留圆柱形候选。旧 \SI{10}{\milli\meter} 壁厚封闭方壳材料体积筛算为
+afterSRC 配置不再保留圆柱形候选。当前封闭方壳材料体积筛算为
 \SI{\ChamberMaterialVolumeL}{\liter}，按不锈钢密度估算约
-\SI{\ChamberScreeningMassKg}{\kilogram}；该旧数值只保留作质量算术比较，
-不是当前 afterSRC 壁厚模型，也不能代替外压屈曲、开孔、焊缝、支撑和搬运 FEA。
+\SI{\ChamberScreeningMassKg}{\kilogram}；该数值忽略开孔、焊接准备和局部加强，
+不能代替外压屈曲、开孔、焊缝、支撑和搬运 FEA。
 
-\subsection{Compact v2 方向}
+\subsection{当前集成方向}
 
 \begin{itemize}
-  \item 首个几何候选采用约 0.8 的比例：
-    D/P-small/P-large 中心半径约为
-    \SI{\CompactScaledDeuteronRadius}{\milli\meter}/
-    \SI{\CompactScaledProtonSmallRadius}{\milli\meter}/
-    \SI{\CompactScaledProtonLargeRadius}{\milli\meter}，
-    有效直径约 \SI{\CompactScaledActiveDiameter}{\milli\meter}。
+  \item 在获得物理证据并进行受控变更之前，保持 canonical 通道角度、
+    有效中心半径和 \SI{\ActiveDiameterMm}{\milli\meter} 有效直径。
   \item 两个当前部署配置均采用有平面服务壁的方形靶室；afterSRC 使用
     $440\times440$ mm 方形筛选配置，不保留圆柱形 afterSRC 候选。
-  \item 顶部采用可拆服务歧管，并利用平面靶室壁布置测量基准和四组信号接口，
-    使扇区径向抽出、工具空间、线缆路径和焊接变形能够直接评审。
+  \item afterSRC 顶部采用全金属 ICF305 盲板检修口。所有探测器支撑和定位基准
+    均位于与永久腔壁接触的固定结构上，不得安装在可拆盲板上。
+  \item 当前 12 mm 释放动作只是第一阶段；后续平移、转姿、提出和线缆整理必须按
+    安装状态在 STEP 中独立验证。
   \item 方形选型不等于结构放行；每套靶室仍须针对实际开孔、焊缝、支撑和搬运
     工况完成外压屈曲与局部载荷计算。
   \item 束流两端使用符合各站点已批准配合标准的短、可拆采购接管；运输时保护
@@ -427,8 +423,8 @@ afterSRC 配置不再保留圆柱形候选。旧 \SI{10}{\milli\meter} 壁厚封
 
 \section{探测器物理与有效厚度}
 
-现有能损分析最初服务于旧外置探测器布局。本报告按旧数值参考 CompactInVacuum
-探测器直径和半径重新计算弹性 d--p coincidence 接受度。质心系前向重叠区约为
+本报告按 canonical CompactInVacuum 探测器直径、有效中心半径和实验室系角度重新计算
+弹性 d--p coincidence 接受度。质心系前向重叠区约为
 \ForwardCmLow--\ForwardCmHigh 度，后向重叠区约为
 \BackwardCmLow--\BackwardCmHigh 度。
 
@@ -893,14 +889,16 @@ SiPM 仍工作在线性区。
 
 两个当前 CompactInVacuum 部署配置均使用方形筛选靶室：afterSRC 为
 $440\times440$ mm，pre-SAMURAI 为 $450\times450$ mm。这是明确的集成选择：
-平面壁便于安装服务歧管、建立测量基准、提供工具空间，并保证扇区径向拆卸。
-CompactInVacuum-afterSRC 不保留圆柱形靶室方案。
+永久平面壁提供固定支撑基准和服务口安装面。afterSRC 顶壁布置选定的
+全金属 ICF305 检修口；CompactInVacuum-afterSRC 不保留圆柱形靶室方案。
 
 选定架构包括：
 \begin{itemize}
   \item 针对实际开孔、焊缝、支撑和搬运载荷验证的方形外压靶室；
-  \item 集中信号馈通和线缆路径的可拆顶部服务歧管；
-  \item 具有径向抽出与工具空间的四套确定性扇区载架接口；
+  \item 只负责封闭真空边界的 afterSRC ICF305 可拆盲板；它不承载探测器、
+    支撑、定位基准、保护接地端或永久线缆固定件；
+  \item 位于固定腔壁支撑上的四套确定性扇区载架接口；已验证初始 12 mm
+    释放，完整取出路径仍未关闭；
   \item 两端使用与各站点批准配合标准一致的认证采购束流件；
   \item 旋转馈通接口和采购件按站点独立确定，并分别关闭轴载荷、扭矩、回差、
     寿命、烘烤温度和维护包络。
@@ -920,8 +918,8 @@ CompactInVacuum-afterSRC 不保留圆柱形靶室方案。
     仪器 & 束流接口 & 其他真空接口 & 当前权威状态 \\
     \midrule
     CompactInVacuum-afterSRC & 前后标准与孔径 TBD &
-      旋转、信号、泵与规管口 TBD &
-      束流 D 类；当前 ICF70 旋转/服务包络 C 类 \\
+      已选 ICF305 检修口；旋转、信号、抽气、规管与全通径隔离阀接口 TBD &
+      检修口为推荐/暂定；束流 D 类；当前 ICF70 旋转/服务包络 C 类 \\
     CompactInVacuum-preSAMURAI & 配合链、标准与孔径 TBD &
       旋转、信号、泵与规管口 TBD &
       束流与旋转 D 类；服务容量概念公共、布局 C 类 \\
@@ -1154,15 +1152,15 @@ CompactInVacuum-preSAMURAI，旋转接口仍是 D 类/TBD，必须结合靶运�
   风险 & 概率 & 影响 & 控制与关闭条件 \\
   \midrule
   \endhead
-  旧数值参考的 \SI{63}{\milli\meter} stay-clear 与参考 ICF114 净孔不相容 &
-    高 & 高 & 将其作为参考几何冲突而非站点合同；先取得各站点批准接口和采购件
-    认证孔径，再关闭 stay-clear \\
+  将 ICF305 脱离后孔径屏蔽误认为安装状态下的完整取出路径 &
+    高 & 高 & 在检修方案关闭前，对释放、平移、转姿、提出、工具和线缆处理进行
+    连续安装状态验证 \\
   legacy ICF114/ICF70 被传播到 CompactInVacuum-afterSRC &
     中 & 高 & 在 compact 站点批准图将实际接口提升为 A 类前，保持 B/C 类 \\
   两个站点错误复用同一靶室概念 &
     中 & 高 & 独立关闭站点 Gate 0A/0B，并释放两套靶室/接口配置 \\
   只使用一列 LISE++ 数据选厚度或把探测器当作量能器 &
-    中 & 高 & 使用五模型 CSV 包络，先测试 5/6 mm，保留 4/8/10 mm，
+    中 & 高 & 使用五模型 CSV 包络，先测试 5/5.5/6 mm，保留 4/8/10 mm，
     经阈值、时间和 Geant4 后冻结 \\
   未淬灭高负载事件导致 SiPM 或前端饱和 &
     中 & 高 & EQR15、受控光收集、至少
@@ -1186,7 +1184,7 @@ CompactInVacuum-preSAMURAI，旋转接口仍是 D 类/TBD，必须结合靶运�
     pre-SAMURAI 接口门审；
   \item 批准具有站点证据的 compact 几何；旧半径和
     \SI{25}{\milli\meter} 接受度仅保留为受控对比方案；
-  \item 批准 Gate 1 的 5 mm、6 mm 短探测器头和比较样片；
+  \item 批准 Gate 1 的 5 mm、5.5 mm 和 6 mm 探测器头/比较样片；
   \item 批准各站点适用的真空边界与整机漏率，再定义工作压力、气负载、
     装机烘烤温度、抽气时间、清洗等级和 RGA 要求；
   \item 冻结旋转馈通载荷、扭矩、寿命、回差、角度重复性、工况和维护；
@@ -1273,8 +1271,8 @@ Gate 0A/0B，同时继续公共 golden detector 与 golden sector 实验。
       CSV/JSON、单元测试和 stale-file 检查 \\
     \provisional & 尚未测量或冻结的工程筛选输入 &
       在 \path{data/report_assumptions.yaml} 中显式记录 \\
-    \proposal & 推荐但尚未写入权威 CAD 配置的选择 &
-      设计评审和受控配置更新 \\
+    \proposal & 已推荐的原型选择，但供应商/试验/放行证据仍未关闭 &
+      设计评审、证据关闭和受控放行 \\
     \bottomrule
   \end{tabularx}
 \end{table}
@@ -1288,14 +1286,15 @@ make verify
 
 该命令执行：
 \begin{enumerate}
-  \item 读取公共平台需求/配置、两套部署配置，以及保留的旧数值参考配置、
-    target、通道清单和 validation 报告；
+  \item 读取公共平台需求/配置、两套部署配置，以及 canonical afterSRC
+    target、自动生成的通道清单和 resolved validation 报告；
   \item 将探测器角度和有效中心半径与 CAD 生成清单比较；
   \item 使用 \path{code/data/energy_lise/dp_dc_kinematics.py} 计算运动学，
     使用 \path{code/data/energy_lise/lise_range.py} 显式选择 LISE++ 模型，
-    重算 1/2/3/4/5/6/8/10 mm 能损扫描；
+    重算 1/2/3/4/5/5.5/6/8/10 mm 能损扫描；
   \item 重算全部 SiPM 饱和、电荷和 10\% 非线性界限；
-  \item 重算旧靶室质量筛算和参考 ICF 几何算术，但不把参考值提升为部署合同；
+  \item 重算当前 afterSRC 靶室质量筛算、过渡管算术和 ICF305 检修口指标，
+    但不把暂定接口提升为站点合同；
   \item 把重新生成的 CSV、JSON 和 LaTeX 片段与报告输入逐字节比较；
   \item 运行独立单元测试；
   \item 使用 LuaLaTeX/Biber 编译中英文报告并检查 PDF 可搜索内容。
@@ -1339,10 +1338,9 @@ make report-zh
 \end{longtable}
 
 \begin{notebox}{配置状态警告}
-  旧数值参考 CAD 源仍写着 active medium: placeholder/undecided 和
-  photosensor: placeholder/undecided。本报告有意把塑料闪烁体和 EQR15
-  记录为建议原型基线。验证工具同时报告 CAD 状态与报告建议，
-  避免把建议误认为已经冻结的 CAD 要求。
+  canonical CAD 原型已选择快速蓝光塑闪和 EQR15 类 SiPM，但供应商、光学耦合、PCB、
+  材料和台架试验证据仍为 provisional。源 CAD 验证模式是 \SourceValidationMode，
+  不是加工/放行门。ICF305 孔径屏蔽不等于完整扇区取出动作已关闭。
 \end{notebox}
 
 \subsection{当前验证的局限}

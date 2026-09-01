@@ -37,7 +37,14 @@ Cable and connector keepouts do not increase this metric. The default gate is 18
 
 One coherent carrier holds deuteron, small-angle proton, and large-angle proton heads. Each nest has an insertion stop, D-flat anti-rotation land, removable clamp bridge, and two provisional M3 fastener envelopes. One common plate provides acceptance relief, a rear cable lane, survey datums, and a plane–pin–slot chamber interface.
 
-Heads remove rearward after clamp release. The sector removes radially outward. Both motions are checked with solid collision geometry.
+Heads remove rearward after clamp release. For the current afterSRC fixed-wall study, exact solid
+poses validate only the first 12 mm inward release from the stationary support. The subsequent
+translation, reorientation, and lift through the top ICF305 opening remain unresolved; the former
+70 mm straight radial motion is not evidence of complete extraction.
+
+The removable access closure owns no detector support, locating datum, protective-ground
+termination, or permanent cable restraint. All holder load paths remain on stationary supports
+that contact permanent chamber walls.
 
 ## Monitoring disposition
 
@@ -74,7 +81,10 @@ See `MIGRATION.md` for rejected fields and mappings.
   --force-rebuild
 ```
 
-Non-strict validation permits documented evidence warnings but never geometry, collision, capacity, or acceptance failures. Strict mode additionally requires supplier drawings, site envelopes, vacuum-material evidence, chamber-access closure, and pressure-vessel analysis. It does not require removed monitoring hardware.
+Non-strict validation permits documented evidence warnings but never geometry, collision, capacity,
+or acceptance failures. A non-strict pass is a prototype geometry result, not a fabrication release.
+Strict mode additionally requires supplier drawings, site envelopes, vacuum-material evidence,
+chamber-access closure, and pressure-vessel analysis. It does not require removed monitoring hardware.
 
 Generated CAD, screenshots, caches, and runtime state remain untracked unless intentionally selected as reference artifacts.
 
@@ -85,5 +95,9 @@ The redesign preserves 53.4° for the large-angle proton and 11.2° for the smal
 ## Authorities
 
 - `docs/specs/compact_one_requirement_baseline.md`
-- `docs/specs/compact_one_architecture_audit.md`
-- `compactInVacuum/MIGRATION.md`
+
+Supporting records:
+
+- `docs/specs/compact_one_architecture_audit.md`: dated implementation snapshot; later baseline
+  revisions supersede conflicting extraction or access claims.
+- `compactInVacuum/MIGRATION.md`: schema migration guide, not a mechanical requirement authority.

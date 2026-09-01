@@ -1,5 +1,10 @@
 # RCNP BLP 设计细节查询
 
+> 状态：2026-09-01 重新分类为外置探测器/RCNP 类比参考。本文中的 50 mm 外置探测器、
+> 0.40/0.62 m 半径、窗口薄膜和多靶位线性靶梯不是当前 CompactInVacuum 基线约束。
+> 当前需求以 `docs/specs/compact_one_requirement_baseline.md` 为准；外置参考模型位于
+> `external_version/infrontofSamuraiMag/`。
+
 ## 1. 文档目标与范围
 
 本文整理 RCNP（大阪大学核物理研究中心）WS 束流线 BLP（Beam Line Polarimeter）相关公开资料中的机械与工艺要点，面向本项目 FreeCAD 建模使用。重点关注：
@@ -8,7 +13,7 @@
 - 散射室开孔、窗口、密封与真空接口
 - 靶梯（target ladder）与线性馈入机构
 - 探测器几何与支撑思路
-- 与本项目 `infrontofSamuraiMag` 设计参数的映射
+- 与本仓库 legacy external `infrontofSamuraiMag` 参考参数的历史映射
 
 本文不替代 RCNP 内部工程图纸；公开资料缺失的尺寸会明确标注为“待定参数”。
 
@@ -106,9 +111,9 @@
 
 ## 5. 探测器与支撑结构
 
-### 5.1 本项目约束（来自项目 readme）
+### 5.1 legacy external 历史约束（非当前 compact 基线）
 
-本项目要求“探测器外壳为直径 `50 mm` 圆柱，前表面中心位于给定角度与半径”。当前约束为：
+保留的旧外置路线曾采用“探测器外壳为直径 `50 mm` 圆柱，前表面中心位于给定角度与半径”的包络：
 
 | 粒子通道 | 角度（lab） | 半径 |
 |---|---:|---:|
@@ -116,7 +121,9 @@
 | proton-1 | 11.2° | 0.62 m |
 | proton-2 | 53.4° | 0.62 m |
 
-这三组是本项目布置约束，不是 RCNP 原始 BLP 的一一复刻参数。
+这三组是 legacy external 布置的历史参考，既不是 RCNP 原始 BLP 的一一复刻参数，
+也不是当前 CompactInVacuum 配置。当前 compact 原型采用 20 mm 有效直径，通道有效中心半径为
+140/190/205 mm，其状态和证据等级由专用基线与 resolved configuration 管理。
 
 ### 5.2 支撑建模建议
 
@@ -143,7 +150,7 @@
 
 ## 8. 对本仓库 CAD 的落地建议
 
-针对 `infrontofSamuraiMag`：
+以下只是对 `external_version/infrontofSamuraiMag/` 外置参考路线的历史建模方法：
 
 1. 采用“参数化装配”而非单体布尔模型。
 2. 腔体、法兰、窗口环、薄膜、靶梯、馈入、探测器支撑全部拆为独立对象。

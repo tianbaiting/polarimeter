@@ -1,5 +1,9 @@
 # Phase 0 — Headless PartDesign Feasibility Report
 
+> **ARCHIVED HISTORICAL EVIDENCE.** Paths and commands record the repository layout at the time of
+> this external-route spike. They are not current module instructions and do not validate the
+> CompactInVacuum architecture.
+
 - **Date**: 2026-04-17
 - **Spike script**: `infrontofSamuraiMag/scripts/spike_partdesign_headless.py`
 - **Raw output**: `infrontofSamuraiMag/reports/phase0_spike/phase0_results.json`

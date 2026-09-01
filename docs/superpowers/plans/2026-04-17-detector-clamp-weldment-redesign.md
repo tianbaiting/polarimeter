@@ -1,5 +1,10 @@
 # Detector Clamp Weldment Redesign Implementation Plan
 
+> **ARCHIVED HISTORICAL PLAN (2026-04-17).** This plan targets the preserved external-detector
+> implementation now under `external_version/`. Its root-level paths and commands are retained as
+> execution history and are not current instructions. Use `AGENTS.md` and `codex_targets.yaml` for
+> current routing; do not execute this plan against CompactInVacuum.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Rewrite the DPOL polarimeter detector-clamp fixture (Sub-2 of a 6-step manufacturability roadmap) so each detector position emits three named single-solid PartDesign Bodies — `Weldment_LoadBearing`, `UpperClamp_Detachable`, `BasePlate_Bolted` — plus real fastener solids, with no intentional interpenetration and a new strict validator guarding that property.

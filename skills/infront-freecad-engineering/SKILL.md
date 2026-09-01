@@ -1,139 +1,107 @@
 ---
 name: infront-freecad-engineering
-description: Build and validate the infrontofSamuraiMag FreeCAD model, capture review drawings/views, and run the polarimeter `code/` analysis workflow with reproducible CLI commands.
+description: Build, validate, inspect, and capture review views for the polarimeter's stateful CompactInVacuum or preserved external-reference FreeCAD models, including coupled CAD-analysis checks. Use for geometry, exports, validation reports, detector placement, access/support studies, or FreeCAD screenshots. Use dpolar-count-inference instead for standalone count-to-polarization inference.
 ---
 
-# infront FreeCAD Engineering Skill
+# Polarimeter FreeCAD Engineering
 
-Use this skill when the user asks to modify, generate, export, draw, screenshot, or validate the `infrontofSamuraiMag` model, or when the request couples geometry work with the `code/` reconstruction / plotting workflow.
+Use the stateful module registry; do not infer a module from an old directory name or screenshot.
 
-## Trigger Conditions
+## Select the workstream
 
-Apply this skill when user requests include any of:
-- `infrontofSamuraiMag`
-- FreeCAD model generation or export
-- FreeCAD screenshots, review views, or drawing-style snapshots
-- detector angle/radius constraint checks
-- validation report or strict geometry acceptance
-- `code/` reconstruction, ROOT plotting, or ratio / LRUD / coincidence studies
+Read `codex_targets.yaml`, then route as follows:
 
-## MCP Preflight Checklist
+| Registry name | Role | Baseline | Runner | Module worklog |
+|---|---|---|---|---|
+| `compactOneAfterSRC` | current baseline | `docs/specs/compact_one_requirement_baseline.md` | `compactInVacuum/run_compactOne_afterSRC.sh` | `compactInVacuum/worklog.md` |
+| `compactOneInfrontSamurai` | current baseline | `docs/specs/compact_one_requirement_baseline.md` | `compactInVacuum/run_compactOne_infrontSamurai.sh` | `compactInVacuum/worklog.md` |
+| `compactInVacuum` | compatibility scaffold | `docs/specs/compact_one_requirement_baseline.md` | `compactInVacuum/run_compactInVacuum.sh` | `compactInVacuum/worklog.md` |
+| `afterSRC` | legacy external reference | `docs/specs/BLP_v1_requirement_baseline.md` | `external_version/afterSRC/run_afterSRC.sh` | `external_version/afterSRC/worklog.md` |
+| `infrontofSamuraiMag` | legacy external reference | `docs/specs/BLP_v1_requirement_baseline.md` | `external_version/infrontofSamuraiMag/run_infrontofSamuraiMag.sh` | `external_version/infrontofSamuraiMag/worklog.md` |
 
-Before interactive MCP actions, verify all items below:
+If the request does not identify a workstream, infer it only from current artifacts or ask when the
+choice would change the design. `afterSRC` normally means the current compact baseline unless the
+user explicitly asks for the external H+V+V reference.
 
-1. FreeCAD GUI is open.
-2. `MCP Addon` workbench is selected in FreeCAD.
-3. `Start RPC Server` has been clicked.
-4. Codex MCP registration exists:
-   - `codex mcp list`
-   - `codex mcp get freecad`
-5. Addon is installed in active FreeCAD user directory:
-   - `~/.local/share/FreeCAD/Mod/FreeCADMCP` (current environment)
-6. Decide whether the task is:
-   - stateful CAD generation/validation,
-   - interactive FreeCAD drawing/screenshot capture,
-   - or `code/` analysis / plotting.
+## Stateful workflow
 
-## Workflow
+Before edits or runs, read:
 
-1. Read context files before any edit/run:
-   - `docs/specs/BLP_v1_requirement_baseline.md`
-   - `AGENTS.md`
-   - `worklog.md`
-   - `infrontofSamuraiMag/worklog.md`
-2. If the task is geometry/config work, edit physical parameters in `infrontofSamuraiMag/config/default_infront.yaml` or pass one-off overrides with `--set`.
-3. Run strict validation first for stateful geometry changes:
-   - `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
-4. If validation passes, generate artifacts:
-   - `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml`
-5. Inspect report keys:
-   - `status`, `thresholds`, `channels`, `subsystems`, `artifacts`
-6. Fail fast rule:
-   - If `status=fail`, do not claim geometry is acceptable; adjust config or tolerances.
-7. Confirm runtime state:
-   - `infrontofSamuraiMag/state.json` should have `validation.status=pass`.
-8. After every stateful run (including `--validate-only`), append one entry to both:
-   - `worklog.md`
-   - `infrontofSamuraiMag/worklog.md`
-   Entry fields (English): timestamp, command, key params/overrides, validation result, next action.
+1. `AGENTS.md`.
+2. The selected baseline.
+3. The selected target and referenced configuration.
+4. `worklog.md` and the selected module worklog.
+5. The selected state and referenced validation report, when present.
 
-## `code/` Workflow
+Put requirement changes in the baseline first and parameter changes in the target/config before
+changing implementation code. Never hand-edit state, lock, or generated validation output.
 
-Use this branch of the skill when the user is asking for analysis code, plotting logic, or numerical study outputs rather than CAD geometry.
+Run the selected wrapper from the repository root:
 
-1. Read the build entrypoints:
-   - `code/CMakeLists.txt`
-   - `code/apps/dpol_tool.cpp`
-   - `code/apps/dpol_batch.cpp`
-   - `code/tests/test_main.cpp`
-2. Configure out-of-tree:
-   - `cmake -S code -B code/build -DDPOLAR_BUILD_TESTS=ON`
-3. Build:
-   - `cmake --build code/build`
-4. Run regression test gate:
-   - `ctest --test-dir code/build --output-on-failure`
-5. Use `dpol_tool` for targeted studies:
-   - `./code/build/dpol_tool validate-transform --scenario code/config/default.ini`
-   - `./code/build/dpol_tool ratio --scenario code/config/default.ini --mode proton --output-dir code/output/manual_ratio`
-   - `./code/build/dpol_tool coincidence --scenario code/config/default.ini --output-dir code/output/manual_coincidence`
-6. Use `dpol_batch` for the full pre-defined workflow:
-   - `./code/build/dpol_batch --scenario code/config/default.ini --output-dir code/output/manual_batch`
-7. Treat `code/build/` and `code/output/` as generated only; do not commit them.
-8. If analysis behavior changes, update test coverage under `code/tests/`.
+```bash
+./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml
+./compactInVacuum/run_compactOne_infrontSamurai.sh --pipeline-index codex_targets.yaml
+./external_version/afterSRC/run_afterSRC.sh --pipeline-index codex_targets.yaml
+./external_version/infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml
+```
 
-## FreeCAD Drawing / Screenshot Workflow
+Use `--validate-only` when artifacts are unnecessary, `--force-rebuild` only when intentionally
+bypassing hash skip, and `--strict-validation` only when intentionally evaluating the strict
+evidence/release gate. Use target/config or supported `--set` overrides for geometry parameters.
 
-Use this branch when the user asks to “画图”, get review images, or inspect a subsystem visually.
+After every stateful invocation, append timestamp, command, parameters, validation mode/result, and
+next action to both `worklog.md` and the selected module worklog.
 
-1. Decide the source model before drawing:
-   - stateful `infrontofSamuraiMag` output for authoritative geometry
-   - `infrontofSamuraiMag/build_polarimeter.py` only for quick reference previews
-2. Build or validate the source geometry first; do not draw from a stale or unvalidated assembly if the request is meant to review current parameters.
-3. Capture standard review views in this default order:
-   - `Isometric`
-   - `Front`
-   - `Top`
-   - `Right`
-4. Focus on the changed object or subsystem when possible to reduce clutter.
-5. Use screenshots / viewport captures for review unless the user explicitly requests dimensioned engineering drawings.
-6. Do not describe screenshots as fabrication-ready drawings; dimension authority comes from validated parameters and requirement docs, not viewport images alone.
-7. If MCP/GUI is unavailable, fall back to batch validation/export and state clearly that no interactive drawing capture was produced.
+## Interpret validation correctly
 
-## Stable Commands
+For CompactInVacuum reports inspect at least:
 
-- Dump merged config:
-  - `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --dump-resolved-config`
-- Tighten tolerance:
-  - `--angle-tol-deg <deg> --radius-tol-mm <mm>`
-- Disable hard failure temporarily:
-  - `--no-strict-validation`
-- Stateful run from root index:
-  - `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml`
-- `code/` configure:
-  - `cmake -S code -B code/build -DDPOLAR_BUILD_TESTS=ON`
-- `code/` build:
-  - `cmake --build code/build`
-- `code/` tests:
-  - `ctest --test-dir code/build --output-on-failure`
-- Single-study analysis:
-  - `./code/build/dpol_tool <command> --scenario code/config/default.ini --output-dir <dir>`
-- Batch analysis:
-  - `./code/build/dpol_batch --scenario code/config/default.ini --output-dir <dir>`
+- `status`, `strict`, `validation_mode`, and `summary`;
+- `categories`, `engineering_metrics`, and `resolved_configuration`;
+- the state file's target hash and artifact paths.
 
-## Fallback Rule (RPC Unavailable)
+For legacy external reports inspect the report status and subsystem/check summaries exposed by that
+engine. A non-strict `pass` is a prototype geometry pass, not a fabrication/release pass. Claim a
+strict release pass only when `strict=true`, `status=pass`, and all applicable evidence gates close.
 
-If MCP RPC is unavailable or FreeCAD GUI is not running:
+For the current afterSRC access design, keep these distinctions explicit:
 
-1. Do not continue interactive MCP calls.
-2. Fall back to deterministic batch validation:
-   - `./infrontofSamuraiMag/run_infrontofSamuraiMag.sh --pipeline-index codex_targets.yaml --validate-only --strict-validation`
-3. Continue with batch export only after validation passes.
-4. For `code/` tasks, continue with CLI build/test/plot commands because they do not depend on MCP.
+- ICF305 is the recommended all-metal maintenance opening.
+- The removable closure carries no detector, support, datum, ground, or cable-restraint load.
+- Permanent supports remain on permanent chamber walls.
+- The sampled 12 mm release does not prove the complete reorientation and lift path.
 
-## Notes
+## Tests
 
-- Legacy-mode default strict thresholds are `0.05 deg` and `0.2 mm`.
-- `--validate-only` skips FCStd/STEP generation and focuses on constraint acceptance.
-- For reproducible history, keep `--basename` unique per iteration.
-- Keep FreeCAD GUI open for MCP-driven operations.
-- In this repository, “画图” may mean either FreeCAD geometry screenshots or ROOT physics plots; decide which branch is intended before acting.
+Use the selected module's own test entry. For the current CompactInVacuum engine:
+
+```bash
+./compactInVacuum/run_freecad_tests.sh
+```
+
+Do not reuse legacy test paths for CompactInVacuum or claim a geometry result from tests belonging
+to another workstream.
+
+## Interactive review views
+
+Use FreeCAD MCP only when the GUI RPC server is available. Confirm the selected stateful artifact
+before opening or capturing it. Prefer object-focused `Isometric`, `Front`, `Top`, and `Right`
+captures. Screenshots are review evidence, not manufacturing drawings.
+
+If RPC is unavailable, use the selected stateful wrapper for deterministic batch validation/export
+and report that interactive captures were not produced. Do not fall back to removed ad-hoc macros.
+
+## Coupled analysis
+
+ROOT-based analysis must run in `anaroot-env`:
+
+```bash
+micromamba run -n anaroot-env cmake -S code -B code/build -DDPOLAR_BUILD_TESTS=ON
+micromamba run -n anaroot-env cmake --build code/build
+micromamba run -n anaroot-env ctest --test-dir code/build --output-on-failure
+micromamba run -n anaroot-env ./code/build/dpol_tool <command> --scenario code/config/default.ini --output-dir <dir>
+```
+
+Use this branch only when geometry and analysis must be checked together. Route standalone `pzz`,
+`pyy`, LR/UD, profile-likelihood, or likelihood-curve requests to
+`skills/dpolar-count-inference/SKILL.md`.

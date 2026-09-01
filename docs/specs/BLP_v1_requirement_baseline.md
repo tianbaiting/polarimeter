@@ -1,9 +1,9 @@
 # BLP Mechanical Requirement Baseline v1
 
 ## 1. Purpose
-本文件是 `afterSRC/` 与 `infrontofSamuraiMag/` 外置探测器机械路线的需求基线，用于跨终端一致协作与上下文连续性。
+本文件是 `external_version/afterSRC/` 与 `external_version/infrontofSamuraiMag/` 外置探测器机械路线的需求基线，用于跨终端一致协作与上下文连续性。
 
-当前项目基线不是“afterSRC 外置 + 一台 CompactInVacuum”，而是两台真空内紧凑型极化仪：`CompactInVacuum-afterSRC` 与 `CompactInVacuum-preSAMURAI`。`afterSRC/` 外置探测器设计仅作为 legacy/fallback/reference 路线保留。
+当前项目基线不是“afterSRC 外置 + 一台 CompactInVacuum”，而是两台真空内紧凑型极化仪：`CompactInVacuum-afterSRC` 与 `CompactInVacuum-preSAMURAI`。`external_version/afterSRC/` 外置探测器设计仅作为 legacy/fallback/reference 路线保留。
 
 CompactInVacuum 公共平台及两台基线仪器由 `docs/specs/compact_one_requirement_baseline.md` 管理。本文件中已有 CompactInVacuum 条目仅作为迁移历史、筛选假设和外置路线接口关联说明；若两者冲突，以 CompactInVacuum 专用基线为准。
 
@@ -34,9 +34,9 @@ CompactInVacuum 公共平台及两台基线仪器由 `docs/specs/compact_one_req
 - 靶框：单靶可拆框架，双螺钉压板锁定。
 - 驱动：电机在真空外，纯机械旋转馈通；机械止挡 + 计步校准；外部手轮应急；工作位使靶心落在束流中心，停靠位使整套 holder 偏心摆离 z 轴束流包络。
 - 真空接口采用模块化合同冻结：`infrontofSamuraiMag` 保持前后 JIS 可更换模块，默认上游 `VF100` / 下游 `VG80`，接口装配语义为 `[ chamber ] -> welded round pipe stub -> [ flange ] <-> [ mating flange / equipment ]`；当前默认上游 stub 长 `100 mm`、下游 stub 长 `20 mm`；`VG` 侧在对外接口面带 O-ring groove，`VF` 侧不带 groove。
-- legacy `afterSRC/` 外置路线的历史真空接口合同为：前后束流端面 `ICF114`，顶部旋转馈通安装面 `ICF70`。该合同只约束 legacy 外置设计，证据类别为 `B — LEGACY INHERITANCE`，不得自动传播到 `CompactInVacuum-afterSRC`。
+- legacy `external_version/afterSRC/` 外置路线的历史真空接口合同为：前后束流端面 `ICF114`，顶部旋转馈通安装面 `ICF70`。该合同只约束 legacy 外置设计，证据类别为 `B — LEGACY INHERITANCE`，不得自动传播到 `CompactInVacuum-afterSRC`。
 - CompactInVacuum 历史 CAD 中的前后 `ICF114`、顶部 `ICF70` 为筛选/集成假设，不是已确认束线约束。两台 CompactInVacuum 的束流配合接口当前均为 `D — UNRESOLVED/TBD`；afterSRC compact 的 ICF114/ICF70 外形研究按 `B/C` 管理，直到独立的束线图纸、现场测量或责任方批准将其提升为 `A — EXTERNAL CONSTRAINT`。
-- CompactInVacuum 公共电气服务需求为“真空内无有源模拟电子学”：每个 SiPM 使用一条独立、可测试的 `50 Ω` 同轴通道，信号与偏置通过真空外 bias tee 共线；12 路使用、每扇区 1 路备用建议、12 个两线温度通道和不少于 32 个 housekeeping 引脚容量属于公共平台需求/建议。四个四通道 `ICF70` 同轴口和一个 `ICF70` 多芯口仅为 `C — ENGINEERING ASSUMPTION`，具体法兰标准、数量、位置、连接器、真空电缆、料号和针脚分配均由两台仪器分别关闭。
+- CompactInVacuum 公共电气服务需求为“真空内无有源模拟电子学”：每个 SiPM 使用一条独立、可测试的 `50 Ω` 同轴通道，信号与偏置通过真空外 bias tee 共线；12 路使用，每扇区 1 路备用容量仅为建议。专用温度传感器、温度线束、housekeeping 通道及多芯 housekeeping 馈通不是公共平台需求，并已由 CompactInVacuum schema 3 删除。四个四通道 `ICF70` 同轴口仅为 `C — ENGINEERING ASSUMPTION`，具体法兰标准、数量、位置、连接器、真空电缆、料号和通道分配均由两台仪器分别关闭。
 - CompactInVacuum 馈通与线缆宜集中在可维护的服务区。所有外置馈通器按可拆采购件处理，运输状态应能拆除并用同真空等级盲板封闭；焊接短管、购买件密封、转接器、波纹管、馈通器和整机焊缝共同构成验收真空边界，不允许用未经批准的低等级密封替代。具体 ICF/CF/JIS 标准由每个站点的已批准接口证据决定。
 - `CompactInVacuum` 真空内布线必须有参数化路由包络、靠近探测器和馈通端的机械应力释放、独立保护接地/等电位连接以及束流和旋转靶 keep-out。供应商电缆未冻结前，概念 CAD 使用 `25 mm` 最小静态弯曲半径和 `8 mm` 路由包络直径；这些值是待电缆图纸验证的设计假设，不是采购规格。
 - chamber 端口按模块化合同冻结：`infrontofSamuraiMag` 保持主泵口 + 真空计/安全口 + 机械旋转馈通口 + 备用口（固定 4 口）；`afterSRC` 仅保留顶置 `rotary_feedthrough`，不再保留 `main_pump / gauge_safety / spare` 侧口；允许端口在所属壁面内做偏心布置以服务新 target rotary 机构。
@@ -95,7 +95,7 @@ LOS scope definition (frozen contract):
 - LOS 无遮挡（v1 概念几何范围：plates / ports / stand；豁免：chamber_shell / end_modules / target_hardware / detector_packages）
 - 无实体干涉（至少覆盖 detector package 对主装配碰撞矩阵）
 - 真空边界完整
-- CompactInVacuum 通用验证要求：12 条已分配同轴通道可追踪；建议的 4 条备用容量和 housekeeping 容量状态明确；线缆路由包络不进入束流 stay-clear 或旋转靶工作/停靠包络；馈通端与探测器端均有应力释放；外部馈通器包络不得与相邻法兰或维护抽取包络重叠。束流与旋转接口必须按各部署配置核对；未获 `A — EXTERNAL CONSTRAINT` 证据时，strict release gate 必须保持未关闭，不得硬编码为 ICF114/ICF70 通过。
+- CompactInVacuum 通用验证要求：12 条已分配同轴通道可追踪；建议的 4 条备用容量状态明确；不得因 schema 3 已删除的温度或 housekeeping 子系统缺席而失败；线缆路由包络不进入束流 stay-clear 或旋转靶工作/停靠包络；馈通端与探测器端均有应力释放；外部馈通器包络不得与相邻法兰或维护抽取包络重叠。束流与旋转接口必须按各部署配置核对；未获 `A — EXTERNAL CONSTRAINT` 证据时，strict release gate 必须保持未关闭，不得硬编码为 ICF114/ICF70 通过。
 
 ## 6. Required Artifacts
 - FCStd
@@ -106,6 +106,9 @@ LOS scope definition (frozen contract):
 - 本文件为 v1 基线，修改必须追加版本记录，不覆盖历史决策。
 
 ## 8. Version History
+- 2026-09-01 v1.36:
+  - 将 CompactInVacuum 专用温度监测、housekeeping 通道和多芯馈通从当前公共需求中删除，与 `compact_one_requirement_baseline.md` 和 schema 3 保持一致。
+  - 保留 v1.32/v1.35 版本记录作为迁移历史，不将其中的旧监测要求解读为当前合同。
 - 2026-07-27 v1.35:
   - 更正顶层项目架构：当前基线为 `CompactInVacuum-afterSRC` 与 `CompactInVacuum-preSAMURAI` 两台真空内紧凑型仪器；`afterSRC/` 外置设计降为 legacy/fallback/reference。
   - 将 CompactInVacuum 的 ICF114/ICF70 从“固定合同”更正为继承/工程假设；两站点束线接口在取得独立图纸、测量或责任方批准前保持 TBD。

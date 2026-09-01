@@ -58,18 +58,18 @@ class SipmCalculationTest(unittest.TestCase):
 
 
 class ChamberScreeningTest(unittest.TestCase):
-    def test_closed_square_shell_mass(self) -> None:
+    def test_current_aftersrc_closed_square_shell_mass(self) -> None:
         metrics = chamber_metrics(
             inner_x_mm=440.0,
             inner_y_mm=440.0,
-            body_length_mm=360.0,
-            wall_thickness_mm=10.0,
+            body_length_mm=420.0,
+            wall_thickness_mm=8.0,
             density_g_per_cm3=7.90,
         )
-        self.assertAlmostEqual(metrics.material_volume_l, 10.352, places=6)
-        self.assertAlmostEqual(metrics.mass_kg, 81.7808, places=6)
-        self.assertEqual(metrics.outer_size_x_mm, 460.0)
-        self.assertEqual(metrics.outer_size_y_mm, 460.0)
+        self.assertAlmostEqual(metrics.material_volume_l, 9.11872, places=6)
+        self.assertAlmostEqual(metrics.mass_kg, 72.037888, places=6)
+        self.assertEqual(metrics.outer_size_x_mm, 456.0)
+        self.assertEqual(metrics.outer_size_y_mm, 456.0)
 
 
 class LiseRangeTableTest(unittest.TestCase):

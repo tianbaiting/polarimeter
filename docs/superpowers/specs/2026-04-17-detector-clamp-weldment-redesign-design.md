@@ -1,9 +1,13 @@
 # Detector Clamp Weldment Redesign — Design Spec
 
+> **ARCHIVED HISTORICAL SPEC.** This document applies only to the preserved external H+V+V route.
+> Root-level module paths below are historical and are not runnable current paths. It is not a
+> CompactInVacuum requirement authority.
+
 - **Date**: 2026-04-17
 - **Pilot module**: `afterSRC` (reuses `infrontofSamuraiMag/src/ifsm/` internals → `infrontofSamuraiMag` inherits automatically)
 - **Scope**: Sub-project 2 of a 6-step decomposition (see §1)
-- **Status**: Design approved, ready for implementation planning
+- **Status**: Archived external-route design record; superseded for current baseline work
 
 ## 0. Context
 
