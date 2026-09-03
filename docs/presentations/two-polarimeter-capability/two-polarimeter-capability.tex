@@ -4,8 +4,9 @@
 \usepackage{booktabs,tabularx,array}
 \usepackage{graphicx}
 \usepackage{xcolor}
+\usepackage{appendixnumberbeamer}
 
-\graphicspath{{docs/presentations/afterSRC-samurai-detector-review/figures/}{../afterSRC-samurai-detector-review/figures/}}
+\graphicspath{{docs/presentations/two-polarimeter-capability/figures/}{figures/}{docs/presentations/afterSRC-samurai-detector-review/figures/}{../afterSRC-samurai-detector-review/figures/}}
 
 \definecolor{Navy}{HTML}{17324D}
 \definecolor{Teal}{HTML}{128C8C}
@@ -203,7 +204,7 @@
 
   \begin{columns}[T,onlytextwidth]
     \column{0.47\textwidth}
-      \textbf{Coherent rank mixing}
+      \textbf{Quadratic spin interaction}
 
       Tensor magnetic/electric polarizability or other quadratic spin couplings can generate
       \[
@@ -212,7 +213,7 @@
         \vct p_f\neq0.
       \]
     \column{0.47\textwidth}
-      \textbf{Open or selective transport}
+      \textbf{Spin-dependent loss or material interaction}
 
       Spin-dependent loss, material interactions, collimation, and acceptance can change both ranks and the density-matrix eigenvalues.
   \end{columns}
@@ -222,81 +223,299 @@
   \note{[Sources] A. J. Silenko, Phys. Rev. C 77, 021001 (2008), arXiv:0711.2390; general spin-1 density-matrix evolution. Silenko gives an explicit initially tensor-polarized deuteron beam acquiring vector polarization through tensor magnetic polarizability.}
 \end{frame}
 
-% [EN] Contrast nominal-mode monitoring with reconstruction of a full state after rank-preserving or rank-mixing transport. / [CN] 区分名义模式监测与在保持或混合阶数的输运后重建完整状态。
-\begin{frame}{Two stations can recover all 8 degrees}
+% [EN] Derive the one-station blind directions directly from the measured d-p scattering cross section. / [CN] 直接从实测 d-p 散射截面推导单台极化计的盲方向。
+\begin{frame}{The cross section shows the two blind directions}
+  \footnotesize
+  \begin{align*}
+    \frac{\sigma(\theta,\phi)}{\sigma_0(\theta)}={}&1
+      +\frac32\left(p_x\sin\phi+p_y\cos\phi\right)A_y(\theta)\\
+      &+\frac23\left(p_{xz}\cos\phi-p_{yz}\sin\phi\right)A_{xz}(\theta)\\
+      &+\frac16\left[(p_{xx}-p_{yy})\cos2\phi-2p_{xy}\sin2\phi\right]
+        \left[A_{xx}(\theta)-A_{yy}(\theta)\right]\\
+      &+\frac12p_{zz}A_{zz}(\theta).
+  \end{align*}
+  \normalsize
+
+  \vspace{-0.35em}
   \begin{columns}[T,onlytextwidth]
     \column{0.47\textwidth}
-      \textbf{Nominal $p_{yy}$ monitoring}
-      \[
-        \frac{N_L+N_R-N_U-N_D}
-        {N_L+N_R+N_U+N_D}
-        \quad\Longrightarrow\quad p_{yy}.
-      \]
-      One station measures the amplitude if the beam is assumed to remain a pure $p_{yy}$ state.
+      \textbf{$p_z$ is absent}\\[0.15em]
+      The $d$--$p$ reaction has no longitudinal-vector term in this geometry.
     \column{0.47\textwidth}
-      \textbf{General-state test}
-
-      One L/R/U/D station is blind to tensor $p_{xy}$ and vector $p_z$.
-
-      \vspace{0.35em}
-      A complementary second view rotates these directions into measured combinations.
+      \textbf{$p_{xy}$ vanishes at the four arms}\\[0.15em]
+      At L/R/U/D, $\phi=0^\circ,90^\circ,180^\circ,270^\circ$, so $\sin2\phi=0$.
   \end{columns}
 
-  \vspace{0.45em}
-  \renewcommand{\arraystretch}{1.05}
-  \begin{tabularx}{\textwidth}{Y c c}
-    \toprule
-    Calibrated multi-angle measurement & tensor state & full density matrix \\
-    \midrule
-    one station & $4/5$ & $6/8$ \\
-    two stations with a characterized complementary transfer map & $\alert{5/5}$ & $\alert{8/8}$ \\
-    \bottomrule
-  \end{tabularx}
-
-  \note{[Sources] DPOLAR multi-angle L/R/U/D response and joint-rank analysis. A single tensor station has the exact pxy blind direction; the full response also omits pz.}
+  \vspace{0.20em}
+  {\color{Teal}\bfseries One calibrated multi-angle station measures 6/8 density-matrix parameters, or 4/5 tensor parameters.}
+  \note{[Sources] DPOLAR Cartesian d-p scattering response. Multiple polar-angle groups separate py from pxz and px from pyz through their distinct Ay and Axz dependences.}
 \end{frame}
 
-% [EN] Diagnose a lower pyy using tensor magnitude, generated vector polarization, and full density-matrix purity before assigning a location. / [CN] 用张量幅度、产生的矢量极化和完整密度矩阵纯度诊断 pyy 下降，再判断其发生位置。
-\begin{frame}{Full $\rho$ identifies what changed and where}
-  A lower $p_{yy}$ component has three distinct interpretations. Use
+% [EN] Show explicitly how the characterized BigRIPS rotation maps both one-station blind directions into measured channels. / [CN] 明确展示已表征的 BigRIPS 转动如何把单台测量的两个盲方向映射到可测通道。
+\begin{frame}{BigRIPS makes both blind directions visible}
+  \textbf{Before BigRIPS:} unprimed.\qquad
+  \textbf{After BigRIPS:} primed.
   \[
-    Q_T=\sqrt{\frac{2}{3}\Tr[(\Tens)^2]},
-    \qquad V=|\vct p|,
-    \qquad \Pi=\Tr(\rho^2).
+    R_{\rm rel}=R_y(\delta),
+    \qquad \delta=27.513^\circ,
+    \qquad c=\cos\delta=0.886906,
+    \qquad s=\sin\delta=0.461951.
   \]
 
+  \begin{columns}[T,onlytextwidth]
+    \column{0.47\textwidth}
+      \textbf{Vector blind direction}
+      \begin{align*}
+        p'_x&=c\,p_x+s\,p_z,\\
+        p'_z&=-s\,p_x+c\,p_z.
+      \end{align*}
+      Hence an upstream $p_z$ gives
+      \[
+        \boxed{p'_x=0.461951\,p_z},
+      \]
+      which is measured at station 2.
+    \column{0.47\textwidth}
+      \textbf{Tensor blind direction}
+      \begin{align*}
+        p'_{xy}&=c\,p_{xy}+s\,p_{yz},\\
+        p'_{yz}&=-s\,p_{xy}+c\,p_{yz}.
+      \end{align*}
+      Hence an upstream $p_{xy}$ gives
+      \[
+        \boxed{p'_{yz}=-0.461951\,p_{xy}},
+      \]
+      which is measured at station 2.
+  \end{columns}
+
+  \vspace{0.10em}
+  {\color{Teal}\bfseries Two stations: tensor $5/5$; full density matrix $8/8$.}
+  \note{[Sources] DPOLAR BigDpol/T11-to-F13 central-ray transport and joint-rank analysis.}
+\end{frame}
+
+% [EN] Replace abstract coherence labels with the three concrete beam processes that can reduce the measured pyy component. / [CN] 用三种具体束流过程替代抽象的相干性标签，解释测得的 pyy 分量为何下降。
+\begin{frame}{Why can $p_{yy}$ decrease?}
+  Compare tensor size $Q_T$, vector polarization $V=|\vct p|$, and density-matrix purity $\Pi=\Tr(\rho^2)$.
+
   \renewcommand{\arraystretch}{1.05}
+  {\small
   \begin{tabularx}{\textwidth}{>{\bfseries}Y Y}
-    measured change & physical interpretation \\
+    what the polarimeters see & what happened in the beam \\
     \midrule
-    $Q_T$ unchanged, $V=0$, tensor axis changes & ordinary coherent rotation \\
-    $Q_T$ changes, $V$ appears, $\Pi$ unchanged & coherent tensor--vector conversion \\
-    $\Pi$ decreases & incoherent ensemble depolarization \\
-  \end{tabularx}
+    $p_{yy}$ changes; $Q_T$ and $\Pi$ stay constant; the axis moves; $V=0$
+      & Common magnetic rotation: all particles' axes turn together; no polarization is lost. \\
+    $Q_T$ changes; $V$ appears; $\Pi$ stays constant
+      & Quadratic spin coupling transfers polarization from tensor to vector. \\
+    $\Pi$ decreases
+      & Different trajectories acquire different axes or phases and cancel in the average; spin-dependent loss can also change $\rho$. \\
+  \end{tabularx}}
 
   \vspace{0.20em}
   \conclusion{Changed already after SRC $\Rightarrow$ upstream. Changed only after BigRIPS $\Rightarrow$ between the stations.}
-  \note{[Sources] Density-matrix purity under unitary evolution; tensor-multipole invariants under ordinary rotations; SAMURAI73 two-station loss-localization requirement.}
+  \note{[Sources] Density-matrix purity under unitary evolution; tensor-multipole invariants under ordinary rotations; phase-space-averaged transport; SAMURAI73 two-station loss-localization requirement.}
 \end{frame}
 
-% [EN] End with the concrete coordination decision needed from the RIKEN participants. / [CN] 以需要 RIKEN 参会者确认的具体协调事项收束报告。
-\begin{frame}{Who is the contact for an after-SRC polarimeter?}
-  \vspace{0.35em}
-  {\Large\bfseries\color{Navy}Could a polarimeter be installed just downstream of SRC?\par}
+% [EN] Ask only for the responsible contact and formal installation workflow, since the concept-level interface questions are already known. / [CN] 只询问负责人和正式安装流程，因为概念阶段的接口问题已经明确。
+\begin{frame}{Who should we contact to start the after-SRC process?}
+  \vspace{0.20em}
+  {\Large\bfseries\color{Navy}We would like to start the formal installation process.\par}
 
-  \vspace{0.75em}
-  {\large Who should we contact to discuss\par}
-  \vspace{0.30em}
-  \begin{itemize}
-    \setlength\itemsep{0.45em}
-    \item the available beam-line location and longitudinal space;
-    \item vacuum, mechanical, electrical, and detector interfaces;
-    \item beam optics, operation, radiation safety, and installation constraints?
-  \end{itemize}
+  \vspace{0.55em}
+  \begin{enumerate}
+    \setlength\itemsep{0.35em}
+    \item Who owns the approval for an installation immediately downstream of SRC?
+    \item What is the required technical, accelerator, safety, and scheduling sequence?
+    \item Where should we submit the first CAD/interface package, and what documents are required?
+  \end{enumerate}
 
-  \vspace{0.70em}
-  \conclusion{Requested next step: identify the responsible beam-line contact and arrange an interface discussion.}
+  \vspace{0.50em}
+  \conclusion{Requested outcome: one named contact and the next formal step.}
   \note{[Sources] SAMURAI73 polarimeter-location request.}
+\end{frame}
+
+\renewcommand{\appendixname}{Appendix}
+\appendix
+\setbeamertemplate{footline}{\leavevmode\hbox to\paperwidth{\hspace{0.65cm}{\color{Muted}\scriptsize\strut SAMURAI73 two-station polarimetry}\hfill{\color{Muted}\scriptsize\strut Backup}\hspace{0.65cm}}\vspace{0.28em}}
+
+% [EN] Insert a clean boundary between the short main talk and optional technical material. / [CN] 在简短主报告与可选技术材料之间加入清晰分隔。
+\begin{frame}[plain]
+  \vfill
+  \centering
+  {\Huge\bfseries\color{Navy}Backup\par}
+  \vspace{0.35em}
+  {\large\color{Teal}Source, accelerator, beam-line, and detector details\par}
+  \vfill
+\end{frame}
+
+% [EN] Preserve the RIKEN source drawings while explaining how the initial spin axis is selected. / [CN] 保留 RIKEN 原始装置图，并说明初始自旋轴如何设定。
+\begin{frame}{Backup: Wien filter sets the PIS spin axis}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.47\textwidth}
+      \centering
+      \includegraphics[width=0.98\linewidth,height=0.36\textheight,keepaspectratio]{tub04_riken_pis.png}
+
+      {\small RIKEN polarized ion source}
+    \column{0.49\textwidth}
+      \centering
+      \includegraphics[width=0.98\linewidth,height=0.36\textheight,keepaspectratio]{tub04_wien_filter.png}
+
+      {\small Wien-filter spin-orientation control}
+  \end{columns}
+
+  \vspace{0.25em}
+  \begin{itemize}
+    \setlength\itemsep{0.16em}
+    \item The two-stage PIS produces vector and tensor modes.
+    \item After the ECR ionizer the axis is vertical; crossed $\vct E$ and $\vct B$ tilt the spin without changing the orbit.
+    \item Rotating the Wien filter sets the azimuth; vector polarization calibrates the angles.
+  \end{itemize}
+  \note{[Sources] N. Sakamoto et al., ``Acceleration of Polarized Deuteron Beams with RIBF Cyclotrons,'' Cyclotrons2016, TUB04, pp. 145--148, Figs. 2--3.}
+\end{frame}
+
+% [EN] Connect turn purity directly to preservation of one spin phase through the cyclotron cascade. / [CN] 将圈纯度直接联系到回旋加速器链中单一自旋相位的保持。
+\begin{frame}{Backup: single-turn extraction preserves spin phase}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.46\textwidth}
+      \centering
+      \includegraphics[width=0.98\linewidth,height=0.29\textheight,keepaspectratio]{tub04_accelerator_chain.png}
+
+      {\small PIS $\rightarrow$ AVF $\rightarrow$ RRC $\rightarrow$ SRC}
+    \column{0.50\textwidth}
+      \centering
+      \includegraphics[width=0.98\linewidth,height=0.29\textheight,keepaspectratio]{tub04_single_turn_timing.png}
+
+      {\small Timing signature of wrong-turn extraction}
+  \end{columns}
+
+  \vspace{0.25em}
+  \begin{itemize}
+    \setlength\itemsep{0.18em}
+    \item The cyclotron field changes the spin direction every turn:
+      $\Delta\beta=360^\circ\gamma(g-1)$, with $g=0.8477$ in the paper's convention.
+    \item Mixing $N$ with $N\pm1$ turns superposes spin phases and lowers the polarization.
+    \item AVF, RRC, and SRC kept the same turn: $0.07\%$ mixing, $>99\%$ purity, stable for 2--3 days.
+  \end{itemize}
+  \note{[Sources] N. Sakamoto et al., Cyclotrons2016, TUB04. The abstract and Sec. ``Why Single-turn Extraction?'' explain turn-dependent spin orientation; pp. 147--148 report 0.07 percent mixing, greater than 99 percent purity, and 2--3 day stability.}
+\end{frame}
+
+% [EN] Use the original RIKEN schematics to identify the magnets enclosed by the two polarimeters. / [CN] 用 RIKEN 原始示意图标明两台极化计之间包含的磁铁区段。
+\begin{frame}{Backup: magnets between the two stations}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.45\textwidth}
+      \centering
+      \includegraphics[width=0.98\linewidth,height=0.58\textheight,keepaspectratio]{bigdpol_to_f0.png}
+    \column{0.51\textwidth}
+      \centering
+      \includegraphics[width=0.98\linewidth,height=0.20\textheight,keepaspectratio]{bigrips_f0_f7.png}
+
+      \vspace{0.20em}
+      \raggedright
+      \begin{itemize}
+        \setlength\itemsep{0.18em}
+        \item Station 1: BigDpol/T11, between DMT1 and DMT2.
+        \item DMT2 and DMT3: two identical $50^\circ$ dipoles.
+        \item BigRIPS $F0\rightarrow F7$: six $30^\circ$ dipoles, signs $(-,-,-,+,+,-)$, net bend $-60^\circ$.
+        \item $F7\rightarrow F13$: quadrupoles, but no incident-beam dipole before the target.
+      \end{itemize}
+  \end{columns}
+  \note{[Sources] DPOLAR density-matrix transport note, beam-line Secs. 2 and 8; original RIKEN BigRIPS map; Sekiguchi et al. BigDpol layout; Kusaka et al. DMT2/DMT3 specifications.}
+\end{frame}
+
+% [EN] State the central-ray numerical baseline and the visible projections that make the two stations complementary. / [CN] 给出中心轨道的数值基线，以及使两台测量互补的可见投影。
+\begin{frame}{Backup: central ray gives \texorpdfstring{$\delta=27.513^\circ$}{delta=27.513 deg} at 190 MeV/u}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.45\textwidth}
+      \renewcommand{\arraystretch}{1.12}
+      \begin{tabularx}{\textwidth}{Y r}
+        DMT2 + DMT3 & $-100^\circ$ \\
+        BigRIPS $F0\rightarrow F7$ & $-60^\circ$ \\
+        $F7\rightarrow F13$ & $0^\circ$ \\
+        \midrule
+        total orbit bend $\theta$ & $-160^\circ$ \\
+      \end{tabularx}
+    \column{0.51\textwidth}
+      For a 190 MeV/u deuteron,
+      \[
+        \gamma=1.20260044,
+        \qquad G_d=-0.14298727,
+      \]
+      \vspace{-0.45em}
+      \[
+        \delta=G_d\gamma\theta=+27.513^\circ,
+        \qquad R_{\rm rel}=R_y(\delta).
+      \]
+  \end{columns}
+
+  \vspace{0.35em}
+  The central rotation exposes the one-station blind directions:
+  \[
+    p'_x=0.461951\,p_z+\cdots,
+    \qquad
+    p'_{yz}=-0.461951\,p_{xy}+\cdots.
+  \]
+
+  \vspace{0.20em}
+  \conclusion{This is the central-ray horizontal-bend baseline; the real analysis uses $R_{\rm rel}(\xi)$ from field maps and measured beam phase space.}
+  \note{[Sources] DPOLAR density-matrix transport note, Sec. 8: signed bend sum, 190 MeV/u BMT constants, central relative rotation, and component map.}
+\end{frame}
+
+% [EN] Show the proposed afterSRC instrument without exposing repository-state terminology to the meeting audience. / [CN] 展示拟议的 afterSRC 装置，不向会议听众暴露仓库状态术语。
+\begin{frame}{Backup: proposed polarimeter after SRC}
+  \centering
+  \includegraphics[width=0.90\textwidth,height=0.58\textheight,keepaspectratio]{cad_aftersrc_current_isometric.png}
+
+  \vspace{0.10em}
+  {\large\color{Ink}Compact in-vacuum polarimeter proposed just downstream of SRC.\par}
+  \note{[Sources] compactOneAfterSRC current state and validation report; ICF305 standard isometric review rendering generated from the current baseline geometry.}
+\end{frame}
+
+% [EN] Show the proposed pre-SAMURAI instrument without repository-state terminology. / [CN] 展示拟议的 pre-SAMURAI 装置，不使用仓库状态术语。
+\begin{frame}{Backup: proposed polarimeter before SAMURAI}
+  \centering
+  \includegraphics[width=0.90\textwidth,height=0.58\textheight,keepaspectratio]{cad_presamurai_current_isometric.png}
+
+  \vspace{0.10em}
+  {\large\color{Ink}Compact in-vacuum polarimeter proposed upstream of SAMURAI.\par}
+  \note{[Sources] compactOneInfrontSamurai current state and validation report; standard isometric review rendering generated from the current baseline geometry.}
+\end{frame}
+
+% [EN] Report the current detector geometry and the pyy counting precision with every normalization assumption visible. / [CN] 在明确列出所有归一化假设的前提下，给出当前探测器几何与 pyy 计数精度。
+\begin{frame}{Backup: expected \texorpdfstring{$p_{yy}$}{pyy} precision and rates}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.49\textwidth}
+      \textbf{Detector geometry}
+
+      \renewcommand{\arraystretch}{1.08}
+      \begin{tabularx}{\textwidth}{Y r r}
+        channel & $\theta_{\rm lab}$ & radius \\
+        \midrule
+        deuteron & $20.9^\circ$ & 140 mm \\
+        proton, small angle & $11.2^\circ$ & 190 mm \\
+        proton, large angle & $53.4^\circ$ & 205 mm \\
+      \end{tabularx}
+    \column{0.47\textwidth}
+      \textbf{Rate assumptions}
+
+      \renewcommand{\arraystretch}{1.16}
+      \begin{tabularx}{\textwidth}{Y l}
+        beam & 190 MeV/u, $10^7$ d/s \\
+        nominal polarization & $p_{yy}=0.8$ \\
+        CH$_2$ for rate model & $1000\,\mathrm{mg/cm^2}$ \\
+        selected LR/UD rate & $36.95\,\mathrm{s^{-1}}$ \\
+      \end{tabularx}
+  \end{columns}
+
+  \vspace{0.30em}
+  \renewcommand{\arraystretch}{1.10}
+  \begin{tabularx}{\textwidth}{l r r r Y}
+    time & $N_L+N_R$ & $N_U+N_D$ & total & $p_{yy}$ statistical precision \\
+    \midrule
+    10 min & $13{,}734$ & $8{,}438$ & $22{,}172$ & $\sigma=0.0210$; 68\% CI $[0.779,0.821]$ \\
+    30 min & $41{,}203$ & $25{,}314$ & $66{,}517$ & $\sigma=0.0121$; 68\% CI $[0.788,0.812]$ \\
+  \end{tabularx}
+
+  \vspace{0.25em}
+  {\color{Gold}\bfseries Counts use $1000\,\mathrm{mg/cm^2}$, not the $0.20$ mm target drawn in the CAD.}
+  \note{[Sources] code/config/current_tensor.ini; current dpolar LR/UD forward model at pyy=0.8. Commands: dpol_tool lrud --scenario current --observable proton; dpol_tool infer-pyy with the 10 min expected counts and with counts scaled by three for 30 min.}
 \end{frame}
 
 \end{document}

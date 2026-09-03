@@ -1014,3 +1014,12 @@ Entry Template:
 - Validation Result: report `make verify` PASS; report numerical tests 8/8; CompactInVacuum pure-Python 24/24 and FreeCAD runtime groups PASS; external pure-Python 35/35 PASS. A direct FreeCAD execution of the 45 external runtime markers found 43 PASS and two existing failures (weldment-side bolt-count expectation and an old validation fixture rejected by a newer earlier config guard); external sources were untouched.
 - Artifacts/State: root/project/module architecture documents, requirement baselines, bilingual LaTeX sources, report assumptions/generator/provenance, and compatibility deployment metadata updated. English and Chinese PDFs rebuilt and visually inspected. Existing DOCX tooling remains historical and is not maintained.
 - Next Action: collect approved afterSRC and pre-SAMURAI beamline/interface evidence independently; do not freeze ICF114, ICF70, chamber size, radii, or port layout from the legacy afterSRC route.
+
+- Timestamp UTC: 2026-09-03T13:23:04Z
+- Timestamp Local: 2026-09-03 22:23:04 JST
+- Module/Scope: compactOneAfterSRC current-state confirmation for presentation review rendering
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml`
+- Key Parameters/Overrides: no overrides; non-strict current baseline; resolved configuration hash `2e7715c733583206e6bd1d0b4a168700d08baa616d31d2f2064029141b90b876` matched the stored state.
+- Validation Result: hash-skipped invocation retained the current prototype non-strict pass (`47` pass / `10` warnings / `0` failures); this is not a strict fabrication/release pass.
+- Artifacts/State: canonical afterSRC FCStd/STEP/report/state remained unchanged; the retained ICF305 isometric rendering was reused as review evidence in the SAMURAI73 backup slides.
+- Next Action: use the rendering only for meeting review; close the existing supplier, site-envelope, structural, and continuous extraction-motion evidence gates before release.
