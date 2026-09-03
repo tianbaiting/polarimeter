@@ -513,9 +513,27 @@
     30 min & $41{,}203$ & $25{,}314$ & $66{,}517$ & $\sigma=0.0121$; 68\% CI $[0.788,0.812]$ \\
   \end{tabularx}
 
-  \vspace{0.25em}
-  {\color{Gold}\bfseries Counts use $1000\,\mathrm{mg/cm^2}$, not the $0.20$ mm target drawn in the CAD.}
   \note{[Sources] code/config/current_tensor.ini; current dpolar LR/UD forward model at pyy=0.8. Commands: dpol_tool lrud --scenario current --observable proton; dpol_tool infer-pyy with the 10 min expected counts and with counts scaled by three for 30 min.}
+\end{frame}
+
+% [EN] Plot the directly measured LR/UD count ratio and its time-dependent statistical uncertainty. / [CN] 绘制直接测得的 LR/UD 计数比及其随测量时间变化的统计误差。
+\begin{frame}{Backup: LR/UD count ratio versus \texorpdfstring{$p_{yy}$}{pyy}}
+  \centering
+  \includegraphics[width=0.94\textwidth,height=0.70\textheight,keepaspectratio]{pyy_lrud_ratio_10min_vs_30min.pdf}
+
+  \vspace{0.05em}
+  {\color{Teal}\bfseries At $p_{yy}=0.8$: $R_{LRUD}=0.2389$; $\sigma_R=0.0060$ (10 min) and $0.0035$ (30 min).}
+  \note{[Sources] Current dpolar LR/UD forward scan using code/config/current_tensor.ini. RLRUD=(NL+NR-NU-ND)/(NL+NR+NU+ND). The 30 min statistical uncertainty is the 10 min value divided by sqrt(3) at fixed beam current and target areal density.}
+\end{frame}
+
+% [EN] Show the time dependence as a direct profile-likelihood comparison rather than another table. / [CN] 用直接的剖面似然比较展示时间依赖，不再增加另一张表格。
+\begin{frame}{Backup: \texorpdfstring{$p_{yy}$}{pyy} precision at 10 and 30 min}
+  \centering
+  \includegraphics[width=0.94\textwidth,height=0.68\textheight,keepaspectratio]{pyy_precision_10min_vs_30min.pdf}
+
+  \vspace{0.05em}
+  {\color{Teal}\bfseries At $p_{yy}=0.8$: $\sigma=0.0210$ at 10 min and $0.0121$ at 30 min (42\% smaller).}
+  \note{[Sources] Current dpolar frequentist profile-likelihood scans using the 10 min and 30 min expected LR/UD counts. T20 and T22 are fixed at their table central values.}
 \end{frame}
 
 \end{document}
