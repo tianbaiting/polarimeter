@@ -116,8 +116,8 @@
   \note{[Sources] Ohlsen spin-1 density-matrix convention; DPOLAR Cartesian density-matrix parameterization. pyy and pzz are two preparation axes of the same axial-tensor family.}
 \end{frame}
 
-% [EN] Separate physical spin evolution from the passive change to the downstream beam basis. / [CN] 将真实自旋演化与下游束流坐标系的被动变换严格分开。
-\begin{frame}{Precession is measured in the local beam frame}
+% [EN] Separate physical spin evolution from the passive change to the downstream beam basis, and state the rank-preserving scope of linear BMT. / [CN] 将真实自旋演化与下游束流坐标系的被动变换分开，并明确线性 BMT 保持张量阶数的适用范围。
+\begin{frame}{Linear BMT preserves vector and tensor ranks}
   \begin{columns}[T,onlytextwidth]
     \column{0.47\textwidth}
       \textbf{1. Magnetic field rotates the spin in the lab}
@@ -141,46 +141,85 @@
   \[
     \boxed{R_{\mathrm{rel}}=R_o^{\mathsf T}R_s},
     \qquad
+    \vct p_{b,f}=R_{\mathrm{rel}}\vct p_0,
+    \qquad
     \Tens_{b,f}=R_{\mathrm{rel}}\Tens_0R_{\mathrm{rel}}^{\mathsf T}.
   \]
 
   \vspace{0.10em}
-  \conclusion{Lowest-order model: one common $R_{\rm rel}$ moves the polarization axis but preserves the tensor eigenvalues and magnitude.}
-  \note{[Sources] Thomas-BMT equation; DPOLAR local beam-frame transport convention. The first transformation is physical evolution; the second only re-expresses the same state in the downstream beam basis.}
+  \conclusion{Lowest order: a common rotation moves the polarization axis, but vector and tensor ranks remain separate.}
+  \note{[Sources] Thomas-BMT equation; Ohlsen spin-1 irreducible multipoles; DPOLAR local beam-frame transport convention. The first transformation is physical evolution; the second only re-expresses the same state in the downstream beam basis.}
 \end{frame}
 
-% [EN] Treat trajectory-dependent rotation as the higher-order beam effect, not as one unknown rotation. / [CN] 将随轨迹变化的旋转作为高阶束流效应，而不是一个未知旋转。
-\begin{frame}{Different trajectories can reduce the ensemble polarization}
-  Beyond the central ray, each phase-space point
-  $\xi=(x,x',y,y',\Delta p/p,\ldots)$ has its own calculated rotation:
+% [EN] Show that a distribution of ordinary BMT rotations broadens the tensor sector without generating vector polarization. / [CN] 说明普通 BMT 旋转的分布只会扩展张量子空间，而不会产生矢量极化。
+\begin{frame}{BMT field spread cannot convert tensor to vector}
+  Each phase-space point $\xi=(x,x',y,y',\Delta p/p,\ldots)$ has its own calculated rotation:
   \[
-    \Tens_f(\xi)
-    =R_{\mathrm{rel}}(\xi)\Tens_0R_{\mathrm{rel}}^{\mathsf T}(\xi),
+    \vct p_f(\xi)=R_\xi\vct p_0,
     \qquad
-    \overline{\Tens}_f
-    =\int d\xi\,f(\xi)\Tens_f(\xi).
+    \Tens_f(\xi)=R_\xi\Tens_0R_\xi^{\mathsf T}.
   \]
 
-  \vspace{0.20em}
+  The polarimeter measures the ensemble average:
+  \[
+    \overline{\vct p}_f=\int d\xi\,f(\xi)R_\xi\vct p_0,
+    \qquad
+    \overline{\Tens}_f=\int d\xi\,f(\xi)R_\xi\Tens_0R_\xi^{\mathsf T}.
+  \]
+
+  \vspace{0.10em}
   \begin{columns}[T,onlytextwidth]
-    \column{0.29\textwidth}
-      {\color{Navy}\bfseries 1 degree}\\[0.15em]
-      fixed axis and one amplitude $q$
-    \column{0.33\textwidth}
-      {\color{Navy}\bfseries 3 degrees}\\[0.15em]
-      one rigid tensor: $q$ plus two axis angles
-    \column{0.33\textwidth}
-      {\color{Navy}\bfseries 5 degrees}\\[0.15em]
-      a general beam-averaged tensor
+    \column{0.46\textwidth}
+      If $\vct p_0=0$, then exactly
+      \[
+        \overline{\vct p}_f=0.
+      \]
+    \column{0.48\textwidth}
+      The averaged tensor can become biaxial and require all
+      \[
+        \boxed{5\ \text{tensor components}}.
+      \]
   \end{columns}
 
-  \vspace{0.45em}
-  {\color{Teal}\bfseries Each particle remains coherent. The average can lose tensor magnitude because the particles arrive with different axes.}
-  \note{[Sources] DPOLAR phase-space-averaged spin-transport model. Here ``higher order'' means transport beyond one central trajectory: Rrel varies across the beam phase space.}
+  \vspace{0.20em}
+  \conclusion{Different $\vct B(\xi)$ under linear BMT can open up to 5 tensor degrees; it cannot give tensor$\rightarrow$vector conversion.}
+  \note{[Sources] Wigner rotation law for spin-1 irreducible multipoles; DPOLAR phase-space-averaged BMT transport. A convex average of rank-preserving rotations remains rank preserving.}
 \end{frame}
 
-% [EN] Contrast nominal-mode monitoring with model-independent tensor identifiability. / [CN] 区分名义模式监测与不依赖纯模式假设的张量可辨识性。
-\begin{frame}{One station sees 4/5 tensor degrees; two see 5/5}
+% [EN] Add the distinct higher-order mechanisms that can couple vector and tensor multipoles and therefore open the full density matrix. / [CN] 单独加入能够耦合矢量与张量多极矩、从而打开完整密度矩阵的高阶机制。
+\begin{frame}{Rank mixing opens all 8 state parameters}
+  Tensor--vector conversion requires spin dynamics beyond the linear BMT term. For example,
+  \[
+    H_{\rm spin}
+    =-\mu\,\vct S\!\cdot\!\vct B
+     -\beta_T\bigl(\vct S\!\cdot\!\vct B\bigr)^2+\cdots,
+    \qquad
+    \overline\rho_f=\int d\xi\,f(\xi)\,\mathcal E_\xi[\rho_0].
+  \]
+
+  \begin{columns}[T,onlytextwidth]
+    \column{0.47\textwidth}
+      \textbf{Coherent rank mixing}
+
+      Tensor magnetic/electric polarizability or other quadratic spin couplings can generate
+      \[
+        \vct p_0=0,\ \Tens_0\neq0
+        \quad\longrightarrow\quad
+        \vct p_f\neq0.
+      \]
+    \column{0.47\textwidth}
+      \textbf{Open or selective transport}
+
+      Spin-dependent loss, material interactions, collimation, and acceptance can change both ranks and the density-matrix eigenvalues.
+  \end{columns}
+
+  \vspace{0.35em}
+  \conclusion{Once rank mixing is allowed, the fit must allow the full $8=3_{\rm vector}+5_{\rm tensor}$ parameters.}
+  \note{[Sources] A. J. Silenko, Phys. Rev. C 77, 021001 (2008), arXiv:0711.2390; general spin-1 density-matrix evolution. Silenko gives an explicit initially tensor-polarized deuteron beam acquiring vector polarization through tensor magnetic polarizability.}
+\end{frame}
+
+% [EN] Contrast nominal-mode monitoring with reconstruction of a full state after rank-preserving or rank-mixing transport. / [CN] 区分名义模式监测与在保持或混合阶数的输运后重建完整状态。
+\begin{frame}{Two stations can recover all 8 degrees}
   \begin{columns}[T,onlytextwidth]
     \column{0.47\textwidth}
       \textbf{Nominal $p_{yy}$ monitoring}
@@ -200,54 +239,40 @@
   \end{columns}
 
   \vspace{0.45em}
-  \renewcommand{\arraystretch}{1.18}
+  \renewcommand{\arraystretch}{1.05}
   \begin{tabularx}{\textwidth}{Y c c}
     \toprule
     Calibrated multi-angle measurement & tensor state & full density matrix \\
     \midrule
     one station & $4/5$ & $6/8$ \\
-    two stations with characterized complementary transport & $\alert{5/5}$ & $\alert{8/8}$ \\
+    two stations with a characterized complementary transfer map & $\alert{5/5}$ & $\alert{8/8}$ \\
     \bottomrule
   \end{tabularx}
 
   \note{[Sources] DPOLAR multi-angle L/R/U/D response and joint-rank analysis. A single tensor station has the exact pxy blind direction; the full response also omits pz.}
 \end{frame}
 
-% [EN] Use an axis-independent tensor magnitude to distinguish rotation from loss and the two locations to identify the interval. / [CN] 用与坐标轴无关的张量幅度区分旋转与损失，并用两个位置确定发生区段。
-\begin{frame}{Two stations locate a true loss of polarization}
-  Use an axis-independent tensor magnitude
+% [EN] Diagnose a lower pyy using tensor magnitude, generated vector polarization, and full density-matrix purity before assigning a location. / [CN] 用张量幅度、产生的矢量极化和完整密度矩阵纯度诊断 pyy 下降，再判断其发生位置。
+\begin{frame}{Full $\rho$ identifies what changed and where}
+  A lower $p_{yy}$ component has three distinct interpretations. Use
   \[
-    Q\equiv\sqrt{\frac{2}{3}\Tr\!\left[(\Tens)^2\right]},
-    \qquad Q=|p_{yy}|\ \text{for an ideal axial $p_{yy}$ state}.
+    Q_T=\sqrt{\frac{2}{3}\Tr[(\Tens)^2]},
+    \qquad V=|\vct p|,
+    \qquad \Pi=\Tr(\rho^2).
   \]
 
-  \vspace{0.10em}
-  \begin{columns}[T,onlytextwidth]
-    \column{0.47\textwidth}
-      \textbf{What happened?}
+  \renewcommand{\arraystretch}{1.05}
+  \begin{tabularx}{\textwidth}{>{\bfseries}Y Y}
+    measured change & physical interpretation \\
+    \midrule
+    $Q_T$ unchanged, $V=0$, tensor axis changes & ordinary coherent rotation \\
+    $Q_T$ changes, $V$ appears, $\Pi$ unchanged & coherent tensor--vector conversion \\
+    $\Pi$ decreases & incoherent ensemble depolarization \\
+  \end{tabularx}
 
-      \vspace{0.20em}
-      $Q_2\simeq Q_1$, but the principal axis changes:
-      \alert{coherent rotation, not depolarization}.
-
-      \vspace{0.45em}
-      $Q_2<Q_1$ after transport correction:
-      \alert{true loss of beam-averaged polarization}.
-    \column{0.47\textwidth}
-      \textbf{Where did the loss occur?}
-
-      \vspace{0.20em}
-      $Q_1$ already low after SRC:
-      \alert{source, acceleration, or SRC}.
-
-      \vspace{0.45em}
-      $Q_1$ nominal, but $Q_2$ low after BigRIPS:
-      \alert{between the stations, including BigRIPS transport or acceptance}.
-  \end{columns}
-
-  \vspace{0.30em}
-  \conclusion{A lower $p_{yy}$ component alone is ambiguous: its axis may have moved, or its magnitude may have fallen.}
-  \note{[Sources] Rotation invariance of Tr[(P2)^2]; SAMURAI73 two-station loss-localization requirement. The after-BigRIPS comparison is made against the phase-space-averaged transport prediction.}
+  \vspace{0.20em}
+  \conclusion{Changed already after SRC $\Rightarrow$ upstream. Changed only after BigRIPS $\Rightarrow$ between the stations.}
+  \note{[Sources] Density-matrix purity under unitary evolution; tensor-multipole invariants under ordinary rotations; SAMURAI73 two-station loss-localization requirement.}
 \end{frame}
 
 % [EN] End with the concrete coordination decision needed from the RIKEN participants. / [CN] 以需要 RIKEN 参会者确认的具体协调事项收束报告。
