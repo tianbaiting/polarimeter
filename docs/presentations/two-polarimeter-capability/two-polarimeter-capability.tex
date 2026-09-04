@@ -327,26 +327,31 @@
   \note{[Sources] DPOLAR BigDpol/T11-to-F13 central-ray transport and joint-rank analysis.}
 \end{frame}
 
-% [EN] Replace abstract coherence labels with the three concrete beam processes that can reduce the measured pyy component. / [CN] 用三种具体束流过程替代抽象的相干性标签，解释测得的 pyy 分量为何下降。
-\begin{frame}{Why can $p_{yy}$ decrease?}
-  Compare tensor size $Q_T$, vector polarization $V=|\vct p|$, and density-matrix purity $\Pi=\Tr(\rho^2)$.
+% [EN] Separate robust interval localization from model-dependent mechanism identification with one slice-resolved transport reference. / [CN] 用一个切片分辨的输运参考，将可靠的区段定位与依赖模型的机制判定分开。
+\begin{frame}{Two stations localize changes in the spin state}
+  The BMT reference at station 2 must retain the slice distribution:
+  \[
+    \overline\rho_{2,\mathrm{BMT}}
+      =\int d\xi\,f_2(\xi)U_\xi\rho_1(\xi)U_\xi^\dagger.
+  \]
+  The measured average $\overline\rho_1$ alone omits correlations between spin and phase space.
 
-  \renewcommand{\arraystretch}{1.05}
-  {\small
+  \vspace{0.35em}
+  \renewcommand{\arraystretch}{1.35}
   \begin{tabularx}{\textwidth}{>{\bfseries}Y Y}
-    what the polarimeters see & what happened in the beam \\
+    station comparison & location of the change \\
     \midrule
-    $p_{yy}$ changes; $Q_T$ and $\Pi$ stay constant; the axis moves; $V=0$
-      & Common magnetic rotation: all particles' axes turn together; no polarization is lost. \\
-    tensor components mix and $V$ appears
-      & Correlated BMT rotations unmask hidden slice vectors. Any residual points to local rank mixing or spin-selective transport. \\
-    $\Pi$ decreases
-      & Trajectory-dependent axes or phases cancel in the average. Spin-dependent loss can also change $\rho$. \\
-  \end{tabularx}}
+    $\overline\rho_1\not\simeq\rho_{\mathrm{prep}}$
+      & The source, acceleration chain, or SRC changed the state. \\
+    $\overline\rho_1\simeq\rho_{\mathrm{prep}}$ and
+    $\overline\rho_2\not\simeq\overline\rho_{2,\mathrm{BMT}}$
+      & The state changed between the two stations. \\
+  \end{tabularx}
 
-  \vspace{0.05em}
-  \conclusion{Station comparison localizes the change upstream of SRC or between the stations.}
-  \note{[Sources] Density-matrix purity under unitary evolution; tensor-multipole invariants under ordinary rotations; phase-space-averaged BMT transport with spin--orbit correlations; SAMURAI73 two-station loss-localization requirement.}
+  \vspace{0.45em}
+  \textbf{Mechanism:} The BMT integral includes field spread and hidden slice vectors. Any remaining mismatch tests higher-order or spin-selective dynamics.
+
+  \note{[Sources] Bargmann--Michel--Telegdi spin transport; phase-space-averaged spin transport with spin--orbit correlations; SAMURAI73 two-station loss-localization requirement. The station-1 average alone cannot reconstruct the conditional distribution $\rho_1(\xi)$.}
 \end{frame}
 
 % [EN] Ask the RIKEN audience only for the responsible contact and the required installation procedure. / [CN] 只向 RIKEN 听众询问负责人和所需安装流程。
