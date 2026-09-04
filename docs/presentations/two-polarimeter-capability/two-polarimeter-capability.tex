@@ -121,59 +121,49 @@
   \note{[Sources] Ohlsen spin-1 density-matrix convention; DPOLAR Cartesian density-matrix parameterization. pyy and pzz are two preparation axes of the same axial-tensor family.}
 \end{frame}
 
-% [EN] Write the magnetic-field spin equation explicitly and expose its antisymmetric generator so the transport is visibly a rotation. / [CN] 显式写出磁场中的自旋运动方程，并展示其反对称生成元，使输运的旋转性质一目了然。
-\begin{frame}{Thomas--BMT transport is a rotation}
+% [EN] Put the BMT spin equation entirely in fixed lab axes and postpone the passive beam-frame projection until the final readout. / [CN] 将 BMT 自旋方程完全写在固定实验室坐标中，并把被动的束流坐标投影推迟到最终读出。
+\begin{frame}{Spin motion in the laboratory frame}
   \small
   \setlength{\abovedisplayskip}{0.35em}
   \setlength{\belowdisplayskip}{0.35em}
-  For a magnetic lattice $(\vct E=0)$, each trajectory obeys the Thomas--BMT equation
+
+  \textbf{1. Physical spin motion in fixed lab axes}
   \[
-    \frac{d\vct p}{dt}=\vct\Omega_B\!\times\!\vct p,
+    \boxed{\frac{d\vct S_{\mathrm{lab}}}{dt}
+      =\vct\Omega_{\mathrm{BMT}}(t)\!\times\!\vct S_{\mathrm{lab}}(t)},
     \qquad
-    \vct\Omega_B=-\frac qm\left[
-      \left(G+\frac1\gamma\right)\vct B
+    \frac{d}{dt}|\vct S_{\mathrm{lab}}|^2
+      =2\vct S_{\mathrm{lab}}\!\cdot\!
+       (\vct\Omega_{\mathrm{BMT}}\!\times\!\vct S_{\mathrm{lab}})=0.
+  \]
+  For $\vct E=0$, with $\vct B(t)=\vct B_{\mathrm{lab}}(\vct x(t))$,
+  \[
+    \vct\Omega_{\mathrm{BMT}}(t)=-\frac qm\left[
+      \left(G+\frac1\gamma\right)\vct B(t)
       -\frac{G\gamma}{\gamma+1}
-       (\vct\beta\!\cdot\!\vct B)\vct\beta
+       (\vct\beta(t)\!\cdot\!\vct B(t))\vct\beta(t)
     \right],
     \quad G=\frac{g-2}{2}.
   \]
+  The orbit independently supplies the time-dependent inputs:
+  \[
+    \frac{d\vct x}{dt}=\vct v,
+    \qquad
+    \frac{d\vct p_{\mathrm{orb}}}{dt}
+      =q\,\vct v\!\times\!\vct B_{\mathrm{lab}}(\vct x).
+  \]
 
-  \begin{columns}[T,onlytextwidth]
-    \column{0.47\textwidth}
-      \textbf{The cross product generates a rotation}
-      \[
-        K_B\vct v\equiv\vct\Omega_B\!\times\!\vct v,
-        \qquad K_B^{\mathsf T}=-K_B,
-      \]
-      \[
-        \begin{aligned}
-          \dot R_s&=K_B R_s,\\
-          R_s(t_f,t_0)&=\mathcal T\exp\!\left[\int_{t_0}^{t_f}K_B\,dt\right]\in SO(3).
-        \end{aligned}
-      \]
+  \vspace{0.20em}
+  \textbf{2. Passive coordinate change at the downstream polarimeter}
+  \[
+    \hat{\vct z}_b
+      =\frac{\vct p_{\mathrm{orb}}(t_f)}{|\vct p_{\mathrm{orb}}(t_f)|},
+    \qquad
+    \vct S_b(t_f)=R_o^{\mathsf T}(t_f)\vct S_{\mathrm{lab}}(t_f),
+  \]
+  where $R_o(t_f)$ contains the local beam axes expressed in lab coordinates.
 
-    \column{0.48\textwidth}
-      \textbf{Both spin moments follow the same $R_s$}
-      \[
-        \vct p_f=R_s\vct p_0,
-        \qquad
-        \Tens_f=R_s\Tens_0R_s^{\mathsf T}.
-      \]
-      The downstream momentum supplies a passive change of axes:
-      \[
-        R_{\mathrm{rel}}=R_o^{\mathsf T}R_s,
-        \qquad
-        \vct p_{b,f}=R_{\mathrm{rel}}\vct p_0,
-      \]
-      \vspace{-0.55em}
-      \[
-        \Tens_{b,f}=R_{\mathrm{rel}}\Tens_0R_{\mathrm{rel}}^{\mathsf T}.
-      \]
-  \end{columns}
-
-  \vspace{0.15em}
-  \conclusion{BMT precession applies one $SO(3)$ rotation to both vector and tensor moments.}
-  \note{[Sources] V. Bargmann, L. Michel, and V. L. Telegdi, Phys. Rev. Lett. 2, 435 (1959); Ohlsen spin-1 irreducible multipoles; DPOLAR local beam-frame convention. $R_s$ is physical spin evolution, while $R_o$ only re-expresses the state in the downstream beam axes.}
+  \note{[Sources] V. Bargmann, L. Michel, and V. L. Telegdi, Phys. Rev. Lett. 2, 435 (1959); Lorentz-force orbital transport; DPOLAR local beam-frame convention. BMT is evaluated in fixed lab axes along the known trajectory. $R_o$ enters only afterward as a passive basis change.}
 \end{frame}
 
 % [EN] Distinguish zero beam-average vector polarization from zero vector polarization in every slice, then show how correlated BMT rotations break the cancellation. / [CN] 区分束流平均矢量极化为零与每个切片的矢量极化均为零，并展示相关的 BMT 旋转如何破坏抵消。
@@ -327,31 +317,39 @@
   \note{[Sources] DPOLAR BigDpol/T11-to-F13 central-ray transport and joint-rank analysis.}
 \end{frame}
 
-% [EN] Separate robust interval localization from model-dependent mechanism identification with one slice-resolved transport reference. / [CN] 用一个切片分辨的输运参考，将可靠的区段定位与依赖模型的机制判定分开。
-\begin{frame}{Two stations localize changes in the spin state}
-  The BMT reference at station 2 must retain the slice distribution:
-  \[
-    \overline\rho_{2,\mathrm{BMT}}
-      =\int d\xi\,f_2(\xi)U_\xi\rho_1(\xi)U_\xi^\dagger.
-  \]
-  The measured average $\overline\rho_1$ alone omits correlations between spin and phase space.
+% [EN] State only the two experimental purposes of the station pair: complete state constraints and localization of the affected interval. / [CN] 仅说明双测站的两个实验目的：完整约束自旋态，以及定位发生问题的输运区段。
+\begin{frame}{Two-station measurement goals}
+  \vspace{0.65em}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.47\textwidth}
+      \textbf{Constrain all degrees of freedom}
 
-  \vspace{0.35em}
-  \renewcommand{\arraystretch}{1.35}
-  \begin{tabularx}{\textwidth}{>{\bfseries}Y Y}
-    station comparison & location of the change \\
-    \midrule
-    $\overline\rho_1\not\simeq\rho_{\mathrm{prep}}$
-      & The source, acceleration chain, or SRC changed the state. \\
-    $\overline\rho_1\simeq\rho_{\mathrm{prep}}$ and
-    $\overline\rho_2\not\simeq\overline\rho_{2,\mathrm{BMT}}$
-      & The state changed between the two stations. \\
-  \end{tabularx}
+      \vspace{0.55em}
+      Station 2 exposes the $p_z$ and $p_{xy}$ directions hidden at station 1.
 
-  \vspace{0.45em}
-  \textbf{Mechanism:} The BMT integral includes field spread and hidden slice vectors. Any remaining mismatch tests higher-order or spin-selective dynamics.
+      \vspace{0.80em}
+      \[
+        \begin{array}{c|cc}
+          & \text{one station} & \text{two stations} \\
+          \hline
+          \text{tensor} & 4/5 & \mathbf{5/5} \\
+          \text{full }\rho & 6/8 & \mathbf{8/8}
+        \end{array}
+      \]
 
-  \note{[Sources] Bargmann--Michel--Telegdi spin transport; phase-space-averaged spin transport with spin--orbit correlations; SAMURAI73 two-station loss-localization requirement. The station-1 average alone cannot reconstruct the conditional distribution $\rho_1(\xi)$.}
+    \column{0.47\textwidth}
+      \textbf{Locate the affected transport interval}
+
+      \vspace{0.65em}
+      {\color{Teal}\bfseries Already changed after SRC}\\[0.20em]
+      The problem is upstream of station 1.
+
+      \vspace{1.10em}
+      {\color{Teal}\bfseries First changed after BigRIPS}\\[0.20em]
+      The problem is between the stations.
+  \end{columns}
+
+  \note{[Sources] DPOLAR joint-rank analysis; characterized BigRIPS relative rotation; SAMURAI73 two-station loss-localization requirement.}
 \end{frame}
 
 % [EN] Ask the RIKEN audience only for the responsible contact and the required installation procedure. / [CN] 只向 RIKEN 听众询问负责人和所需安装流程。
