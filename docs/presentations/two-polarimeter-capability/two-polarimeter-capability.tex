@@ -121,79 +121,114 @@
   \note{[Sources] Ohlsen spin-1 density-matrix convention; DPOLAR Cartesian density-matrix parameterization. pyy and pzz are two preparation axes of the same axial-tensor family.}
 \end{frame}
 
-% [EN] Separate physical spin evolution from the passive change to the downstream beam basis, and state the rank-preserving scope of linear BMT. / [CN] 将真实自旋演化与下游束流坐标系的被动变换分开，并明确线性 BMT 保持张量阶数的适用范围。
-\begin{frame}{Linear BMT preserves vector and tensor ranks}
-  \begin{columns}[T,onlytextwidth]
-    \column{0.47\textwidth}
-      \textbf{1. Magnetic field rotates the spin in the lab}
-      \[
-        \rho_{\mathrm{lab},f}
-        =U_s\rho_0U_s^\dagger,
-        \qquad R_s\in SO(3).
-      \]
-      Thomas--BMT determines $R_s$ along the trajectory.
-
-    \column{0.47\textwidth}
-      \textbf{2. The downstream beam defines new axes}
-      \[
-        \rho_{b,f}
-        =U_o^\dagger\rho_{\mathrm{lab},f}U_o.
-      \]
-      $R_o$ follows the transported momentum and defines the local $x_b,y_b,z_b$ frame.
-  \end{columns}
-
-  \vspace{0.30em}
+% [EN] Write the magnetic-field spin equation explicitly and expose its antisymmetric generator so the transport is visibly a rotation. / [CN] 显式写出磁场中的自旋运动方程，并展示其反对称生成元，使输运的旋转性质一目了然。
+\begin{frame}{Thomas--BMT transport is a rotation}
+  \small
+  \setlength{\abovedisplayskip}{0.35em}
+  \setlength{\belowdisplayskip}{0.35em}
+  For a magnetic lattice $(\vct E=0)$, each trajectory obeys the Thomas--BMT equation
   \[
-    \boxed{R_{\mathrm{rel}}=R_o^{\mathsf T}R_s},
+    \frac{d\vct p}{dt}=\vct\Omega_B\!\times\!\vct p,
     \qquad
-    \vct p_{b,f}=R_{\mathrm{rel}}\vct p_0,
-    \qquad
-    \Tens_{b,f}=R_{\mathrm{rel}}\Tens_0R_{\mathrm{rel}}^{\mathsf T}.
+    \vct\Omega_B=-\frac qm\left[
+      \left(G+\frac1\gamma\right)\vct B
+      -\frac{G\gamma}{\gamma+1}
+       (\vct\beta\!\cdot\!\vct B)\vct\beta
+    \right],
+    \quad G=\frac{g-2}{2}.
   \]
 
-  \vspace{0.10em}
-  \conclusion{Lowest order: a common rotation moves the polarization axis, but vector and tensor ranks remain separate.}
-  \note{[Sources] Thomas-BMT equation; Ohlsen spin-1 irreducible multipoles; DPOLAR local beam-frame transport convention. The first transformation is physical evolution; the second only re-expresses the same state in the downstream beam basis.}
+  \begin{columns}[T,onlytextwidth]
+    \column{0.47\textwidth}
+      \textbf{The cross product generates a rotation}
+      \[
+        K_B\vct v\equiv\vct\Omega_B\!\times\!\vct v,
+        \qquad K_B^{\mathsf T}=-K_B,
+      \]
+      \[
+        \begin{aligned}
+          \dot R_s&=K_B R_s,\\
+          R_s(t_f,t_0)&=\mathcal T\exp\!\left[\int_{t_0}^{t_f}K_B\,dt\right]\in SO(3).
+        \end{aligned}
+      \]
+
+    \column{0.48\textwidth}
+      \textbf{Both spin moments follow the same $R_s$}
+      \[
+        \vct p_f=R_s\vct p_0,
+        \qquad
+        \Tens_f=R_s\Tens_0R_s^{\mathsf T}.
+      \]
+      The downstream momentum supplies a passive change of axes:
+      \[
+        R_{\mathrm{rel}}=R_o^{\mathsf T}R_s,
+        \qquad
+        \vct p_{b,f}=R_{\mathrm{rel}}\vct p_0,
+      \]
+      \vspace{-0.55em}
+      \[
+        \Tens_{b,f}=R_{\mathrm{rel}}\Tens_0R_{\mathrm{rel}}^{\mathsf T}.
+      \]
+  \end{columns}
+
+  \vspace{0.15em}
+  \conclusion{BMT precession applies one $SO(3)$ rotation to both vector and tensor moments.}
+  \note{[Sources] V. Bargmann, L. Michel, and V. L. Telegdi, Phys. Rev. Lett. 2, 435 (1959); Ohlsen spin-1 irreducible multipoles; DPOLAR local beam-frame convention. $R_s$ is physical spin evolution, while $R_o$ only re-expresses the state in the downstream beam axes.}
 \end{frame}
 
-% [EN] Show that a distribution of ordinary BMT rotations broadens the tensor sector without generating vector polarization. / [CN] 说明普通 BMT 旋转的分布只会扩展张量子空间，而不会产生矢量极化。
-\begin{frame}{BMT field spread cannot convert tensor to vector}
-  Each phase-space point $\xi=(x,x',y,y',\Delta p/p,\ldots)$ has its own calculated rotation:
+% [EN] Distinguish zero beam-average vector polarization from zero vector polarization in every slice, then show how correlated BMT rotations break the cancellation. / [CN] 区分束流平均矢量极化为零与每个切片的矢量极化均为零，并展示相关的 BMT 旋转如何破坏抵消。
+\begin{frame}{BMT spread mixes tensors and can reveal a vector}
+  \small
+  \setlength{\abovedisplayskip}{0.25em}
+  \setlength{\belowdisplayskip}{0.25em}
+  A zero entrance mean does not require zero vector polarization in every phase-space slice:
   \[
-    \vct p_f(\xi)=R_\xi\vct p_0,
+    \overline{\vct p}_0=\int d\xi\,f(\xi)\vct p_0(\xi)=0,
     \qquad
-    \Tens_f(\xi)=R_\xi\Tens_0R_\xi^{\mathsf T}.
+    \overline{\Tens}_0\neq0,
+    \qquad
+    \vct p_0(\xi)\not\equiv0.
   \]
 
-  The polarimeter measures the ensemble average:
-  \[
-    \overline{\vct p}_f=\int d\xi\,f(\xi)R_\xi\vct p_0,
-    \qquad
-    \overline{\Tens}_f=\int d\xi\,f(\xi)R_\xi\Tens_0R_\xi^{\mathsf T}.
-  \]
-
-  \vspace{0.10em}
   \begin{columns}[T,onlytextwidth]
-    \column{0.46\textwidth}
-      If $\vct p_0=0$, then exactly
+    \column{0.44\textwidth}
+      \textbf{Entrance: two slice vectors cancel}
       \[
-        \overline{\vct p}_f=0.
+        \vct p_0^{(+)}=p\,\hat{\vct x},
+        \qquad
+        \vct p_0^{(-)}=-p\,\hat{\vct x},
       \]
-    \column{0.48\textwidth}
-      The averaged tensor can become biaxial and require all
+      These give $\overline{\vct p}_0=0$. Their trajectory maps are
+      $R_+=R_z(+\theta)$ and $R_-=R_z(-\theta)$.
+
+    \column{0.51\textwidth}
+      \textbf{Exit: the rotated vectors add}
       \[
-        \boxed{5\ \text{tensor components}}.
+        \begin{aligned}
+        \overline{\vct p}_f
+          &=\tfrac12\left(R_+\vct p_0^{(+)}
+                          +R_-\vct p_0^{(-)}\right)\\
+          &=p\sin\theta\,\hat{\vct y}\neq0.
+        \end{aligned}
       \]
+      The vector already existed slice by slice.
   \end{columns}
 
-  \vspace{0.20em}
-  \conclusion{Different $\vct B(\xi)$ under linear BMT can open up to 5 tensor degrees; it cannot give tensor$\rightarrow$vector conversion.}
-  \note{[Sources] Wigner rotation law for spin-1 irreducible multipoles; DPOLAR phase-space-averaged BMT transport. A convex average of rank-preserving rotations remains rank preserving.}
+  The same phase-space-dependent rotations mix the five tensor components:
+  \[
+    \overline{\Tens}_f
+      =\int d\xi\,f(\xi)R_\xi\Tens_0(\xi)R_\xi^{\mathsf T},
+  \]
+  The beam-average tensor can become biaxial. Local rank conversion requires higher-order spin coupling.
+
+  \vspace{0.05em}
+  \conclusion{Correlated BMT rotations can expose initially cancelling slice vectors.}
+  \note{[Sources] Bargmann--Michel--Telegdi spin transport; K. Heinemann and G. H. Hoffstaetter, arXiv:acc-phys/9605001; algebraic two-slice example shown here. Linear BMT preserves rank within each slice. Phase-space averaging can nevertheless reveal pre-existing, cancelling slice vectors and mix the rank-2 tensor components.}
 \end{frame}
 
 % [EN] Add the distinct higher-order mechanisms that can couple vector and tensor multipoles and therefore open the full density matrix. / [CN] 单独加入能够耦合矢量与张量多极矩、从而打开完整密度矩阵的高阶机制。
 \begin{frame}{Rank mixing opens all 8 state parameters}
-  Tensor--vector conversion requires spin dynamics beyond the linear BMT term. For example,
+  Local tensor--vector conversion requires spin dynamics beyond the linear BMT term. For example,
   \[
     H_{\rm spin}
     =-\mu\,\vct S\!\cdot\!\vct B
@@ -303,15 +338,15 @@
     \midrule
     $p_{yy}$ changes; $Q_T$ and $\Pi$ stay constant; the axis moves; $V=0$
       & Common magnetic rotation: all particles' axes turn together; no polarization is lost. \\
-    $Q_T$ changes; $V$ appears; $\Pi$ stays constant
-      & Quadratic spin coupling transfers polarization from tensor to vector. \\
+    tensor components mix and $V$ appears
+      & Correlated BMT rotations unmask hidden slice vectors. Any residual points to local rank mixing or spin-selective transport. \\
     $\Pi$ decreases
-      & Different trajectories acquire different axes or phases and cancel in the average; spin-dependent loss can also change $\rho$. \\
+      & Trajectory-dependent axes or phases cancel in the average. Spin-dependent loss can also change $\rho$. \\
   \end{tabularx}}
 
-  \vspace{0.20em}
-  \conclusion{Changed already after SRC $\Rightarrow$ upstream. Changed only after BigRIPS $\Rightarrow$ between the stations.}
-  \note{[Sources] Density-matrix purity under unitary evolution; tensor-multipole invariants under ordinary rotations; phase-space-averaged transport; SAMURAI73 two-station loss-localization requirement.}
+  \vspace{0.05em}
+  \conclusion{Station comparison localizes the change upstream of SRC or between the stations.}
+  \note{[Sources] Density-matrix purity under unitary evolution; tensor-multipole invariants under ordinary rotations; phase-space-averaged BMT transport with spin--orbit correlations; SAMURAI73 two-station loss-localization requirement.}
 \end{frame}
 
 % [EN] Ask the RIKEN audience only for the responsible contact and the required installation procedure. / [CN] 只向 RIKEN 听众询问负责人和所需安装流程。
