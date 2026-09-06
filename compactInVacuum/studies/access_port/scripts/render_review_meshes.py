@@ -8,16 +8,22 @@ import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
+from matplotlib.colors import to_rgba
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
 import trimesh
 
-
 GROUP_STYLE = {
     "chamber": ("#9aa0a6", 0.12),
-    "internals": ("#a9782d", 0.92),
-    "services": ("#4f5966", 0.95),
+    "internals": ("#a9782d", 1.00),
+    "services": ("#4f5966", 1.00),
     "support": ("#247ba0", 1.00),
     "access": ("#d1493f", 0.58),
+    "carrier": ("#6b99b4", 1.00),
+    "tools": ("#8964b2", 1.00),
+    "neighbors": ("#79858b", 0.08),
+    "active": ("#24a9bf", 1.00),
+    "housings": ("#333941", 1.00),
 }
 
 VIEWS = {
@@ -58,14 +64,17 @@ def _display_vertices(mesh: trimesh.Trimesh) -> np.ndarray:
     return vertices[:, (0, 2, 1)]
 
 
-def _render_model(model_root: Path, title: str, basename: str, internals_only: bool = False) -> None:
+def _render_model(
+    model_root: Path, title: str, basename: str, internals_only: bool = False
+) -> None:
     mesh_dir = model_root / "review_meshes"
     screenshot_dir = model_root / "screenshots"
     screenshot_dir.mkdir(parents=True, exist_ok=True)
     meshes = {
         name: _load_mesh(mesh_dir / f"{name}.stl")
         for name in GROUP_STYLE
-        if not internals_only or name in {"internals", "support"}
+        if (mesh_dir / f"{name}.stl").exists()
+        and (not internals_only or name not in {"chamber", "access", "services"})
     }
     all_vertices = np.vstack([_display_vertices(mesh) for mesh in meshes.values()])
     mins = all_vertices.min(axis=0)
@@ -75,10 +84,17 @@ def _render_model(model_root: Path, title: str, basename: str, internals_only: b
     for view_name, (elevation, azimuth) in VIEWS.items():
         figure = plt.figure(figsize=(14.0, 9.0), dpi=100)
         axis = figure.add_subplot(111, projection="3d")
+        triangles = []
+        face_colors = []
         for group_name in (
             "internals",
+            "carrier",
+            "active",
+            "housings",
             "support",
+            "tools",
             "services",
+            "neighbors",
             "access",
             "chamber",
         ):
@@ -87,17 +103,18 @@ def _render_model(model_root: Path, title: str, basename: str, internals_only: b
             mesh = meshes[group_name]
             vertices = _display_vertices(mesh)
             color, alpha = GROUP_STYLE[group_name]
-            axis.plot_trisurf(
-                vertices[:, 0],
-                vertices[:, 1],
-                vertices[:, 2],
-                triangles=np.asarray(mesh.faces),
-                color=color,
-                alpha=alpha,
-                linewidth=0.04,
-                edgecolor="#303030" if group_name == "access" else "none",
+            faces = vertices[np.asarray(mesh.faces)]
+            triangles.append(faces)
+            face_colors.append(np.tile(to_rgba(color, alpha), (len(faces), 1)))
+        # [EN] Sort all physical triangles together; per-material collections can incorrectly paint an entire carrier in front of its detector faces. / [CN] 对所有实体三角面统一排序，避免按材料分组时把整块载板错误地盖在探头正面上。
+        axis.add_collection3d(
+            Poly3DCollection(
+                np.concatenate(triangles),
+                facecolors=np.concatenate(face_colors),
+                linewidths=0,
                 shade=True,
             )
+        )
         axis.set_xlim(center[0] - span, center[0] + span)
         axis.set_ylim(center[1] - span, center[1] + span)
         axis.set_zlim(center[2] - span, center[2] + span)
@@ -109,9 +126,7 @@ def _render_model(model_root: Path, title: str, basename: str, internals_only: b
             fontsize=14,
         )
         figure.patch.set_facecolor("white")
-        destination = screenshot_dir / (
-            f"{basename}_{view_name}.png"
-        )
+        destination = screenshot_dir / (f"{basename}_{view_name}.png")
         figure.savefig(destination, bbox_inches="tight", facecolor="white")
         plt.close(figure)
         print(destination)
@@ -121,10 +136,16 @@ def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     study_root = args.study_root.resolve()
     if args.model_root:
-        _render_model(args.model_root.resolve(), args.title, args.basename, args.internals_only)
+        _render_model(
+            args.model_root.resolve(), args.title, args.basename, args.internals_only
+        )
         return 0
     for standard in ("ICF253", "ICF305", "ICF356"):
-        _render_model(study_root / standard.lower(), f"CompactInVacuum-afterSRC {standard} maintenance access", f"CompactOne_afterSRC_access_{standard}")
+        _render_model(
+            study_root / standard.lower(),
+            f"CompactInVacuum-afterSRC {standard} maintenance access",
+            f"CompactOne_afterSRC_access_{standard}",
+        )
     return 0
 
 
