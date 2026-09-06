@@ -30,9 +30,9 @@ def test_two_compact_deployment_profiles_load() -> None:
     assert aftersrc.compact_one.deployment.external_route_module == "afterSRC"
     assert samurai.compact_one.deployment.external_route_module == "infrontofSamuraiMag"
     assert aftersrc.compact_one.deployment.maintenance_access is not None
-    assert samurai.compact_one.deployment.maintenance_access is None
-    assert samurai.compact_one.deployment.sector_mount("up").wall == "positive_y"
-    assert samurai.compact_one.deployment.sector_mount("up").wall_standoff_mm == 16.0
+    assert samurai.compact_one.deployment.maintenance_access is not None
+    assert samurai.compact_one.deployment.sector_mount("up").wall == "rear_open_frame"
+    assert samurai.compact_one.deployment.sector_mount("up").wall_standoff_mm == 12.0
     assert len(aftersrc.channels) * len(aftersrc.sectors) == 12
     assert len(samurai.channels) * len(samurai.sectors) == 12
 
@@ -157,11 +157,34 @@ def test_aftersrc_all_metal_maintenance_access_contract() -> None:
         sector: platform.deployment.sector_mount(sector)
         for sector in ("left", "right", "up", "down")
     }
-    assert mounts["up"].wall == "negative_x"
-    assert mounts["up"].tangent_coordinate_mm == pytest.approx(180.0)
-    assert mounts["up"].wall_standoff_mm == pytest.approx(75.0)
-    assert mounts["up"].release_clearance_mm == pytest.approx(12.0)
+    assert all(mount.wall == "rear_open_frame" for mount in mounts.values())
+    assert mounts["up"].tangent_coordinate_mm == pytest.approx(0.0)
+    assert mounts["up"].wall_standoff_mm == pytest.approx(12.0)
+    assert mounts["up"].release_clearance_mm == pytest.approx(20.0)
     assert all(mount.wall != "positive_y" for mount in mounts.values())
+
+
+@pytest.mark.parametrize("profile", ["afterSRC_compact.yaml", "infrontSamurai_compact.yaml"])
+def test_common_frame_access_and_inherited_dimensions(profile: str) -> None:
+    cfg = load_config(str(CONFIG_DIR / profile))
+    deployment = cfg.compact_one.deployment
+    assert deployment.support_frame is not None
+    assert deployment.support_frame.extraction_policy == "independent_sector_target"
+    assert deployment.support_frame.complete_extraction_status == "placeholder"
+    assert deployment.maintenance_access.selected.standard == "ICF305"
+    assert CONFIG_DIR.resolve() / "common_open_frame.yaml" in config_dependency_paths(CONFIG_DIR / profile)
+    assert not [rule for rule in evaluate_config_rules(cfg) if not rule.passed and not rule.strict_only]
+
+
+@pytest.mark.parametrize("key,value,match", [
+    ("mount_radius_mm", 230.0, "fit inside"),
+    ("dock_face_z_mm", 350.0, "upstream of"),
+    ("rail_width_mm", 190.0, "central aperture"),
+    ("frame_depth_mm", -1.0, "> 0"),
+])
+def test_common_frame_rejects_invalid_envelopes(key, value, match) -> None:
+    with pytest.raises(ValueError, match=match):
+        load_config(str(CONFIG_DIR / "afterSRC_compact.yaml"), overrides={f"deployment.support_frame.{key}": value})
 
 
 @pytest.mark.parametrize(
@@ -197,7 +220,8 @@ def test_aftersrc_access_study_profiles_select_matching_chambers(
     length_mm: float,
     clear_bore_mm: float,
 ) -> None:
-    platform = load_config(str(ACCESS_STUDY_CONFIG_DIR / profile)).compact_one
+    cfg = load_config(str(ACCESS_STUDY_CONFIG_DIR / profile))
+    platform = cfg.compact_one
     assert platform is not None
     access = platform.deployment.maintenance_access
     assert access is not None
@@ -205,6 +229,7 @@ def test_aftersrc_access_study_profiles_select_matching_chambers(
     assert platform.deployment.chamber.name == chamber
     assert platform.deployment.chamber.length_mm == pytest.approx(length_mm)
     assert access.selected.clear_bore_diameter_mm == pytest.approx(clear_bore_mm)
+    assert not [rule for rule in evaluate_config_rules(cfg) if not rule.passed and not rule.strict_only]
 
 
 def test_aftersrc_maintenance_access_rejects_elastomer_contract() -> None:

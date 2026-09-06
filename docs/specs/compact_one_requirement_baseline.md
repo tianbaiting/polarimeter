@@ -1,4 +1,4 @@
-# CompactInVacuum Requirement Baseline v2.4
+# CompactInVacuum Requirement Baseline v2.5
 
 ## 1. Authority and scope
 
@@ -135,13 +135,15 @@ M3 and locating-pin geometry demonstrates assembly access only. Fastener selecti
 
 Detector heads are inserted axially from the rear, stopped on the rear mounting face, clocked by the D-flat, and retained by the removable bridge. Clamp fasteners are accessed from the rear. Releasing one bridge permits removal of one head without removing the other two.
 
-The whole sector is located by a plane–pin–slot interface. For the afterSRC fixed-wall support study, five exact solid poses sample an initial `12 mm` translation inward from the configured stationary mounting wall to disengage the pins; this is only the release stage. The subsequent translation, reorientation, and lift through the top access port remain a separate unresolved continuous motion. The former straight `70 mm` radial path shall not be used as evidence of complete extraction.
+The whole sector is located by a plane–pin–slot interface. The two active deployments use a common rear open C-frame with four equal front-facing sector docks. The common frame remains with the chamber and transfers load to permanent side and bottom walls; its open upper-right quadrant and central aperture are kept distinct from the removable top closure. No top-cover load path is permitted. The carrier is one connected profiled plate with relieved acceptance windows and a rear docking web, without the former UP-only sideways arm. Frame dimensions, stiffness, fasteners, and joints remain provisional.
+
+All four loaded holders first translate upstream along `-Z` to disengage their stationary pins. Five exact solid poses sample the configured `20 mm` release. The rear frame occupies the rear part of the opening's projection below the lid; the provisional internal lifting corridor is the circular port projection clipped at `z <= 210 mm`, ahead of the stationary pins. The released loaded holder, including its withdrawn clamp envelopes, shall lie completely ahead of this plane. The full opening and blank-flange lift above the top wall remain unobstructed. This staged internal corridor replaces the former whole-bore cylinder below the lid; it is not evidence of a complete extraction path. Independent removal of one sector while the other three remain installed is the design target. A complete in-chamber transfer/reorientation/top-lift path is a separate unresolved requirement; neither the initial release nor a detached-holder aperture screen proves that path.
 
 The plate, nests, clamps, and fastener envelopes shall clear every complete active-acceptance cone. The plate includes a common rear service-lane relief. Arbitrary per-detector wall rails, wall anchors, cylindrical thermal straps, and a synthesized wall backbone are prohibited.
 
 The holder is a provisional manufacturable concept, not a released drawing. Tool access, chamber closure, pin retention, tolerances, surface finish, and production fasteners remain to be resolved.
 
-Every removable sector-holder structural interface shall contact either a permanent chamber wall or a separately defined stationary load-bearing pad/pedestal with zero geometric gap. Every stationary pad/pedestal shall in turn contact a permanent chamber wall with zero gap. A protective-ground strap is electrical bonding only and shall never be used to bridge a structural mounting gap or satisfy the load path.
+Every removable sector-holder structural interface shall contact either a permanent chamber wall or a separately defined stationary load-bearing pad/pedestal with zero geometric gap. Every stationary pad/pedestal shall in turn contact a permanent chamber wall, or the explicitly defined common stationary support frame, with zero gap. The common frame shall contact permanent side/bottom walls with zero gap. A protective-ground strap is electrical bonding only and shall never be used to bridge a structural mounting gap or satisfy the load path.
 
 ## 7. Physical and overlay roles
 
@@ -236,17 +238,18 @@ Validation also requires:
 - A cylindrical afterSRC chamber is not part of the selected CompactInVacuum-afterSRC profile.
 - Front/rear ICF114 values are legacy/provisional evidence, not approved site requirements.
 - The maintenance opening is a top-wall circular ICF port with a removable ICF blank flange. Elastomer/O-ring sealing is prohibited for this deployment; the screening seal is an oxygen-free-copper metal gasket. The maximum allowable helium leak rate is `1.0e-10 Pa m^3/s`, based on the user-supplied Toshiba inspection sheet; document identity and applicability to the complete compact chamber remain to be closed before fabrication release.
-- The access-port comparison family is `ICF253`, `ICF305`, and `ICF356`. Vendor-catalog screening dimensions distinguish the flange hole from the applicable pipe outside diameter: ICF253 uses a `198.5 mm` flange bore / `203 mm` pipe OD, ICF305 uses `251.0 mm` / `254 mm`, and ICF356 uses `301.8 mm` / `305 mm`. ICF305 is the active recommended prototype; ICF253 is retained as a rejected comparison because the corrected removable UP holder plus allowance does not pass even the edge-on screen, and ICF356 remains the enlarged-envelope comparison.
+- The access-port comparison family is `ICF253`, `ICF305`, and `ICF356`. Vendor-catalog screening dimensions distinguish the flange hole from the applicable pipe outside diameter: ICF253 uses a `198.5 mm` flange bore / `203 mm` pipe OD, ICF305 uses `251.0 mm` / `254 mm`, and ICF356 uses `301.8 mm` / `305 mm`. ICF305 is the active recommended prototype; ICF253 remains a smaller-port comparison requiring reorientation; its former side-wall UP-holder rejection is historical and shall not be applied unchanged to the new common-frame carrier, and ICF356 remains the enlarged-envelope comparison.
 - A top access flange alone does not close the sector-removal requirement. Validation shall separately report: flange-to-chamber fit, flange-to-service-port clearance, detached-holder passage screening, and the complete installed-holder release/reorientation/lift path. The existing straight `70 mm` radial release path shall not be re-labelled as a successful top-port extraction path.
 - The removable ICF fixed/blank closure owns no detector support, locating datum, structural fastener, thermal sink, protective-ground termination, cable clamp, or target-mechanism load. Removing the blank flange shall leave all internal detector supports positioned on permanent chamber structure.
-- The afterSRC ICF305 integration routes LEFT to the permanent `-X` wall, RIGHT to `+X`, DOWN to `-Y`, and relocates the UP-sector structural interface to a stationary `-X` side-wall pedestal near `y=180 mm`, adjacent to the UP-sector signal-service side. The long wall-reaching member belongs to the stationary chamber structure, not the removable UP holder; the removable holder docks to the inner pad and shall still pass the ICF305 bore. All stationary wall supports shall physically contact their permanent wall and their removable holder interface rather than leave a gap bridged only by an electrical ground strap.
+- Both compact deployments now use the common rear open C-frame defined above, four equal sector docks, and deployment-specific permanent-wall feet. This supersedes the former afterSRC UP `-X` pedestal at `y=180 mm`.
 - Available envelope, the complete service-removal motion, purchased ICF305 interface drawing, support datum, and pressure-vessel release remain unresolved.
 - The preserved external afterSRC route remains a legacy fallback/reference.
 
 ### 11.2 CompactInVacuum-preSAMURAI
 
 - Baseline instrument upstream of the SAMURAI terminal.
-- Selected screening chamber: square 450 × 450 mm internal section, provisional.
+- Selected screening chamber: square 450 × 450 mm internal section, provisional; the ICF305 top-access prototype uses a 420 mm body with upstream outer face at `z=-50 mm`. The former 380 mm service-plate chamber remains a comparison candidate.
+- The top maintenance opening adopts the same provisional ICF305 geometry and load-free closure as afterSRC; supplier, seal/site applicability, and complete extraction evidence remain unresolved. Signal services occupy the permanent upstream top strip outside the maintenance flange.
 - VF100/VG80 evidence inherited from external work is not automatically authoritative for the compact deployment.
 - Available envelope, mating-chain ownership, service-removal closure, purchased interface drawings, support datum, and pressure-vessel release remain unresolved.
 - The preserved external SAMURAI-front route remains reference engineering work.
@@ -309,6 +312,8 @@ Runtime state, caches, and machine-specific files remain untracked.
 - Evidence resolving 53.4° versus approximately 55.9°, and 11.2° versus approximately 11.3°.
 
 ## 16. Change history
+
+- 2026-09-06 v2.5: selected the common rear open C-frame, four axial-release sector docks, and top ICF305 access for both compact prototypes; retained independent complete extraction as an unresolved design target.
 
 - 2026-09-01 v2.4: clarified that sampled holder-release poses do not constitute proof of the
   complete extraction path; aligned downstream documentation and validation terminology with the

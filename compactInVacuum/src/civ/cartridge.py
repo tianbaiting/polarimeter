@@ -39,6 +39,7 @@ class SectorHolderGeometry:
     holder_physical_names: tuple[str, ...]
     stationary_physical_names: tuple[str, ...]
     stationary_purchased_interface_names: tuple[str, ...]
+    stationary_support_name: str
     loaded_maintenance_bounds_mm: tuple[float, float, float, float, float, float]
     removal_poses: tuple[Part.Shape, ...]
 
@@ -55,7 +56,8 @@ def _segment_keepout(
 
 
 def _physical_solids_only(shape: Part.Shape) -> Part.Shape:
-    solids = [solid.copy() for solid in shape.Solids]
+    # [EN] Discard only sub-tolerance zero-volume Boolean residues, below the 1e-6 mm3 collision tolerance. / [CN] 仅丢弃小于 1e-6 mm3 碰撞容差的近零体积布尔残留。
+    solids = [solid.copy() for solid in shape.Solids if abs(solid.Volume) > 1.0e-7]
     if not solids:
         return shape
     if len(solids) == 1:
@@ -372,6 +374,7 @@ def build_sector_holder(
         sector,
         sum(point.z for point in node_centers) / len(node_centers),
     )
+    frame = cfg.compact_one.deployment.support_frame
     mount_outward = mount_geometry.outward
     mount_tangent = mount_geometry.tangent
     plate_parts: list[Part.Shape] = [
@@ -409,16 +412,26 @@ def build_sector_holder(
             interface_center,
             (
                 tangent
-                if (mount_outward - outward).Length <= 1.0e-9
+                if frame is not None or (mount_outward - outward).Length <= 1.0e-9
                 else App.Vector(0.0, 0.0, 1.0)
             ),
             holder.common_bracket_width_mm,
             holder.carrier_plate_thickness_mm,
         )
     )
+    if frame is not None:
+        # [EN] Close the rear web against the rear-most nest to form one profiled carrier instead of an UP-only transverse cantilever. / [CN] 将后部腹板连接到最后方巢座形成整体轮廓载板，替代 UP 专用横向悬臂。
+        rear_node = max(node_centers, key=lambda point: point.z)
+        plate_parts.append(_web_between(rear_node, interface_center, tangent, holder.carrier_web_width_mm, holder.carrier_plate_thickness_mm))
     carrier_plate = plate_parts[0]
     for part in plate_parts[1:]:
         carrier_plate = carrier_plate.fuse(part)
+    if frame is not None:
+        # [EN] Trim the common docking profile at the stationary socket face; the sloping rear web must not extend into its seat. / [CN] 在固定座端面裁齐公共对接轮廓，防止倾斜后腹板伸入安装座。
+        carrier_plate = carrier_plate.cut(Part.makeBox(
+            cfg.vessel.inner_size_x_mm, cfg.vessel.inner_size_y_mm, cfg.vessel.length_mm,
+            App.Vector(-cfg.vessel.inner_size_x_mm / 2, -cfg.vessel.inner_size_y_mm / 2, frame.dock_face_z_mm),
+        ))
     carrier_plate_maintenance_envelope = carrier_plate.copy()
 
     # [EN] Machine the detector withdrawal bores and expanded acceptance windows into the one-piece plate; this keeps the carrier coherent without placing material in any full-disc particle cone. / [CN] 在整体载板上加工探测器抽出孔和扩张后的接收窗；既保持载板连贯，又避免材料进入任何完整灵敏圆面的粒子锥。
@@ -482,7 +495,7 @@ def build_sector_holder(
     interface_datums = mount_geometry.datums
     block_name = f"{sector}_SectorInterfaceBlock"
     dock_name = f"{sector}_HolderDockInterface"
-    support_name = f"{sector}_PermanentWallSupport"
+    support_name = f"{sector}_{'FrameSocket' if frame is not None else 'PermanentWallSupport'}"
     interface_name = f"{sector}_ChamberMountInterface"
     physical[block_name] = interface_block
     physical[support_name] = stationary_support
@@ -493,6 +506,7 @@ def build_sector_holder(
     interfaces[dock_name] = holder_dock_plane
     interfaces[interface_name] = chamber_mount_plane
     purchased_interfaces.update(purchased)
+    purchased_interfaces.update(mount_geometry.holder_fasteners)
     stationary_purchased_interface_names.extend(purchased)
     datums.update(interface_datums)
     thermal_connections.extend(
@@ -547,6 +561,9 @@ def build_sector_holder(
         - scaled(mount_outward, 0.5 * holder.interface_block_mm[0] + 6.0)
         + scaled(mount_tangent, holder.service_lane_offset_mm)
     )
+    if frame is not None:
+        # [EN] Put the service junction inside the C-frame aperture and behind the nests; the detachable harness leaves the fixed frame clear. / [CN] 服务汇合点置于 C 形基架内孔及巢座后方，使可断开线束避开固定框。
+        service_junction = scaled(outward, frame.mount_radius_mm - 0.5 * holder.interface_block_mm[2] - 14.0) + scaled(tangent, 14.0) + App.Vector(0, 0, frame.dock_face_z_mm - holder.interface_block_mm[0] - 8.0)
     cable_radius_mm = 0.5 * routing.cable_keepout_diameter_mm
     for index, placement in enumerate(placements):
         start = route_starts[placement.tag]
@@ -643,6 +660,7 @@ def build_sector_holder(
         stationary_purchased_interface_names=tuple(
             stationary_purchased_interface_names
         ),
+        stationary_support_name=support_name,
         loaded_maintenance_bounds_mm=loaded_maintenance_bounds_mm,
         removal_poses=removal_poses,
     )

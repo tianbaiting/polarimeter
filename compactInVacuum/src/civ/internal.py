@@ -3,11 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import Part
+import FreeCAD as App
 
 from .cartridge import SectorHolderGeometry, build_sector_holder
 from .config import CIVConfig
 from .layout import DetectorPlacement
 from .target import TargetSystemGeometry, build_target_system
+from .support import build_common_support_frame
 
 
 @dataclass(frozen=True)
@@ -50,6 +52,20 @@ def build_internal_assembly(cfg: CIVConfig) -> InternalAssemblyGeometry:
         datums.update(holder.datums)
         materials.update(holder.materials)
         thermal_connections.extend(holder.thermal_connections)
+
+    frame = build_common_support_frame(cfg)
+    if frame is not None:
+        physical["CommonOpenSupportFrame"] = frame
+        materials["CommonOpenSupportFrame"] = cfg.compact_one.deployment.support_frame.material
+        for holder in sector_holders.values():
+            thermal_connections.append((holder.stationary_support_name, "CommonOpenSupportFrame"))
+        spec = cfg.compact_one.deployment.support_frame
+        x = -cfg.vessel.inner_size_x_mm / 2
+        y = spec.mount_radius_mm - spec.wall_foot_width_mm / 2
+        z = spec.dock_face_z_mm + spec.socket_depth_mm
+        points = [App.Vector(x, y, z), App.Vector(x, y + spec.wall_foot_width_mm, z), App.Vector(x, y + spec.wall_foot_width_mm, z + spec.frame_depth_mm), App.Vector(x, y, z + spec.frame_depth_mm)]
+        interfaces["CommonPermanentWallInterface"] = Part.Face(Part.makePolygon([*points, points[0]]))
+        thermal_connections.append(("CommonOpenSupportFrame", "CommonPermanentWallInterface"))
 
     physical.update(target.stationary)
     materials.update(

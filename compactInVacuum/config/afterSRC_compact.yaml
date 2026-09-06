@@ -1,4 +1,4 @@
-extends: common_detector.yaml
+extends: common_open_frame.yaml
 doc_name: CompactOne_afterSRC
 
 deployment:
@@ -138,7 +138,7 @@ deployment:
     candidates:
       - standard: ICF253
         status: placeholder
-        disposition: rejected_insufficient_passage_with_fixed_support
+        disposition: comparison_requires_reorientation
         chamber_candidate: aftersrc_square_icf253_access
         center_x_mm: 0.0
         center_z_mm: 160.0
@@ -193,27 +193,6 @@ deployment:
         gasket_inner_diameter_mm: 300.0
         gasket_thickness_mm: 2.0
         weld_neck_length_mm: 25.0
-  sector_mounts:
-    - sector: left
-      wall: negative_x
-      tangent_coordinate_mm: 0.0
-      wall_standoff_mm: 16.0
-      release_clearance_mm: 12.0
-    - sector: right
-      wall: positive_x
-      tangent_coordinate_mm: 0.0
-      wall_standoff_mm: 16.0
-      release_clearance_mm: 12.0
-    - sector: up
-      wall: negative_x
-      tangent_coordinate_mm: 180.0
-      wall_standoff_mm: 75.0
-      release_clearance_mm: 12.0
-    - sector: down
-      wall: negative_y
-      tangent_coordinate_mm: 0.0
-      wall_standoff_mm: 16.0
-      release_clearance_mm: 12.0
   service_ports:
     - name: rotary_target
       role: rotary

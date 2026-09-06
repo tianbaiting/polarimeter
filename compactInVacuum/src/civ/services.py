@@ -76,7 +76,10 @@ def _ground_strap(
 ) -> Part.Shape:
     mount = cfg.compact_one.deployment.sector_mount(sector)
     wall = mount.wall
-    if wall == "negative_x":
+    if cfg.compact_one.deployment.support_frame is not None:
+        frame = cfg.compact_one.deployment.support_frame
+        end = App.Vector(start.x, start.y, frame.dock_face_z_mm + frame.socket_depth_mm + 2.5)
+    elif wall == "negative_x":
         end = App.Vector(
             -0.5 * cfg.vessel.inner_size_x_mm,
             start.y + 12.0,
@@ -172,14 +175,27 @@ def build_services(
             approach_y_mm,
             signal_lane.z,
         )
+        frame = cfg.compact_one.deployment.support_frame
+        crossing_x = signal_lane.x if frame is None else max(
+            -frame.mount_radius_mm + frame.rail_width_mm / 2 + routing.minimum_static_bend_radius_mm,
+            min(signal_lane.x, frame.mount_radius_mm - frame.rail_width_mm / 2 - routing.minimum_static_bend_radius_mm),
+        )
+        crossing_points = (
+            (
+                App.Vector(crossing_x, approach_y_mm, service_lane_z_mm),
+                App.Vector(crossing_x, approach_y_mm, signal_lane.z),
+                port_low_lane,
+            )
+            if frame is not None
+            else (port_high_lane, port_low_lane)
+        )
         tangent = _sector_tangent(sector)
         for index, placement in enumerate(holder.placements):
             offset = tangent * (2.5 * (index - 1))
             points = (
                 holder.service_junction + offset,
                 sector_high_lane + offset,
-                port_high_lane + offset,
-                port_low_lane + offset,
+                *(point + offset for point in crossing_points),
                 signal_lane + offset,
                 signal_port.channel_entry_points[index],
             )

@@ -82,7 +82,12 @@ def evaluate_config_rules(cfg: CIVConfig) -> tuple[ConfigRule, ...]:
             and holder.detector_mounts
             == ("deuteron", "proton_small", "proton_large")
             and "plane_pin_slot" in holder.chamber_interface
-            and "radially_outward" in holder.sector_removal_direction,
+            and (
+                holder.sector_removal_direction == "sector_upstream_then_top_access"
+                and holder.sector_removal_clearance_mm == deployment.support_frame.release_clearance_mm
+                if deployment.support_frame is not None
+                else "radially_outward" in holder.sector_removal_direction
+            ),
             (
                 f"architecture={holder.architecture}, "
                 f"mounts={holder.detector_mounts}, "
@@ -410,7 +415,7 @@ def evaluate_config_rules(cfg: CIVConfig) -> tuple[ConfigRule, ...]:
                 and mount.release_clearance_mm
                 >= holder.locating_slot_length_mm
                 and abs(mount.tangent_coordinate_mm)
-                <= mount_tangent_limit_mm[mount.wall]
+                <= mount_tangent_limit_mm.get(mount.wall, 0.0)
                 for mount in sector_mounts
             ),
             ", ".join(
@@ -422,6 +427,15 @@ def evaluate_config_rules(cfg: CIVConfig) -> tuple[ConfigRule, ...]:
         )
     )
     if access is not None and access.enabled:
+        frame = deployment.support_frame
+        if frame is not None:
+            rules.append(_rule(
+                "mechanical", "frame_lift_corridor_ahead_of_fixed_pins",
+                access.selected.center_z_mm - access.selected.clear_bore_diameter_mm / 2
+                < frame.lift_corridor_rear_limit_z_mm
+                < frame.dock_face_z_mm - holder.interface_block_mm[0],
+                f"corridor_rear_z_mm={frame.lift_corridor_rear_limit_z_mm:.3f}, pin_front_z_mm={frame.dock_face_z_mm - holder.interface_block_mm[0]:.3f}",
+            ))
         rules.append(
             _rule(
                 "mechanical",

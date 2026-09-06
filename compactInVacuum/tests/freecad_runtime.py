@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import math
+from dataclasses import replace
 from pathlib import Path
 import sys
 
@@ -29,10 +30,11 @@ from civ.detector import detector_stack_metrics
 from civ.internal import build_internal_assembly, internal_compound
 from civ.layout import build_detector_placements
 from civ.services import build_services
-from civ.support import build_sector_mount
+from civ.support import build_common_support_frame, build_sector_mount
 from civ.thermal import evaluate_thermal_paths
 from civ.validation_compact import (
     find_acceptance_obstructions,
+    find_fixed_structure_release_collisions,
     validate_compact_one,
 )
 from civ.visual import (
@@ -54,6 +56,31 @@ def _intersection_volume_mm3(shape_a: Part.Shape, shape_b: Part.Shape) -> float:
 
 def _check_by_name(report: dict[str, object], name: str) -> dict[str, object]:
     return next(check for check in report["checks"] if check["name"] == name)
+
+
+def test_common_frame_runtime() -> dict[str, object]:
+    for profile in ("afterSRC_compact.yaml", "infrontSamurai_compact.yaml"):
+        cfg = load_config(str(MODULE_ROOT / "config" / profile))
+        spec = cfg.compact_one.deployment.support_frame
+        frame = build_common_support_frame(cfg)
+        chamber = build_chamber(cfg)
+        assert frame.isValid() and len(frame.Solids) == 1
+        assert frame.distToShape(chamber.physical["ProjectChamberBody"])[0] <= 1.0e-6
+        for name in ("MaintenanceAccessInternalLiftCorridor", "MaintenanceAccessOpenPassage", "MaintenanceAccessBlindRemovalEnvelope"):
+            assert _intersection_volume_mm3(frame, chamber.keepouts[name]) <= 1.0e-6
+        block_volumes = []
+        for sector in cfg.sectors:
+            mount = build_sector_mount(cfg, sector, 0.0)
+            block_volumes.append(mount.interface_block.Volume)
+            assert mount.release_direction == App.Vector(0, 0, -1)
+            assert mount.interface_block.distToShape(mount.stationary_support)[0] <= 1.0e-6
+            assert mount.stationary_support.distToShape(frame)[0] <= 1.0e-6
+            assert _intersection_volume_mm3(mount.interface_block, mount.stationary_support) <= 1.0e-6
+            assert _intersection_volume_mm3(mount.stationary_support, chamber.keepouts["MaintenanceAccessInternalLiftCorridor"]) <= 1.0e-6
+            assert len(mount.holder_fasteners) == 2
+            assert max(shape.BoundBox.ZMax for shape in [mount.interface_block, *mount.holder_fasteners.values()]) - spec.release_clearance_mm <= spec.lift_corridor_rear_limit_z_mm
+        assert max(block_volumes) - min(block_volumes) <= 1.0e-6
+    return {"status": "pass", "deployments": 2, "equal_axial_docks_per_frame": 4}
 
 
 def test_detector_head_runtime() -> dict[str, object]:
@@ -172,14 +199,14 @@ def test_sector_holder_runtime() -> dict[str, object]:
     assert "left_SectorRemovalEnvelope" in geometry.keepouts
     assert "left_RearCableLane" in geometry.keepouts
     assert geometry.stationary_physical_names == (
-        "left_PermanentWallSupport",
+        "left_FrameSocket",
     )
     assert set(geometry.stationary_purchased_interface_names) == {
         "left_RoundLocatingPinEnvelope",
         "left_SlotLocatingPinEnvelope",
     }
     assert geometry.physical["left_SectorInterfaceBlock"].distToShape(
-        geometry.physical["left_PermanentWallSupport"]
+        geometry.physical["left_FrameSocket"]
     )[0] <= 1.0e-6
     assert all(
         shape.isValid() and not shape.isNull()
@@ -258,12 +285,18 @@ def test_internal_and_services_runtime() -> dict[str, object]:
     assert all(item.connected for item in thermal.channels)
     chamber_body = chamber.physical["ProjectChamberBody"]
     lift_corridor = chamber.keepouts["MaintenanceAccessInternalLiftCorridor"]
+    assert not find_fixed_structure_release_collisions(internal, chamber)
+    blocker_center = internal.physical["up_deuteron_ActivePlastic"].CenterOfMass - App.Vector(0, 0, cfg.compact_one.deployment.support_frame.release_clearance_mm)
+    blocked = replace(internal, physical={**internal.physical, "TargetReleaseBlocker": Part.makeSphere(3.0, blocker_center)})
+    failures = find_fixed_structure_release_collisions(blocked, chamber)
+    assert any(item["obstacle"] == "TargetReleaseBlocker" and item["sector"] == "up" for item in failures)
     for sector, holder in internal.sector_holders.items():
         block = holder.physical[f"{sector}_SectorInterfaceBlock"]
-        support = holder.physical[f"{sector}_PermanentWallSupport"]
+        support = holder.physical[holder.stationary_support_name]
         ground = services.physical[f"{sector}_ProtectiveGroundStrap"]
         assert block.distToShape(support)[0] <= 1.0e-6
-        assert support.distToShape(chamber_body)[0] <= 1.0e-6
+        assert support.distToShape(internal.physical["CommonOpenSupportFrame"])[0] <= 1.0e-6
+        assert internal.physical["CommonOpenSupportFrame"].distToShape(chamber_body)[0] <= 1.0e-6
         assert ground.Volume > 100.0
         assert max(
             ground.BoundBox.XLength,
@@ -272,7 +305,7 @@ def test_internal_and_services_runtime() -> dict[str, object]:
         ) > 5.0
         assert ground.distToShape(block)[0] <= 1.0e-6
         assert ground.distToShape(support)[0] <= 1.0e-6
-        assert ground.distToShape(chamber_body)[0] <= 1.0e-6
+        assert ground.distToShape(internal.physical["CommonOpenSupportFrame"])[0] <= 1.0e-6
         assert _intersection_volume_mm3(support, lift_corridor) <= 1.0e-6
         assert _intersection_volume_mm3(ground, lift_corridor) <= 1.0e-6
         mount_geometry = build_sector_mount(
@@ -480,6 +513,9 @@ def test_categorized_validation_runtime() -> dict[str, object]:
         "physical_detector_head_depth_gate",
         "coherent_three_detector_sector_holders",
         "sector_mount_release_envelope_clear",
+        "sector_release_clears_fixed_structure",
+        "released_holders_ahead_of_fixed_frame",
+        "common_open_support_frame_connected_and_clear",
         "detector_axial_removal_after_clamp_release_clear",
         "full_active_acceptance_clear",
         "cable_routing_and_connector_keepouts_clear",
@@ -509,7 +545,7 @@ def test_categorized_validation_runtime() -> dict[str, object]:
         for item in metrics["maintenance_access"]["candidate_comparison"]
     }
     assert not comparison["ICF253"]["flat_lift_screen_passed"]
-    assert not comparison["ICF253"]["edge_on_screen_passed"]
+    assert comparison["ICF253"]["edge_on_screen_passed"]
     assert comparison["ICF305"]["flat_lift_screen_passed"]
     assert comparison["ICF356"]["flat_lift_screen_passed"]
     assert _check_by_name(
@@ -536,6 +572,7 @@ def main() -> int:
     print(
         json.dumps(
             {
+                "common_frame": run_case("common_frame", test_common_frame_runtime),
                 "detector_head": run_case(
                     "detector_head",
                     test_detector_head_runtime,

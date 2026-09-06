@@ -225,6 +225,8 @@ def _add_internal_geometry(
     for name, shape in geometry.physical.items():
         if name.startswith("Target"):
             group_name = "Target"
+        elif name == "CommonOpenSupportFrame" or name.endswith("FrameSocket"):
+            group_name = "StationarySupport"
         elif name in holder_names:
             group_name = "SectorHolder"
         else:

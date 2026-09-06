@@ -9,8 +9,8 @@ intent:
     - elastomer_or_oring_seal=prohibited
     - helium_leak_rate_max_pa_m3_s=1.0e-10
     - removable_access_closure_owns_no_detector_support_or_ground
-    - all_sector_holders_contact_stationary_supports_that_contact_permanent_walls
-    - up_sector_mount=removable_inner_pad_plus_stationary_negative_x_wall_pedestal_at_y_180_mm
+    - all_sector_holders_dock_to_common_rear_open_frame_on_permanent_walls
+    - all_sector_mounts=identical_front_facing_plane_pin_slot_docks_with_upstream_release
     - complete_sector_extraction_motion_must_be_reported_separately
 build:
   config: config/afterSRC_compact.yaml

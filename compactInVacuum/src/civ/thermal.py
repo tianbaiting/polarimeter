@@ -60,7 +60,7 @@ def evaluate_thermal_paths(
     channel_reports: list[ChannelThermalPath] = []
     for placement in internal.placements:
         start = f"{placement.tag}_SiPMPackage"
-        destination = f"{placement.sector_name}_ChamberMountInterface"
+        destination = "CommonPermanentWallInterface" if cfg.compact_one.deployment.support_frame is not None else f"{placement.sector_name}_ChamberMountInterface"
         path = _find_path(graph, start, destination)
         gaps = tuple(
             float(shapes[name_a].distToShape(shapes[name_b])[0])

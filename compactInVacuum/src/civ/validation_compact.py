@@ -63,6 +63,26 @@ def _geometry_check(
     }
 
 
+def find_fixed_structure_release_collisions(internal, chamber) -> list[dict[str, object]]:
+    obstacles = {
+        name: shape for name, shape in internal.physical.items()
+        if name == "CommonOpenSupportFrame" or name.startswith("Target")
+    }
+    obstacles.update(chamber.physical)
+    for holder in internal.sector_holders.values():
+        obstacles.update({name: holder.physical[name] for name in holder.stationary_physical_names})
+        obstacles.update({name: holder.purchased_interfaces[name] for name in holder.stationary_purchased_interface_names})
+    failures = []
+    # [EN] Electrical bonds and detachable harnesses are released before mechanical extraction; permanent sockets, pins and target hardware remain obstacles. / [CN] 机械拆出前先断开等电位带和可拆线束；固定座、定位销与靶机构始终作为障碍物检查。
+    for sector, holder in internal.sector_holders.items():
+        for index, pose in enumerate(holder.removal_poses):
+            for name, obstacle in obstacles.items():
+                overlap = _intersection_volume_mm3(pose, obstacle)
+                if overlap > 1.0e-6:
+                    failures.append({"sector": sector, "pose_index": index, "obstacle": name, "intersection_volume_mm3": overlap})
+    return failures
+
+
 def _config_checks(cfg: CIVConfig, strict: bool) -> list[dict[str, object]]:
     return [
         {
@@ -665,6 +685,7 @@ def validate_compact_one(
                 for item in internal.sector_holders.values()
             )
             and len(coherent_plate_names) == 4
+            and all(internal.physical[name].isValid() and len(internal.physical[name].Solids) == 1 for name in coherent_plate_names)
             and not obsolete_support_names,
             (
                 f"holders={len(internal.sector_holders)}, "
@@ -677,6 +698,22 @@ def validate_compact_one(
         )
     )
     removal_collisions: list[dict[str, object]] = []
+    fixed_release_collisions = find_fixed_structure_release_collisions(internal, chamber)
+    checks.append(_geometry_check(
+        "sector_holder", "sector_release_clears_fixed_structure",
+        not fixed_release_collisions,
+        f"sampled_release_collisions={len(fixed_release_collisions)}; complete extraction remains a separate gate",
+        failures=fixed_release_collisions,
+    ))
+    frame_spec = cfg.compact_one.deployment.support_frame
+    if frame_spec is not None:
+        rear_bounds = {sector: holder.loaded_maintenance_bounds_mm[5] - frame_spec.release_clearance_mm for sector, holder in internal.sector_holders.items()}
+        checks.append(_geometry_check(
+            "sector_holder", "released_holders_ahead_of_fixed_frame",
+            all(value <= frame_spec.lift_corridor_rear_limit_z_mm for value in rear_bounds.values()),
+            f"released_rear_bounds_mm={rear_bounds}; corridor_rear_limit_z_mm={frame_spec.lift_corridor_rear_limit_z_mm}",
+            released_rear_bounds_mm=rear_bounds,
+        ))
     for sector, holder_geometry in internal.sector_holders.items():
         for pose_index, removal_pose in enumerate(holder_geometry.removal_poses):
             for other_sector, other_shape in sector_holder_compounds.items():
@@ -783,10 +820,25 @@ def validate_compact_one(
     access_lift_corridor = chamber.keepouts.get(
         "MaintenanceAccessInternalLiftCorridor"
     )
+    common_frame = internal.physical.get("CommonOpenSupportFrame")
+    frame_wall_gap_mm = 0.0 if common_frame is None else float(common_frame.distToShape(chamber_body)[0])
+    if common_frame is not None:
+        frame_collisions = [
+            {"sector": sector, "intersection_volume_mm3": overlap}
+            for sector, shape in sector_holder_compounds.items()
+            if (overlap := _intersection_volume_mm3(common_frame, shape)) > 1.0e-6
+        ]
+        lift_overlap = 0.0 if access_lift_corridor is None else _intersection_volume_mm3(common_frame, access_lift_corridor)
+        checks.append(_geometry_check(
+            "mechanical", "common_open_support_frame_connected_and_clear",
+            common_frame.isValid() and len(common_frame.Solids) == 1 and frame_wall_gap_mm <= 1.0e-6 and not frame_collisions and lift_overlap <= 1.0e-6,
+            f"solids={len(common_frame.Solids)}, frame_wall_gap_mm={frame_wall_gap_mm:.6f}, lift_overlap_mm3={lift_overlap:.6f}",
+            failures=frame_collisions,
+        ))
     for sector, holder_geometry in internal.sector_holders.items():
         mount = cfg.compact_one.deployment.sector_mount(sector)
         block = holder_geometry.physical[f"{sector}_SectorInterfaceBlock"]
-        support = holder_geometry.physical[f"{sector}_PermanentWallSupport"]
+        support = holder_geometry.physical[holder_geometry.stationary_support_name]
         ground = services.physical[f"{sector}_ProtectiveGroundStrap"]
         pins = {
             name: holder_geometry.purchased_interfaces[name]
@@ -794,6 +846,8 @@ def validate_compact_one(
         }
         block_support_gap_mm = float(block.distToShape(support)[0])
         support_wall_gap_mm = float(support.distToShape(chamber_body)[0])
+        support_frame_gap_mm = None if common_frame is None else float(support.distToShape(common_frame)[0])
+        support_load_path_gap_mm = support_wall_gap_mm if common_frame is None else max(support_frame_gap_mm, frame_wall_gap_mm)
         pin_support_gaps_mm = {
             name: float(shape.distToShape(support)[0])
             for name, shape in pins.items()
@@ -801,6 +855,8 @@ def validate_compact_one(
         ground_block_gap_mm = float(ground.distToShape(block)[0])
         ground_support_gap_mm = float(ground.distToShape(support)[0])
         ground_wall_gap_mm = float(ground.distToShape(chamber_body)[0])
+        ground_frame_gap_mm = None if common_frame is None else float(ground.distToShape(common_frame)[0])
+        ground_load_path_gap_mm = ground_wall_gap_mm if common_frame is None else max(ground_frame_gap_mm, frame_wall_gap_mm)
         ground_extent_mm = max(
             float(ground.BoundBox.XLength),
             float(ground.BoundBox.YLength),
@@ -832,7 +888,7 @@ def validate_compact_one(
                     "other_holder_overlaps": other_holder_overlaps,
                 }
             )
-        if support_wall_gap_mm > 1.0e-6 or any(
+        if support_load_path_gap_mm > 1.0e-6 or any(
             gap_mm > 1.0e-6 for gap_mm in pin_support_gaps_mm.values()
         ):
             support_wall_failures.append(
@@ -847,7 +903,7 @@ def validate_compact_one(
             or ground_extent_mm <= 5.0
             or ground_block_gap_mm > 1.0e-6
             or ground_support_gap_mm > 1.0e-6
-            or ground_wall_gap_mm > 1.0e-6
+            or ground_load_path_gap_mm > 1.0e-6
         ):
             ground_bond_failures.append(
                 {
@@ -898,10 +954,14 @@ def validate_compact_one(
                 "wall_standoff_mm": mount.wall_standoff_mm,
                 "block_support_gap_mm": block_support_gap_mm,
                 "support_wall_gap_mm": support_wall_gap_mm,
+                "support_frame_gap_mm": support_frame_gap_mm,
+                "structural_path_maximum_gap_mm": support_load_path_gap_mm,
                 "pin_support_gaps_mm": pin_support_gaps_mm,
                 "ground_volume_mm3": float(ground.Volume),
                 "ground_maximum_extent_mm": ground_extent_mm,
                 "ground_wall_gap_mm": ground_wall_gap_mm,
+                "ground_frame_gap_mm": ground_frame_gap_mm,
+                "ground_path_maximum_gap_mm": ground_load_path_gap_mm,
                 "support_lift_overlap_mm3": support_lift_overlap_mm3,
                 "pin_lift_overlap_mm3": pin_lift_overlap_mm3,
                 "ground_lift_overlap_mm3": ground_lift_overlap_mm3,
@@ -1229,6 +1289,11 @@ def validate_compact_one(
             "passage_margin_mm": passage_margin_mm,
             "contact_gaps_mm": contact_gaps_mm,
             "complete_extraction_status": access.complete_extraction_status,
+            "internal_lift_corridor": {
+                "scope": "forepart_staging_only" if frame_spec is not None else "whole_port_projection",
+                "rear_limit_z_mm": None if frame_spec is None else frame_spec.lift_corridor_rear_limit_z_mm,
+                "complete_extraction_proven": False,
+            },
             "candidate_comparison": candidate_comparison,
         }
 

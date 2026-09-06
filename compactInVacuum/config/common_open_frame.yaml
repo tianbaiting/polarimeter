@@ -1,0 +1,21 @@
+extends: common_detector.yaml
+
+sector_holder:
+  sector_removal_direction: sector_upstream_then_top_access
+  sector_removal_clearance_mm: 20.0
+
+deployment:
+  support_frame:
+    architecture: rear_open_c_frame
+    status: provisional
+    mount_radius_mm: 180.0
+    dock_face_z_mm: 220.0
+    socket_depth_mm: 12.0
+    frame_depth_mm: 12.0
+    rail_width_mm: 40.0
+    wall_foot_width_mm: 40.0
+    release_clearance_mm: 20.0
+    lift_corridor_rear_limit_z_mm: 210.0
+    material: stainless_304L
+    extraction_policy: independent_sector_target
+    complete_extraction_status: placeholder

@@ -382,3 +382,57 @@ Entry Template:
 - Validation Result: hash-skipped invocation retained the current prototype non-strict pass (`47` pass / `10` warnings / `0` failures); this is not a strict fabrication/release pass.
 - Artifacts/State: canonical afterSRC FCStd/STEP/report/state remained unchanged; the retained ICF305 isometric rendering was reused as review evidence in the SAMURAI73 backup slides.
 - Next Action: use the rendering only for meeting review; close the existing supplier, site-envelope, structural, and continuous extraction-motion evidence gates before release.
+
+- Timestamp UTC: 2026-09-06T08:42:44+00:00
+- Timestamp Local: 2026-09-06T17:42:44+09:00
+- Module/Scope: compactOneAfterSRC common open-frame first prototype validation
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --validate-only`
+- Key Parameters/Overrides: common rear C-frame; mount radius 180 mm; dock z=220 mm; 12 mm socket/frame depths; four upstream-release docks; ICF305; no CLI overrides.
+- Validation Result: prototype non-strict fail; {'pass_count': 45, 'warning_count': 10, 'fail_count': 3}.
+- Artifacts/State: machine-written canonical validation report/state; full CAD export pending geometry corrections.
+- Next Action: correct reported geometry failures and rerun both compact prototypes.
+
+- Timestamp UTC: 2026-09-06T08:50:44+00:00
+- Timestamp Local: 2026-09-06T17:50:44+09:00
+- Module/Scope: compactOneAfterSRC common open-frame second prototype validation
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --validate-only`
+- Key Parameters/Overrides: 20 mm upstream release; forepart staging corridor z<=210 mm; full lid/open-port envelope unchanged; signal routes detour through the C-frame central aperture.
+- Validation Result: runtime error before report completion: OCC Removing splitter failed after an acceptance-window Boolean. Prior report is not a result of this invocation.
+- Artifacts/State: machine-owned state records the runtime error; no full export.
+- Next Action: retain valid post-Boolean carrier topology without optional splitter removal, then retry validation.
+
+- Timestamp UTC: 2026-09-06T08:58:19+00:00
+- Timestamp Local: 2026-09-06T17:58:19+09:00
+- Module/Scope: compactOneAfterSRC common open-frame third prototype validation
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --validate-only`
+- Key Parameters/Overrides: 20 mm upstream release; internal staging corridor z<=210 mm; full lid lift retained; aperture-routed signals; four fixed frame sockets; no CLI overrides.
+- Validation Result: prototype non-strict pass; {'pass_count': 51, 'warning_count': 10, 'fail_count': 0}; complete extraction remains unresolved.
+- Artifacts/State: canonical validation report/state refreshed; CAD export pending. Follow-up metadata aligns the declared release direction and ICF253 comparison disposition with this geometry.
+- Next Action: export both canonical compact assemblies with final configuration metadata, then inspect standard review views.
+
+- Timestamp UTC: 2026-09-06T09:06:53+00:00
+- Timestamp Local: 2026-09-06T18:06:53+09:00
+- Module/Scope: compactOneAfterSRC common open-frame full canonical export
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: shared rear C-frame; four equal front-facing plane-pin-slot docks; two M4 clamp envelopes per dock; 20 mm upstream release; z<=210 mm internal staging corridor; full ICF305 lid lift; 420 mm chamber length; force rebuild intentionally refreshes exported CAD after generator changes.
+- Validation Result: prototype non-strict PASS; {'pass_count': 51, 'warning_count': 10, 'fail_count': 0}; configuration hash and resolved configuration match current source. Complete sector reorientation/top-lift and fabrication evidence remain unresolved.
+- Artifacts/State: canonical FCStd, STEP, metrics, report, manifest and machine-owned state regenerated.
+- Next Action: render and visually inspect assembly/support standard views and finish the FreeCAD regression suite.
+
+- Timestamp UTC: 2026-09-06T09:06:54+00:00
+- Timestamp Local: 2026-09-06T18:06:54+09:00
+- Module/Scope: compactOneInfrontSamurai common open-frame full canonical export
+- Command(s): `./compactInVacuum/run_compactOne_infrontSamurai.sh --pipeline-index codex_targets.yaml --force-rebuild`
+- Key Parameters/Overrides: shared rear C-frame; four equal front-facing plane-pin-slot docks; two M4 clamp envelopes per dock; 20 mm upstream release; z<=210 mm internal staging corridor; full ICF305 lid lift; 420 mm chamber length; force rebuild intentionally refreshes exported CAD after generator changes.
+- Validation Result: prototype non-strict PASS; {'pass_count': 51, 'warning_count': 10, 'fail_count': 0}; configuration hash and resolved configuration match current source. Complete sector reorientation/top-lift and fabrication evidence remain unresolved.
+- Artifacts/State: canonical FCStd, STEP, metrics, report, manifest and machine-owned state regenerated.
+- Next Action: render and visually inspect assembly/support standard views and finish the FreeCAD regression suite.
+
+- Timestamp UTC: 2026-09-06T09:11:48+00:00
+- Timestamp Local: 2026-09-06T18:11:48+09:00
+- Module/Scope: compactOneAfterSRC / compactOneInfrontSamurai common open-frame final regression and visual QA
+- Command(s): `micromamba run -n anaroot-env python -m pytest -q compactInVacuum/tests/test_platform_config.py compactInVacuum/tests/test_geometry.py`; `./compactInVacuum/run_freecad_tests.sh`; `freecadcmd` invoking `studies/access_port/scripts/export_review_meshes.py` with each canonical `--source` and `--output-dir`; `uv run --with matplotlib --with trimesh --with numpy python compactInVacuum/studies/access_port/scripts/render_review_meshes.py --model-root compactInVacuum/artifacts/<deployment> --title <title> --basename assembly`; the same renderer with `--basename internal_support --internals-only` for afterSRC; FreeCAD STEP reopen; current hash/resolved-configuration audit.
+- Key Parameters/Overrides: canonical ICF305 models; 180 mm docking radius, z=220 mm dock face, 12 mm socket and frame depths, 20 mm upstream release, forepart staging corridor z<=210 mm. Retained standard Isometric/Front/Top/Right views use beam Z and vertical Y. GUI RPC was unavailable; retained batch rendering tools produced review views from the canonical FCStd files.
+- Validation Result: 47/47 pure-Python tests PASS; all seven FreeCAD runtime groups PASS (common frame, detector head, sector holder, internal/services including deliberate release obstruction, categorized validation, access candidates, document roles). Both canonical reports PASS non-strict with 51 passes / 10 warnings / 0 failures. Both STEP files reopen valid with 214 solids. These are prototype results, not strict fabrication release or proof of complete independent extraction.
+- Artifacts/State: both canonical FCStd/STEP/JSON artifacts and states current; assembly PNGs for both deployments and focused support PNGs for afterSRC visually checked. Generated artifacts remain untracked. Render tooling committed separately as b20e6ed.
+- Next Action: review the new common-frame layout with the user; develop the complete sector transfer/reorientation/lift path and resolve structural/tool-access/fabrication evidence before release.

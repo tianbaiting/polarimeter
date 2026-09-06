@@ -2,6 +2,12 @@ schema_version: 1
 module: compactOneInfrontSamurai
 intent:
   description: CompactInVacuum-preSAMURAI baseline in-vacuum engineering prototype before the SAMURAI terminal; chamber and beamline interfaces remain site-specific and unresolved until supported by approved evidence.
+  requirements:
+    - selected_maintenance_access=ICF305
+    - removable_access_closure_owns_no_detector_support_or_ground
+    - all_sector_holders_dock_to_common_rear_open_frame_on_permanent_walls
+    - all_sector_mounts=identical_front_facing_plane_pin_slot_docks_with_upstream_release
+    - complete_sector_extraction_motion_must_be_reported_separately
 build:
   config: config/infrontSamurai_compact.yaml
   overrides: []

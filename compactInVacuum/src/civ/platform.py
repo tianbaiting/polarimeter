@@ -368,6 +368,23 @@ class MaintenanceAccessSpec:
 
 
 @dataclass(frozen=True)
+class SupportFrameSpec:
+    architecture: str
+    status: str
+    mount_radius_mm: float
+    dock_face_z_mm: float
+    socket_depth_mm: float
+    frame_depth_mm: float
+    rail_width_mm: float
+    wall_foot_width_mm: float
+    release_clearance_mm: float
+    lift_corridor_rear_limit_z_mm: float
+    material: str
+    extraction_policy: str
+    complete_extraction_status: str
+
+
+@dataclass(frozen=True)
 class SectorMountSpec:
     sector: str
     wall: str
@@ -409,6 +426,7 @@ class DeploymentSpec:
     support_alignment_status: str
     external_service_envelope_status: str
     maintenance_access: MaintenanceAccessSpec | None
+    support_frame: SupportFrameSpec | None
     sector_mounts: tuple[SectorMountSpec, ...]
     service_ports: tuple[ServicePortPlacementSpec, ...]
 
@@ -426,6 +444,16 @@ class DeploymentSpec:
         return matches[0]
 
     def sector_mount(self, sector: str) -> SectorMountSpec:
+        if self.support_frame is not None:
+            if sector not in {"left", "right", "up", "down"}:
+                raise ValueError(f"unsupported sector mount: {sector!r}")
+            return SectorMountSpec(
+                sector=sector,
+                wall="rear_open_frame",
+                tangent_coordinate_mm=0.0,
+                wall_standoff_mm=self.support_frame.socket_depth_mm,
+                release_clearance_mm=self.support_frame.release_clearance_mm,
+            )
         matches = [item for item in self.sector_mounts if item.sector == sector]
         if len(matches) == 1:
             return matches[0]
@@ -1574,6 +1602,36 @@ def _parse_maintenance_access(
     return spec
 
 
+def _parse_support_frame(value: Any) -> SupportFrameSpec | None:
+    if value is None:
+        return None
+    prefix = "deployment.support_frame"
+    entry = _mapping(value, prefix)
+    spec = SupportFrameSpec(
+        architecture=_text(entry.get("architecture"), f"{prefix}.architecture"),
+        status=_state(entry.get("status"), f"{prefix}.status"),
+        **{
+            name: _positive(_number(entry.get(name), f"{prefix}.{name}"), f"{prefix}.{name}")
+            for name in (
+                "mount_radius_mm", "dock_face_z_mm", "socket_depth_mm",
+                "frame_depth_mm", "rail_width_mm", "wall_foot_width_mm",
+                "release_clearance_mm",
+                "lift_corridor_rear_limit_z_mm",
+            )
+        },
+        material=_text(entry.get("material"), f"{prefix}.material"),
+        extraction_policy=_text(entry.get("extraction_policy"), f"{prefix}.extraction_policy"),
+        complete_extraction_status=_state(entry.get("complete_extraction_status"), f"{prefix}.complete_extraction_status"),
+    )
+    if spec.architecture != "rear_open_c_frame":
+        raise ValueError(f"{prefix}.architecture must be rear_open_c_frame")
+    if spec.extraction_policy != "independent_sector_target":
+        raise ValueError(f"{prefix}.extraction_policy must be independent_sector_target")
+    if spec.rail_width_mm >= spec.mount_radius_mm:
+        raise ValueError(f"{prefix} must retain a central aperture")
+    return spec
+
+
 def _parse_sector_mounts(value: Any) -> tuple[SectorMountSpec, ...]:
     if value is None:
         return ()
@@ -1756,9 +1814,21 @@ def _parse_deployment(raw: Mapping[str, Any]) -> DeploymentSpec:
             )
         ),
         sector_mounts=_parse_sector_mounts(raw.get("sector_mounts")),
+        support_frame=_parse_support_frame(raw.get("support_frame")),
         service_ports=tuple(ports),
     )
     _ = spec.chamber
+    if spec.support_frame is not None:
+        frame = spec.support_frame
+        if spec.sector_mounts:
+            raise ValueError("common support_frame cannot be combined with per-wall sector_mounts")
+        chamber = spec.chamber
+        if chamber.cross_section != "square":
+            raise ValueError("rear open support frame requires a square chamber")
+        if frame.mount_radius_mm + 0.5 * frame.rail_width_mm >= 0.5 * min(chamber.inner_size_x_mm, chamber.inner_size_y_mm):
+            raise ValueError("support frame rails must fit inside permanent chamber walls")
+        if frame.dock_face_z_mm + frame.socket_depth_mm + frame.frame_depth_mm >= chamber.center_z_mm + 0.5 * chamber.length_mm - chamber.wall_thickness_mm:
+            raise ValueError("support frame must fit upstream of the permanent rear wall")
     if spec.maintenance_access is not None and spec.maintenance_access.enabled:
         access_candidate = spec.maintenance_access.selected
         chamber_names = {candidate.name for candidate in spec.chamber_candidates}

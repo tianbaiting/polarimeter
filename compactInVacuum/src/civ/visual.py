@@ -35,6 +35,8 @@ def ensure_gui_session() -> None:
 
 
 def _shape_color(name: str, role: str) -> tuple[float, float, float]:
+    if name == "CommonOpenSupportFrame" or name.endswith(("FrameSocket", "PermanentWallSupport")):
+        return (0.14, 0.48, 0.63)
     if "ActivePlastic" in name:
         return (0.08, 0.72, 0.88)
     if "ReflectorEnvelope" in name:

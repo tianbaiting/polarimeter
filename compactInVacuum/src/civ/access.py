@@ -187,6 +187,14 @@ def build_maintenance_access_components(
         App.Vector(spec.center_x_mm, 0.0, spec.center_z_mm),
         axis,
     )
+    frame = cfg.compact_one.deployment.support_frame
+    if frame is not None:
+        # [EN] The lid retains its full lift envelope; the internal staged route occupies only the forepart ahead of fixed locating pins. / [CN] 盖板保留完整升降包络；腔内分阶段路线仅占用固定定位销前方区域。
+        forepart = Part.makeBox(
+            candidate.inner_size_x_mm, blank_base_y_mm, frame.lift_corridor_rear_limit_z_mm - (candidate.center_z_mm - candidate.length_mm / 2),
+            App.Vector(-candidate.inner_size_x_mm / 2, 0, candidate.center_z_mm - candidate.length_mm / 2),
+        )
+        internal_lift_corridor = internal_lift_corridor.common(forepart)
     blind_removal = Part.makeCylinder(
         0.5 * spec.flange_outer_diameter_mm,
         spec.flange_thickness_mm + 100.0,
