@@ -31,6 +31,10 @@ VIEWS = {
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     module_root = Path(__file__).resolve().parents[3]
     parser = argparse.ArgumentParser()
+    parser.add_argument("--model-root", type=Path)
+    parser.add_argument("--title", default="CompactInVacuum")
+    parser.add_argument("--basename", default="support_review")
+    parser.add_argument("--internals-only", action="store_true")
     parser.add_argument(
         "--study-root",
         type=Path,
@@ -54,14 +58,14 @@ def _display_vertices(mesh: trimesh.Trimesh) -> np.ndarray:
     return vertices[:, (0, 2, 1)]
 
 
-def _render_variant(study_root: Path, standard: str) -> None:
-    token = standard.lower()
-    mesh_dir = study_root / token / "review_meshes"
-    screenshot_dir = study_root / token / "screenshots"
+def _render_model(model_root: Path, title: str, basename: str, internals_only: bool = False) -> None:
+    mesh_dir = model_root / "review_meshes"
+    screenshot_dir = model_root / "screenshots"
     screenshot_dir.mkdir(parents=True, exist_ok=True)
     meshes = {
         name: _load_mesh(mesh_dir / f"{name}.stl")
         for name in GROUP_STYLE
+        if not internals_only or name in {"internals", "support"}
     }
     all_vertices = np.vstack([_display_vertices(mesh) for mesh in meshes.values()])
     mins = all_vertices.min(axis=0)
@@ -78,6 +82,8 @@ def _render_variant(study_root: Path, standard: str) -> None:
             "access",
             "chamber",
         ):
+            if group_name not in meshes:
+                continue
             mesh = meshes[group_name]
             vertices = _display_vertices(mesh)
             color, alpha = GROUP_STYLE[group_name]
@@ -99,12 +105,12 @@ def _render_variant(study_root: Path, standard: str) -> None:
         axis.view_init(elev=elevation, azim=azimuth)
         axis.set_axis_off()
         axis.set_title(
-            f"CompactInVacuum-afterSRC {standard} maintenance access — {view_name}",
+            f"{title} — {view_name}",
             fontsize=14,
         )
         figure.patch.set_facecolor("white")
         destination = screenshot_dir / (
-            f"CompactOne_afterSRC_access_{standard}_{view_name}.png"
+            f"{basename}_{view_name}.png"
         )
         figure.savefig(destination, bbox_inches="tight", facecolor="white")
         plt.close(figure)
@@ -114,8 +120,11 @@ def _render_variant(study_root: Path, standard: str) -> None:
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     study_root = args.study_root.resolve()
+    if args.model_root:
+        _render_model(args.model_root.resolve(), args.title, args.basename, args.internals_only)
+        return 0
     for standard in ("ICF253", "ICF305", "ICF356"):
-        _render_variant(study_root, standard)
+        _render_model(study_root / standard.lower(), f"CompactInVacuum-afterSRC {standard} maintenance access", f"CompactOne_afterSRC_access_{standard}")
     return 0
 
 
