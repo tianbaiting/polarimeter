@@ -1,4 +1,4 @@
-# CompactInVacuum Requirement Baseline v2.5
+# CompactInVacuum Requirement Baseline v2.6
 
 ## 1. Authority and scope
 
@@ -313,6 +313,7 @@ Runtime state, caches, and machine-specific files remain untracked.
 
 ## 16. Change history
 
+- 2026-09-06 v2.6: authorized one detailed RIGHT-sector boxed-carrier study on a near-detector annular support, with connector disconnection, tool access and complete controlled extraction. This is an isolated design study, not replacement of either canonical deployment.
 - 2026-09-06 v2.5: selected the common rear open C-frame, four axial-release sector docks, and top ICF305 access for both compact prototypes; retained independent complete extraction as an unresolved design target.
 
 - 2026-09-01 v2.4: clarified that sampled holder-release poses do not constitute proof of the
@@ -323,3 +324,15 @@ Runtime state, caches, and machine-specific files remain untracked.
 - 2026-07-29 v2.1: selected the square 440 × 440 mm screening chamber for CompactInVacuum-afterSRC and removed its cylindrical chamber candidate.
 - 2026-08-30 v2.2: froze the afterSRC maintenance opening as an all-metal top ICF port with an oxygen-free-copper gasket and `1.0e-10 Pa m^3/s` helium-leak criterion; added ICF253/305/356 comparison candidates, selected ICF305 for the active prototype, and kept complete sector extraction as an independently validated unresolved motion.
 - 2026-08-30 v2.3: prohibited all detector support/datum/ground ownership on the removable ICF closure; required zero-gap removable-holder-to-stationary-pad-to-permanent-wall load paths; and moved the afterSRC UP-sector mount from the opened `+Y` wall to a stationary `-X` side-wall pedestal while keeping the long wall-reaching member out of the removable holder.
+
+## 17. Boxed-sector design study
+
+The registered `compactBoxedSectorStudy` first develops one complete RIGHT sector using the unchanged three active detector positions and the afterSRC ICF305 chamber. Its candidate carrier uses two side cheeks, three nests, local crossmembers, a plane-pin-slot docking foot and an accessible draw screw. A fixed annular support near the large-angle detector transfers load to permanent side/bottom walls. The ring is retained during routine detector maintenance; segmentation and fabrication release are separate decisions.
+
+The study must include real detector-head solids, retention and docking interfaces, three passive pigtails and their disconnect envelopes, protective bonding, a defined grasping joint and the handling-tool envelope. The other three sectors are reserved by conservative module envelopes, supplemented by their actual detector-head solids. Results shall explicitly identify this single-sector scope.
+
+Maintenance is performed with the blank flange and gasket removed. Connector plugs are withdrawn and parked before the module moves. A capture tool supports the module before its draw screw is removed. The module releases inward, translates downstream, turns on a controlled joint whose axis is parallel to beam Z, centers below the opening and lifts out. The handling rod stays vertical. This refines the conceptual beam-axis turn into an executable tool-controlled motion.
+
+Check the complete modeled motion against permanent support, chamber, flange, services and the three reserved sectors. Discrete clear poses alone do not prove motion clearance: use analytic swept envelopes or interval certificates based on minimum shape distance and an upper bound on point displacement. Any collision or interval left uncertified shall fail the motion gate. Intended mating contacts require explicit geometric certificates; they cannot be bypassed by blanket obstacle exclusions. The full aperture is retained; do not shrink an arbitrary keepout to make a mechanism pass.
+
+Transport dimensions, microcoax bend radius, connector/capture-tool envelopes and fabrication details are provisional. Geometry certification applies only to those modeled envelopes. Supplier/material qualification, stiffness, clamp preload, human reach/handling forces and available external headroom remain strict evidence gates. No manufacturing release or four-sector detailed-assembly claim follows from this study.

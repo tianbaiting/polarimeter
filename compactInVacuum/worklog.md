@@ -436,3 +436,93 @@ Entry Template:
 - Validation Result: 47/47 pure-Python tests PASS; all seven FreeCAD runtime groups PASS (common frame, detector head, sector holder, internal/services including deliberate release obstruction, categorized validation, access candidates, document roles). Both canonical reports PASS non-strict with 51 passes / 10 warnings / 0 failures. Both STEP files reopen valid with 214 solids. These are prototype results, not strict fabrication release or proof of complete independent extraction.
 - Artifacts/State: both canonical FCStd/STEP/JSON artifacts and states current; assembly PNGs for both deployments and focused support PNGs for afterSRC visually checked. Generated artifacts remain untracked. Render tooling committed separately as b20e6ed.
 - Next Action: review the new common-frame layout with the user; develop the complete sector transfer/reorientation/lift path and resolve structural/tool-access/fabrication evidence before release.
+
+- Timestamp UTC: 2026-09-06T11:44:42+00:00
+- Timestamp Local: 2026-09-06T20:44:42+09:00
+- Module/Scope: compactBoxedSectorStudy first validation
+- Command(s): `./compactInVacuum/studies/boxed_sector/run.sh --validate-only`
+- Key Parameters/Overrides: one RIGHT boxed module; annular support near z=140 mm; 14 mm inward release and 100 mm downstream transfer; three parked coax connections and capture-tool envelope; study-local state and native flock.
+- Validation Result: static geometry checks found intersections/contact and LOS issues; motion certification was not attempted. Manifest export then raised a KeyError because the shared coincidence manifest requires all twelve placement records; state records error and the generated report retains the diagnostic findings.
+- Artifacts/State: only study-local report/state written; canonical deployment artifacts unchanged.
+- Next Action: fix module interferences, verify finite contact faces and correct the study manifest scope before retrying.
+
+- Timestamp UTC: 2026-09-06T11:53:47+00:00
+- Timestamp Local: 2026-09-06T20:53:47+09:00
+- Module/Scope: compactBoxedSectorStudy second validation
+- Command(s): `./compactInVacuum/studies/boxed_sector/run.sh --validate-only`
+- Key Parameters/Overrides: separated coax layers; opened connector pockets; machined full-cone nest relief; finite-area contacts evaluated using planar-face intersections because OCC solid common removes zero-volume contacts.
+- Validation Result: fail; generated report {'pass_count': 18, 'warning_count': 5, 'fail_count': 2}. Contact/load-path, all twelve acceptance cones, capture workspace, pin release and driver sweeps pass. One large-angle pigtail/clamp interference remains; motion certification not yet attempted.
+- Artifacts/State: study-local report/manifest/state only.
+- Next Action: lead the large-angle pigtail rearward before its inward return, then rerun.
+
+- Timestamp UTC: 2026-09-06T11:59:02+00:00
+- Timestamp Local: 2026-09-06T20:59:02+09:00
+- Module/Scope: compactBoxedSectorStudy third validation
+- Command(s): `./compactInVacuum/studies/boxed_sector/run.sh --validate-only`
+- Key Parameters/Overrides: large-angle cable takes a rearward bend before its inward return; all structural and service components included.
+- Validation Result: static geometry, finite-area load paths, all twelve acceptances, head withdrawal, pin/driver sweeps and capture workspace pass. Signal disconnect/parking intervals certify; ground-disconnect stage fails and full extraction remains uncertified.
+- Artifacts/State: study-local failed report/state; no promotion or canonical rebuild.
+- Next Action: resolve the reported ground contact/motion issue and continue interval certification.
+
+- Timestamp UTC: 2026-09-06T12:12:58+00:00
+- Timestamp Local: 2026-09-06T21:12:58+09:00
+- Module/Scope: compactBoxedSectorStudy fourth validation, interrupted for acceleration
+- Command(s): `./compactInVacuum/studies/boxed_sector/run.sh --validate-only`
+- Key Parameters/Overrides: same geometry; exact OCC bounds for intended separating-plane contacts; explicit analytic mating certificates required.
+- Validation Result: preparation, release, downstream transfer, controlled turn and centering certified in the running process. Final lift was interrupted before report/state completion because repeated exact hollow-body distance queries were expensive; no complete-motion pass is claimed from this invocation.
+- Artifacts/State: previous failed state/report retained; native flock released normally when the owned process exited.
+- Next Action: validate independently empty geometric regions as distance lower bounds, then rerun the full study.
+
+- Timestamp UTC: 2026-09-06T12:18:16+00:00
+- Timestamp Local: 2026-09-06T21:18:16+09:00
+- Module/Scope: compactBoxedSectorStudy fifth validation
+- Command(s): `./compactInVacuum/studies/boxed_sector/run.sh --validate-only`
+- Key Parameters/Overrides: same detailed module and tool geometry; exact empty-region checks accelerate the conservative distance/displacement certificates; no obstacles removed or motion-clearance thresholds relaxed.
+- Validation Result: prototype non-strict pass; {'pass_count': 36, 'warning_count': 5, 'fail_count': 0}. All 12 interval-certified preparation/handling phases plus analytic pin, jaw and screw/driver sweeps pass. Complete modeled RIGHT-sector extraction certified. Port radial allowance 8.598 mm; modeled tool headroom above closure 408.850 mm.
+- Artifacts/State: study-local successful report/manifest/state; canonical deployment files unchanged.
+- Next Action: full study export and visual review; preserve the single-detailed-sector scope and open supplier/structural/human-factor gates.
+
+- Timestamp UTC: 2026-09-06T12:28:15+00:00
+- Timestamp Local: 2026-09-06T21:28:15+09:00
+- Module/Scope: compactBoxedSectorStudy first complete CAD export
+- Command(s): `./compactInVacuum/studies/boxed_sector/run.sh`
+- Key Parameters/Overrides: current source/configuration; one detailed RIGHT sector, annular support and twelve certified preparation/handling phases; no CLI overrides.
+- Validation Result: prototype non-strict pass; {'pass_count': 36, 'warning_count': 5, 'fail_count': 0}; complete modeled extraction certified.
+- Artifacts/State: standalone BoxedSector_RIGHT FCStd/STEP, installed BoxedSectorStudy FCStd/STEP, five transformed keypose FCStd documents, geometry metrics, manifest and state generated in artifacts/boxed_sector.
+- Next Action: inspect generated geometry and keypose views, complete final regression checks and commit task-owned sources.
+
+- Timestamp UTC: 2026-09-06T12:33:51+00:00
+- Timestamp Local: 2026-09-06T21:33:51+09:00
+- Module/Scope: compactBoxedSectorStudy export interrupted by GUI document closure
+- Command(s): `./compactInVacuum/studies/boxed_sector/run.sh`
+- Key Parameters/Overrides: added flexible-loom workspace check; capture head explicitly classified as a provisional purchased envelope; unchanged physical geometry.
+- Validation Result: geometry and complete modeled motion PASS ({'pass_count': 37, 'warning_count': 5, 'fail_count': 0}); export then raised a deleted-document ReferenceError after the GUI session closed. State records error; the partial export is not treated as completed delivery.
+- Artifacts/State: study-local report and partial CAD files; canonical modules unchanged.
+- Next Action: hide the batch worker GUI while keeping its native view providers, then regenerate the full artifact set.
+
+- Timestamp UTC: 2026-09-06T12:42:01+00:00
+- Timestamp Local: 2026-09-06T21:42:01+09:00
+- Module/Scope: compactBoxedSectorStudy complete delivery rebuild
+- Command(s): `./compactInVacuum/studies/boxed_sector/run.sh`
+- Key Parameters/Overrides: unchanged detailed geometry; hidden worker GUI preserves native view providers during export; source formatting and CLI override hashing finalized; no geometry overrides.
+- Validation Result: prototype non-strict PASS ({'pass_count': 37, 'warning_count': 5, 'fail_count': 0}); all modeled motion phases certify. Current source/config fingerprint matches stored state; all expected CAD files exist.
+- Artifacts/State: complete standalone sector, installed scene and five extraction keyposes regenerated in artifacts/boxed_sector; study-local state pass.
+- Next Action: final STEP reopen and visual artifact inspection, then commit only task-owned source/config/test/worklog files.
+
+- Timestamp UTC: 2026-09-06T13:17:46+00:00
+- Timestamp Local: 2026-09-06T22:17:46+09:00
+- Module/Scope: compactBoxedSectorStudy supported service-parking completion
+- Command(s): `./compactInVacuum/studies/boxed_sector/run.sh`; `./compactInVacuum/studies/boxed_sector/run_tests.sh`
+- Key Parameters/Overrides: wall-mounted three-position plug comb with collar seats; two ground-jumper support pegs; plugs first withdraw upward, move laterally, then lower onto seats; ground jumper similarly lowers onto its pegs. The detailed carrier and main extraction geometry are unchanged.
+- Validation Result: prototype non-strict PASS ({'pass_count': 41, 'warning_count': 5, 'fail_count': 0}); all 14 preparation/handling phases certify. Physical parking support and analytic plug-seating sweeps pass. Python tests 56/56 and motion/contact/void-region regression checks pass.
+- Artifacts/State: standalone carrier, installed scene and extraction keyposes regenerated; study-local state pass.
+- Next Action: inspect final parking fixtures in the review views and commit the completed study sources.
+
+- Timestamp UTC: 2026-09-06T13:27:00+00:00
+- Timestamp Local: 2026-09-06T22:27:00+09:00
+- Module/Scope: compactBoxedSectorStudy final artifact and source QA
+- Command(s): `./compactInVacuum/studies/boxed_sector/run_tests.sh`; FreeCAD STEP reopen for standalone carrier and installed scene; `export_review_meshes.py --source <verified FCStd> --output-dir <review directory> --include-review-context`; `render_review_meshes.py --model-root <review directory> --title <title> --basename <view set>`; current source/config fingerprint audit; `git diff --check`.
+- Key Parameters/Overrides: one detailed RIGHT module, three conservative neighboring reservations, physical plug parking comb and ground hangers; native beam-axis-consistent Isometric/Front/Top/Right renders; capture head is an envelope with internal guides/latch unresolved.
+- Validation Result: 56 Python tests PASS; thin/contained/rotational obstruction, uncertified-interval, contact and false-void regression checks PASS. Final prototype report: {'pass_count': 41, 'warning_count': 5, 'fail_count': 0}; 14 phases / 265 certified intervals, plus analytic mating sweeps. Source/config fingerprint matches state. Carrier STEP reopens valid with 60 solids; installed scene STEP with 98 solids. Visual checks cover carrier faces, installation, extraction and supported service parking.
+- Artifacts/State: complete files under compactInVacuum/artifacts/boxed_sector; final preview sets under review_sector_final, review_installed_delivery and review_extracted_delivery. Canonical afterSRC/preSAMURAI artifacts retained. Render improvements committed as 600016e; generated CAD/state/reports/meshes/images excluded from Git.
+- Next Action: review the detailed single-sector prototype with the user before adapting the remaining sectors; close supplier, strength/preload, manufacturing and real handling/site evidence before fabrication release.

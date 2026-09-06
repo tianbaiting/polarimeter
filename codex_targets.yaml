@@ -8,6 +8,12 @@ active_modules:
     target: compactInVacuum/target_compact_one_infrontSamurai.yaml
     state: compactInVacuum/compactOne_infrontSamurai.state.json
 
+  # [EN] Single-sector mechanical/extraction study, not a third instrument / [CN] 单扇区机构与取出研究，不是第三台仪器
+  - name: compactBoxedSectorStudy
+    role: design_study
+    target: compactInVacuum/studies/boxed_sector/target.yaml
+    state: compactInVacuum/studies/boxed_sector/state/study.state.json
+
   # [EN] Compatibility numerical/CAD scaffold, not a third baseline instrument / [CN] 兼容性数值/CAD 骨架，不是第三台基线仪器
   - name: compactInVacuum
     target: compactInVacuum/target.yaml

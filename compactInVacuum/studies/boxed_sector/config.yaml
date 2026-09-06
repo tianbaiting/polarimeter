@@ -1,0 +1,101 @@
+extends: ../../config/afterSRC_compact.yaml
+doc_name: BoxedSectorStudy
+deployment:
+  support_frame:
+
+boxed_sector_study:
+  sector: right
+  cheek_inner_half_width_mm: 18.0
+  cheek_thickness_mm: 3.0
+  carrier_r_min_mm: 23.0
+  carrier_r_max_mm: 182.0
+  carrier_z_min_mm: 110.0
+  carrier_z_max_mm: 205.0
+  cheek_corner_radius_mm: 4.0
+  cheek_windows_mm: [[62.0, 141.0, 95.0, 53.0, 6.0], [72.0, 117.0, 73.0, 15.0, 4.0]]
+  front_brace_mm: [90.0, 110.0, 14.0, 6.0]
+  rear_bridge_depth_mm: 6.0
+  rear_bridge_attachment_r_mm: 157.0
+  nest_boss_tangent_mm: 15.3
+  nest_boss_radius_mm: 2.7
+  clamp_width_local_x_mm: 10.0
+  side_attachment_local_x_mm: 8.0
+  side_bolt_radius_mm: 1.0
+  side_bolt_head_radius_mm: 2.0
+  side_bolt_head_depth_mm: 1.2
+  fastener_clearance_mm: 0.25
+  ring_inner_radius_mm: 185.0
+  ring_outer_radius_mm: 205.0
+  ring_front_z_mm: 135.0
+  ring_depth_mm: 10.0
+  wall_foot_width_mm: 24.0
+  dock_plane_r_mm: 182.0
+  dock_depth_mm: 6.0
+  dock_z_min_mm: 143.0
+  dock_z_max_mm: 166.0
+  pin_center_z_mm: 150.0
+  pin_tangent_spacing_mm: 18.0
+  pin_diameter_mm: 3.0
+  pin_projection_mm: 8.0
+  pin_bore_diameter_mm: 3.5
+  slot_length_mm: 6.0
+  draw_screw_head_mm: [177.0, 15.0, 160.0]
+  draw_screw_access_direction: [-72.0, 220.0, 40.0]
+  draw_screw_shaft_radius_mm: 1.5
+  draw_screw_shaft_length_mm: 24.0
+  draw_screw_head_radius_mm: 2.8
+  draw_screw_head_depth_mm: 3.0
+  draw_screw_withdrawal_mm: 36.0
+  screwdriver_radius_mm: 2.5
+  screwdriver_length_mm: 360.0
+  grip_center_mm: [70.0, 0.0, 190.0]
+  grip_pin_radius_mm: 3.0
+  grip_pin_length_mm: 8.0
+  grip_head_radius_mm: 6.0
+  grip_bearing_clearance_mm: 0.15
+  grip_head_depth_mm: 6.0
+  grip_rod_radius_mm: 3.0
+  grip_rod_length_mm: 350.0
+  grip_jaw_open_offset_mm: [14.0, -12.0, 0.0]
+  grip_fork_half_width_mm: 5.0
+  grip_fork_plate_depth_mm: 2.0
+  grip_fork_anchor_r_mm: 55.0
+  grip_relief_z_half_span_mm: 6.0
+  cable_radius_mm: 0.5
+  cable_bend_radius_mm: 5.0
+  connector_radius_mm: 3.0
+  connector_body_length_mm: 6.0
+  connector_r_mm: 170.0
+  connector_z_mm: [168.0, 200.0, 179.0]
+  cable_turn_r_mm: [120.0, 80.0, 145.0]
+  cable_lane_y_mm: [10.0, 10.0, 16.0]
+  cable_lane_merge_r_mm: [130.0, 120.0, 154.0]
+  large_angle_cable_turn_z_mm: 142.0
+  connector_plug_length_mm: 12.0
+  connector_plug_collar_radius_mm: 4.0
+  connector_plug_collar_depth_mm: 2.0
+  connector_withdrawal_mm: 100.0
+  connector_parking_x_mm: 210.0
+  connector_parking_y_mm: 80.0
+  parking_clip_outer_radius_mm: 5.0
+  parking_clip_bore_radius_mm: 3.2
+  parking_clip_y_mm: [84.0, 90.0]
+  parking_backplate_mm: [214.5, 70.0, 96.0, 153.0, 207.0]
+  ground_parking_pegs_mm: [199.0, 203.0, 114.2, 152.0, 158.0]
+  ground_parking_peg_radius_mm: 2.0
+  ground_parking_backplate_mm: [197.0, 110.0, 116.2, 150.0, 152.0]
+  ground_parking_translation_mm: [18.0, 90.0, 0.0]
+  ground_bond_radius_mm: 0.8
+  radial_release_mm: 14.0
+  downstream_translation_mm: 100.0
+  rotation_deg: 90.0
+  lift_mm: 360.0
+  neighbor_r_min_mm: 22.5
+  neighbor_r_max_mm: 182.0
+  neighbor_half_width_mm: 21.0
+  neighbor_z_min_mm: 110.0
+  neighbor_z_max_mm: 205.0
+  continuous_clearance_mm: 0.10
+  interval_min_fraction: 0.00001
+  interval_max_depth: 20
+  collision_volume_tolerance_mm3: 0.000001

@@ -1,0 +1,28 @@
+schema_version: 1
+module: compactBoxedSectorStudy
+intent:
+  description: One detailed RIGHT-sector boxed carrier with passive services and controlled ICF305 extraction, evaluated against three reserved neighboring sectors.
+  requirements:
+    - unchanged_active_detector_centers_and_axes
+    - stationary_ring_on_permanent_side_and_bottom_walls
+    - top_closure_owns_no_detector_load
+    - capture_before_unlocking
+    - disconnect_and_park_services_before_module_motion
+    - continuously_certified_modeled_extraction
+    - supplier_structural_and_human_factors_evidence_remains_provisional
+build:
+  config: config.yaml
+  doc_name: BoxedSectorStudy
+  mode: boxed_sector_study
+  overrides: []
+validation:
+  strict: false
+  angle_tolerance_deg: 0.05
+  radius_tolerance_mm: 0.2
+output:
+  output_dir: ../../artifacts/boxed_sector
+  basename: BoxedSectorStudy
+  formats: [fcstd, step]
+artifacts:
+  report_json: ../../artifacts/boxed_sector/BoxedSectorStudy.validation_report.json
+  channel_manifest_json: ../../artifacts/boxed_sector/BoxedSectorStudy.channel_manifest.json

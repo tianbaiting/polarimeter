@@ -202,6 +202,10 @@ def main(argv: list[str] | None = None) -> int:
     cfg = load_config(str(config_path), overrides=overrides)
     cfg = _apply_target_doc_name(cfg, target)
 
+    if build_cfg.get("mode") == "boxed_sector_study":
+        from .boxed.runner import run_study
+        return run_study(args, target, target_path, state_path, cfg, config_path, pipeline_index)
+
     if args.dump_resolved_config:
         print(dump_config_yaml(cfg), end="")
         return 0
