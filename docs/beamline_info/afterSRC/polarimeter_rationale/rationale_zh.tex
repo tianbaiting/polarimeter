@@ -1,0 +1,177 @@
+% !TEX program = xelatex
+% [EN] Signed bends and spin angles refer to the two local beam frames. / [CN] 带符号弯角与自旋转角均以两站局部束流坐标为约定。
+\documentclass[UTF8,11pt,a4paper,fontset=none]{ctexart}
+\usepackage[margin=23mm,headheight=15pt]{geometry}
+\setCJKmainfont{Noto Serif CJK SC}
+\setCJKsansfont{Noto Sans CJK SC}
+\setCJKmonofont{Noto Sans Mono CJK SC}
+\setmainfont{TeX Gyre Termes}
+\setsansfont{TeX Gyre Heros}
+\usepackage{amsmath,amssymb,bm,booktabs,tabularx,array,xcolor,fancyhdr}
+\usepackage{xurl}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+\definecolor{ink}{HTML}{193B55}
+\ctexset{section={format=\large\bfseries\sffamily\color{ink}},subsection={format=\normalsize\bfseries\sffamily\color{ink}}}
+\linespread{1.08}
+\setlength{\parskip}{3pt}
+\setlength{\emergencystretch}{2em}
+\renewcommand{\arraystretch}{1.18}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\pvec}{\bm p}
+\newcommand{\Pt}{\mathsf P}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\sffamily SRC 后极化仪的安装理由}
+\fancyhead[R]{\small BigDpol/T11 与 F13}
+\fancyfoot[C]{\thepage}
+\hypersetup{pdftitle={为什么在 SRC 后安装极化仪},pdfauthor={DPOLAR 项目}}
+\title{\sffamily\color{ink}为什么在 SRC 后安装极化仪\\[4pt]
+\large 原 BigDpol/T11 站与 F13 站的互补作用}
+\author{DPOLAR 项目}
+\date{资料核对：2026 年 9 月 8 日}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+\noindent
+在 SRC 后原 BigDpol/T11 位置安装极化仪，可建立一个便于调束的高能上游极化基准；与 F13 极化仪配合，可以分段判断异常，并利用两站间的自旋旋转增加密度矩阵测量的独立信息。本文的第二站指 \textbf{BigRIPS 下游、SAMURAI 反应靶前的 F13 入射束线}。两站分别位于主要输运弯转的前后：
+\begin{equation*}
+\begin{aligned}
+\mathrm{SRC}\to DMT1\to
+\boxed{\mathrm{BigDpol/T11}}&\to DMT2,DMT3\to F0\\[-1pt]
+&\to\mathrm{BigRIPS}\ (F0\text{--}F7)\to\boxed{F13}.
+\end{aligned}
+\end{equation*}
+BigDpol 位于 DMT1 下游、DMT2 上游；SAMURAI 分析磁铁位于反应靶后，不计入两站之间的入射束自旋输运。站位与几何沿用仓库的密度矩阵专题记录及其原始束线资料\cite{local,geometry}。
+
+\section{较高的上游束流率可缩短调束反馈时间}
+
+SRC 至 BigRIPS 入口属于一次束输运段，具备利用较高一次束流强调试极化的条件基础。官方 SRC 表中，$250\,\mathrm{MeV/u}$ 偏振氘束的实验规划值为 $30\,\mathrm{pnA}$，并注明需要相应源开发；BigRIPS 官方规定的 F3 总束流率上限为 $10^7\,\mathrm{s^{-1}}$\cite{current,limit}。两者分别描述加速器供束能力与下游总率条件，说明上游测量具有流强余量的潜力；该规划值不直接代表本次 $190\,\mathrm{MeV/u}$ 运行能够取得的流强。
+
+在靶厚、接受度、分析本领及有效活时间比例固定时，极化精度与所需时间近似满足
+\begin{equation}
+ N\propto I_{\mathrm b}t,\qquad
+ \sigma(P)\propto N^{-1/2},\qquad
+ t_{\sigma(P)=\mathrm{const}}\propto I_{\mathrm b}^{-1}.
+\end{equation}
+因此，在探测器线性计数范围内，提高上游有效束流率可更快比较 PIS/RF 模式、Wien filter 轴向设置和加速器取出条件，及时判断调节是否改善了极化，而不必每次等待完整下游束线完成调试。
+
+这项优势对应\textbf{设施允许的上游本地调束模式}：束流在允许的终止位置被接收，或按已认可的方案衰减后继续输送。2025 年 BIS 报告表明，一次束进入 BigRIPS 的许可会检查加速器上游 ATT 的衰减状态\cite{bis}；因此不能据此保证同一送束模式下 T11 始终高流强而 F13 始终低流强。
+
+\section{两站给出上游基准与下游结果，便于分段定位异常}
+
+T11 测量源、加速器及其上游输运共同产生的高能束流极化；F13 测量实际到达实验端的极化。在相同源模式及可比较的束流条件下，应将 F13 结果与 T11 结果经标称自旋输运得到的预测比较。
+
+\begingroup\small\noindent
+\begin{tabularx}{\linewidth}{@{}p{0.37\linewidth}Y@{}}
+\toprule
+测量现象 & 优先检查的区段或原因 \\
+\midrule
+T11 已偏离参考极化 & 源模式、调轴、加速器取出条件及 T11 上游输运。\\
+T11 正常，F13 偏离输运预测 & 两站之间的磁场／轨道、接受度与束流选择，以及 F13 仪器响应。\\
+两站变化符合标称输运关系 & 优先追踪共同的上游变化，减少对下游磁铁的盲目调整。\\
+\bottomrule
+\end{tabularx}
+\endgroup
+
+比较前应校正两站效率、活时间、束斑与接受度；狭缝改变所选束流样本时也应纳入比较。双站提供的是区段诊断依据，单凭两点测量不能直接确定某一台磁铁故障。
+
+\clearpage
+\section{两站间的弯转提供密度矩阵重构所需的独立投影}
+
+\subsection{160 度轨道弯转在 190 MeV/u 下对应 27.513 度相对自旋旋转}
+
+取每站 $z$ 轴沿当地束流、$y$ 轴竖直、$x$ 轴使坐标系为右手系。沿用专题记录的符号约定，DMT2、DMT3 各贡献 $-50^\circ$；BigRIPS 的 D1--D6 为 $(-30,-30,-30,+30,+30,-30)^\circ$，净弯角为 $-60^\circ$；F7 至靶前 F13 的中心入射轨道不增加净弯角\cite{local,geometry}。故
+\begin{equation}
+ \Theta_{\mathrm{T11}\to F13}=(-50^\circ-50^\circ)-60^\circ+0^\circ=-160^\circ.
+\end{equation}
+这里 $160^\circ$ 是带符号轨道弯转的\textbf{净值的大小}，不是所有弯铁角度绝对值之和。
+
+对能量近似不变、横向偶极场主导的水平中心轨道，Thomas--BMT 方程给出\cite{bmt,constants}
+\begin{align}
+ \psi_{\mathrm{lab}}&=(1+G_d\gamma)\Theta,&
+ \delta&=\psi_{\mathrm{lab}}-\Theta=G_d\gamma\Theta,\\
+ G_d&=-0.14298726968,&
+ \gamma&=1+\frac{2T_u}{m_dc^2},\quad m_dc^2=1875.612945\,\mathrm{MeV}.
+\end{align}
+$T_u$ 为每核子动能。取 $T_u=190\,\mathrm{MeV/u}$，则氘核总动能为 $380\,\mathrm{MeV}$，$\gamma=1.20260044$，得到
+\begin{equation}
+ \boxed{\psi_{\mathrm{lab}}=-132.487^\circ,\qquad
+ \delta=+27.513^\circ.}
+\end{equation}
+两极化仪的联合分析使用相对各自束流坐标的 $\delta$。该数值是上述中心轨道近似的计算值；改变能量或插入显著降能材料时，应重新计算，不能把 $27.513^\circ$ 当作与能量无关的常数。
+
+\subsection{矢量方向与张量主轴服从同一个空间旋转}
+
+令 $c=\cos\delta$、$s=\sin\delta$，两站之间的矢量和对称无迹张量分别满足
+\begin{equation}
+ R_y(\delta)=\begin{pmatrix}c&0&s\\0&1&0\\-s&0&c\end{pmatrix},\qquad
+ \pvec_{13}=R_y\pvec_{\mathrm{T11}},\qquad
+ \Pt_{13}=R_y\Pt_{\mathrm{T11}}R_y^{\mathsf T}.
+\end{equation}
+若某一张量主轴为 $\hat{\bm n}$，变换后的主轴就是 $R_y\hat{\bm n}$。所以矢量与张量\textbf{没有两套不同的主轴进动角}。以初始轴沿束流 $z$ 为例，二者均变为
+\begin{equation}
+ \hat{\bm n}_{13}=(\sin\delta,0,\cos\delta)
+ =(0.461951,0,0.886906),
+\end{equation}
+即相对当地束流偏转 $27.513^\circ$。矢量有正负方向，张量主轴则以 $\hat{\bm n}$ 与 $-\hat{\bm n}$ 表示同一条轴。
+
+\begingroup\small\noindent
+\begin{tabularx}{\linewidth}{@{}p{0.28\linewidth}YY@{}}
+\toprule
+量 & 190 MeV/u 的结果 & 物理含义 \\
+\midrule
+初始沿 $z$ 的矢量方向 & $+27.513^\circ$ & 绕竖直 $y$ 轴旋转。\\
+初始沿 $z$ 的张量主轴 & $+27.513^\circ$（模 $180^\circ$） & 同一空间旋转，主轴没有箭头。\\
+张量分量的二倍角 & $2\delta=55.026^\circ$ & 出现在 $\sin2\delta$、$\cos2\delta$ 中，不是主轴转角。\\
+初始沿 $y$ 的方向／单轴张量 & 轴偏转为 $0^\circ$ & 轴平行旋转轴；竖直极化保持不变。\\
+\bottomrule
+\end{tabularx}
+\endgroup
+
+例如 $p'_{xz}=\tfrac12\sin2\delta\,(p_{zz}-p_{xx})+\cos2\delta\,p_{xz}$。
+二倍角源于二阶张量的分量变换；对于一般倾斜的主轴，应直接使用 $R_y\hat{\bm n}$ 求方向，而不把其空间夹角一律写成 $27.513^\circ$。
+
+\clearpage
+\subsection{已知旋转把单站盲分量投影到第二站可见通道}
+
+一般自旋 $1$ 的归一化密度矩阵包含三个矢量分量和五个张量分量，共八个独立实参数。对本项目的多极角 L/R/U/D 几何，理想标定下单站可辨识六个组合；纵向矢量 $p_z$ 不进入散射响应，而张量 $p_{xy}$ 所乘的 $\sin2\phi$ 在四个正交方位为零\cite{local}。
+
+两站间的已知旋转使
+\begin{align}
+ p'_x&=c\,p_x+s\,p_z,\\
+ p'_{yz}&=-s\,p_{xy}+c\,p_{yz}.
+\end{align}
+在 $190\,\mathrm{MeV/u}$ 下，$s=0.461951\ne0$：第一站看不到的 $p_z$ 和 $p_{xy}$，分别以 $+0.461951$ 与 $-0.461951$ 的系数进入第二站的可见分量。两站因此形成互补的测量投影。
+
+\begin{center}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+标定及归一化受约束的多极角响应 & 矢量＋张量 & 仅张量 \\
+\midrule
+一站，或两站无相对自旋旋转 & $6/8$ & $4/5$ \\
+T11 与 F13，已知 $R_y(27.513^\circ)$ & $8/8$ & $5/5$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+上述秩结论要求不同极角提供非简并的分析本领组合，并有受约束的归一化、效率及输运模型。它说明可辨识性，不等同于任意计数率下都能高精度重构。仅测已知竖直轴上的张量幅度时，一站即可完成该幅度测量；完整密度矩阵测量才需要解除这些单站盲方向。
+
+因此，对\textbf{现有相同方位布局的两台极化仪}，两站间提供独立投影的非退化自旋旋转是必要条件，现有束线弯转正好提供这一条件。必要的是测量投影的独立性；其他可控自旋旋转或测量几何也可实现这一点，轨道拐弯并非所有密度矩阵测量方案的普遍必要条件。
+
+\begingroup\footnotesize
+\setlength{\parskip}{0pt}
+\begin{thebibliography}{8}
+\setlength{\itemsep}{3pt}
+\bibitem{local} DPOLAR，氘核自旋密度矩阵、束流输运与极化计可辨识性，本站位、分量约定及两站响应的详细推导。仓库文件：
+\path{docs/code/tensor_identifiability/deuteron_spin_density_matrix/main.tex}。
+\bibitem{geometry} K. Sekiguchi 等，Plan of Measurement of Polarized Deuteron--Proton Scattering at RIBF，RIKEN APR 42 (2009), 27；K. Kusaka 等，Present status of the beam transport line from SRC to BigRIPS，RIKEN APR 51 (2018), 173，\url{https://www.nishina.riken.jp/researcher/APR/APR051/pdf/173.pdf}。
+BigRIPS D1--D6 角度及 SAMURAI 支线几何：\url{https://ribf.riken.jp/BigRIPSInfo/}；标准几何模板 \href{https://ribf.riken.jp/BigRIPSInfo/lise/NoUCSF_Be_fragmentation_Standard_SAMURAI.lpp}{NoUCSF\_Be\_fragmentation\_Standard\_SAMURAI.lpp}，仅用于几何，不作为偏振氘束运行设定。
+\bibitem{current} RIKEN，Accelerator Technical Information，SRC 表及源开发脚注：\url{https://www.nishina.riken.jp/ribf/accelerator/tecinfo.html}。
+\bibitem{limit} RIKEN，Secondary beam intensity expected，F3 总率要求：\url{https://www.nishina.riken.jp/ribf/BigRIPS/intensity.html}。
+\bibitem{bis} M. Komiyama 等，Development of a machine protection beam interlock system for the RIBF，RIKEN APR 58 (2025), 98--99：\url{https://www.nishina.riken.jp/researcher/APR/APR058/pdf/98.pdf}。
+\bibitem{bmt} V. Bargmann, L. Michel, V. L. Telegdi, Phys. Rev. Lett. 2 (1959), 435--436，\href{https://doi.org/10.1103/PhysRevLett.2.435}{doi:10.1103/PhysRevLett.2.435}。
+\bibitem{constants} P. J. Mohr 等，CODATA Recommended Values of the Fundamental Physical Constants: 2022，Rev. Mod. Phys. 97 (2025), 025002，\href{https://doi.org/10.1103/RevModPhys.97.025002}{doi:10.1103/RevModPhys.97.025002}。本项目数值实现：\path{analysis/spin_transport/bmt.py}。
+\end{thebibliography}
+\endgroup
+\end{document}
