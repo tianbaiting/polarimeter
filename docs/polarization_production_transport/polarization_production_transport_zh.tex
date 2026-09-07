@@ -1,0 +1,389 @@
+% !TEX program = xelatex
+% [EN] Source screenshots retain the original pixels; page locators include PDF covers. / [CN] 文献截图保留原始像素，PDF 页码包含封面。
+\documentclass[UTF8,11pt,a4paper,fontset=none]{ctexart}
+\usepackage[margin=23mm,headheight=15pt]{geometry}
+\setCJKmainfont{Noto Serif CJK SC}
+\setCJKsansfont{Noto Sans CJK SC}
+\setCJKmonofont{Noto Sans Mono CJK SC}
+\setmainfont{TeX Gyre Termes}
+\setsansfont{TeX Gyre Heros}
+\linespread{1.13}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{graphicx,float,caption}
+\usepackage{booktabs,tabularx,longtable,array}
+\usepackage{xcolor,fancyhdr,enumitem}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{xurl}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+\graphicspath{{figures/}}
+\definecolor{ink}{HTML}{193B55}
+\definecolor{soft}{HTML}{EDF3F7}
+\ctexset{section={format=\Large\bfseries\sffamily\color{ink}},subsection={format=\large\bfseries\sffamily\color{ink}}}
+\captionsetup{font=small,labelfont=bf,labelsep=quad}
+\setlength{\parskip}{3pt}
+\setlength{\emergencystretch}{2em}
+\setlist{nosep,leftmargin=1.6em}
+\renewcommand{\arraystretch}{1.22}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\sffamily RIKEN 极化氘束：产生、输运与实验交接}
+\fancyhead[R]{\small 2026-09-07}
+\fancyfoot[C]{\thepage}
+\newcommand{\unit}[1]{\,\mathrm{#1}}
+\newcommand{\src}[2]{\cite[#2]{#1}}
+\newcommand{\key}[1]{\par\noindent\colorbox{soft}{\parbox{\dimexpr\linewidth-2\fboxsep}{#1}}\par}
+\newcommand{\screenshot}[4]{\begin{figure}[H]\centering\includegraphics[width=#2\linewidth]{#1}\caption{#3}\label{#4}\end{figure}}
+\hypersetup{pdftitle={RIKEN 极化氘束的产生、输运与极化测量},pdfauthor={Polarimeter 项目技术资料整理}}
+\title{\sffamily\color{ink}RIKEN 极化氘束的产生、输运与极化测量\\[5pt]\large 面向 SAMURAI 实验的技术链与 Sekiguchi 团队工作交接}
+\author{Polarimeter 项目技术资料整理}
+\date{资料核对日期：2026 年 9 月 7 日}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+\begin{abstract}
+RIKEN 极化氘束的实验能力由三部分共同形成：离子源设定磁子态布居及极化轴，回旋加速器通过单圈取出维持可控自旋相位，极化仪通过已标定的反应分析本领确定束流状态。对 SAMURAI 实验，最终需要给出的是实际反应顶点处、逐源模式且带不确定度的极化，而不是只引用离子源的名义极化率。Sekiguchi 团队的公开工作覆盖核极化技术、极化测量与散射实验系统；承担相应实验支持，需要把源模式接口、参考标定、两站测量、靶点输运和运行质量控制连成可复算的链条。本文从用户提供的共享聊天出发，按原始文献核对事实，附十一幅原始 PDF 局部截图，并同时标注 PDF 页码、文内页码及图表位置。
+\end{abstract}
+\key{\textbf{核心交付：}每个有效时间段、每个源模式在实际靶点的 $p_i$、$p_{ij}$ 或经验证的轴对称参数 $P,T,\hat{\bm n}$，以及对应标定、输运配置和协方差。}
+\vspace{3mm}
+\begingroup\small
+\setlength{\parskip}{0pt}
+\setcounter{tocdepth}{1}
+\tableofcontents
+\endgroup
+
+\clearpage
+\section{把产生、加速、输运与测量接成一条链}
+
+本文围绕约 $190\unit{MeV/u}$ 极化氘束与 SAMURAI 实验需求整理。共享聊天\cite{SharedChat}提供问题范围和检索线索；实验事实以文献正文、正式进展报告或报告人的会议材料为依据。文中的“交接建议”和“模型推导”分别表示面向本实验的工作安排与物理推演，不等同于设施已经承诺的配置。
+
+历史高能极化束链可概括为
+\begin{equation*}
+\mathrm{PIS}\to\mathrm{Wien\ filter}\to\mathrm{AVF}\to\mathrm{RRC}\to\mathrm{SRC}.
+\end{equation*}
+Sakamoto 等给出了加速器与诊断仪器的整体布局（图\ref{fig:chain}）。RRC 后的 Dpol 与 SRC 后的 BigDpol 处在不同能量和不同阶段；低能 C-22 仪器位于 AVF 下游。C-22 是源恢复测试的测量位置，不能把所有诊断站画成同一束路中同时工作的串联装置。\src{Sakamoto2016}{PDF 1，Fig. 1；PDF 2--3}\src{Sugahara2025}{PDF 1，左栏中部}
+
+\screenshot{sakamoto2016_p1_fig1.png}{0.62}{历史加速与监测布局原图。来源：Sakamoto 等\cite{Sakamoto2016}，PDF 第 1 页／文内第 145 页，Fig. 1，裁去图注。CC BY 3.0。图中束流收集终点不表示本次 SAMURAI 束流将采用同一终止方式。}{fig:chain}
+
+\begin{table}[H]\centering\small
+\begin{tabularx}{\linewidth}{p{31mm}YY}
+\toprule
+阶段 & 要确定的物理量 & 测量或运行依据 \\\midrule
+极化产生 & 磁子态布居、矢量及张量幅度 & RF 模式与源后实测极化 \\
+轴向设定 & 极化对称轴的空间方向 & Wien filter 设定及轴向扫描 \\
+加速 & 圈数分布、自旋相位稳定性 & 单圈监测与参考极化仪 \\
+高能输运 & 路径相关的自旋旋转 & 磁场／轨道模型与下游测量 \\
+物理靶点 & 参与反应的束流平均自旋态 & 最后测量站到反应顶点的输运 \\\bottomrule
+\end{tabularx}
+\caption{本文按物理功能整理的实验链；不是人员或机器的正式责任分配表。}
+\end{table}
+
+\clearpage
+\section{极化怎样产生：原子束型 PIS}
+
+\subsection{六极磁铁与 RF 跃迁设定核自旋布居}
+RIKEN PIS 采用原子束型方案：$\mathrm D_2$ 解离后形成冷原子束，六极磁铁依照电子自旋相关的磁力选择超精细态，RF 跃迁单元与后续选择级重新分配核自旋布居，ECR 电离器再把已选态的原子变成正离子。六极磁铁与 RF 单元配合工作，因此“极化模式”有对应的超精细态选择程序。\src{Ikegami1993}{PDF 1--2，II}\src{Sakamoto2016}{PDF 1--2，Production of Polarized Deuteron Beams}
+
+\screenshot{sakamoto2016_p1_fig2.png}{0.55}{PIS 原始结构图，含冷喷嘴、两级六极磁铁、强／弱场 RF 跃迁、ECR 电离器及 Wien filter。来源：Sakamoto 等\cite{Sakamoto2016}，PDF 第 1 页／文内第 145 页，Fig. 2，局部截图；CC BY 3.0。}{fig:source}
+
+\subsection{公开设备参数与运行经验}
+1993 年设备论文记录喷嘴约 $37\unit K$、解离 RF 功率 $60$--$80\unit W$、第一六极磁铁长 $165\unit{mm}$ 且孔径由 $14$ 增至 $28\unit{mm}$、第二级长 $115.5\unit{mm}$ 且孔径 $30\unit{mm}$，以及 $2.45\unit{GHz}$、典型功率 $30$--$40\unit W$ 的 ECR 电离器。这些是\textbf{历史设备参数}，用于理解冷原子通量、选择效率和背景来源；当前设定应取自设施运行文件。\src{Ikegami1993}{PDF 2／文内 215，Dissociator、Sextupole Magnets、ECR Ionizer}
+
+同文记录喷嘴沉积与真空背景会影响强度及极化。2026 年设备论文仍把源约一周的运行窗口用于统计规划。对本实验，这意味着源模式测试、机械安装和 DAQ 调试应安排成明确的阶段，源运行期间保留强度、模式稳定性和维护后的重新测量记录。\src{Ikegami1993}{PDF 1--3}\src{Saito2026}{PDF 9，右栏第 4 节}
+
+\clearpage
+\section{布居与极化轴是两个独立控制量}
+
+对源的对称轴 $Z$，取 $N_++N_0+N_-=1$，定义
+\begin{align}
+P\equiv P_Z&=N_+-N_-, & T\equiv P_{ZZ}&=1-3N_0,\label{eq:pop}\\
+N_0&=\frac{1-T}{3}, & N_\pm&=\frac{2+T\pm3P}{6}.
+\end{align}
+第一行沿用 Saito 等的定义；第二行由第一行反解得到。布居非负要求 $-2\leq T\leq1$、$3|P|\leq2+T$。文献的大写 $Z$ 是\textbf{源的对称轴}，不能自动替换为靶点的束流方向 $z$。\src{Saito2026}{PDF 3，2.1、Eq. (1)}
+
+对轴对称态，本文在固定实验坐标中写为
+\begin{equation}
+\bm p=P\hat{\bm n},\qquad p_{ij}=\frac{T}{2}(3n_i n_j-\delta_{ij}).\label{eq:axial}
+\end{equation}
+RF 模式改变 $P,T$；Wien filter 通过交叉场在参考粒子满足 $\bm E+\bm v\times\bm B=0$ 时旋转极化轴。轴反向 $\hat{\bm n}\to-\hat{\bm n}$ 改变矢量符号，却不改变张量。\textbf{把轴转 $180^\circ$ 不能实现张量正负模式互换。}这是式\eqref{eq:axial}的结果。
+
+\screenshot{sakamoto2016_p2_fig3.png}{0.47}{Wien filter 与靶点矢量极化的角度扫描。来源：Sakamoto 等\cite{Sakamoto2016}，PDF 第 2 页／文内第 146 页，Fig. 3，局部截图；CC BY 3.0。原图展示轴向控制经过测量标定。}{fig:wien}
+
+例如纯张量态 $P=0,T=-1.6$ 的布居为 $(N_+,N_0,N_-)=(1/15,13/15,1/15)$。若轴沿 $y$，则 $(p_{xx},p_{yy},p_{zz})=(0.8,-1.6,0.8)$；若轴沿 $z$，则为 $(0.8,0.8,-1.6)$。这是同一组本征布居在不同方向的表示。
+
+2004 年实验确实使用过理想模式 $(P_Z,P_{ZZ})=(0,-2)$，而 2024 年恢复测试使用的模式菜单不同。因此“纯张量模式是否可用”应具体落实到本次 RF 菜单与实测残余矢量，不应仅以历史可实现性作答。\src{Sekiguchi2004}{arXiv PDF 5，II A}\src{Sugahara2025}{PDF 1，Table 2}
+
+\clearpage
+\section{加速与单圈取出：保持可控的自旋相位}
+
+\subsection{名义能量与实际能量分别记录}
+Sakamoto 等的 Table 2 给出名义 $190\unit{MeV/u}$ 模式的 AVF、RRC、SRC 输出分别为 $4.0$、$70.4$、$187.5\unit{MeV/u}$；相应 RF 频率为 $12.3$、$24.6$、$24.6\unit{MHz}$，谐波数为 $2,5,5$。同表列出取出圈间距 $4.0$、$6.6$、$7.6\unit{mm}$。\textbf{7 MeV/u 的 C-22 源测试与这份 4 MeV/u 的 AVF 加速配方不是同一能量条件。}\src{Sakamoto2016}{PDF 2，Tables 1--2}
+
+\screenshot{sakamoto2016_p2_table2.png}{0.42}{原始加速参数表，保留 190、250、300 三种名义模式用于辨认。来源：Sakamoto 等\cite{Sakamoto2016}，PDF 第 2 页／文内第 146 页，Table 2；CC BY 3.0。这里不是本次运行设定单。}{fig:recipe}
+
+\subsection{用 RF 时间结构验证取出圈数}
+当极化轴包含水平分量时，多一圈或少一圈会产生不同自旋相位，混圈束的平均极化可随之减小。单圈取出使相位保持可控；维持同一取出圈与维持轴方向都需要诊断。AVF 利用 chopper 后的束团时间结构；RRC／SRC 则利用其 RF 频率与 AVF 的倍频关系，从异常时刻的束团识别混圈。SRC flat-top RF 改善圈间分离，径向探针给出直接诊断。\src{Sakamoto2016}{PDF 2--3，Why Single-turn Extraction?、Figs. 4--6}
+
+\screenshot{sakamoto2016_p3_fig6.png}{0.52}{单圈诊断的 RF 时间谱与 $d$--$p$ 符合时间谱。来源：Sakamoto 等\cite{Sakamoto2016}，PDF 第 3 页／文内第 147 页，Fig. 6；CC BY 3.0。正文给出的该例混圈率为 $0.07\%$；这不是本次实验实测值。}{fig:turn}
+
+该报告还记载单圈运行稳定维持 $2$--$3$ 天且纯度高于 $99\%$（PDF 4，文内 148）。本次应保存 RF 谱、混圈估计、取出设定与有效时间；重新调能量或取出条件后，再确认极化轴。竖直极化在理想竖直场中较易保持，并不意味着纵向态也已得到同等验证。
+
+\clearpage
+\section{AVF 后的低能极化仪与近期恢复记录}
+
+\subsection{C-22：用转移反应检查源模式}
+2024 年 9 月的测试在 AVF 下游 C-22 进行，以 $7\unit{MeV/u}$ 氘束轰击天然碳，选择 $^{12}\mathrm C(\vec d,p)^{13}\mathrm C_{\rm g.s.}$。左右两个 $\Delta E$--$E$ telescope 分别由 $0.5\unit{mm}$ 塑料和 $58\unit{mm}$ NaI(Tl) 组成，位于 $\theta_{\rm lab}=60^\circ$。它测量源、轴向控制与 AVF 之后的束流状态。\src{Sugahara2025}{PDF 1，左栏与 Table 1}
+
+\screenshot{sugahara2025_p1_table1.png}{0.52}{C-22 低能极化测量条件原表。来源：Sugahara 等\cite{Sugahara2025}，单篇 PDF 第 1 页／APR 58 文内第 36 页，Table 1。能量、靶厚和反应均限定于这次低能测试。}{fig:c22}
+
+四种模式含一个非极化参考，以 $5\unit s$ 为间隔循环切换 RF 单元。图\ref{fig:modes}显示实测矢量与张量不能简单由同一比例缩放所有理想模式：模式 3 的张量为 $0.565\pm0.052$，而模式 1 为 $-0.741\pm0.039$。这些不确定度按原表照录；该表未单独列出完整系统误差与模式间协方差。
+
+\screenshot{sugahara2025_p1_table2.png}{0.85}{2024 年 9 月各模式的实测极化。来源：Sugahara 等\cite{Sugahara2025}，PDF 第 1 页／文内第 36 页，Table 2。这里的模式编号与原表一致，不能移作其他运行时期的模式编号。}{fig:modes}
+
+\clearpage
+\subsection{2026 年 1 月已扩展到 AVF＋RRC 的 100 MeV/u}
+2026 年 8 月公开报告明确列出：测量日期为 1 月 9--16 日、约 150 小时，使用 $100\unit{MeV/u}$ 束流和 D-room 极化仪，反应为 $d$--$p$ 弹性散射。\src{SugaharaTalk2026}{PDF 4／幻灯片编号 3}
+
+\screenshot{sugahara2026_p4_droom.png}{0.73}{近期报告展示的 D-room 极化仪照片。来源：Sugahara\cite{SugaharaTalk2026}，PDF 第 4 页／幻灯片编号 3，右上照片局部。它是 RRC 后 $d$--$p$ 极化测量的实物参考，不是上一页的 C-22 低能碳反应仪器。}{fig:droom2026}
+
+\screenshot{sugahara2026_p4_run.png}{0.56}{2026 年 1 月运行条件截图。来源：Sugahara\cite{SugaharaTalk2026}，PDF 第 4 页／幻灯片编号 3，左下条件表。该运行包含 AVF＋RRC，不能据此推定 SRC／BigRIPS／SAMURAI 全链已验证。}{fig:jan2026}
+
+会议摘要另报 $p_y=-0.615\pm0.005$、$p_{yy}=0.896\pm0.012$；摘要未在这句话中给出二者的模式对应关系，本文不将它们拼成同一模式的 $(P,T)$。\src{SugaharaAbstract2026}{网页 Description 中 Building on these preparations 段落}
+
+这些记录为近期恢复后的中能束流运行提供了证据。本实验可据此定位需要交接的 D-room 数据、模式标签与标定方法；实际采用时，仍应取得对应能量和源模式的完整测量表，并把 SRC 与后续束流输运纳入本实验的验证范围。
+
+\clearpage
+\section{高能极化仪与 Sekiguchi 的分析本领数据}
+
+\subsection{BigDpol 的测量条件及源模式}
+2017 年实验以 SRC 引出线上的 BigDpol 测量 $186.6\unit{MeV/u}$、即氘核总动能 $373.2\unit{MeV}$ 的 $d$--$p$ 弹性散射。束流强度 $4$--$8\unit{nA}$，CH$_2$ 靶厚 $330\unit{mg/cm^2}$。四对塑料闪烁体分布在相互垂直的两个平面，用散射氘与反冲质子的运动学符合压低背景；质子臂限制的角接受度为 $\Delta\theta_{\rm lab}=\pm1^\circ$。\src{Sekiguchi2017}{带封面 PDF 3--4／稿件 2--3，II}
+
+源模式每 $5\unit s$ 切换，RRC 后的 Dpol 在 $70\unit{MeV/u}$ 连续监测参考极化。对 $iT_{11},T_{20},T_{22}$，极化轴垂直于水平面；为取得 $T_{21}$，轴在水平面内与束向成 $45.0^\circ\pm1.1^\circ$。这说明完整分析本领测量同时依赖源模式、轴向设定和探测几何。\src{Sekiguchi2017}{PDF 4，II}
+
+\subsection{Table I 是公开数值依据，标题能量不是数据能量}
+图\ref{fig:ap}给出论文 Table I。其实际能量为 $186.6\unit{MeV/u}$，质心角为 $38.9^\circ$--$164.8^\circ$；表中误差为统计误差，横线表示对应量未给值。相应束流极化不确定度另在正文说明为小于 $4\%$，不能把表中统计误差当成完整标定误差。\src{Sekiguchi2017}{PDF 8／稿件 7，Table I；PDF 4，II 末段}
+
+\screenshot{sekiguchi2017_p8_table1.png}{0.62}{完整分析本领数值表截图，未补齐缺失数据。来源：Sekiguchi 等\cite{Sekiguchi2017}，\textbf{带 CHORUS 封面的 PDF 第 8 页／稿件第 7 页，Table I}。采用仓库已有原始文件；图像裁去原图注，数据及列标题保持原样。}{fig:ap}
+
+建立本实验数据表时应同时保存能量、$\theta_{\rm cm}$、球张量／Cartesian 约定、统计误差、共同尺度误差和插值范围。若本次实际为 $190\unit{MeV/u}$，需要评价与 $186.6\unit{MeV/u}$ 的差异。Faddeev／AGS 计算可作比较，但不能在未说明的情况下替换实验标定。
+
+\clearpage
+\section{绝对标定与测量公式：不对称怎样成为极化}
+
+\subsection{绝对尺度的来源与传递}
+2004 年论文明确描述了标定反应
+\begin{equation}
+{}^{12}\mathrm C(\vec d,\alpha){}^{10}\mathrm B^*[2^+],\qquad
+A_{yy}(0^\circ)=-\frac12.\label{eq:absolute}
+\end{equation}
+该值由宇称约束给出，用于标定日常 $d$--$p$ 极化仪的分析本领。Suda 等于 2007 年发表了专门标定论文，2017 年实验将其列为参考文献 46。式\eqref{eq:absolute}的直接逐页依据见 2004 年论文的标定说明。\src{Sekiguchi2004}{arXiv PDF 6，II B}\cite{Suda2007}
+
+\key{绝对标定反应 $\longrightarrow$ 已标定分析本领 $\longrightarrow$ 参考极化仪 $\longrightarrow$ 实验极化仪 $\longrightarrow$ 靶点极化。各级应传递共同尺度误差；两台仪器读数相符不会消除共享的标定误差。}
+
+2004 年还提供了两站测量的直接先例：D-room 仪器测 RRC 后极化，Swinger 仪器位于散射室之前，随 beam swinger 移动，在每个 run 前后测量靶前束流。这支持“上游参考＋靶前确认”的实验逻辑。该文中的\textbf{焦平面 DPOL}测的是散射后质子极化，不能与入射氘束的 beam-line Dpol 混为一谈。\src{Sekiguchi2004}{arXiv PDF 6，II B；PDF 7，II C}
+
+\subsection{明确坐标、归一化与接受度}
+下面给出本文采用的 Cartesian 约定及其代数结果。令局部 $z$ 沿入射束，水平左臂的散射法线为 $+y$，轴对称态的主轴沿 $y$。未极化靶上、理想左右对称几何有
+\begin{equation}
+\sigma_{L,R}=\sigma_0\left(1\pm\frac32 P A_y+\frac12 T A_{yy}\right).\label{eq:lr}
+\end{equation}
+这里 $A_y,A_{yy}$ 与球张量 $iT_{11},T_{2m}$ 是不同表示；使用 Table I 前必须以同一散射法线和坐标约定转换。左右符号随法线约定改变，不能只凭探测器标签决定。
+
+若 $r_{L,R}$ 为经过\textbf{逐模式亮度、效率和活时间校正}后的极化／非极化产额比，则式\eqref{eq:lr}给出
+\begin{equation}
+P=\frac{r_L-r_R}{3A_y},\qquad T=\frac{r_L+r_R-2}{A_{yy}}.\label{eq:extract}
+\end{equation}
+因此左右差提供矢量信息，共同产额变化提供张量信息。没有可信的归一化或其他张量敏感观测量，只由左右不对称一般不能唯一给出张量极化。式\eqref{eq:extract}是理想条件下的解释式，并非实际宽接受度装置的最终拟合模型。
+
+对探测臂 $a$，实际需要的是接受度加权响应
+\begin{equation}
+A^{\rm eff}_{k,a}=\frac{\int dE\,d\Omega\;w_a(E,\Omega)\sigma_0(E,\Omega)A_k(E,\Omega)}
+{\int dE\,d\Omega\;w_a(E,\Omega)\sigma_0(E,\Omega)}.\label{eq:aeff}
+\end{equation}
+$w_a$ 含靶内能损、几何、效率及分析选择；截面与角积分应处于同一参考系。若极化态也随轨迹变化，应直接对极化相关截面积分，不能把 $p_{ij}$ 无条件提出积分号。
+
+\clearpage
+\section{从 SRC 到实际反应顶点的自旋输运}
+
+\subsection{共同进动改变方向，轨迹平均可能降低极化}
+在仅含磁偶极自旋耦合的输运模型中，单条轨迹对应空间旋转 $R$。对 spin-1 密度矩阵及其一阶、二阶矩，有
+\begin{equation}
+\rho'=U(R)\rho U^\dagger(R),\quad
+\bm p'=R\bm p,\quad Q'=RQR^{\mathsf T},\qquad Q_{ij}=p_{ij}.\label{eq:transport}
+\end{equation}
+共同旋转保持密度矩阵和张量的本征值。多个轨迹的磁场积分不同时，探测器或物理反应接受到的平均量为
+\begin{equation}
+\overline Q=\frac{\int d\Gamma\, f(\Gamma)W(\Gamma)
+R(\Gamma)Q(\Gamma)R^{\mathsf T}(\Gamma)}{\int d\Gamma\,f(\Gamma)W(\Gamma)}.\label{eq:average}
+\end{equation}
+这一区分把共同转动、自旋相位分散和束流选择分开。磁场引起的单粒子旋转不把 rank-1 变成 rank-2；束流轨迹分散和接受度变化则能改变观测到的平均分量。式\eqref{eq:transport}--\eqref{eq:average}是本文按旋转性质整理的模型关系。
+
+\subsection{轨道和自旋应同时积分}
+在实验室场中，以电荷 $q>0$ 的氘核为例，轨道满足
+\begin{equation}
+\frac{d\bm p_{\rm orbit}}{dt}=q(\bm E+c\bm\beta\times\bm B),\qquad
+\frac{d\bm s}{dt}=\bm\Omega_s\times\bm s.
+\end{equation}
+忽略 EDM 的 BMT 方程可写为
+\begin{equation}
+\bm\Omega_s=-\frac q{m_d}\left[
+\left(G_d+\frac1\gamma\right)\bm B
+-\frac{G_d\gamma}{\gamma+1}(\bm\beta\cdot\bm B)\bm\beta
+-\left(G_d+\frac1{\gamma+1}\right)\frac{\bm\beta\times\bm E}{c}
+\right].\label{eq:bmt}
+\end{equation}
+这里 $\bm s$ 是以实验室轴表示的静止系自旋方向；$G_d=(g_d-2)/2$ 使用加速器自旋动力学定义。BMT 原始出处见\cite{BMT1959}。求出实验室旋转后，再转换到每站局部束流坐标，不能将实验室转角直接当作相对束向的转角。
+
+\subsection{理想偶极中的数值检查}
+在无电场、纯横向磁场的平面弯转中，自旋\textbf{相对动量}的有符号转角为
+\begin{equation}
+\psi=G_d\gamma\theta,\qquad
+\gamma=1+\frac{K_d}{m_dc^2},\qquad
+G_d=\frac{\mu_d}{\mu_N}\frac{m_d}{2m_p}-1.\label{eq:dipole}
+\end{equation}
+采用 NIST CODATA 2022 的 $m_dc^2=1875.612945\unit{MeV}$、$\mu_d/\mu_N=0.8574382335$、$m_d/m_p=1.9990075012699$，名义 $K_d=2\times190\unit{MeV}$ 给出 $G_d=-0.14298727$、$\gamma=1.20260044$、$G_d\gamma=-0.17195655$。\cite{CODATA2022}
+
+\clearpage
+\subsection{纵向与竖直张量态的不同响应}
+若初始主轴沿束向，绕 $y$ 转过 $\psi$，在输出处束流坐标中
+\begin{equation}
+\frac{p_{zz}^{\rm out}}{T}=\frac{3\cos^2\psi-1}{2},\qquad
+p_{xz}^{\rm out}=\frac32T\sin\psi\cos\psi.\label{eq:projection}
+\end{equation}
+对同一个 $R_y$ 旋转，主轴沿 $y$ 的轴对称张量保持不变。实际三维场的验证应包含一个对水平或纵向方向敏感的源态，才能检验旋转方向和幅度。
+
+\begin{table}[H]\centering
+\begin{tabular}{rrrr}\toprule
+理想轨道转角 $\theta$ & 相对自旋转角 $\psi$ & $p_{zz}^{\rm out}/T$ & 纵向投影变化 \\\midrule
+$3^\circ$ & $-0.51587^\circ$ & $0.9998784$ & $0.01216\%$ \\
+$30^\circ$ & $-5.15870^\circ$ & $0.9878730$ & $1.21270\%$ \\\bottomrule
+\end{tabular}
+\caption{按式\eqref{eq:dipole}--\eqref{eq:projection}计算的示例。转角为说明性输入，不是 BigRIPS 或 SAMURAI 的实测场积分；投影变化不等于张量本征极化损失。}
+\end{table}
+
+\subsection{计算终点必须与物理靶的位置一致}
+本实验的输运边界应写为
+\begin{equation*}
+\text{SRC 后参考站}\to\text{实际束流线}\to\text{靶前极化仪}
+\to\boxed{\text{反应顶点}}.
+\end{equation*}
+如果物理靶位于 SAMURAI 主场或边缘场内，最后一段必须包含反应前的该部分磁场；如果靶在场外，也应根据场图确认靶前边缘场贡献。共享聊天对“靶进入磁场”的描述引用了未随链接提供的实验材料，因此本文将这部分写成依实际靶位而定的边界条件，不把它当成已确认安装方案。
+
+BigRIPS 官方页面公开了轨道传输图与 SAMURAI Beam Line 的 Default／F12 模式，适合查找参考轨道光学。它们本身不是当前极化束的机器设定或自旋传输矩阵。\src{BigRIPSOptics}{网页 COSY transfer map、Ray plots 的 SAMURAI Beam Line 项}
+
+实际计算需要逐磁铁顺序、三维坐标和方向、极性与设定、场图或场积分、参考能量、动量分布及准直／材料信息。上游极化仪采样的束流，与最终穿过狭缝到达靶的束流，可能具有不同相空间权重；式\eqref{eq:average}中的 $W$ 必须与比较对象相符。
+
+\subsection{两台极化仪可以检验什么}
+一般 spin-1 密度矩阵含 3 个矢量和 5 个张量实分量。两处各测一个标量，不能无条件恢复这 8 个自由度。若源态轴对称且轴向由已验证模型确定，拟合 $P,T$ 可满足实验需要；若要同时确定轴或检验轴对称假设，就需要更多方位、角度或源轴扫描。比较时优先使用各探测臂的预测产额与数据，使几何和归一化差异进入同一个模型。
+
+\clearpage
+\section{将测量能力转化为实验运行能力}
+
+\subsection{每个事件与每个时间段应关联的记录}
+以下为面向本实验的交接建议。源模式标签必须来自实际有效的硬件状态或可追溯时间同步，并同时保存模式切换后的稳定等待／veto、逐模式束流积分、活时间、符合时间与脉冲高度。极化数据库应记录模式、测量站坐标、$P,T$ 或 $p_i,p_{ij}$、协方差、有效时间、分析本领版本和源／加速／输运设定版本。
+
+2017 年实验用相邻束团估计偶然符合，并通过改变弹性峰积分区间评价剩余背景。这些都是可移用的分析方法，但数值容差需要由本装置响应确定。\src{Sekiguchi2017}{PDF 4，II}
+
+\subsection{强度与统计能力应按本装置重新计算}
+对单电荷氘束，$10^7\unit{s^{-1}}$ 相当于约 $1.60\unit{pA}$，远小于 BigDpol 论文的 $4$--$8\unit{nA}$。因此不能直接沿用历史仪器的积累时间。计数率估计为
+\begin{equation}
+R=I\,n_H\!\int_{\rm acceptance}\frac{d\sigma}{d\Omega}\epsilon(\Omega)d\Omega.
+\end{equation}
+\textbf{量级示例：}若 CH$_2$ 为 $330\unit{mg/cm^2}$，以摩尔质量约 $14\unit{g/mol}$ 估算 $n_H\simeq2.84\times10^{22}\unit{cm^{-2}}$；再假定 $I=10^7\unit{s^{-1}}$、截面 $1\unit{mb/sr}$、固体角 $10\unit{msr}$ 且效率为 1，则单臂约 $2.8\unit{s^{-1}}$。这里的截面只是示例输入，不是 190 MeV/u 数据。5 秒切换模式有助于控制漂移，但精确测量可能需要累计多个周期。
+
+靶增厚提高反应概率的同时会改变能损、角散射和下游束流接受度；紧凑装置还应监测束斑偏移。按几何关系，$100\unit{mm}$ 距离处横移 $1\unit{mm}$ 约对应 $0.57^\circ$ 的角度变化，应传播到运动学与有效分析本领。
+
+\subsection{按可观测量组织异常诊断}
+\begin{table}[H]\centering\small
+\begin{tabularx}{\linewidth}{p{47mm}Y}\toprule
+观测 & 应联合检查的记录 \\\midrule
+上、下游同一源模式都改变 & RF 状态、源强度、模式有效时间、共同归一化 \\
+RF 时间谱出现额外束团 & chopper、取出圈分布与相位；调束后重新测极化 \\
+极化随束斑或分析 cuts 改变 & 入射角、几何接受度、背景、相对效率 \\
+仅下游偏离输运预测 & 磁铁设定与极性、狭缝选择、下游仪器响应 \\
+张量信号伴随模式间强度差 & 亮度、死时间、靶重叠与非极化参考 \\\bottomrule
+\end{tabularx}
+\caption{本报告建议的诊断线索；每种现象可能有多个原因，不能仅凭一项观测作唯一归因。}
+\end{table}
+
+运行前应完成原始数据到极化结果的重放；用已知输入与真实接受度检验恢复偏差；分别报告统计、分析本领尺度、轴向、几何和归一化误差。恢复源或更改关键机器设定后，应建立新的有效区间。
+
+\clearpage
+\section{Sekiguchi 的作用，以及本实验怎样承担相应工作}
+
+\subsection{公开材料能够确认的贡献}
+RIKEN APR 58 的 Three-Body Nuclear Force Laboratory 报告将核极化技术和极化测量技术列为研究方向，记载 FY2024 的离子源准备、加速测试以及 KuJyaku／极化质子靶系统工作，并列 Kimiko Sekiguchi 为该报告时期的负责人。\src{SekiguchiLab2025}{PDF 1／文内 370，Major Research Subjects、Summary、Members}
+
+\screenshot{sekiguchi_lab_p1_members.png}{0.30}{研究组报告的负责人栏原始截图。来源：RIKEN APR 58\cite{SekiguchiLab2025}，单篇 PDF 第 1 页／文内第 370 页，Members。该组织记录不是本次实验的任务书。}{fig:sek-role}
+
+从具体成果看，Sekiguchi 第一作者的 2004 年论文记录了多轴极化、两站 beam-line polarimetry 和绝对标定；2017 年论文提供了 186.6 MeV/u 完整分析本领。她也参与署名 2016 年极化束加速技术报告、2025 年源恢复测试及 2026 年新测量系统论文。因而可确认的作用包括极化散射实验的组织与方法、参考数据和测量系统建设。\cite{Sekiguchi2004,Sekiguchi2017,Sakamoto2016,Sugahara2025,Saito2026}
+
+PIS 的早期设备论文与加速器技术报告同时显示设施能力来自多个团队；不能把源硬件开发、回旋加速器操作、束流线安装权限都归为个人职责。对使用非极化 Sn 靶的束流实验，承担束流极化支持并不要求复制用于双极化 $d$--$p$ 实验的 triplet-DNP、NMR 或 KuJyaku。\src{Ikegami1993}{PDF 1，作者与 Introduction}\src{Saito2026}{PDF 3--4，2.1--2.3}
+
+\subsection{面向交接的任务与交付物}
+下表把“cover”解释为能独立执行实验侧工作、明确设施接口并交付可复查结果。它是本报告提出的工作分解，\textbf{不是 Sekiguchi 已承诺承担或移交的正式清单}。
+
+\begin{table}[H]\centering\small
+\begin{tabularx}{\linewidth}{p{28mm}YY}\toprule
+工作 & 实验侧应交付 & 应与设施／设备方确认 \\\midrule
+模式与极化轴 & 目标 $P,T,\hat{\bm n}$、翻转顺序、残余矢量要求 & 当前 RF 菜单、纯张量可用性、Wien 标定 \\
+源与加速接口 & 模式同步、有效区间、单圈质量记录 & 本次配方、调束与维护负责人、恢复程序 \\
+极化仪运行 & 靶、符合 DAQ、束斑监测、分析重放 & 安装接口、可借用设备、强度与真空条件 \\
+标定尺度 & 分析本领版本、坐标约定、误差传递 & 参考标定数据、原始记录与系统误差 \\
+靶点输运 & 可验证旋转模型及两站产额比较 & 当前场图、磁铁设定、轨道、实际靶位 \\
+束流期支持 & 在线极化、漂移诊断、数据有效性判断 & 值班责任、故障联络、重新验收条件 \\\bottomrule
+\end{tabularx}
+\end{table}
+
+\clearpage
+\subsection{用四项结果判断实验侧能力是否已经接住}
+\begin{enumerate}
+\item \textbf{逐模式参考态：}给出实际 $P,T$、轴方向及协方差，能回溯至测量时间、RF 菜单和源状态；明确纯张量或混合矢量模式的适用方式。
+\item \textbf{独立极化分析：}从符合事件、归一化计数和版本化标定表重算极化，并能用源模式变化、非极化参考和分析选择稳定性检查结果。
+\item \textbf{实际靶点预测与验证：}以本次磁铁与靶位为输入，解释参考站到下游站的响应，将最后一段输运延伸到反应顶点并传播不确定度。
+\item \textbf{可执行运行规则：}知道哪些时间段数据有效、发生异常应检查什么、由谁处理设施问题，以及恢复后需重测哪些量。
+\end{enumerate}
+这四项共同把极化源提供的束流变成物理分析可用的靶点自旋状态。公开文献支持其方法和历史可行性；本次配置、可用模式和现场责任应体现在交接数据中。
+
+\section{来源、截图与复现索引}
+\label{sec:locators}
+\textbf{页码规则：}“PDF 第 $n$ 页”从下载文件第一页起以 1 计数，包含封面；“文内页码”按原稿页脚或页眉。会议幻灯片编号单独列出。网页没有 PDF 页码，改用标题、栏目与段落定位。全部访问日期为 2026-09-07。
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{30mm}>{\raggedright\arraybackslash}p{32mm}>{\raggedright\arraybackslash}p{88mm}}
+\toprule 资料 & PDF／文内位置 & 支撑内容与截图 \\\midrule\endhead
+Ikegami 1993\cite{Ikegami1993} & 1--3／214--216 & II：PIS 结构及参数；第 3 页 Spin Rotating System、Figs. 4--5：轴向控制。\\
+Sakamoto 2016\cite{Sakamoto2016} & 1／145 & Figs. 1--2：加速链和源；本文图\ref{fig:chain}、\ref{fig:source}。\\
+同上 & 2／146 & Fig. 3：Wien 扫描；Table 2：加速配方；本文图\ref{fig:wien}、\ref{fig:recipe}。\\
+同上 & 3--4／147--148 & Fig. 6 与 Single-turn Monitors：混圈率、时间谱和运行稳定性；本文图\ref{fig:turn}。\\
+Sugahara APR 58\cite{Sugahara2025} & 1／36 & C-22 条件与逐模式结果，Tables 1--2；本文图\ref{fig:c22}、\ref{fig:modes}。\\
+Sekiguchi 2004\cite{Sekiguchi2004} & arXiv 5--7／5--7 & II A：纯张量模式；II B：双站极化仪与 $A_{yy}=-1/2$；II C：焦平面 DPOL。\\
+Sekiguchi 2017\cite{Sekiguchi2017} & 接收稿 3--4／2--3；8／7 & II：BigDpol、70 MeV/u 监测、误差；Table I：186.6 MeV/u 数据；本文图\ref{fig:ap}。\\
+Saito 2026\cite{Saito2026} & 3／Page 3 of 13；9／Page 9 of 13 & 2.1、Eq. (1)：源轴与布居；4：源运行窗口。\\
+研究组报告\cite{SekiguchiLab2025} & 1／370 & 研究方向、FY2024 活动、Members；本文图\ref{fig:sek-role}。\\
+Sugahara EFB2026\cite{SugaharaTalk2026} & 4／幻灯片 3 & January 2026：100 MeV/u、AVF＋RRC、D-room；本文图\ref{fig:droom2026}、\ref{fig:jan2026}。\\
+\bottomrule
+\end{longtable}
+
+\clearpage
+\subsection{文件与复现方法}
+LaTeX 正文、文献库和截图位于本目录，原始 PDF 留在本地 \texttt{sources/}；2017 年论文直接引用仓库既有文件。\texttt{sources.json} 固定原始 PDF 的 SHA-256、下载地址、PDF 页码、文内位置及截图裁剪坐标。截图通过 Poppler 在 220 dpi 下直接裁切，没有重绘或改写原文。
+
+在仓库根目录运行：
+\begin{quote}\small\ttfamily
+make -C docs/polarization\_production\_transport\\
+make -C docs/polarization\_production\_transport verify
+\end{quote}
+第一条以 XeLaTeX／latexmk 编译，使用 Noto CJK 字体；第二条核对原始 PDF 哈希及截图文件是否齐全。重新生成截图使用同目录的 \texttt{make screenshots}，会按来源清单取得缺少的 PDF 并先核对版本。PDF 如果发生变化，脚本中止，需重新核实页码再更新清单。截图文件随 LaTeX 一起保存，因此已有截图时编译无需访问文献网站。
+
+\subsection{与共享聊天的对应关系}
+本文保留聊天的技术主线，但把近期源测试限定到其实际能量与测量位置，把 2017 年数值表固定到带封面的接收稿，并将靶内／靶前磁场写为依实际靶位确定的条件。聊天提及但未附正文的博士论文、私人消息、机械空位和本次任务分工不作为实验事实写入。EPJ Web of Conferences 378, 02020 的书目信息可检索，但本次未取得其 PDF 正文，近期恢复结果因此采用可逐页核验的 APR 58 与 EFB2026 材料。读者可据本节逐项返回原文，不必依赖聊天中的引用标记。
+
+\clearpage
+\begingroup\footnotesize
+\linespread{1.0}\selectfont
+\setlength{\bibsep}{3pt}
+\bibliographystyle{unsrtnat}
+\bibliography{references}
+\endgroup
+\end{document}

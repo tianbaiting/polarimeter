@@ -1,0 +1,77 @@
+{
+  "accessed": "2026-09-07",
+  "dpi": 220,
+  "page_convention": "One-based PDF page including covers; crops are fractions of page size from top-left. No retouching or text replacement.",
+  "shared_chat": "https://chatgpt.com/share/6a9e507f-ba88-83ee-930f-861c5ef504c1",
+  "sources": [
+    {
+      "id": "Ikegami1993", "file": "sources/ikegami1993.pdf",
+      "url": "https://www.pasj.jp/web_publish/sast1993/26DL3.pdf",
+      "sha256": "b4bd050f368c13ec8398823bfe13a61408988b542c4925ce537ad91d6c84e23d",
+      "locators": "PDF 1-3, printed 214-216; II Ion Source, Spin Rotating System, Figs. 1, 4, 5", "crops": []
+    },
+    {
+      "id": "Sakamoto2016", "file": "sources/sakamoto2016.pdf",
+      "url": "https://proceedings.jacow.org/cyclotrons2016/papers/tub04.pdf",
+      "sha256": "726caf801d2e761e7ab3a004d058ef64aa7b622b51206a65c7e8d8e7bed9b66d",
+      "locators": "PDF 1-4 = printed 145-148; CC BY 3.0",
+      "crops": [
+        {"image": "sakamoto2016_p1_fig1.png", "pdf_page": 1, "printed_page": "145", "element": "Fig. 1 accelerator and monitor chain", "box_fraction_top_left": [0.088, 0.647, 0.495, 0.863]},
+        {"image": "sakamoto2016_p1_fig2.png", "pdf_page": 1, "printed_page": "145", "element": "Fig. 2 polarized ion source", "box_fraction_top_left": [0.505, 0.645, 0.911, 0.892]},
+        {"image": "sakamoto2016_p2_fig3.png", "pdf_page": 2, "printed_page": "146", "element": "Fig. 3 Wien filter and axis calibration", "box_fraction_top_left": [0.10, 0.065, 0.485, 0.37]},
+        {"image": "sakamoto2016_p2_table2.png", "pdf_page": 2, "printed_page": "146", "element": "Table 2 acceleration recipes", "box_fraction_top_left": [0.51, 0.292, 0.915, 0.59]},
+        {"image": "sakamoto2016_p3_fig6.png", "pdf_page": 3, "printed_page": "147", "element": "Fig. 6 RF time spectrum and coincidence resolution", "box_fraction_top_left": [0.51, 0.749, 0.91, 0.894]}
+      ]
+    },
+    {
+      "id": "Sugahara2025", "file": "sources/sugahara2025.pdf",
+      "url": "https://www.nishina.riken.jp/researcher/APR/APR058/pdf/36.pdf",
+      "sha256": "ede16f05a523c98f8796502dd4ce351397448a5b87a48cdb21846a506a20af26",
+      "locators": "PDF 1 = printed 36; September 2024 test, Tables 1 and 2",
+      "crops": [
+        {"image": "sugahara2025_p1_table1.png", "pdf_page": 1, "printed_page": "36", "element": "Table 1 C-22 polarimeter conditions", "box_fraction_top_left": [0.52, 0.162, 0.914, 0.312]},
+        {"image": "sugahara2025_p1_table2.png", "pdf_page": 1, "printed_page": "36", "element": "Table 2 measured polarization modes", "box_fraction_top_left": [0.519, 0.619, 0.916, 0.707]}
+      ]
+    },
+    {
+      "id": "Sekiguchi2017", "file": "../code/polarimeter_stastic/prc2017_KSekiguchi_CompleteSetOfDeuteronAnalyzingPowerFromDPElasticScatteringAt190MevNucleon.pdf",
+      "url": "https://link.aps.org/accepted/10.1103/PhysRevC.96.064001",
+      "sha256": "d5260c26d9ce9b722d2a81c13c7f65b9aa9e08bfbd48ac49bf6a7e328aec54d6",
+      "locators": "Repository CHORUS accepted manuscript with cover; PDF 3-4 = manuscript 2-3 (II); PDF 8 = manuscript 7 (Table I)",
+      "crops": [
+        {"image": "sekiguchi2017_p8_table1.png", "pdf_page": 8, "printed_page": "7", "element": "Table I numerical data, caption omitted in crop", "box_fraction_top_left": [0.272, 0.101, 0.734, 0.473]}
+      ]
+    },
+    {
+      "id": "Sekiguchi2004", "file": "sources/sekiguchi2004.pdf",
+      "url": "https://arxiv.org/pdf/nucl-ex/0404026",
+      "sha256": "6ed757b25d3c2e4d30cdd1c9399c6770d519dcb472917733c955178414f0a620",
+      "locators": "arXiv v1, PDF 5-6 = manuscript 5-6, II A-B; not journal pagination", "crops": []
+    },
+    {
+      "id": "Saito2026", "file": "sources/saito2026.pdf",
+      "url": "https://link.springer.com/content/pdf/10.1140/epja/s10050-026-01902-8.pdf",
+      "sha256": "1bcbbd2f46aa66d329fd680f4014cc0fe4f4b4cbc423f337c41e9656fc459d2c",
+      "locators": "Publisher version, PDF 3: II.1 and Eq. (1); PDF 9: IV, source operation window; CC BY 4.0", "crops": []
+    },
+    {
+      "id": "SekiguchiLab2025", "file": "sources/sekiguchi-lab2025.pdf",
+      "url": "https://www.nishina.riken.jp/researcher/APR/APR058/pdf/370.pdf",
+      "sha256": "f48228f43676489ab41789d99c2168add649bb2278b0ac8b4a560219173d3217",
+      "locators": "PDF 1 = printed 370; Major Research Subjects, Summary of Research Activity, Members",
+      "crops": [
+        {"image": "sekiguchi_lab_p1_members.png", "pdf_page": 1, "printed_page": "370", "element": "Members: Director", "box_fraction_top_left": [0.069, 0.502, 0.29, 0.557]}
+      ]
+    },
+    {
+      "id": "SugaharaTalk2026", "file": "sources/sugahara-talk2026.pdf",
+      "url": "https://indico.cern.ch/event/1441702/contributions/7106564/attachments/3328418/5961478/260818_sugahara.pdf",
+      "sha256": "3951b96fcab5fafa8db0295bb88df574ec00f6cc16eca4ef5c8bfe786943a464",
+      "locators": "EFB2026, 18 August 2026; PDF 3-4 = slide 2-3; PDF 4 states January 9-16 at 100 MeV/nucleon",
+      "crops": [
+        {"image": "sugahara2026_p4_droom.png", "pdf_page": 4, "printed_page": "slide 3", "element": "D-room polarimeter photograph", "box_fraction_top_left": [0.634, 0.137, 0.976, 0.578]},
+        {"image": "sugahara2026_p4_run.png", "pdf_page": 4, "printed_page": "slide 3", "element": "January 2026 conditions table", "box_fraction_top_left": [0.031, 0.69, 0.54, 0.998]}
+      ]
+    }
+  ]
+}
