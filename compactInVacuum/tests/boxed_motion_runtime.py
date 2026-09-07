@@ -19,7 +19,9 @@ def main():
     clear = Phase(
         "clear", {"a": a}, {"b": Part.makeBox(1, 1, 1, V(5, 3, 0))}, delta=V(10, 0, 0)
     )
-    assert certify_phase(clear, s)["status"] == "pass"
+    result = certify_phase(clear, s)
+    assert result["status"] == "pass"
+    assert result["swept_bounding_region_certificate_count"] == 1
     thin = Phase(
         "thin blocker",
         {"a": a},
@@ -42,7 +44,11 @@ def main():
         delta=V(1, 0, 0),
     )
     assert certify_phase(enclosed, s)["status"] == "fail"
-    unresolved = certify_phase(clear, replace(s, interval_min_fraction=1.0))
+    clear_rotation = replace(
+        rotor, obstacles={"b": Part.makeSphere(0.1, V(4.2426407, 4.2426407, 0))}
+    )
+    assert certify_phase(clear_rotation, s)["status"] == "pass"
+    unresolved = certify_phase(clear_rotation, replace(s, interval_min_fraction=1.0))
     assert unresolved["status"] == "fail"
     assert unresolved["failures"][0]["kind"] == "uncertified_interval"
     contact = Phase(

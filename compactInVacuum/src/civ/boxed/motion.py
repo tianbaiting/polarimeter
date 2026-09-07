@@ -210,7 +210,37 @@ def certify_phase(
     failures = []
     end = phase.at(1)
     plane_pairs = set()
+    swept_pairs = set()
+    if phase.delta is None:
+        # [EN] Rotation about Z preserves axial bounds; the full bounding circle contains every partial-turn position. / [CN] 绕 Z 转动保持轴向边界不变，完整包围圆包含部分转角中的全部位置。
+        for name, start in phase.starts.items():
+            radius = phase.rotation_radii[name]
+            box = start.BoundBox
+            sweep_box = App.BoundBox(
+                phase.pivot.x - radius,
+                phase.pivot.y - radius,
+                box.ZMin,
+                phase.pivot.x + radius,
+                phase.pivot.y + radius,
+                box.ZMax,
+            )
+            for obstacle_name, obstacle in phase.obstacles.items():
+                distance = bbox_distance(sweep_box, obstacle.BoundBox)
+                for region in certified_regions.get(obstacle_name, ()):
+                    distance = max(distance, region.lower_bound(sweep_box))
+                if distance > spec.continuous_clearance_mm:
+                    swept_pairs.add((name, obstacle_name))
     if phase.delta is not None:
+        # [EN] A translation stays inside the union bounds of its endpoints; an obstacle separated from that entire prism needs no temporal subdivision. / [CN] 平移始终位于两端包围盒的并集棱柱内，与整个棱柱分离的障碍物无需再进行时间细分。
+        for name, start in phase.starts.items():
+            sweep_box = App.BoundBox(start.BoundBox)
+            sweep_box.add(end[name].BoundBox)
+            for obstacle_name, obstacle in phase.obstacles.items():
+                distance = bbox_distance(sweep_box, obstacle.BoundBox)
+                for region in certified_regions.get(obstacle_name, ()):
+                    distance = max(distance, region.lower_bound(sweep_box))
+                if distance > spec.continuous_clearance_mm:
+                    swept_pairs.add((name, obstacle_name))
         for actor_name, obstacle_name in phase.contacts:
             if translation_plane_certificate(
                 phase.starts[actor_name],
@@ -227,7 +257,11 @@ def certify_phase(
             bound = phase.displacement_bound(name, a, b)
             for obstacle_name, obstacle in phase.obstacles.items():
                 pair = (name, obstacle_name)
-                if pair in phase.excluded_pairs or pair in plane_pairs:
+                if (
+                    pair in phase.excluded_pairs
+                    or pair in plane_pairs
+                    or pair in swept_pairs
+                ):
                     continue
                 distance = bbox_distance(shape.BoundBox, obstacle.BoundBox)
                 # [EN] A region independently proved empty supplies a lower bound on distance to this obstacle; it does not remove any obstacle or relax the motion bound. / [CN] 独立证明为空的区域提供到该障碍物的距离下界，并未删除障碍物或放宽运动界。
@@ -288,6 +322,7 @@ def certify_phase(
             None if minimum_certified_gap == float("inf") else minimum_certified_gap
         ),
         "plane_contact_certificates": sorted(plane_pairs),
+        "swept_bounding_region_certificate_count": len(swept_pairs),
         "analytic_mating_pairs": sorted(phase.excluded_pairs),
         "failures": failures,
     }
