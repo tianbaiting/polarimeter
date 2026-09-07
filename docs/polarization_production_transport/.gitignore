@@ -1,4 +1,5 @@
 sources/
 build/
 polarization_production_transport_zh.pdf
+polarization_production_transport_en.pdf
 !Makefile
