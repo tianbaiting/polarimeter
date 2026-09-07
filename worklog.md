@@ -1303,3 +1303,49 @@ Entry Template:
 - Verification: 67 pure-Python tests PASS; motion/contact/void/rotation-bound negative regressions PASS; actual four-sector geometry, journal-hole, upper parking, thin blocker and incomplete-artifact guard regressions PASS; all seven retained core FreeCAD groups PASS. Both native assemblies contain 342 physical/purchased valid solids and 12 correctly linked active detectors; both STEP files reopen valid with 342 solids. Four final native extraction poses per deployment are above closure height. Both current configuration/source fingerprints match machine state. Twelve acceptance metrics and eight coincidence metrics are retained.
 - Artifacts/State: both canonical FCStd/STEP/metrics/manifests/reports/states current; maintenance-open documents, four standalone loaded sectors and seventeen main-motion pose documents per deployment exported. Standard Isometric/Front/Top/Right assembly and focused support PNG sets generated and visually inspected; review views are not manufacturing drawings. Generated CAD, runtime state and review assets remain excluded from Git.
 - Next Action: deliver both complete compact files and the four-sector overview; resolve full service-tool qualification and fabrication evidence before manufacturing release. Local motion acceleration commit: 9ad67c4.
+
+- Timestamp UTC: 2026-09-07T07:46:07+00:00
+- Timestamp Local: 2026-09-07T16:46:07+09:00
+- Module/Scope: compactOneafterSRC side-access local-support design
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --validate-only`
+- Key Parameters/Overrides: top rotary, negative-X signal ports, positive-X ICF305 access; four removable local supports on small factory-welded pads with blind M4-class mounting bores; 42 mm inward release, 96 mm downstream transfer, horizontal extraction; no CLI overrides.
+- Validation Result: non-strict prototype fail; {'pass_count': 87, 'warning_count': 7, 'fail_count': 2}; support installation certified=True, loaded-module transport certified=False. Full tool/service and fabrication qualification remain separate.
+- Artifacts/State: selected canonical machine-owned state/report; full CAD export only after prototype geometry pass.
+- Next Action: Resolve the reported side-removal obstruction, then rerun both complete instruments.
+
+- Timestamp UTC: 2026-09-07T07:54:34+00:00
+- Timestamp Local: 2026-09-07T16:54:34+09:00
+- Module/Scope: compactOneafterSRC side-access local-support design
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --validate-only`
+- Key Parameters/Overrides: top rotary, negative-X signal ports, positive-X ICF305 access; four removable local supports on small factory-welded pads with blind M4-class mounting bores; 42 mm inward release, 96 mm downstream transfer, horizontal extraction; no CLI overrides.
+- Validation Result: non-strict prototype pass; {'pass_count': 136, 'warning_count': 7, 'fail_count': 0}; support installation certified=True, loaded-module transport certified=True. Full tool/service and fabrication qualification remain separate.
+- Artifacts/State: selected canonical machine-owned state/report; full CAD export only after prototype geometry pass.
+- Next Action: All support-insertion and side-removal geometry checks pass; run final regressions and export both full instruments with side-access metadata.
+
+- Timestamp UTC: 2026-09-07T08:03:17+00:00
+- Timestamp Local: 2026-09-07T17:03:17+09:00
+- Module/Scope: compactOneafterSRC side-access local-support design
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml`
+- Key Parameters/Overrides: top rotary, negative-X signal ports, positive-X ICF305 access; four removable local supports on small factory-welded pads with blind M4-class mounting bores; 42 mm inward release, 96 mm downstream transfer, horizontal extraction; no CLI overrides.
+- Validation Result: non-strict prototype pass; {'pass_count': 136, 'warning_count': 7, 'fail_count': 0}; support installation certified=True, loaded-module transport certified=True. Full tool/service and fabrication qualification remain separate.
+- Artifacts/State: selected canonical machine-owned state/report; full CAD export only after prototype geometry pass.
+- Next Action: Reopen the complete CAD/STEP files and support-installation scenes, verify source fingerprints and inspect side-access review views.
+
+- Timestamp UTC: 2026-09-07T08:03:17+00:00
+- Timestamp Local: 2026-09-07T17:03:17+09:00
+- Module/Scope: compactOneinfrontSamurai side-access local-support design
+- Command(s): `./compactInVacuum/run_compactOne_infrontSamurai.sh --pipeline-index codex_targets.yaml`
+- Key Parameters/Overrides: top rotary, negative-X signal ports, positive-X ICF305 access; four removable local supports on small factory-welded pads with blind M4-class mounting bores; 42 mm inward release, 96 mm downstream transfer, horizontal extraction; no CLI overrides.
+- Validation Result: non-strict prototype pass; {'pass_count': 136, 'warning_count': 7, 'fail_count': 0}; support installation certified=True, loaded-module transport certified=True. Full tool/service and fabrication qualification remain separate.
+- Artifacts/State: selected canonical machine-owned state/report; full CAD export only after prototype geometry pass.
+- Next Action: Reopen the complete CAD/STEP files and support-installation scenes, verify source fingerprints and inspect side-access review views.
+
+- Timestamp UTC: 2026-09-07T08:28:23+00:00
+- Timestamp Local: 2026-09-07T17:28:23+09:00
+- Module/Scope: compactOneAfterSRC and compactOneInfrontSamurai final side-access design delivery
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml`; `./compactInVacuum/run_compactOne_infrontSamurai.sh --pipeline-index codex_targets.yaml`; `./compactInVacuum/run_side_access_tests.sh`; `./compactInVacuum/run_freecad_tests.sh`; FreeCAD FCStd/STEP reopen and per-solid matching; source/target/config fingerprint audit; retained `export_review_meshes.py --source <canonical MaintenanceOpen FCStd> --output-dir <deployment>/review_side_access/review_meshes` and `render_review_meshes.py --model-root <deployment>/review_side_access --basename assembly`, with focused support and final side-exit views; `git diff --check`.
+- Key Parameters/Overrides: top rotary; four negative-X signal feedthroughs; positive-X ICF305 maintenance opening at y=0,z=190 mm; no annular support; four local removable supports on small factory-welded pads with modeled weld fillets, 16 M4-class mounting screw envelopes and blind pad bores. RIGHT support roots on the permanent wall upstream of the opening. Support initial installation is checked before detectors are installed. Module removal order RIGHT/DOWN/UP/LEFT, 42 mm inward staging, 96 mm downstream transfer, 450 mm side extraction; no CLI overrides.
+- Validation Result: both canonical prototype reports PASS non-strict with 136 passes / 7 evidence warnings / 0 failures. All four initial support-installation paths and all four loaded-module side-extraction paths certify: 9 initial-installation phases plus 55 capture/retainer/module phases, 120 certified intervals total per deployment. Each module has 5.4625 mm conservative radial passage allowance. Complete service-process qualification remains false: full hand/tool insertion, retainer actuation, flexible cable handling, capture internals, chamber/structure/material/site evidence remain open. Maximum modeled rod reach beyond the closed side cover is 721.2 mm afterSRC / 716.2 mm preSAMURAI.
+- Verification: 75 pure-Python tests PASS; retained motion/contact/rotation/void and boxed-module runtime regressions PASS; new side-wall geometry and actual initial-support-installation tests PASS, including deliberate window obstruction rejection; all seven retained core FreeCAD runtime groups PASS. Both native assemblies have 365 valid one-solid physical/purchased objects, 12 active detectors, four local supports, 16 mounting screws, correct service walls and no AnnularSupportWeldment. Both STEP files reopen valid with 365 solids and match native component centers, volumes and exact bounds; maximum bound discrepancy 5.735e-7 mm and total relative volume discrepancy below 1e-9. Four final side-exit scenes per deployment are outside the side cover. Both current source fingerprints match state; 12 acceptance metrics and 8 coincidence metrics retained.
+- Artifacts/State: both canonical closed and MaintenanceOpen FCStd assemblies, STEP, metrics, manifest, report and state current; four loaded sector models, four standalone local support assemblies, 17 module-motion poses and 9 support-installation poses per deployment exported. Standard Isometric/Front/Top/Right opening-layout views and focused support/side-exit views visually inspected; these are review views, not manufacturing drawings. Generated CAD/state/report/mesh/image outputs are excluded from Git. Old top-boxed configuration copies preserve prior study and regression inputs.
+- Next Action: deliver both complete side-access instruments and the opening-layout preview; use the model for design review and close operator/tool, structural and manufacturing evidence before release.

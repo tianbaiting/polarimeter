@@ -55,12 +55,18 @@ def run_study(args, target, target_path, state_path, cfg, config_path, pipeline_
         for key, value in (item.split("=", 1) for item in args.set)
     }
     spec = load_spec(config_path, overrides)
-    full = target.get("build", {}).get("mode") == "boxed_deployment"
+    side = target.get("build", {}).get("mode") == "side_access_deployment"
+    full = side or target.get("build", {}).get("mode") == "boxed_deployment"
     if full:
         from .deployment import build_deployment
         from .deployment_validation import validate_deployment
 
         deployment = load_deployment(config_path, overrides)
+    if side:
+        from .side_config import load_side_spec
+        from .side_geometry import build_side_geometry
+
+        side_spec = load_side_spec(config_path, overrides)
     if args.dump_resolved_config:
         from ..config import dump_config_yaml
 
@@ -70,6 +76,7 @@ def run_study(args, target, target_path, state_path, cfg, config_path, pipeline_
                     "platform": yaml.safe_load(dump_config_yaml(cfg)),
                     "boxed_sector_study": asdict(spec),
                     **({"boxed_deployment": deployment} if full else {}),
+                    **({"side_access_deployment": side_spec} if side else {}),
                 },
                 indent=2,
             ),
@@ -100,22 +107,54 @@ def run_study(args, target, target_path, state_path, cfg, config_path, pipeline_
     )
     previous = load_state(str(state_path))
     if should_skip(previous, fingerprint) and not args.force_rebuild:
-        if args.validate_only or complete_artifact_set(
-            previous.get("artifacts", {}), full
-        ):
+        all_artifacts = complete_artifact_set(previous.get("artifacts", {}), full)
+        if side:
+            installation = previous.get("artifacts", {}).get(
+                "support_installation_fcstd", {}
+            )
+            all_artifacts = (
+                all_artifacts
+                and set(installation) == {"left", "down", "up", "right"}
+                and all(
+                    Path(v).is_file()
+                    for poses in installation.values()
+                    for v in poses.values()
+                )
+            )
+        if args.validate_only or all_artifacts:
             print("skipped")
             return 0
     started = now()
     artifacts = {}
     report = None
     try:
-        geometry = (
-            build_deployment(cfg, spec, deployment)
-            if full
-            else build_geometry(cfg, spec)
-        )
+        if side:
+            geometry = build_side_geometry(cfg, spec, deployment, side_spec)
+            deployment = {
+                **deployment,
+                "removal_order": side_spec["removal_order"],
+                "turn_deg": side_spec["turn_deg"],
+                "retainer_tangential_clearance_mm": side_spec[
+                    "retainer_tangential_clearance_mm"
+                ],
+                "side_access": side_spec,
+            }
+        else:
+            geometry = (
+                build_deployment(cfg, spec, deployment)
+                if full
+                else build_geometry(cfg, spec)
+            )
         report = (
-            validate_deployment(cfg, spec, deployment, geometry, strict, report_path)
+            validate_deployment(
+                cfg,
+                spec,
+                deployment,
+                geometry,
+                strict,
+                report_path,
+                side=side_spec if side else None,
+            )
             if full
             else validate_study(cfg, spec, geometry, strict, report_path)
         )
@@ -125,6 +164,13 @@ def run_study(args, target, target_path, state_path, cfg, config_path, pipeline_
             manifest["module"] = target["module"]
             for channel in manifest["channels"]:
                 channel["cad_object_name"] = channel["channel_id"] + "_ActivePlastic"
+                if side:
+                    port = next(
+                        p
+                        for p in cfg.compact_one.deployment.service_ports
+                        if p.sector == channel["sector"]
+                    )
+                    channel["electrical_service"]["wall"] = port.wall
             manifest_path.write_text(json.dumps(manifest, indent=2) + "\n")
             artifacts["channel_manifest"] = str(manifest_path)
         else:
@@ -145,6 +191,19 @@ def run_study(args, target, target_path, state_path, cfg, config_path, pipeline_
                         target["output"]["basename"],
                     )
                 )
+                if side:
+                    from .side_artifacts import export_support_installation
+
+                    artifacts.update(
+                        export_support_installation(
+                            cfg,
+                            spec,
+                            deployment,
+                            geometry,
+                            output,
+                            target["output"]["basename"],
+                        )
+                    )
             else:
                 from .artifacts import export_artifacts
 
@@ -176,6 +235,10 @@ def run_study(args, target, target_path, state_path, cfg, config_path, pipeline_
         if full:
             state["validation"]["all_four_loaded_module_transport_certified"] = report[
                 "all_four_loaded_module_transport_certified"
+            ]
+        if side:
+            state["validation"]["all_four_support_installation_certified"] = report[
+                "all_four_support_installation_certified"
             ]
         save_state(str(state_path), state)
         print(

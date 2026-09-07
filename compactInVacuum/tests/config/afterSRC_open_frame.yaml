@@ -1,1 +1,1 @@
-extends: [../../config/afterSRC_compact.yaml, ../../config/common_open_frame.yaml]
+extends: [../../config/reference_afterSRC_top_boxed.yaml, ../../config/common_open_frame.yaml]

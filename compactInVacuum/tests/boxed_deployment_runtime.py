@@ -22,7 +22,7 @@ from civ.boxed.validation import contact_area
 
 
 def main():
-    path = ROOT / "config/afterSRC_compact.yaml"
+    path = ROOT / "config/reference_afterSRC_top_boxed.yaml"
     cfg, s, d = load_config(str(path)), load_spec(path), load_deployment(path)
     f = build_deployment(cfg, s, d)
     actors = flatten(f.sectors)

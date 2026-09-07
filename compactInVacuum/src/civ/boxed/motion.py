@@ -85,6 +85,8 @@ class VoidRegion:
             x0, x1, y0, y1, z0, z1 = self.values
             return Part.makeBox(x1 - x0, y1 - y0, z1 - z0, V(x0, y0, z0))
         a, b, r, lo, hi = self.values
+        if self.kind == "cylinder_x":
+            return Part.makeCylinder(r, hi - lo, V(lo, a, b), V(1, 0, 0))
         return (
             Part.makeCylinder(r, hi - lo, V(a, lo, b), V(0, 1, 0))
             if self.kind == "cylinder_y"
@@ -103,6 +105,13 @@ class VoidRegion:
                 z1 - box.ZMax,
             )
         a, b, r, lo, hi = self.values
+        if self.kind == "cylinder_x":
+            radial = max(
+                math.hypot(y - a, z - b)
+                for y in (box.YMin, box.YMax)
+                for z in (box.ZMin, box.ZMax)
+            )
+            return min(r - radial, box.XMin - lo, hi - box.XMax)
         if self.kind == "cylinder_y":
             radial = max(
                 math.hypot(x - a, z - b)

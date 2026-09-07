@@ -90,7 +90,12 @@ def evaluate_config_rules(cfg: CIVConfig) -> tuple[ConfigRule, ...]:
                     holder.sector_removal_direction == "sector_radial_inward"
                     and holder.sector_removal_clearance_mm == deployment.boxed_support.release_clearance_mm
                     if deployment.boxed_support is not None
-                    else "radially_outward" in holder.sector_removal_direction
+                    else (
+                        holder.sector_removal_direction == "sector_radial_inward"
+                        and holder.sector_removal_clearance_mm == deployment.local_support.release_clearance_mm
+                        if deployment.local_support is not None
+                        else "radially_outward" in holder.sector_removal_direction
+                    )
                 )
             ),
             (
@@ -355,7 +360,7 @@ def evaluate_config_rules(cfg: CIVConfig) -> tuple[ConfigRule, ...]:
             _rule(
                 "vacuum",
                 "maintenance_access_all_metal_contract",
-                access.wall == "positive_y_top"
+                access.wall in {"positive_y_top", "positive_x_side", "negative_x_side"}
                 and access.seal_type == "conflat_knife_edge_metal_gasket"
                 and access.seal_material == "oxygen_free_copper"
                 and not access.elastomer_seal_allowed

@@ -5,15 +5,17 @@ intent:
   requirements:
     - selected_maintenance_access=ICF305
     - removable_access_closure_owns_no_detector_support_or_ground
-    - four_detailed_boxed_modules_on_common_annular_support_on_permanent_walls
+    - four_detailed_modules_on_individually_installable_local_wall_supports
     - all_sector_mounts=radial_plane_pin_slot_with_downstream_retaining_bridges
-    - removal_order=up,right,left,down
+    - removal_order=right,down,up,left
+    - rotary_on_top_signal_feedthroughs_on_left_maintenance_access_on_right
+    - initial_support_installation_through_side_access_must_be_verified
     - complete_sector_extraction_motion_must_be_reported_separately
 build:
   config: config/infrontSamurai_compact.yaml
   overrides: []
   doc_name: CompactOne_infrontSamurai
-  mode: boxed_deployment
+  mode: side_access_deployment
 validation:
   strict: false
   angle_tolerance_deg: 0.05

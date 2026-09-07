@@ -13,6 +13,7 @@ from .access import (
 )
 from .config import CIVConfig
 from .feedthrough import service_wall_y_mm
+from .wall_frame import port_frame
 from .platform import (
     ChamberCandidateSpec,
     PurchasedBeamInterfaceSpec,
@@ -193,16 +194,12 @@ def _selected_body_and_vacuum(cfg: CIVConfig) -> tuple[Part.Shape, Part.Shape]:
         vacuum = vacuum.fuse(access_boundary.vacuum_extension)
 
     for port in deployment.service_ports:
-        wall_center = App.Vector(
-            port.center_x_mm,
-            service_wall_y_mm(cfg, port.center_x_mm),
-            port.center_z_mm,
-        )
+        wall_center, axis, _ = port_frame(cfg, port)
         bore = Part.makeCylinder(
             0.5 * port.bore_diameter_mm,
             port.collar_length_mm + 2.0 * wall_mm + 0.4,
-            wall_center - App.Vector(0.0, wall_mm + 0.2, 0.0),
-            App.Vector(0.0, 1.0, 0.0),
+            wall_center - axis * (wall_mm + 0.2),
+            axis,
         )
         body = body.cut(bore)
         vacuum = vacuum.fuse(bore)

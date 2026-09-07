@@ -1,0 +1,50 @@
+extends: common_boxed.yaml
+
+sector_holder:
+  sector_removal_clearance_mm: 42.0
+
+deployment:
+  boxed_support:
+  local_support:
+    mount_radius_mm: 182.0
+    release_clearance_mm: 42.0
+
+boxed_sector_study:
+  radial_release_mm: 42.0
+
+side_access_deployment:
+  status: provisional
+  removal_order: [right, down, up, left]
+  turn_deg: {right: 0.0, down: 90.0, up: -90.0, left: 180.0}
+  wall_pad_thickness_mm: 8.0
+  wall_pad_half_width_mm: 30.0
+  wall_pad_z_mm: [125.0, 176.0]
+  window_pad_z_mm: [-15.0, 35.0]
+  wall_weld_leg_mm: 2.0
+  support_flange_thickness_mm: 6.0
+  support_flange_half_width_mm: 28.0
+  mount_screw_t_mm: [-24.0, 24.0]
+  mount_screw_z_offsets_mm: [-12.0, 12.0]
+  mount_screw_center_z_mm: 150.0
+  window_screw_center_z_mm: 10.0
+  mount_screw_radius_mm: 2.0
+  mount_screw_head_radius_mm: 3.5
+  mount_screw_head_depth_mm: 4.0
+  mount_screw_blind_end_offset_mm: 1.5
+  mount_driver_radius_mm: 3.0
+  mount_driver_length_mm: 60.0
+  window_rib_thickness_mm: 3.0
+  support_insertion_offset_x_mm: 600.0
+  support_insertion_inboard_mm: 25.0
+  support_insertion_stage_z_mm: 100.0
+  support_insertion_stage_y_mm: 170.0
+  capture_rod_y_offset_mm: 6.5
+  capture_approach_raise_mm: 40.0
+  capture_insertion_offset_x_mm: 650.0
+  retainer_tangential_clearance_mm: 30.0
+  side_extraction_mm: 450.0
+  retainer_side_extraction_mm: 550.0
+  loom_front_z_mm: {right: [30.0, 40.0, 50.0], left: [30.0, 40.0, 50.0], up: [60.0, 70.0, 80.0], down: [60.0, 70.0, 80.0]}
+  loom_approach_x_mm: {right: -155.0, left: -150.0, up: -110.0, down: -110.0}
+  loom_approach_step_mm: 6.0
+  loom_entry_turn_abs_y_mm: 100.0

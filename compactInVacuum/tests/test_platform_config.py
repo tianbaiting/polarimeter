@@ -162,7 +162,7 @@ def test_common_frame_access_and_inherited_dimensions(profile: str) -> None:
     deployment = cfg.compact_one.deployment
     assert deployment.support_frame is None
     assert deployment.maintenance_access.selected.standard == "ICF305"
-    assert CONFIG_DIR.resolve() / "common_boxed.yaml" in config_dependency_paths(CONFIG_DIR / profile)
+    assert CONFIG_DIR.resolve() / "common_side_access.yaml" in config_dependency_paths(CONFIG_DIR / profile)
     assert not [rule for rule in evaluate_config_rules(cfg) if not rule.passed and not rule.strict_only]
 
 

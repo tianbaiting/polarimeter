@@ -53,7 +53,7 @@ def _group_name(obj) -> str:
     if name.endswith("LightTightSleeve"):
         return "housings"
     if name.startswith(
-        ("AnnularSupport", "DockPin", "ServiceParking", "GroundParking", "Retainer")
+        ("AnnularSupport", "DockPin", "ServiceParking", "GroundParking", "Retainer", "LocalWallSupport", "FactoryWeldedWallPad", "SupportMountScrew")
     ):
         return "support"
     if name == "CommonOpenSupportFrame" or name.endswith(

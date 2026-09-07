@@ -1,4 +1,4 @@
-extends: common_side_access.yaml
+extends: common_boxed.yaml
 doc_name: CompactOne_afterSRC
 
 deployment:
@@ -34,7 +34,7 @@ deployment:
       wall_thickness_mm: 8.0
       wall_thickness_status: provisional
       material: stainless_304L
-      service_accessibility: right_side_icf305_metal_seal_access
+      service_accessibility: top_icf305_metal_seal_access
       service_plate_concept: circular_icf_port_with_removable_blind_flange
     - name: aftersrc_square_icf356_access
       cross_section: square
@@ -120,7 +120,7 @@ deployment:
   maintenance_access:
     enabled: true
     status: recommended
-    wall: positive_x_side
+    wall: positive_y_top
     selected_candidate: ICF305
     supplier: unresolved
     fixed_flange_part_number: unresolved
@@ -196,7 +196,6 @@ deployment:
   service_ports:
     - name: rotary_target
       role: rotary
-      wall: positive_y_top
       center_x_mm: 70.0
       center_z_mm: 0.0
       bore_diameter_mm: 22.0
@@ -204,36 +203,32 @@ deployment:
       collar_length_mm: 8.0
     - name: sector_left
       role: signal
-      wall: negative_x_side
       sector: left
-      center_y_mm: -175.0
+      center_x_mm: -175.0
       center_z_mm: 10.0
       bore_diameter_mm: 38.0
       collar_outer_diameter_mm: 42.0
       collar_length_mm: 8.0
     - name: sector_right
       role: signal
-      wall: negative_x_side
       sector: right
-      center_y_mm: 175.0
+      center_x_mm: 175.0
       center_z_mm: 10.0
       bore_diameter_mm: 38.0
       collar_outer_diameter_mm: 42.0
       collar_length_mm: 8.0
     - name: sector_up
       role: signal
-      wall: negative_x_side
       sector: up
-      center_y_mm: 175.0
+      center_x_mm: -175.0
       center_z_mm: 90.0
       bore_diameter_mm: 38.0
       collar_outer_diameter_mm: 42.0
       collar_length_mm: 8.0
     - name: sector_down
       role: signal
-      wall: negative_x_side
       sector: down
-      center_y_mm: -175.0
+      center_x_mm: 175.0
       center_z_mm: 90.0
       bore_diameter_mm: 38.0
       collar_outer_diameter_mm: 42.0

@@ -1,4 +1,4 @@
-# CompactInVacuum Requirement Baseline v2.7
+# CompactInVacuum Requirement Baseline v2.8
 
 ## 1. Authority and scope
 
@@ -298,6 +298,8 @@ Runtime state, caches, and machine-specific files remain untracked.
 
 ## 16. Change history
 
+- 2026-09-07 v2.8: user selected top rotary, left-wall signal feedthroughs and right-wall maintenance access; replace the inaccessible annular weldment with individually installable local supports and include initial support installation in validation.
+
 - 2026-09-07 v2.7: promoted four detailed boxed modules to both canonical deployments, with a permanent annulus, downstream retaining bridges, rear handling journals, complete installed/parked signal looms and the UP/RIGHT/LEFT/DOWN service sequence. Loaded-module and modeled capture/bridge motion remain distinct from full service-tool and fabrication qualification.
 
 - 2026-09-06 v2.6: authorized one detailed RIGHT-sector boxed-carrier study on a near-detector annular support, with connector disconnection, tool access and complete controlled extraction. This is an isolated design study, not replacement of either canonical deployment.
@@ -335,3 +337,13 @@ All strict evidence gates in section 12 apply to the new canonical engine, inclu
 The full-deployment inward staging travel is 40 mm before the 96 mm downstream transfer. This reduces the rear handling-rod offset to 30 mm, keeping the complete vertical rod inside the circular opening during transfer. It replaces the single-sector study's 14 mm initial release for the full deployment; detector operating positions remain unchanged.
 
 Each retaining bridge first disengages downstream by 20 mm, steps radially outward by 20 mm to clear the rear crossmember, steps 26 mm tangentially away from the engaged handling rod, transfers another 40 mm downstream, centers below the opening and lifts out. The loose bridge and fastener solids are included in the trajectory checks; the actuating/holding tool remains a purchased-mechanism qualification item.
+
+## 19. Side-access baseline superseding the annular support
+
+The two active deployments retain the rotary target axis and its feedthrough on the positive-Y top wall. The four signal feedthroughs move to the negative-X side wall. The metal-sealed ICF305 maintenance opening moves to the positive-X side wall; its center starts at y=0, z=190 mm. Beam interfaces remain on the upstream/downstream Z end walls and retain their deployment-specific contracts. All twelve active detector coordinates remain frozen. Sections 6, 11 and 18 describe the preceding annular prototype wherever inconsistent with this section; it is preserved as a reference only.
+
+There shall be no annular support in the new physical assembly. UP, DOWN and LEFT use short local wall supports. RIGHT uses a local cantilever rooted on permanent wall upstream of the maintenance opening. Small factory-welded wall pads, blind mounting bores, removable support bodies, mounting fastener envelopes and locating pins are modeled. The removable closure and its flange shall carry no detector support or permanent cable load. Every removable support body shall have a checked insertion path through the side opening into the otherwise empty chamber; endpoint fit or contact area alone is insufficient. Factory welding, final machining, chamber deformation and bolt preload remain fabrication evidence gates.
+
+The provisional removal sequence is RIGHT, DOWN, UP, LEFT, reversed for installation. Inward staging starts at 42 mm, downstream transfer at 96 mm, and extraction is toward +X. Capture geometry retains gravity-supporting journal contact while the operating rod approaches horizontally. Capture approach, module motion, retaining-bridge motion and initial support installation shall be reported separately from unqualified flexible service handling and purchased tool internals. The conservative contact and continuous-motion requirements in section 17 remain applicable.
+
+Side-port configuration lives in the two selected deployment YAML files; common support and handling parameters live in `config/common_side_access.yaml`. Both canonical closed/open FCStd assemblies, four real loaded sectors and each sector's side-extraction keyposes are required. A successful ring-era report shall not be reused as side-access evidence.

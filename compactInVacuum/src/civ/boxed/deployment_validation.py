@@ -45,7 +45,7 @@ def collisions(first, second=None, tolerance=1e-6):
     return failures
 
 
-def validate_deployment(cfg, s, d, f, strict=False, output_path=None):
+def validate_deployment(cfg, s, d, f, strict=False, output_path=None, side=None):
     checks, phases, margins, headrooms = [], [], {}, {}
     tolerance = s.collision_volume_tolerance_mm3
 
@@ -67,15 +67,41 @@ def validate_deployment(cfg, s, d, f, strict=False, output_path=None):
     for rule in evaluate_config_rules(cfg):
         if not rule.strict_only:
             check(rule.name, rule.passed, rule.detail)
-    boxed = cfg.compact_one.deployment.boxed_support
-    check(
-        "registered_boxed_support_dimensions_match",
-        boxed is not None
-        and abs(boxed.mount_radius_mm - s.dock_plane_r_mm) < 1e-9
-        and abs(boxed.ring_outer_radius_mm - s.ring_outer_radius_mm) < 1e-9
-        and abs(boxed.release_clearance_mm - s.radial_release_mm) < 1e-9,
-        "Resolved platform metadata and detailed mechanism share one dimensional source",
-    )
+    if side is not None:
+        local = cfg.compact_one.deployment.local_support
+        check(
+            "registered_local_support_dimensions_match",
+            local is not None
+            and abs(local.mount_radius_mm - s.dock_plane_r_mm) < 1e-9
+            and abs(local.release_clearance_mm - s.radial_release_mm) < 1e-9,
+            "Local support and moving module share the configured radial interface",
+        )
+        ports = cfg.compact_one.deployment.service_ports
+        check(
+            "top_rotary_left_signals_right_access",
+            cfg.compact_one.deployment.maintenance_access.wall == "positive_x_side"
+            and all(
+                p.wall
+                == ("positive_y_top" if p.role == "rotary" else "negative_x_side")
+                for p in ports
+            ),
+            "Physical port normals are top rotary, negative-X signals and positive-X maintenance access",
+        )
+        check(
+            "no_annular_support_present",
+            "AnnularSupportWeldment" not in f.fixed and len(f.support_bodies) == 4,
+            "Four separately installable local support bodies replace the closed annulus",
+        )
+    else:
+        boxed = cfg.compact_one.deployment.boxed_support
+        check(
+            "registered_boxed_support_dimensions_match",
+            boxed is not None
+            and abs(boxed.mount_radius_mm - s.dock_plane_r_mm) < 1e-9
+            and abs(boxed.ring_outer_radius_mm - s.ring_outer_radius_mm) < 1e-9
+            and abs(boxed.release_clearance_mm - s.radial_release_mm) < 1e-9,
+            "Resolved platform metadata and detailed mechanism share one dimensional source",
+        )
 
     actors = flatten(f.sectors)
     services = {
@@ -176,26 +202,61 @@ def validate_deployment(cfg, s, d, f, strict=False, output_path=None):
         "Includes stationary support, pins, working target, all service and vacuum interfaces",
         bad,
     )
-    regions = fused(
-        [
-            sh
-            for n, sh in f.fixed_regions.items()
-            if n == "RingWeb" or n.startswith("Socket_")
-        ]
-    )
-    weldment = f.fixed["AnnularSupportWeldment"]
-    check(
-        "fixed_collision_regions_match_weldment",
-        regions.cut(weldment).Volume <= tolerance
-        and weldment.cut(regions).Volume <= tolerance,
-        "Collision decomposition covers the entire fixed annular support",
-    )
-    wall = f.base.chamber.physical["ProjectChamberBody"]
-    check(
-        "annular_frame_bears_on_permanent_walls",
-        len(weldment.Solids) == 1 and contact_area(weldment, wall) > 1,
-        "One connected annular support with permanent side and bottom feet",
-    )
+    if side is not None:
+        wall = f.base.chamber.physical["ProjectChamberBody"]
+        weldment = Part.makeCompound(
+            [f.fixed[f"LocalWallSupport_{sector}"] for sector in ANGLES]
+        )
+        bad = collisions(f.fixed, tolerance=tolerance)
+        check(
+            "local_support_parts_do_not_intersect",
+            not bad,
+            "Includes wall pads, welds, real bores, locating pins and mounting fasteners",
+            bad,
+        )
+        problems = []
+        for sector in ANGLES:
+            body, pad = (
+                f.fixed[f"LocalWallSupport_{sector}"],
+                f.wall_pads[f"FactoryWeldedWallPad_{sector}"],
+            )
+            if (
+                len(body.Solids) != 1
+                or len(pad.Solids) != 1
+                or contact_area(body, pad) < 1
+                or contact_area(pad, wall) < 1
+            ):
+                problems.append(sector)
+            for name, bolt in f.mount_bolts[sector].items():
+                if contact_area(bolt, body) < 1:
+                    problems.append(name)
+        check(
+            "four_bolted_supports_bear_on_welded_wall_pads",
+            not problems,
+            "Finite-area pad/brace/head contacts and modeled weld fillets define the mechanical connections",
+            problems,
+        )
+    else:
+        regions = fused(
+            [
+                sh
+                for n, sh in f.fixed_regions.items()
+                if n == "RingWeb" or n.startswith("Socket_")
+            ]
+        )
+        weldment = f.fixed["AnnularSupportWeldment"]
+        check(
+            "fixed_collision_regions_match_weldment",
+            regions.cut(weldment).Volume <= tolerance
+            and weldment.cut(regions).Volume <= tolerance,
+            "Collision decomposition covers the entire fixed annular support",
+        )
+        wall = f.base.chamber.physical["ProjectChamberBody"]
+        check(
+            "annular_frame_bears_on_permanent_walls",
+            len(weldment.Solids) == 1 and contact_area(weldment, wall) > 1,
+            "One connected annular support with permanent side and bottom feet",
+        )
     contact_failures = []
     local_structural = (*f.base.structural, "GripRearJournal")
     for sector, parts in f.sectors.items():
@@ -229,7 +290,7 @@ def validate_deployment(cfg, s, d, f, strict=False, output_path=None):
     check(
         "all_four_finite_area_structural_paths",
         not contact_failures,
-        "Rear head face to nest, cheeks/crossmembers to radial dock and permanent annulus; retaining bridges bear on both dock and socket",
+        "Rear head face to nest, cheeks/crossmembers to radial dock and fixed support; retaining bridges bear on both dock and socket",
         contact_failures,
     )
     parking_errors = []
@@ -254,7 +315,7 @@ def validate_deployment(cfg, s, d, f, strict=False, output_path=None):
     check(
         "four_permanent_wall_service_parking_stations",
         not parking_errors,
-        "Plug collars have physical seats; upper parking attaches to the permanent left wall",
+        "Plug collars have physical seats on permanent walls",
         parking_errors,
     )
     los = find_acceptance_obstructions(
@@ -341,43 +402,81 @@ def validate_deployment(cfg, s, d, f, strict=False, output_path=None):
     chamber = f.base.chamber.candidate
     flange_r = port.flange_outer_diameter_mm / 2
     edge_margin = min(
-        chamber.inner_size_x_mm / 2
+        (chamber.inner_size_y_mm if side is not None else chamber.inner_size_x_mm) / 2
         + chamber.wall_thickness_mm
-        - abs(port.center_x_mm)
+        - abs(port.center_y_mm if side is not None else port.center_x_mm)
         - flange_r,
         port.center_z_mm - flange_r - (chamber.center_z_mm - chamber.length_mm / 2),
         chamber.center_z_mm + chamber.length_mm / 2 - port.center_z_mm - flange_r,
     )
     check(
-        "maintenance_flange_fits_top_face",
+        (
+            "maintenance_flange_fits_side_face"
+            if side is not None
+            else "maintenance_flange_fits_top_face"
+        ),
         edge_margin >= access.flange_edge_margin_mm,
         f"Minimum flange-to-chamber edge margin {edge_margin:.3f} mm",
     )
-    service_margin = min(
-        math.hypot(p.center_x_mm - port.center_x_mm, p.center_z_mm - port.center_z_mm)
-        - flange_r
-        - (
-            cfg.compact_one.services.signal_interface.module_outer_diameter_mm / 2
-            if p.role == "signal"
-            else (
-                35.0
-                if cfg.compact_one.deployment.target_feedthrough_standard == "ICF70"
-                else p.collar_outer_diameter_mm / 2
-            )
+    if side is not None:
+        flange = f.base.chamber.purchased_interfaces["MaintenanceAccessFixedICFFlange"]
+        service_margin = min(
+            flange.distToShape(sh)[0]
+            for p in f.base.ports.values()
+            for sh in p.purchased_interfaces.values()
         )
-        for p in cfg.compact_one.deployment.service_ports
-    )
-    check(
-        "maintenance_flange_clears_service_ports",
-        service_margin >= access.service_port_clearance_mm,
-        f"Minimum projected clearance to target/signal interfaces {service_margin:.3f} mm",
-    )
+        check(
+            "side_access_clear_of_rotary_and_signal_ports",
+            service_margin >= access.service_port_clearance_mm,
+            f"Minimum actual 3D clearance to service interfaces {service_margin:.3f} mm",
+        )
+    else:
+        service_margin = min(
+            math.hypot(
+                p.center_x_mm - port.center_x_mm, p.center_z_mm - port.center_z_mm
+            )
+            - flange_r
+            - (
+                cfg.compact_one.services.signal_interface.module_outer_diameter_mm / 2
+                if p.role == "signal"
+                else (
+                    35.0
+                    if cfg.compact_one.deployment.target_feedthrough_standard == "ICF70"
+                    else p.collar_outer_diameter_mm / 2
+                )
+            )
+            for p in cfg.compact_one.deployment.service_ports
+        )
+        check(
+            "maintenance_flange_clears_service_ports",
+            service_margin >= access.service_port_clearance_mm,
+            f"Minimum projected clearance to target/signal interfaces {service_margin:.3f} mm",
+        )
 
     basic_ok = not any(c["status"] == "fail" for c in checks)
     motion_env = chamber_environment(f)
-    voids, void_records = verify_void_regions(
-        study_void_candidates(f.base, s), motion_env, tolerance
-    )
+    if side is not None:
+        from .side_installation import (
+            side_void_candidates,
+            validate_support_installation,
+        )
+
+        candidates = side_void_candidates(f, s)
+    else:
+        candidates = study_void_candidates(f.base, s)
+    voids, void_records = verify_void_regions(candidates, motion_env, tolerance)
+    support_installation, support_installed = [], None
+    if side is not None:
+        if basic_ok:
+            support_installation, support_installed = validate_support_installation(
+                f, s, side, check, voids
+            )
+        check(
+            "all_four_support_installation_paths_certified",
+            bool(support_installed),
+            "All local support bodies and locating pins enter through the side opening and seat on permanent wall pads",
+        )
+        basic_ok = basic_ok and bool(support_installed)
     removed = set()
     all_transport = True
     if basic_ok:
@@ -458,15 +557,38 @@ def validate_deployment(cfg, s, d, f, strict=False, output_path=None):
                 **f.tools[sector],
                 lower_name: moved(f.tools[sector][lower_name], jaw_delta),
             }
-            insertion = Phase(
-                f"{sector}_capture_tool_insertion",
-                {
-                    n: moved(sh, V(0, d["handling_rod_length_mm"], 0))
-                    for n, sh in open_tool.items()
-                },
-                capture_obstacles,
-                delta=V(0, -d["handling_rod_length_mm"], 0),
-            )
+            if side is not None:
+                raise_by = V(0, side["capture_approach_raise_mm"], 0)
+                insertion = Phase(
+                    f"{sector}_capture_tool_enter_side_window",
+                    {
+                        n: moved(
+                            sh,
+                            raise_by + V(side["capture_insertion_offset_x_mm"], 0, 0),
+                        )
+                        for n, sh in open_tool.items()
+                    },
+                    capture_obstacles,
+                    delta=V(-side["capture_insertion_offset_x_mm"], 0, 0),
+                )
+                approach = Phase(
+                    f"{sector}_capture_tool_lower_onto_journal",
+                    insertion.at(1),
+                    capture_obstacles,
+                    delta=-raise_by,
+                )
+                capture_phases = [insertion, approach]
+            else:
+                insertion = Phase(
+                    f"{sector}_capture_tool_insertion",
+                    {
+                        n: moved(sh, V(0, d["handling_rod_length_mm"], 0))
+                        for n, sh in open_tool.items()
+                    },
+                    capture_obstacles,
+                    delta=V(0, -d["handling_rod_length_mm"], 0),
+                )
+                capture_phases = [insertion]
             align = Phase(
                 f"{sector}_capture_jaw_alignment",
                 {lower_name: open_tool[lower_name]},
@@ -514,7 +636,7 @@ def validate_deployment(cfg, s, d, f, strict=False, output_path=None):
                 contacts=frozenset({(lower_name, upper_name)}),
             )
             prep_pass = True
-            for phase in (insertion, align, close):
+            for phase in (*capture_phases, align, close):
                 print(f"CERTIFY {phase.name}", file=sys.stderr, flush=True)
                 result = certify_phase(phase, s, jaw_mate, voids)
                 phases.append(result)
@@ -541,12 +663,46 @@ def validate_deployment(cfg, s, d, f, strict=False, output_path=None):
                         zz - d["retainer_screw_length_mm"],
                     ),
                 )
-                pair = (f"{sector}_RetainerScrew_{index}", f"Socket_{sector}")
+                pair = (
+                    f"{sector}_RetainerScrew_{index}",
+                    (
+                        f"LocalWallSupport_{sector}"
+                        if side is not None
+                        else f"Socket_{sector}"
+                    ),
+                )
                 volume = overlap(sweep, obstacles[pair[1]])
                 if volume > tolerance:
                     retainer_errors.append({"pair": pair, "volume_mm3": volume})
                 else:
                     retainer_mates.add(pair)
+            if side is not None:
+                bridge_name = f"{sector}_RetainerBridge"
+                support_name = f"LocalWallSupport_{sector}"
+                bridge_shape = f.retainers[sector][bridge_name]
+                b = bridge_shape.optimalBoundingBox(False, False)
+                swept_bridge = Part.makeBox(
+                    b.XLength,
+                    b.YLength,
+                    b.ZLength + d["retainer_release_mm"],
+                    V(b.XMin, b.YMin, b.ZMin),
+                )
+                # [EN] A complete rectangular translation envelope proves separation beyond the finite initial bearing face, even when the remote mounting flange extends behind that face. / [CN] 完整矩形平移包络证明初始有限承压面之后的分离，即使远处安装法兰延伸到该面后方也适用。
+                valid_bridge_sweep = (
+                    overlap(swept_bridge, obstacles[support_name]) <= tolerance
+                    and contact_area(bridge_shape, obstacles[support_name]) > 1
+                )
+                check(
+                    f"{sector}_retainer_initial_bearing_sweep",
+                    valid_bridge_sweep,
+                    "The complete bridge translation prism clears the local support after separating from its bearing face",
+                )
+                if valid_bridge_sweep:
+                    retainer_mates.add((bridge_name, support_name))
+                else:
+                    retainer_errors.append(
+                        {"kind": "unproved_bridge_bearing_sweep", "sector": sector}
+                    )
             retainer = Phase(
                 f"{sector}_retaining_bridge_disengagement",
                 f.retainers[sector],
@@ -556,7 +712,14 @@ def validate_deployment(cfg, s, d, f, strict=False, output_path=None):
                 contacts=frozenset(
                     {
                         (f"{sector}_RetainerBridge", f"{sector}_CarrierDockFoot"),
-                        (f"{sector}_RetainerBridge", f"Socket_{sector}"),
+                        (
+                            f"{sector}_RetainerBridge",
+                            (
+                                f"LocalWallSupport_{sector}"
+                                if side is not None
+                                else f"Socket_{sector}"
+                            ),
+                        ),
                     }
                 ),
             )
@@ -584,22 +747,31 @@ def validate_deployment(cfg, s, d, f, strict=False, output_path=None):
                 sector,
                 sum(d["retainer_r_mm"]) / 2 + d["retainer_radial_clearance_mm"],
                 0,
-            ).x
+            )
+            offset = offset.y if side is not None else offset.x
             if abs(offset) > 1e-6:
                 retainer_center = Phase(
                     f"{sector}_retaining_bridge_centering",
                     free_retainer,
                     retainer_obstacles,
-                    delta=V(-offset, 0, 0),
+                    delta=V(0, -offset, 0) if side is not None else V(-offset, 0, 0),
                 )
                 retainer_phases.append(retainer_center)
                 free_retainer = retainer_center.at(1)
             retainer_phases.append(
                 Phase(
-                    f"{sector}_retaining_bridge_lift",
+                    (
+                        f"{sector}_retaining_bridge_side_exit"
+                        if side is not None
+                        else f"{sector}_retaining_bridge_lift"
+                    ),
                     free_retainer,
                     retainer_obstacles,
-                    delta=V(0, d["retainer_lift_mm"], 0),
+                    delta=(
+                        V(side["retainer_side_extraction_mm"], 0, 0)
+                        if side is not None
+                        else V(0, d["retainer_lift_mm"], 0)
+                    ),
                 )
             )
             retainer_pass = not retainer_errors
@@ -622,7 +794,17 @@ def validate_deployment(cfg, s, d, f, strict=False, output_path=None):
                 obstacles,
                 delta=vector(sector, -s.radial_release_mm, 0),
                 excluded_pairs=frozenset(mates),
-                contacts=frozenset((n, f"Socket_{sector}") for n in f.sectors[sector]),
+                contacts=frozenset(
+                    (
+                        n,
+                        (
+                            f"LocalWallSupport_{sector}"
+                            if side is not None
+                            else f"Socket_{sector}"
+                        ),
+                    )
+                    for n in f.sectors[sector]
+                ),
             )
             transfer = Phase(
                 f"{sector}_downstream_transfer",
@@ -645,20 +827,33 @@ def validate_deployment(cfg, s, d, f, strict=False, output_path=None):
                 )
                 sector_phases.append(turn)
                 turned.update(turn.at(1))
-            if abs(pivot.x) > 1e-6:
+            center_offset = pivot.y if side is not None else pivot.x
+            if abs(center_offset) > 1e-6:
                 center = Phase(
                     f"{sector}_center_under_port",
                     turned,
                     obstacles,
-                    delta=V(-pivot.x, 0, 0),
+                    delta=(
+                        V(0, -center_offset, 0)
+                        if side is not None
+                        else V(-center_offset, 0, 0)
+                    ),
                 )
                 sector_phases.append(center)
                 turned = center.at(1)
             lift = Phase(
-                f"{sector}_lift_through_port",
+                (
+                    f"{sector}_extract_through_side_port"
+                    if side is not None
+                    else f"{sector}_lift_through_port"
+                ),
                 turned,
                 obstacles,
-                delta=V(0, d["lift_mm"], 0),
+                delta=(
+                    V(side["side_extraction_mm"], 0, 0)
+                    if side is not None
+                    else V(0, d["lift_mm"], 0)
+                ),
             )
             sector_phases.append(lift)
             f.poses[sector] = {phase.name: phase.at(1) for phase in sector_phases}
@@ -687,24 +882,39 @@ def validate_deployment(cfg, s, d, f, strict=False, output_path=None):
                 n: sh.optimalBoundingBox(False, False) for n, sh in lift.at(1).items()
             }
             radius = max(
-                math.hypot(x - access.center_x_mm, z - access.center_z_mm)
+                math.hypot(
+                    x
+                    - (access.center_y_mm if side is not None else access.center_x_mm),
+                    z - access.center_z_mm,
+                )
                 for n in f.sectors[sector]
-                for x in (bounds[n].XMin, bounds[n].XMax)
+                for x in (
+                    (bounds[n].YMin, bounds[n].YMax)
+                    if side is not None
+                    else (bounds[n].XMin, bounds[n].XMax)
+                )
                 for z in (bounds[n].ZMin, bounds[n].ZMax)
             )
             margins[sector] = access.clear_bore_diameter_mm / 2 - radius
             rim = f.base.chamber.purchased_interfaces[
                 "MaintenanceAccessBlindFlange"
-            ].BoundBox.YMax
-            bottom = min(bounds[n].YMin for n in f.sectors[sector])
-            headrooms[sector] = max(b.YMax for b in bounds.values()) - rim
+            ].optimalBoundingBox(False, False)
+            rim = rim.XMax if side is not None else rim.YMax
+            bottom = min(
+                bounds[n].XMin if side is not None else bounds[n].YMin
+                for n in f.sectors[sector]
+            )
+            headrooms[sector] = (
+                max(b.XMax if side is not None else b.YMax for b in bounds.values())
+                - rim
+            )
             check(
                 f"{sector}_fully_extracted_with_port_allowance",
                 margins[sector]
                 >= cfg.compact_one.deployment.maintenance_access.passage_diametral_clearance_mm
                 / 2
                 and bottom > rim + 5,
-                f"Module radial allowance {margins[sector]:.3f} mm; bottom {bottom-rim:.3f} mm above closed-lid height",
+                f"Module radial allowance {margins[sector]:.3f} mm; lowest normal coordinate clears the closed cover by {bottom-rim:.3f} mm",
             )
             all_transport = all_transport and passed
             if not passed:
@@ -714,7 +924,7 @@ def validate_deployment(cfg, s, d, f, strict=False, output_path=None):
     check(
         "all_four_loaded_modules_transport_certified",
         complete_transport,
-        "UP, RIGHT, LEFT, DOWN sequence with other actual modules present until their removal",
+        "Configured service sequence with other actual modules present until their removal",
     )
     for name, detail in [
         (
@@ -743,7 +953,11 @@ def validate_deployment(cfg, s, d, f, strict=False, output_path=None):
         ),
         (
             "human_handling_site_and_overhead_evidence",
-            "The modeled vertical rod does not establish operator reach, handling forces or site clearance above the original lid",
+            (
+                "The modeled horizontal rod and driver engagement envelopes do not establish operator reach, holding forces, full mounting-tool insertion or site clearance beside the chamber"
+                if side is not None
+                else "The modeled vertical rod does not establish operator reach, handling forces or site clearance above the original lid"
+            ),
         ),
     ]:
         check(name, False, detail, evidence=True)
@@ -756,7 +970,11 @@ def validate_deployment(cfg, s, d, f, strict=False, output_path=None):
         schema_version=1,
         status="fail" if summary["fail_count"] else "pass",
         strict=bool(strict),
-        validation_mode="four_boxed_sector_deployment",
+        validation_mode=(
+            "side_access_local_support_deployment"
+            if side is not None
+            else "four_boxed_sector_deployment"
+        ),
         scope="four_detailed_modules_twelve_detectors_complete_installed_assembly",
         summary=summary,
         checks=checks,
@@ -765,7 +983,16 @@ def validate_deployment(cfg, s, d, f, strict=False, output_path=None):
         all_four_loaded_module_transport_certified=complete_transport,
         complete_modeled_extraction_certified=False,
         module_port_radial_allowance_mm=margins,
-        required_tool_headroom_above_closure_mm=headrooms,
+        **(
+            {
+                "required_tool_reach_beyond_side_closure_mm": headrooms,
+                "support_installation_phases": support_installation,
+                "all_four_support_installation_certified": bool(support_installed),
+                "side_access_configuration": side,
+            }
+            if side is not None
+            else {"required_tool_headroom_above_closure_mm": headrooms}
+        ),
         transport_prerequisites=[
             "beam off",
             "target parked",
@@ -789,7 +1016,11 @@ def validate_deployment(cfg, s, d, f, strict=False, output_path=None):
                 "flange_edge_margin_mm": edge_margin,
                 "service_port_clearance_mm": service_margin,
                 "module_radial_allowance_mm": margins,
-                "tool_headroom_above_closed_lid_mm": headrooms,
+                (
+                    "tool_reach_beyond_side_cover_mm"
+                    if side is not None
+                    else "tool_headroom_above_closed_lid_mm"
+                ): headrooms,
             },
         },
         software={"FreeCAD": ".".join(App.Version()[:3])},

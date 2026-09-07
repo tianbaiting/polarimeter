@@ -29,7 +29,7 @@ def export_deployment(cfg, s, d, f, output, basename):
         for prop, value in {
             "Instrument": cfg.compact_one.deployment.instrument_name,
             "GeometryScope": kind,
-            "RemovalOrder": "UP -> RIGHT -> LEFT -> DOWN",
+            "RemovalOrder": " -> ".join(name.upper() for name in d["removal_order"]),
             "Coordinates": "Beam +Z; vertical +Y",
             "ReleaseStatus": "Provisional geometry; complete maintenance preparation and fabrication evidence remain open",
             "BoxedDeploymentParameters": json.dumps(d, sort_keys=True),
@@ -97,7 +97,7 @@ def export_deployment(cfg, s, d, f, output, basename):
                         "stainless_304L",
                     )
         for n, sh in f.fixed.items():
-            add(doc, n, sh, "FixedSupport", material="stainless_304L")
+            add(doc, n, sh, "FixedSupport", PURCHASED if "Screw" in n else PHYSICAL, material="stainless_304L")
         for sector in ANGLES:
             parked = sector in removed or sector == current
             for mapping, role, material in (

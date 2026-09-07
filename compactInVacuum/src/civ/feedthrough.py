@@ -8,6 +8,7 @@ import Part
 
 from .config import CIVConfig
 from .platform import FeedthroughInterfaceSpec, ServicePortPlacementSpec
+from .wall_frame import port_frame
 
 
 @dataclass(frozen=True)
@@ -47,17 +48,15 @@ def _channel_points(
     center: App.Vector,
     count: int,
     clear_bore_mm: float,
+    tangent: App.Vector = App.Vector(1, 0, 0),
 ) -> tuple[App.Vector, ...]:
     if count <= 0:
         return ()
     radius_mm = min(0.22 * clear_bore_mm, 7.0)
     return tuple(
         center
-        + App.Vector(
-            radius_mm * math.cos(2.0 * math.pi * index / count),
-            0.0,
-            radius_mm * math.sin(2.0 * math.pi * index / count),
-        )
+        + tangent * (radius_mm * math.cos(2.0 * math.pi * index / count))
+        + App.Vector(0, 0, radius_mm * math.sin(2.0 * math.pi * index / count))
         for index in range(count)
     )
 
@@ -70,12 +69,7 @@ def build_feedthrough_port(
         raise ValueError("feedthrough geometry requires a CompactOne schema-v3 configuration")
     services = cfg.compact_one.services
     routing = services.routing
-    wall_center = App.Vector(
-        port.center_x_mm,
-        service_wall_y_mm(cfg, port.center_x_mm),
-        port.center_z_mm,
-    )
-    axis = App.Vector(0.0, 1.0, 0.0)
+    wall_center, axis, tangent = port_frame(cfg, port)
     collar_outer = Part.makeCylinder(
         0.5 * port.collar_outer_diameter_mm,
         port.collar_length_mm,
@@ -85,7 +79,7 @@ def build_feedthrough_port(
     collar_bore = Part.makeCylinder(
         0.5 * port.bore_diameter_mm,
         port.collar_length_mm + 0.4,
-        wall_center - App.Vector(0.0, 0.2, 0.0),
+        wall_center - axis * 0.2,
         axis,
     )
     collar = collar_outer.cut(collar_bore)
@@ -100,14 +94,14 @@ def build_feedthrough_port(
         interface_thickness_mm = interface_spec.module_thickness_mm
         clear_bore_mm = interface_spec.nominal_clear_bore_mm
         channel_count = services.channels_per_signal_feedthrough
-    interface_base = wall_center + App.Vector(0.0, port.collar_length_mm, 0.0)
+    interface_base = wall_center + axis * port.collar_length_mm
     interface_envelope = Part.makeCylinder(
         0.5 * interface_outer_mm,
         interface_thickness_mm,
         interface_base,
         axis,
     )
-    connector_base = interface_base + App.Vector(0.0, interface_thickness_mm, 0.0)
+    connector_base = interface_base + axis * interface_thickness_mm
     connector_keepout = Part.makeCylinder(
         0.5 * routing.connector_keepout_diameter_mm,
         routing.connector_keepout_length_mm,
@@ -139,8 +133,9 @@ def build_feedthrough_port(
         },
         materials={f"{port.name}_ProjectWeldCollar": "stainless_304L"},
         channel_entry_points=_channel_points(
-            wall_center - App.Vector(0.0, 0.5, 0.0),
+            wall_center - axis * 0.5,
             channel_count,
             min(clear_bore_mm, port.bore_diameter_mm),
+            tangent,
         ),
     )

@@ -329,6 +329,7 @@ class MaintenanceAccessFlangeSpec:
     gasket_inner_diameter_mm: float
     gasket_thickness_mm: float
     weld_neck_length_mm: float
+    center_y_mm: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -403,12 +404,20 @@ class ServicePortPlacementSpec:
     bore_diameter_mm: float
     collar_outer_diameter_mm: float
     collar_length_mm: float
+    wall: str = "positive_y_top"
+    center_y_mm: float = 0.0
 
 
 @dataclass(frozen=True)
 class BoxedSupportSpec:
     mount_radius_mm: float
     ring_outer_radius_mm: float
+    release_clearance_mm: float
+
+
+@dataclass(frozen=True)
+class LocalSupportSpec:
+    mount_radius_mm: float
     release_clearance_mm: float
 
 
@@ -437,6 +446,7 @@ class DeploymentSpec:
     sector_mounts: tuple[SectorMountSpec, ...]
     service_ports: tuple[ServicePortPlacementSpec, ...]
     boxed_support: BoxedSupportSpec | None = None
+    local_support: LocalSupportSpec | None = None
 
     @property
     def chamber(self) -> ChamberCandidateSpec:
@@ -452,6 +462,12 @@ class DeploymentSpec:
         return matches[0]
 
     def sector_mount(self, sector: str) -> SectorMountSpec:
+        if self.local_support is not None:
+            if sector not in {"left", "right", "up", "down"}:
+                raise ValueError(f"unsupported sector mount: {sector!r}")
+            half = (self.chamber.inner_size_x_mm if sector in {"left", "right"} else self.chamber.inner_size_y_mm) / 2
+            return SectorMountSpec(sector, "local_wall_support", 0.0,
+                half - self.local_support.mount_radius_mm, self.local_support.release_clearance_mm)
         if self.boxed_support is not None:
             if sector not in {"left", "right", "up", "down"}:
                 raise ValueError(f"unsupported sector mount: {sector!r}")
@@ -1518,6 +1534,7 @@ def _parse_maintenance_access(
                 ),
                 f"{entry_prefix}.weld_neck_length_mm",
             ),
+            center_y_mm=_number(entry.get("center_y_mm", 0.0), f"{entry_prefix}.center_y_mm"),
         )
         if candidate.bolt_count <= 0:
             raise ValueError(f"{entry_prefix}.bolt_count must be > 0")
@@ -1607,8 +1624,8 @@ def _parse_maintenance_access(
         ),
         candidates=tuple(candidates),
     )
-    if spec.wall != "positive_y_top":
-        raise ValueError(f"{prefix}.wall must be positive_y_top")
+    if spec.wall not in {"positive_y_top", "positive_x_side", "negative_x_side"}:
+        raise ValueError(f"{prefix}.wall is unsupported")
     standards = [candidate.standard for candidate in spec.candidates]
     if len(standards) != len(set(standards)):
         raise ValueError(f"{prefix}.candidates standards must be unique")
@@ -1719,7 +1736,7 @@ def _parse_deployment(raw: Mapping[str, Any]) -> DeploymentSpec:
                     else _text(sector_raw, f"deployment.service_ports[{idx}].sector")
                 ),
                 center_x_mm=_number(
-                    entry.get("center_x_mm"),
+                    entry.get("center_x_mm", 0.0),
                     f"deployment.service_ports[{idx}].center_x_mm",
                 ),
                 center_z_mm=_number(
@@ -1747,6 +1764,8 @@ def _parse_deployment(raw: Mapping[str, Any]) -> DeploymentSpec:
                     ),
                     f"deployment.service_ports[{idx}].collar_length_mm",
                 ),
+                wall=_text(entry.get("wall", "positive_y_top"), f"deployment.service_ports[{idx}].wall"),
+                center_y_mm=_number(entry.get("center_y_mm", 0.0), f"deployment.service_ports[{idx}].center_y_mm"),
             )
         )
         if ports[-1].role not in {"rotary", "signal"}:
@@ -1754,6 +1773,10 @@ def _parse_deployment(raw: Mapping[str, Any]) -> DeploymentSpec:
                 "deployment.service_ports role must be rotary or signal; "
                 f"removed service role {ports[-1].role!r} is not supported"
             )
+        if ports[-1].wall not in {"positive_y_top", "positive_x_side", "negative_x_side"}:
+            raise ValueError("unsupported service port wall")
+        if ports[-1].role == "rotary" and ports[-1].wall != "positive_y_top":
+            raise ValueError("the current rotary mechanism requires the top wall")
     spec = DeploymentSpec(
         name=_text(raw.get("name"), "deployment.name"),
         instrument_name=_text(
@@ -1834,8 +1857,17 @@ def _parse_deployment(raw: Mapping[str, Any]) -> DeploymentSpec:
             key: _positive(_number(raw["boxed_support"].get(key), f"deployment.boxed_support.{key}"), f"deployment.boxed_support.{key}")
             for key in ("mount_radius_mm", "ring_outer_radius_mm", "release_clearance_mm")
         })),
+        local_support=(None if raw.get("local_support") is None else LocalSupportSpec(**{
+            key: _positive(_number(raw["local_support"].get(key), f"deployment.local_support.{key}"), f"deployment.local_support.{key}")
+            for key in ("mount_radius_mm", "release_clearance_mm")
+        })),
     )
     _ = spec.chamber
+    if spec.local_support is not None:
+        if spec.support_frame is not None or spec.boxed_support is not None or spec.sector_mounts:
+            raise ValueError("local_support cannot be combined with another mounting architecture")
+        if spec.local_support.mount_radius_mm >= min(spec.chamber.inner_size_x_mm, spec.chamber.inner_size_y_mm) / 2:
+            raise ValueError("local support dock must be inside the chamber")
     if spec.boxed_support is not None:
         boxed = spec.boxed_support
         if spec.support_frame is not None or spec.sector_mounts:
@@ -2102,7 +2134,8 @@ def compact_one_top_services_mapping(platform: CompactOnePlatformConfig) -> dict
                 {
                     "name": port.name,
                     "sector": port.sector,
-                    "center_x_mm": port.center_x_mm,
+                    # [EN] The legacy channel map uses wall-tangent coordinates; physical geometry reads the explicit deployment wall. / [CN] 旧通道映射使用壁面切向坐标，实体几何读取明确的部署壁面。
+                    "center_x_mm": port.center_x_mm if port.wall == "positive_y_top" else port.center_y_mm,
                     "center_z_mm": port.center_z_mm,
                 }
                 for port in signal_ports

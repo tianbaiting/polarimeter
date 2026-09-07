@@ -1,4 +1,4 @@
-extends: ../../config/afterSRC_compact.yaml
+extends: ../../config/reference_afterSRC_top_boxed.yaml
 doc_name: BoxedSectorStudy
 deployment:
   boxed_support:

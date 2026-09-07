@@ -1,7 +1,7 @@
 schema_version: 1
 module: compactOneAfterSRC
 intent:
-  description: CompactInVacuum-afterSRC baseline in-vacuum engineering prototype downstream of SRC with an all-metal top ICF maintenance port; afterSRC external is retained only as a legacy/fallback/reference route, and its interfaces are not inherited as compact site requirements.
+  description: CompactInVacuum-afterSRC baseline in-vacuum engineering prototype downstream of SRC with an all-metal right-side ICF maintenance port; afterSRC external is retained only as a legacy/fallback/reference route, and its interfaces are not inherited as compact site requirements.
   requirements:
     - selected_maintenance_access=ICF305
     - comparison_candidates=ICF253,ICF305,ICF356
@@ -9,15 +9,17 @@ intent:
     - elastomer_or_oring_seal=prohibited
     - helium_leak_rate_max_pa_m3_s=1.0e-10
     - removable_access_closure_owns_no_detector_support_or_ground
-    - four_detailed_boxed_modules_on_common_annular_support_on_permanent_walls
+    - four_detailed_modules_on_individually_installable_local_wall_supports
     - all_sector_mounts=radial_plane_pin_slot_with_downstream_retaining_bridges
-    - removal_order=up,right,left,down
+    - removal_order=right,down,up,left
+    - rotary_on_top_signal_feedthroughs_on_left_maintenance_access_on_right
+    - initial_support_installation_through_side_access_must_be_verified
     - complete_sector_extraction_motion_must_be_reported_separately
 build:
   config: config/afterSRC_compact.yaml
   overrides: []
   doc_name: CompactOne_afterSRC
-  mode: boxed_deployment
+  mode: side_access_deployment
 validation:
   strict: false
   angle_tolerance_deg: 0.05

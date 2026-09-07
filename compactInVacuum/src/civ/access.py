@@ -8,6 +8,7 @@ import Part
 
 from .config import CIVConfig
 from .platform import MaintenanceAccessFlangeSpec
+from .wall_frame import access_local_spec, wall_half_size, orient
 
 
 @dataclass(frozen=True)
@@ -96,9 +97,9 @@ def build_maintenance_access_boundary(
     access = cfg.compact_one.deployment.maintenance_access
     if access is None or not access.enabled:
         return None
-    spec = access.selected
+    spec = access_local_spec(access)
     candidate = cfg.compact_one.deployment.chamber
-    inner_y_mm = 0.5 * candidate.inner_size_y_mm
+    inner_y_mm = wall_half_size(cfg, access.wall)
     outer_y_mm = inner_y_mm + candidate.wall_thickness_mm
     seal_plane_y_mm = (
         outer_y_mm
@@ -120,8 +121,8 @@ def build_maintenance_access_boundary(
     )
     # [EN] Cutting overtravel and vacuum extent are separate so the vacuum stops exactly at the blank seal plane. / [CN] 切孔余量与真空体范围分离，使真空精确终止于盲板密封面。
     return MaintenanceAccessBoundaryGeometry(
-        body_cut=body_cut,
-        vacuum_extension=vacuum_extension,
+        body_cut=orient(body_cut, access.wall),
+        vacuum_extension=orient(vacuum_extension, access.wall),
     )
 
 
@@ -137,9 +138,9 @@ def build_maintenance_access_components(
     access = cfg.compact_one.deployment.maintenance_access
     if access is None or not access.enabled:
         return {}, {}, {}, {}, {}
-    spec = access.selected
+    spec = access_local_spec(access)
     candidate = cfg.compact_one.deployment.chamber
-    outer_y_mm = 0.5 * candidate.inner_size_y_mm + candidate.wall_thickness_mm
+    outer_y_mm = wall_half_size(cfg, access.wall) + candidate.wall_thickness_mm
     axis = App.Vector(0.0, 1.0, 0.0)
     center = App.Vector(spec.center_x_mm, outer_y_mm, spec.center_z_mm)
     neck = annular_tube(
@@ -168,7 +169,7 @@ def build_maintenance_access_components(
         App.Vector(spec.center_x_mm, gasket_base_y_mm, spec.center_z_mm),
         axis,
     )
-    inner_y_mm = 0.5 * candidate.inner_size_y_mm
+    inner_y_mm = wall_half_size(cfg, access.wall)
     open_envelope = Part.makeCylinder(
         0.5 * spec.clear_bore_diameter_mm,
         (
@@ -201,7 +202,7 @@ def build_maintenance_access_components(
         App.Vector(spec.center_x_mm, blank_base_y_mm, spec.center_z_mm),
         axis,
     )
-    return (
+    groups = (
         {
             "MaintenanceAccessProjectWeldNeck": neck,
             "MaintenanceAccessProjectWeldBead": weld_bead,
@@ -227,3 +228,4 @@ def build_maintenance_access_components(
             "MaintenanceAccessProjectWeldBead": candidate.material,
         },
     )
+    return (*({name: orient(shape, access.wall) for name, shape in group.items()} for group in groups[:4]), groups[4])

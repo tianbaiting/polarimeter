@@ -68,7 +68,7 @@ def test_study_overrides_are_applied_and_validated():
 
 
 @pytest.mark.parametrize(
-    "profile", ["afterSRC_compact.yaml", "infrontSamurai_compact.yaml"]
+    "profile", ["reference_afterSRC_top_boxed.yaml", "reference_infrontSamurai_top_boxed.yaml"]
 )
 def test_full_deployments_share_boxed_dimensions_and_keep_site_interfaces(profile):
     path = ROOT / "config" / profile
@@ -88,7 +88,7 @@ def test_full_deployments_share_boxed_dimensions_and_keep_site_interfaces(profil
         cfg.compact_one.deployment.rear_interface.standard,
     )
     assert interfaces == (
-        ("ICF114", "ICF114") if profile.startswith("after") else ("VF100", "VG80")
+        ("ICF114", "ICF114") if "afterSRC" in profile else ("VF100", "VG80")
     )
 
 
