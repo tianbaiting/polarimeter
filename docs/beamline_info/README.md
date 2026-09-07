@@ -19,3 +19,5 @@ This directory collects beamline context, interface notes, and shareable materia
 - `figures/` stores images used directly by the local markdown page.
 - `source/` stores original PDFs or historical reference material.
 - Reused figures should have one canonical location and be linked from other pages instead of duplicated.
+
+- [SRC 到 BigRIPS F2/F3 的束流强度控制（LaTeX）](bigrips/beam-intensity-control.tex)
