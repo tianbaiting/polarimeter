@@ -33,7 +33,7 @@
 \maketitle\thispagestyle{empty}
 
 \textbf{The experimental objective is a calibrated spin state at the reaction target.}
-The polarized ion source prepares the spin populations and axis; the cyclotrons maintain a controlled spin phase; calibrated polarimeters establish the polarization along the beam path. For SAMURAI, these measurements feed a transport model that gives the target polarization for each source mode and time interval. Sekiguchi's published work connects source preparation, polarimetry, reference data and polarized scattering experiments.
+The polarized ion source prepares the spin populations and axis; the cyclotrons maintain a controlled spin phase; calibrated polarimeters establish the polarization along the beam path. For SAMURAI, these measurements feed a transport model that gives the target polarization for each source mode and time interval. The operational support to discuss with Sekiguchi's team covers PIS mode tuning, spin-axis setting, extraction diagnostics and polarization monitoring throughout the run.
 
 \section{Production and beam delivery}
 The established high-energy acceleration chain is
@@ -158,29 +158,28 @@ An illustrative $30^\circ$ bend gives $\psi=-5.1587^\circ$ and $p_{zz}^{\rm out}
 The SAMURAI calculation should use current magnet settings, field maps, beam energy, apertures and target position. The official BigRIPS optics page provides reference orbit maps for the SAMURAI beam line. Two polarimeters can test a specified transport model through their predicted detector yields. For an axial source model, the fitted state is $P,T,\hat{\bm n}$; a general spin-1 state has eight real polarization components.\src{BigRIPSOptics}{SAMURAI Beam Line entries}
 
 \clearpage
-\section{Sekiguchi's contribution and the experimental work package}
-Sekiguchi's team develops nuclear polarization techniques, polarimetry and polarized scattering measurements. The RIKEN laboratory report lists Kimiko Sekiguchi as director for the reported period and describes FY2024 source preparation, acceleration tests, KuJyaku development and polarized-target studies.\src{SekiguchiLab2025}{PDF p. 1 / printed p. 370, research activities and Members}
+\section{Role of Sekiguchi's team during beam time}
+The practical role to discuss with Sekiguchi's team is \textbf{setting up the polarized beam and maintaining a measured spin state during data taking}. Their laboratory reports PIS preparation and beam tests. The operating roles below are inferred from that work and the published beam procedures; personnel and control-room assignments are agreed for each experiment.\src{SekiguchiLab2025}{PDF p. 1 / printed p. 370, Research Activity}
 
-Her first-author papers document multi-axis operation, two-station polarimetry and calibration in 2004, and the complete 186.6 MeV/u analyzing-power dataset in 2017. She also coauthored the 2016 acceleration report, the 2025 source recovery report and the 2026 measurement-system paper. These contributions provide the experimental methods and reference data for the present work.\cite{Sekiguchi2004,Sekiguchi2017,Sakamoto2016,Sugahara2025,Saito2026}
+\textbf{1. Tune the PIS polarization modes with the source specialists.}
+Select the required RF-transition modes, measure $P,T$ for each mode after AVF, and use those measurements to optimize the transition settings. Check the beam current and stability alongside polarization. The 2024 recovery test provides a concrete example: three polarized modes were measured and further optimization was planned for mode 3.\src{Sugahara2025}{PDF p. 1, Table 2 and following paragraph}
 
-\textbf{Proposed work package for the SAMURAI experiment.} Taking on the beam-polarization support requires the following deliverables and agreed facility interfaces.
-\begin{table}[H]\small
-\begin{tabularx}{\linewidth}{p{25mm}YY}\toprule
-Task & Experiment deliverable & Facility interface \\\midrule
-Source modes & Required $P,T$, axis and switching sequence; measured mode table & RF menu, pure-tensor availability, Wien calibration \\
-Acceleration & Time-resolved mode and turn-purity records & Tuning recipe, RF timing, source recovery procedures \\
-Polarimetry & Coincidence DAQ, beam tracking, normalized yields and reproducible analysis & Detector access, installation, beam intensity and vacuum requirements \\
-Calibration & Versioned analyzing powers and correlated uncertainties & Reference data and calibration records \\
-Transport & Target polarization and comparison of both stations & Magnet settings, field maps, apertures and target coordinates \\
-Operation & Online monitoring and valid polarization intervals & Shift responsibilities, fault response and restart checks \\\bottomrule
-\end{tabularx}
-\end{table}
+\textbf{2. Set and verify the spin direction.}
+Set the Wien-filter field and rotation angle for the requested vertical, horizontal or longitudinal axis. Scan the settings and use polarimeter asymmetries to identify the required orientation after acceleration. Repeat the axis check after a change in energy or extraction conditions.\src{Sakamoto2016}{PDF p. 2, Fig. 3}\src{Sekiguchi2017}{PDF p. 4, Sec. II}
 
-\textbf{During beam time}, record the effective mode ID, switching veto, beam normalization, live time, beam spot and timing spectra. Changes in the RF time structure prompt an extraction check; geometry-dependent polarization prompts a beam-position and acceptance check. Renew the polarization interval after source recovery or a major tuning change.
+\textbf{3. Check single-turn extraction jointly with the accelerator crew.}
+Use the AVF chopper monitor and downstream beam--RF timing spectra to identify satellite bunches and estimate turn mixing. At SRC, BigDpol measures recoil-proton timing relative to an RF reference at $f_{\rm beam}/2$. Feed the timing results back to the crew tuning phase acceptance, flat-top RF and extraction. RIKEN assigns cyclotron and polarized-deuteron single-turn operation to Sakamoto's Cyclotron Team.\src{Sakamoto2016}{PDF p. 3, Figs. 4--6}\src{CyclotronTeam}{Research Summary, items 2, 3 and 6}
 
-Choose accumulation times using the actual beam intensity and acceptance. As an illustrative rate estimate, $10^7\unit{s^{-1}}$, a $330\unit{mg/cm^2}$ CH$_2$ target, $1\unit{mb/sr}$ and $10\unit{msr}$ give about $2.8\unit{s^{-1}}$ per arm at unit efficiency. The 2026 equipment paper uses a source operating window of about one week in its planning.\src{Saito2026}{PDF p. 9, Sec. 4}
+\textbf{4. Operate the polarimeters and determine the beam polarization.}
+Set up the target and detector pairs, establish elastic-scattering coincidence gates, collect polarized and unpolarized yields, and apply calibrated analyzing powers. Provide $P,T$, the axis and uncertainties after tuning. The 2017 experiment continuously monitored the reference beam with Dpol at $70\unit{MeV/u}$.\src{Sekiguchi2017}{PDF pp. 3--4, Sec. II}
 
-\textbf{The final data product} is a polarization record for every source mode and valid time interval: the target spin state, covariance, calibration version and source/accelerator/transport settings. Readiness is demonstrated by reproducing reference measurements, recovering known input states through the analysis, and explaining the measured response at both stations.
+\textbf{5. Run the mode sequence and watch polarization during data taking.}
+Cycle the agreed source modes, synchronize the mode labels with DAQ, and track polarization, beam normalization, live time and RF timing. Accumulate enough cycles for the required precision. The published experiments used a five-second mode cycle; the 2004 Swinger measurements checked the target-bound beam before and after each run.\src{Sekiguchi2017}{PDF p. 4}\src{Sekiguchi2004}{arXiv PDF pp. 5--6}
+
+\textbf{6. Diagnose changes and qualify the beam after recovery.}
+When polarization changes, compare the source modes, timing spectra and upstream/downstream polarimeter responses. Use that evidence to choose the next action with the source or accelerator specialists, then remeasure the polarization and axis after recovery. For SAMURAI, agree who performs the final check from the last polarimeter to the reaction target.
+
+For planning, assign an operator and backup to each of these six activities. The key discussion with Sekiguchi's team is which PIS/Wien adjustments and polarimeter shifts they would perform, which timing diagnostics they would analyze, and how they would coordinate retuning with the accelerator crew.
 
 \clearpage
 \section*{Sources and reproduction}
