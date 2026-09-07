@@ -1,0 +1,1 @@
+extends: [../../config/infrontSamurai_compact.yaml, ../../config/common_open_frame.yaml]

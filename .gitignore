@@ -46,6 +46,7 @@ external_version/afterSRC/*.validation_report.json
 external_version/afterSRC/reports/archive/
 compactInVacuum/state.json
 compactInVacuum/state.lock
+compactInVacuum/*.state.lock
 compactInVacuum/*.validation_report.json
 compactInVacuum/*.channel_manifest.json
 compactInVacuum/reports/archive/

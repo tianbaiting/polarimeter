@@ -5,6 +5,7 @@ sector_holder:
   sector_removal_clearance_mm: 20.0
 
 deployment:
+  boxed_support:
   support_frame:
     architecture: rear_open_c_frame
     status: provisional

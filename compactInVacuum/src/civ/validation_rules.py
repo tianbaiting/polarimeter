@@ -86,7 +86,12 @@ def evaluate_config_rules(cfg: CIVConfig) -> tuple[ConfigRule, ...]:
                 holder.sector_removal_direction == "sector_upstream_then_top_access"
                 and holder.sector_removal_clearance_mm == deployment.support_frame.release_clearance_mm
                 if deployment.support_frame is not None
-                else "radially_outward" in holder.sector_removal_direction
+                else (
+                    holder.sector_removal_direction == "sector_radial_inward"
+                    and holder.sector_removal_clearance_mm == deployment.boxed_support.release_clearance_mm
+                    if deployment.boxed_support is not None
+                    else "radially_outward" in holder.sector_removal_direction
+                )
             ),
             (
                 f"architecture={holder.architecture}, "

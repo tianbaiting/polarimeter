@@ -1,8 +1,15 @@
-extends: ../../config/afterSRC_compact.yaml
-doc_name: BoxedSectorStudy
+extends: common_detector.yaml
+
+sector_holder:
+  sector_removal_direction: sector_radial_inward
+  sector_removal_clearance_mm: 40.0
+
 deployment:
-  boxed_support:
   support_frame:
+  boxed_support:
+    mount_radius_mm: &boxed_dock_radius 182.0
+    ring_outer_radius_mm: &boxed_ring_outer 205.0
+    release_clearance_mm: &boxed_release 40.0
 
 boxed_sector_study:
   sector: right
@@ -26,11 +33,11 @@ boxed_sector_study:
   side_bolt_head_depth_mm: 1.2
   fastener_clearance_mm: 0.25
   ring_inner_radius_mm: 185.0
-  ring_outer_radius_mm: 205.0
+  ring_outer_radius_mm: *boxed_ring_outer
   ring_front_z_mm: 135.0
   ring_depth_mm: 10.0
   wall_foot_width_mm: 24.0
-  dock_plane_r_mm: 182.0
+  dock_plane_r_mm: *boxed_dock_radius
   dock_depth_mm: 6.0
   dock_z_min_mm: 143.0
   dock_z_max_mm: 166.0
@@ -87,7 +94,7 @@ boxed_sector_study:
   ground_parking_backplate_mm: [197.0, 110.0, 116.2, 150.0, 152.0]
   ground_parking_translation_mm: [18.0, 90.0, 0.0]
   ground_bond_radius_mm: 0.8
-  radial_release_mm: 14.0
+  radial_release_mm: *boxed_release
   downstream_translation_mm: 100.0
   rotation_deg: 90.0
   lift_mm: 360.0
@@ -100,3 +107,37 @@ boxed_sector_study:
   interval_min_fraction: 0.00001
   interval_max_depth: 20
   collision_volume_tolerance_mm3: 0.000001
+
+boxed_deployment:
+  removal_order: [up, right, left, down]
+  turn_deg: {up: 0.0, right: 90.0, left: -90.0, down: 180.0}
+  journal_center_z_mm: 210.0
+  journal_end_z_mm: 214.0
+  handling_rod_length_mm: 550.0
+  downstream_translation_mm: 96.0
+  lift_mm: 450.0
+  retainer_r_mm: [176.0, 195.0]
+  retainer_half_width_mm: 17.0
+  retainer_depth_mm: 4.0
+  retainer_screw_r_mm: 190.0
+  retainer_screw_t_mm: [-9.0, 9.0]
+  retainer_screw_radius_mm: 1.5
+  retainer_screw_head_radius_mm: 2.8
+  retainer_screw_head_depth_mm: 3.0
+  retainer_screw_length_mm: 12.0
+  retainer_release_mm: 20.0
+  retainer_radial_clearance_mm: 20.0
+  retainer_tangential_clearance_mm: 26.0
+  retainer_downstream_transfer_mm: 40.0
+  retainer_lift_mm: 550.0
+  upper_plug_parking_rt_mm: [80.0, 180.0]
+  upper_ground_parking_delta_rt_mm: [-68.0, 130.0]
+  loom_radial_lanes_mm: [186.0, 192.0, 198.0]
+  loom_tangent_lanes_mm: [136.0, 148.0, 160.0]
+  upper_loom_radial_lanes_mm: [146.0, 158.0, 180.0]
+  upper_loom_tangent_lanes_mm: [214.0, 202.0, 208.0]
+  loom_front_z_mm: {right: [30.0, 40.0, 50.0], left: [30.0, 40.0, 50.0], up: [115.0, 125.0, 135.0], down: [50.0, 60.0, 70.0]}
+  loom_entry_approach_abs_x_mm: 100.0
+  loom_top_margin_mm: 30.0
+  loom_top_lane_spacing_mm: 6.0
+  upper_parked_loom_turn_z_mm: [223.0, 229.0, 235.0]

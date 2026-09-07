@@ -526,3 +526,139 @@ Entry Template:
 - Validation Result: 56 Python tests PASS; thin/contained/rotational obstruction, uncertified-interval, contact and false-void regression checks PASS. Final prototype report: {'pass_count': 41, 'warning_count': 5, 'fail_count': 0}; 14 phases / 265 certified intervals, plus analytic mating sweeps. Source/config fingerprint matches state. Carrier STEP reopens valid with 60 solids; installed scene STEP with 98 solids. Visual checks cover carrier faces, installation, extraction and supported service parking.
 - Artifacts/State: complete files under compactInVacuum/artifacts/boxed_sector; final preview sets under review_sector_final, review_installed_delivery and review_extracted_delivery. Canonical afterSRC/preSAMURAI artifacts retained. Render improvements committed as 600016e; generated CAD/state/reports/meshes/images excluded from Git.
 - Next Action: review the detailed single-sector prototype with the user before adapting the remaining sectors; close supplier, strength/preload, manufacturing and real handling/site evidence before fabrication release.
+
+- Timestamp UTC: 2026-09-07T02:21:16+00:00
+- Timestamp Local: 2026-09-07T11:21:16+09:00
+- Module/Scope: compactOneafterSRC complete boxed deployment integration
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --validate-only`
+- Key Parameters/Overrides: four detailed boxed sectors; annular permanent support; radial pins and downstream retaining bridges; UP/RIGHT/LEFT/DOWN removal sequence; rear handling journals; twelve physical installed/parked looms; common_boxed.yaml with no CLI overrides.
+- Validation Result: prototype non-strict fail; {'pass_count': 10, 'warning_count': 7, 'fail_count': 7}. Loaded-module transport is reported separately from maintenance preparation and fabrication evidence.
+- Artifacts/State: selected canonical machine-owned state/report; CAD export only upon full prototype geometry pass.
+- Next Action: Resolve the reported real component and loom intersections, then retry all-sector validation.
+
+- Timestamp UTC: 2026-09-07T02:27:39+00:00
+- Timestamp Local: 2026-09-07T11:27:39+09:00
+- Module/Scope: compactOneAfterSRC complete boxed deployment, second validation interrupted for motion acceleration
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --validate-only`
+- Key Parameters/Overrides: four real sectors, twelve routed looms, rear journals with crossmember clearance holes; no CLI overrides.
+- Validation Result: all 16 static checks and UP pin/capture/release/downstream-transfer checks passed in the running process; interrupted with SIGINT during lift before report/state completion. This invocation does not establish complete transport.
+- Artifacts/State: previous failed report/state retained; owned process ended and native lock released.
+- Next Action: use an exact endpoint-prism separation certificate for pure translations, retaining every obstacle and the original clearance, then rerun the whole validation.
+
+- Timestamp UTC: 2026-09-07T02:30:55+00:00
+- Timestamp Local: 2026-09-07T11:30:55+09:00
+- Module/Scope: compactOneafterSRC complete boxed deployment integration
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --validate-only`
+- Key Parameters/Overrides: four detailed boxed sectors; annular permanent support; radial pins and downstream retaining bridges; UP/RIGHT/LEFT/DOWN removal sequence; rear handling journals; twelve physical installed/parked looms; common_boxed.yaml with no CLI overrides.
+- Validation Result: prototype non-strict fail; {'pass_count': 46, 'warning_count': 7, 'fail_count': 2}. Loaded-module transport is reported separately from maintenance preparation and fabrication evidence.
+- Artifacts/State: selected canonical machine-owned state/report; CAD export only upon full prototype geometry pass.
+- Next Action: Resolve the continuous-motion obstruction, complete capture and retaining-bridge checks, then rerun.
+
+- Timestamp UTC: 2026-09-07T02:34:24+00:00
+- Timestamp Local: 2026-09-07T11:34:24+09:00
+- Module/Scope: compactOneafterSRC complete boxed deployment integration
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --validate-only`
+- Key Parameters/Overrides: four detailed boxed sectors; annular permanent support; radial pins and downstream retaining bridges; UP/RIGHT/LEFT/DOWN removal sequence; rear handling journals; twelve physical installed/parked looms; common_boxed.yaml with no CLI overrides.
+- Validation Result: prototype non-strict fail; {'pass_count': 46, 'warning_count': 7, 'fail_count': 2}. Loaded-module transport is reported separately from maintenance preparation and fabrication evidence.
+- Artifacts/State: selected canonical machine-owned state/report; CAD export only upon full prototype geometry pass.
+- Next Action: Change retaining-bridge removal to disengage, step outward, transfer behind the rear crossmember, center and lift; then retry all four modules.
+
+- Timestamp UTC: 2026-09-07T02:36:07+00:00
+- Timestamp Local: 2026-09-07T11:36:07+09:00
+- Module/Scope: compactOneafterSRC complete boxed deployment integration
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --validate-only`
+- Key Parameters/Overrides: four detailed boxed sectors; annular permanent support; radial pins and downstream retaining bridges; UP/RIGHT/LEFT/DOWN removal sequence; rear handling journals; twelve physical installed/parked looms; common_boxed.yaml with no CLI overrides.
+- Validation Result: prototype non-strict fail; {'pass_count': 48, 'warning_count': 7, 'fail_count': 2}. Loaded-module transport is reported separately from maintenance preparation and fabrication evidence.
+- Artifacts/State: selected canonical machine-owned state/report; CAD export only upon full prototype geometry pass.
+- Next Action: Resolve the reported retaining-bridge handling obstruction and validate installed plus parked full service looms.
+
+- Timestamp UTC: 2026-09-07T02:37:56+00:00
+- Timestamp Local: 2026-09-07T11:37:56+09:00
+- Module/Scope: compactOneafterSRC complete boxed deployment integration
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --validate-only`
+- Key Parameters/Overrides: four detailed boxed sectors; annular permanent support; radial pins and downstream retaining bridges; UP/RIGHT/LEFT/DOWN removal sequence; rear handling journals; twelve physical installed/parked looms; common_boxed.yaml with no CLI overrides.
+- Validation Result: prototype non-strict fail; {'pass_count': 35, 'warning_count': 7, 'fail_count': 2}. Loaded-module transport is reported separately from maintenance preparation and fabrication evidence.
+- Artifacts/State: selected canonical machine-owned state/report; CAD export only upon full prototype geometry pass.
+- Next Action: Resolve the parked-service interference identified by the added full parked-state check, then rerun.
+
+- Timestamp UTC: 2026-09-07T02:39:58+00:00
+- Timestamp Local: 2026-09-07T11:39:58+09:00
+- Module/Scope: compactOneafterSRC complete boxed deployment integration
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --validate-only`
+- Key Parameters/Overrides: four detailed boxed sectors; annular permanent support; radial pins and downstream retaining bridges; UP/RIGHT/LEFT/DOWN removal sequence; rear handling journals; twelve physical installed/parked looms; common_boxed.yaml with no CLI overrides.
+- Validation Result: prototype non-strict error; {'status': 'error', 'started_at_utc': '2026-09-07T02:38:39Z', 'finished_at_utc': '2026-09-07T02:38:41Z', 'error': 'up loom 2 parked=False: cable segment 3 cannot fit its specified bend radius; points=[Vector (-32.999999999999964, 170.0, 179.0), Vector (-207.99999999999997, 170.00000000000006, 179.0), Vector (-207.99999999999997, 182.00000000000006, 179.0), Vector (-207.99999999999997, 182.00000000000006, 135.0), Vector (-207.99999999999997, 190.0, 135.0), Vector (-100.0, 190.0, 135.0), Vector (-100.0, 190.0, 90.0), Vector (-182.0, 190.0, 90.0), Vector (-182.0, 219.5, 90.0)]'}. Loaded-module transport is reported separately from maintenance preparation and fabrication evidence.
+- Artifacts/State: selected canonical machine-owned state/report; CAD export only upon full prototype geometry pass.
+- Next Action: Increase the upper fixed-loom bend spacing to fit the declared 5 mm bend radius, then rerun.
+
+- Timestamp UTC: 2026-09-07T02:45:40+00:00
+- Timestamp Local: 2026-09-07T11:45:40+09:00
+- Module/Scope: compactOneAfterSRC all-sector validation interrupted to apply verified rotation acceleration
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml --validate-only`
+- Key Parameters/Overrides: inward staging 40 mm; downstream module transfer 96 mm; rear journal; staged retaining-bridge removal; all installed/parked service solids checked; no CLI overrides.
+- Validation Result: static configuration, physical geometry, all twelve acceptances, both service states, UP complete capture/bridge/module path, RIGHT capture/bridge/release/downstream path passed. Interrupted with SIGINT during slow RIGHT turn before report completion; no complete four-sector result from this invocation.
+- Artifacts/State: prior error state/report retained; native lock released by the exited owned worker.
+- Next Action: run both complete canonical exports using whole-rotation axial bounds and verified empty regions; thin-obstacle and unresolved-interval regressions pass.
+
+- Timestamp UTC: 2026-09-07T02:53:00+00:00
+- Timestamp Local: 2026-09-07T11:53:00+09:00
+- Module/Scope: compactOneAfterSRC complete boxed export interrupted to tighten conservative rotation bounds
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml`
+- Key Parameters/Overrides: current four-sector geometry; 40 mm inward staging; 96 mm transfer; all installed/parked services; no overrides.
+- Validation Result: static checks, UP path and RIGHT capture/bridge/release/transfer/turn passed. Interrupted with SIGINT during RIGHT centering before report/export completion. No complete result is claimed from this invocation.
+- Artifacts/State: prior machine-owned state/report retained; owned worker exited and native lock released; no new full CAD export.
+- Next Action: rerun the complete source using exact trimmed bounds and complete angular-extremum enclosures. Rotation-bound, thin-obstacle and contact regressions pass; preserve physics metrics and direct CAD-object links in the full manifest.
+
+- Timestamp UTC: 2026-09-07T02:53:00+00:00
+- Timestamp Local: 2026-09-07T11:53:00+09:00
+- Module/Scope: compactOneInfrontSamurai complete boxed export interrupted to tighten conservative rotation bounds
+- Command(s): `./compactInVacuum/run_compactOne_infrontSamurai.sh --pipeline-index codex_targets.yaml`
+- Key Parameters/Overrides: current four-sector geometry; 40 mm inward staging; 96 mm transfer; all installed/parked services; no overrides.
+- Validation Result: static checks, UP path and RIGHT capture/bridge/release/transfer/turn passed. Interrupted with SIGINT during RIGHT centering before report/export completion. No complete result is claimed from this invocation.
+- Artifacts/State: prior machine-owned state/report retained; owned worker exited and native lock released; no new full CAD export.
+- Next Action: rerun the complete source using exact trimmed bounds and complete angular-extremum enclosures. Rotation-bound, thin-obstacle and contact regressions pass; preserve physics metrics and direct CAD-object links in the full manifest.
+
+- Timestamp UTC: 2026-09-07T02:56:35+00:00
+- Timestamp Local: 2026-09-07T11:56:35+09:00
+- Module/Scope: compactOneafterSRC complete boxed deployment integration
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml`
+- Key Parameters/Overrides: four detailed boxed sectors; annular permanent support; radial pins and downstream retaining bridges; UP/RIGHT/LEFT/DOWN removal sequence; rear handling journals; twelve physical installed/parked looms; common_boxed.yaml with no CLI overrides.
+- Validation Result: prototype non-strict pass; {'pass_count': 111, 'warning_count': 7, 'fail_count': 0}. Loaded-module transport is reported separately from maintenance preparation and fabrication evidence.
+- Artifacts/State: selected canonical machine-owned state/report; CAD export only upon full prototype geometry pass.
+- Next Action: Reopen both exchange files, verify all twelve detector objects and the current fingerprint, render canonical review views, then commit the completed full-deployment sources.
+
+- Timestamp UTC: 2026-09-07T02:56:35+00:00
+- Timestamp Local: 2026-09-07T11:56:35+09:00
+- Module/Scope: compactOneinfrontSamurai complete boxed deployment integration
+- Command(s): `./compactInVacuum/run_compactOne_infrontSamurai.sh --pipeline-index codex_targets.yaml`
+- Key Parameters/Overrides: four detailed boxed sectors; annular permanent support; radial pins and downstream retaining bridges; UP/RIGHT/LEFT/DOWN removal sequence; rear handling journals; twelve physical installed/parked looms; common_boxed.yaml with no CLI overrides.
+- Validation Result: prototype non-strict pass; {'pass_count': 111, 'warning_count': 7, 'fail_count': 0}. Loaded-module transport is reported separately from maintenance preparation and fabrication evidence.
+- Artifacts/State: selected canonical machine-owned state/report; CAD export only upon full prototype geometry pass.
+- Next Action: Reopen both exchange files, verify all twelve detector objects and the current fingerprint, render canonical review views, then commit the completed full-deployment sources.
+
+- Timestamp UTC: 2026-09-07T03:09:30+00:00
+- Timestamp Local: 2026-09-07T12:09:30+09:00
+- Module/Scope: compactOneafterSRC complete boxed deployment integration
+- Command(s): `./compactInVacuum/run_compactOne_afterSRC.sh --pipeline-index codex_targets.yaml`
+- Key Parameters/Overrides: four detailed boxed sectors; annular permanent support; radial pins and downstream retaining bridges; UP/RIGHT/LEFT/DOWN removal sequence; rear handling journals; twelve physical installed/parked looms; common_boxed.yaml with no CLI overrides.
+- Validation Result: prototype non-strict pass; {'pass_count': 111, 'warning_count': 7, 'fail_count': 0}. Loaded-module transport is reported separately from maintenance preparation and fabrication evidence.
+- Artifacts/State: selected canonical machine-owned state/report; CAD export only upon full prototype geometry pass.
+- Next Action: Final guarded source rebuild complete; verify the unchanged artifact geometry, finish visual review and commit task-owned implementation.
+
+- Timestamp UTC: 2026-09-07T03:09:30+00:00
+- Timestamp Local: 2026-09-07T12:09:30+09:00
+- Module/Scope: compactOneinfrontSamurai complete boxed deployment integration
+- Command(s): `./compactInVacuum/run_compactOne_infrontSamurai.sh --pipeline-index codex_targets.yaml`
+- Key Parameters/Overrides: four detailed boxed sectors; annular permanent support; radial pins and downstream retaining bridges; UP/RIGHT/LEFT/DOWN removal sequence; rear handling journals; twelve physical installed/parked looms; common_boxed.yaml with no CLI overrides.
+- Validation Result: prototype non-strict pass; {'pass_count': 111, 'warning_count': 7, 'fail_count': 0}. Loaded-module transport is reported separately from maintenance preparation and fabrication evidence.
+- Artifacts/State: selected canonical machine-owned state/report; CAD export only upon full prototype geometry pass.
+- Next Action: Final guarded source rebuild complete; verify the unchanged artifact geometry, finish visual review and commit task-owned implementation.
+
+- Timestamp UTC: 2026-09-07T03:12:01+00:00
+- Timestamp Local: 2026-09-07T12:12:01+09:00
+- Module/Scope: compactOneAfterSRC and compactOneInfrontSamurai complete four-sector delivery QA
+- Command(s): `./compactInVacuum/run_boxed_tests.sh`; `./compactInVacuum/run_freecad_tests.sh`; FreeCAD native/STEP reopen and manifest-to-object verification; source/target/config SHA-256 comparison to both states; `export_review_meshes.py --source <canonical FCStd> --output-dir <deployment>/review_boxed_support/review_meshes`; `render_review_meshes.py --model-root <deployment>/review_boxed_support --basename four_sectors --support-only` and `--basename assembly`; `git diff --check`.
+- Key Parameters/Overrides: four detailed 61-component modules and twelve detector heads per instrument; common annular permanent support; 40 mm inward staging and 96 mm downstream transfer; UP/RIGHT/LEFT/DOWN sequence; individual head, journal/capture, retaining-bridge, installed and parked service geometry. Core C-frame comparison tests now use explicit retained fixtures; the canonical boxed engine has its own regression entry.
+- Validation Result: both canonical non-strict prototype reports PASS with 111 passes / 7 evidence warnings / 0 failures; all 51 modeled capture, retaining-bridge and module-motion phases certify over 120 intervals. Radial module allowance 5.4625 mm for each sector. Complete service-process qualification remains false: flexible disconnection/handling, purchased capture and retainer actuation, structural and site evidence remain open. Maximum modeled rod headroom above the original closed lid is 728.85 mm (afterSRC) / 723.85 mm (preSAMURAI).
+- Verification: 67 pure-Python tests PASS; motion/contact/void/rotation-bound negative regressions PASS; actual four-sector geometry, journal-hole, upper parking, thin blocker and incomplete-artifact guard regressions PASS; all seven retained core FreeCAD groups PASS. Both native assemblies contain 342 physical/purchased valid solids and 12 correctly linked active detectors; both STEP files reopen valid with 342 solids. Four final native extraction poses per deployment are above closure height. Both current configuration/source fingerprints match machine state. Twelve acceptance metrics and eight coincidence metrics are retained.
+- Artifacts/State: both canonical FCStd/STEP/metrics/manifests/reports/states current; maintenance-open documents, four standalone loaded sectors and seventeen main-motion pose documents per deployment exported. Standard Isometric/Front/Top/Right assembly and focused support PNG sets generated and visually inspected; review views are not manufacturing drawings. Generated CAD, runtime state and review assets remain excluded from Git.
+- Next Action: deliver both complete compact files and the four-sector overview; resolve full service-tool qualification and fabrication evidence before manufacturing release. Local motion acceleration commit: 9ad67c4.

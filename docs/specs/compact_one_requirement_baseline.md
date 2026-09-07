@@ -1,4 +1,4 @@
-# CompactInVacuum Requirement Baseline v2.6
+# CompactInVacuum Requirement Baseline v2.7
 
 ## 1. Authority and scope
 
@@ -118,28 +118,13 @@ Each sector uses one coherent fabricated or machined carrier containing exactly:
 - one small-angle proton detector head;
 - one large-angle proton detector head.
 
-The holder comprises:
+The active deployments use four detailed boxed carriers with two relieved cheeks, front/rear crossmembers, three rear nests and removable clamps, three routed passive coax connections, and one radial plane–pin–slot dock per sector. A common annular support near z=140 mm transfers load to the permanent side and bottom walls. The former rear C-frame is retained only as a comparison configuration.
 
-- one connected carrier plate with three machined acceptance windows;
-- three rear cylindrical nest cradles;
-- three insertion stops at the detector rear faces;
-- three D-flat anti-rotation lands;
-- three removable clamp bridges;
-- two simplified M3-class fastener envelopes per clamp;
-- one rear cable-routing lane;
-- one common chamber-interface block;
-- one primary plane, one round locating pin, and one clocking slot;
-- three survey datums.
+A removable downstream retaining bridge clamps each dock with two axial screw envelopes. The bridge, screws, locating pins and coax/ground interfaces are represented for every sector. A rear-facing cylindrical handling journal projects behind each carrier; its capture tool remains vertical in the chamber coordinate system.
 
-M3 and locating-pin geometry demonstrates assembly access only. Fastener selection remains provisional and shall not be called fabrication-ready.
+The specified service sequence is UP, RIGHT, LEFT, DOWN; installation reverses this sequence. It supersedes the former independent-removal design target for this prototype. Each module disengages radially inward, translates downstream, turns about its handling journal if needed, centers under the ICF305 port, and lifts upward. Other sectors remain physical obstacles until their preceding removal step is complete. Validation must distinguish loaded-module/capture-tool transport from connection release, retaining-bridge access, and purchased capture mechanism qualification. A clear transport path alone shall not be called a complete maintenance-process certificate.
 
-Detector heads are inserted axially from the rear, stopped on the rear mounting face, clocked by the D-flat, and retained by the removable bridge. Clamp fasteners are accessed from the rear. Releasing one bridge permits removal of one head without removing the other two.
-
-The whole sector is located by a plane–pin–slot interface. The two active deployments use a common rear open C-frame with four equal front-facing sector docks. The common frame remains with the chamber and transfers load to permanent side and bottom walls; its open upper-right quadrant and central aperture are kept distinct from the removable top closure. No top-cover load path is permitted. The carrier is one connected profiled plate with relieved acceptance windows and a rear docking web, without the former UP-only sideways arm. Frame dimensions, stiffness, fasteners, and joints remain provisional.
-
-All four loaded holders first translate upstream along `-Z` to disengage their stationary pins. Five exact solid poses sample the configured `20 mm` release. The rear frame occupies the rear part of the opening's projection below the lid; the provisional internal lifting corridor is the circular port projection clipped at `z <= 210 mm`, ahead of the stationary pins. The released loaded holder, including its withdrawn clamp envelopes, shall lie completely ahead of this plane. The full opening and blank-flange lift above the top wall remain unobstructed. This staged internal corridor replaces the former whole-bore cylinder below the lid; it is not evidence of a complete extraction path. Independent removal of one sector while the other three remain installed is the design target. A complete in-chamber transfer/reorientation/top-lift path is a separate unresolved requirement; neither the initial release nor a detached-holder aperture screen proves that path.
-
-The plate, nests, clamps, and fastener envelopes shall clear every complete active-acceptance cone. The plate includes a common rear service-lane relief. Arbitrary per-detector wall rails, wall anchors, cylindrical thermal straps, and a synthesized wall backbone are prohibited.
+The cheeks, crossmembers, nests, clamps, and fastener envelopes shall clear every complete active-acceptance cone. The crossmembers include the declared cable and handling-journal reliefs. Arbitrary per-detector wall rails, wall anchors, cylindrical thermal straps, and a synthesized wall backbone are prohibited.
 
 The holder is a provisional manufacturable concept, not a released drawing. Tool access, chamber closure, pin retention, tolerances, surface finish, and production fasteners remain to be resolved.
 
@@ -241,7 +226,7 @@ Validation also requires:
 - The access-port comparison family is `ICF253`, `ICF305`, and `ICF356`. Vendor-catalog screening dimensions distinguish the flange hole from the applicable pipe outside diameter: ICF253 uses a `198.5 mm` flange bore / `203 mm` pipe OD, ICF305 uses `251.0 mm` / `254 mm`, and ICF356 uses `301.8 mm` / `305 mm`. ICF305 is the active recommended prototype; ICF253 remains a smaller-port comparison requiring reorientation; its former side-wall UP-holder rejection is historical and shall not be applied unchanged to the new common-frame carrier, and ICF356 remains the enlarged-envelope comparison.
 - A top access flange alone does not close the sector-removal requirement. Validation shall separately report: flange-to-chamber fit, flange-to-service-port clearance, detached-holder passage screening, and the complete installed-holder release/reorientation/lift path. The existing straight `70 mm` radial release path shall not be re-labelled as a successful top-port extraction path.
 - The removable ICF fixed/blank closure owns no detector support, locating datum, structural fastener, thermal sink, protective-ground termination, cable clamp, or target-mechanism load. Removing the blank flange shall leave all internal detector supports positioned on permanent chamber structure.
-- Both compact deployments now use the common rear open C-frame defined above, four equal sector docks, and deployment-specific permanent-wall feet. This supersedes the former afterSRC UP `-X` pedestal at `y=180 mm`.
+- Both compact deployments use the boxed carriers and annular support defined above, four radial sector docks, and deployment-specific permanent-wall feet. This supersedes the former afterSRC UP `-X` pedestal at `y=180 mm`.
 - Available envelope, the complete service-removal motion, purchased ICF305 interface drawing, support datum, and pressure-vessel release remain unresolved.
 - The preserved external afterSRC route remains a legacy fallback/reference.
 
@@ -313,6 +298,8 @@ Runtime state, caches, and machine-specific files remain untracked.
 
 ## 16. Change history
 
+- 2026-09-07 v2.7: promoted four detailed boxed modules to both canonical deployments, with a permanent annulus, downstream retaining bridges, rear handling journals, complete installed/parked signal looms and the UP/RIGHT/LEFT/DOWN service sequence. Loaded-module and modeled capture/bridge motion remain distinct from full service-tool and fabrication qualification.
+
 - 2026-09-06 v2.6: authorized one detailed RIGHT-sector boxed-carrier study on a near-detector annular support, with connector disconnection, tool access and complete controlled extraction. This is an isolated design study, not replacement of either canonical deployment.
 - 2026-09-06 v2.5: selected the common rear open C-frame, four axial-release sector docks, and top ICF305 access for both compact prototypes; retained independent complete extraction as an unresolved design target.
 
@@ -336,3 +323,15 @@ Maintenance is performed with the blank flange and gasket removed. Connector plu
 Check the complete modeled motion against permanent support, chamber, flange, services and the three reserved sectors. Discrete clear poses alone do not prove motion clearance: use analytic swept envelopes or interval certificates based on minimum shape distance and an upper bound on point displacement. Any collision or interval left uncertified shall fail the motion gate. Intended mating contacts require explicit geometric certificates; they cannot be bypassed by blanket obstacle exclusions. The full aperture is retained; do not shrink an arbitrary keepout to make a mechanism pass.
 
 Transport dimensions, microcoax bend radius, connector/capture-tool envelopes and fabrication details are provisional. Geometry certification applies only to those modeled envelopes. Supplier/material qualification, stiffness, clamp preload, human reach/handling forces and available external headroom remain strict evidence gates. No manufacturing release or four-sector detailed-assembly claim follows from this study.
+
+## 18. Complete boxed deployment integration
+
+Both canonical deployments shall export all four detailed carriers, twelve complete detector heads, four locating-pin pairs and retaining bridges, twelve installed signal looms, four ground bonds, the common permanent annular support, the selected chamber, target and deployment-specific beamline interfaces. Neighbor reservation boxes are not a substitute for any of the four physical modules.
+
+The common dimensional source is `compactInVacuum/config/common_boxed.yaml`. Sector placement, removal order, rear handling journal, axial retaining bridges and service-parking coordinates are provisional integration parameters there. The upper-sector parking fixture attaches to the permanent left wall, clear of the top opening. The rear journal and tool provide a path behind the three loaded detector heads, especially for the final DOWN removal. A separate maintenance-open document and extraction poses supplement each closed canonical assembly. The original single-RIGHT-sector study remains a reproducible comparison and does not certify the complete deployments.
+
+All strict evidence gates in section 12 apply to the new canonical engine, including beam/signal/access supplier drawings, materials and optical components, chamber pressure integrity, site/overhead envelope, fastener and capture-mechanism detail, and physical service handling. Geometry failures remain fatal; unresolved evidence remains explicitly non-strict prototype-only.
+
+The full-deployment inward staging travel is 40 mm before the 96 mm downstream transfer. This reduces the rear handling-rod offset to 30 mm, keeping the complete vertical rod inside the circular opening during transfer. It replaces the single-sector study's 14 mm initial release for the full deployment; detector operating positions remain unchanged.
+
+Each retaining bridge first disengages downstream by 20 mm, steps radially outward by 20 mm to clear the rear crossmember, steps 26 mm tangentially away from the engaged handling rod, transfers another 40 mm downstream, centers below the opening and lifts out. The loose bridge and fastener solids are included in the trajectory checks; the actuating/holding tool remains a purchased-mechanism qualification item.

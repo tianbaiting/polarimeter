@@ -31,8 +31,7 @@ def test_two_compact_deployment_profiles_load() -> None:
     assert samurai.compact_one.deployment.external_route_module == "infrontofSamuraiMag"
     assert aftersrc.compact_one.deployment.maintenance_access is not None
     assert samurai.compact_one.deployment.maintenance_access is not None
-    assert samurai.compact_one.deployment.sector_mount("up").wall == "rear_open_frame"
-    assert samurai.compact_one.deployment.sector_mount("up").wall_standoff_mm == 12.0
+    assert samurai.compact_one.deployment.support_frame is None
     assert len(aftersrc.channels) * len(aftersrc.sectors) == 12
     assert len(samurai.channels) * len(samurai.sectors) == 12
 
@@ -153,26 +152,17 @@ def test_aftersrc_all_metal_maintenance_access_contract() -> None:
         "ICF305",
         "ICF356",
     }
-    mounts = {
-        sector: platform.deployment.sector_mount(sector)
-        for sector in ("left", "right", "up", "down")
-    }
-    assert all(mount.wall == "rear_open_frame" for mount in mounts.values())
-    assert mounts["up"].tangent_coordinate_mm == pytest.approx(0.0)
-    assert mounts["up"].wall_standoff_mm == pytest.approx(12.0)
-    assert mounts["up"].release_clearance_mm == pytest.approx(20.0)
-    assert all(mount.wall != "positive_y" for mount in mounts.values())
+    assert platform.deployment.support_frame is None
+
 
 
 @pytest.mark.parametrize("profile", ["afterSRC_compact.yaml", "infrontSamurai_compact.yaml"])
 def test_common_frame_access_and_inherited_dimensions(profile: str) -> None:
     cfg = load_config(str(CONFIG_DIR / profile))
     deployment = cfg.compact_one.deployment
-    assert deployment.support_frame is not None
-    assert deployment.support_frame.extraction_policy == "independent_sector_target"
-    assert deployment.support_frame.complete_extraction_status == "placeholder"
+    assert deployment.support_frame is None
     assert deployment.maintenance_access.selected.standard == "ICF305"
-    assert CONFIG_DIR.resolve() / "common_open_frame.yaml" in config_dependency_paths(CONFIG_DIR / profile)
+    assert CONFIG_DIR.resolve() / "common_boxed.yaml" in config_dependency_paths(CONFIG_DIR / profile)
     assert not [rule for rule in evaluate_config_rules(cfg) if not rule.passed and not rule.strict_only]
 
 
@@ -184,7 +174,7 @@ def test_common_frame_access_and_inherited_dimensions(profile: str) -> None:
 ])
 def test_common_frame_rejects_invalid_envelopes(key, value, match) -> None:
     with pytest.raises(ValueError, match=match):
-        load_config(str(CONFIG_DIR / "afterSRC_compact.yaml"), overrides={f"deployment.support_frame.{key}": value})
+        load_config(str(CONFIG_DIR.parent / "tests/config/afterSRC_open_frame.yaml"), overrides={f"deployment.support_frame.{key}": value})
 
 
 @pytest.mark.parametrize(

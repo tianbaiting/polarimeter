@@ -25,7 +25,16 @@ from civ.access import (
 from civ.cassette import build_detector_head, detector_head_compound
 from civ.cartridge import build_sector_holder, sector_holder_compound
 from civ.chamber import build_chamber
-from civ.config import load_config
+from civ.config import load_config as _load_config
+
+
+def load_config(path, **kwargs):
+    # [EN] These retained tests exercise the C-frame comparison engine; canonical boxed deployments have their own geometry regression entry. / [CN] 这些保留测试验证 C 框架比较引擎，当前箱式整机使用独立几何回归入口。
+    source = Path(path)
+    if source.name in {"afterSRC_compact.yaml", "infrontSamurai_compact.yaml"}:
+        source = MODULE_ROOT / "tests" / "config" / source.name.replace("_compact", "_open_frame")
+    return _load_config(str(source), **kwargs)
+
 from civ.detector import detector_stack_metrics
 from civ.internal import build_internal_assembly, internal_compound
 from civ.layout import build_detector_placements

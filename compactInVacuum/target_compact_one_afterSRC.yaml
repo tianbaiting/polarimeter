@@ -9,14 +9,15 @@ intent:
     - elastomer_or_oring_seal=prohibited
     - helium_leak_rate_max_pa_m3_s=1.0e-10
     - removable_access_closure_owns_no_detector_support_or_ground
-    - all_sector_holders_dock_to_common_rear_open_frame_on_permanent_walls
-    - all_sector_mounts=identical_front_facing_plane_pin_slot_docks_with_upstream_release
+    - four_detailed_boxed_modules_on_common_annular_support_on_permanent_walls
+    - all_sector_mounts=radial_plane_pin_slot_with_downstream_retaining_bridges
+    - removal_order=up,right,left,down
     - complete_sector_extraction_motion_must_be_reported_separately
 build:
   config: config/afterSRC_compact.yaml
   overrides: []
   doc_name: CompactOne_afterSRC
-  mode: build
+  mode: boxed_deployment
 validation:
   strict: false
   angle_tolerance_deg: 0.05

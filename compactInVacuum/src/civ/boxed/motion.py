@@ -40,6 +40,41 @@ def radius_about_z(shape, pivot):
     )
 
 
+def rotation_box(box, pivot, angle_deg):
+    # [EN] Every coordinate extremum of a rotated bounding rectangle occurs at a corner endpoint or a sine/cosine stationary angle. / [CN] 旋转包围矩形的坐标极值必定位于角点轨迹的端点或正余弦驻点。
+    lo, hi = sorted((0.0, math.radians(angle_deg)))
+    points = []
+    quarter = math.pi / 2
+    for x in (box.XMin, box.XMax):
+        for y in (box.YMin, box.YMax):
+            u, v = x - pivot.x, y - pivot.y
+            phi = math.atan2(v, u)
+            angles = [lo, hi]
+            angles.extend(
+                k * quarter - phi
+                for k in range(
+                    math.floor((lo + phi) / quarter) - 1,
+                    math.ceil((hi + phi) / quarter) + 2,
+                )
+                if lo <= k * quarter - phi <= hi
+            )
+            points.extend(
+                (
+                    pivot.x + u * math.cos(a) - v * math.sin(a),
+                    pivot.y + u * math.sin(a) + v * math.cos(a),
+                )
+                for a in angles
+            )
+    return App.BoundBox(
+        min(x for x, y in points),
+        min(y for x, y in points),
+        box.ZMin,
+        max(x for x, y in points),
+        max(y for x, y in points),
+        box.ZMax,
+    )
+
+
 @dataclass(frozen=True)
 class VoidRegion:
     kind: str
@@ -211,21 +246,18 @@ def certify_phase(
     end = phase.at(1)
     plane_pairs = set()
     swept_pairs = set()
+    start_bounds = {
+        n: sh.optimalBoundingBox(False, False) for n, sh in phase.starts.items()
+    }
+    obstacle_bounds = {
+        n: sh.optimalBoundingBox(False, False) for n, sh in phase.obstacles.items()
+    }
     if phase.delta is None:
-        # [EN] Rotation about Z preserves axial bounds; the full bounding circle contains every partial-turn position. / [CN] 绕 Z 转动保持轴向边界不变，完整包围圆包含部分转角中的全部位置。
+        # [EN] The complete configured angular sweep is enclosed without extending the arc into unused quadrants. / [CN] 包围完整指定转角的扫掠范围，无需扩展到并未经过的象限。
         for name, start in phase.starts.items():
-            radius = phase.rotation_radii[name]
-            box = start.BoundBox
-            sweep_box = App.BoundBox(
-                phase.pivot.x - radius,
-                phase.pivot.y - radius,
-                box.ZMin,
-                phase.pivot.x + radius,
-                phase.pivot.y + radius,
-                box.ZMax,
-            )
+            sweep_box = rotation_box(start_bounds[name], phase.pivot, phase.angle)
             for obstacle_name, obstacle in phase.obstacles.items():
-                distance = bbox_distance(sweep_box, obstacle.BoundBox)
+                distance = bbox_distance(sweep_box, obstacle_bounds[obstacle_name])
                 for region in certified_regions.get(obstacle_name, ()):
                     distance = max(distance, region.lower_bound(sweep_box))
                 if distance > spec.continuous_clearance_mm:
@@ -233,10 +265,10 @@ def certify_phase(
     if phase.delta is not None:
         # [EN] A translation stays inside the union bounds of its endpoints; an obstacle separated from that entire prism needs no temporal subdivision. / [CN] 平移始终位于两端包围盒的并集棱柱内，与整个棱柱分离的障碍物无需再进行时间细分。
         for name, start in phase.starts.items():
-            sweep_box = App.BoundBox(start.BoundBox)
-            sweep_box.add(end[name].BoundBox)
+            sweep_box = App.BoundBox(start_bounds[name])
+            sweep_box.add(end[name].optimalBoundingBox(False, False))
             for obstacle_name, obstacle in phase.obstacles.items():
-                distance = bbox_distance(sweep_box, obstacle.BoundBox)
+                distance = bbox_distance(sweep_box, obstacle_bounds[obstacle_name])
                 for region in certified_regions.get(obstacle_name, ()):
                     distance = max(distance, region.lower_bound(sweep_box))
                 if distance > spec.continuous_clearance_mm:
@@ -263,7 +295,7 @@ def certify_phase(
                     or pair in swept_pairs
                 ):
                     continue
-                distance = bbox_distance(shape.BoundBox, obstacle.BoundBox)
+                distance = bbox_distance(shape.BoundBox, obstacle_bounds[obstacle_name])
                 # [EN] A region independently proved empty supplies a lower bound on distance to this obstacle; it does not remove any obstacle or relax the motion bound. / [CN] 独立证明为空的区域提供到该障碍物的距离下界，并未删除障碍物或放宽运动界。
                 for region in certified_regions.get(obstacle_name, ()):
                     distance = max(distance, region.lower_bound(shape.BoundBox))

@@ -126,7 +126,7 @@ class StudyGeometry:
     pin_sweeps: dict
 
 
-def build_geometry(cfg, s: BoxSpec) -> StudyGeometry:
+def build_geometry(cfg, s: BoxSpec, axial_retainer=False) -> StudyGeometry:
     placements = build_detector_placements(cfg)
     selected = [p for p in placements if p.sector_name == s.sector]
     actor, head_parts, heads, removal, paths = {}, {}, {}, {}, {}
@@ -597,14 +597,17 @@ def build_geometry(cfg, s: BoxSpec) -> StudyGeometry:
         screw_axis,
     )
     for name in structural:
-        if actor[name].BoundBox.intersect(shaft_cut.BoundBox):
+        if not axial_retainer and actor[name].BoundBox.intersect(shaft_cut.BoundBox):
             actor[name] = _physical_solids_only(
                 actor[name].cut(shaft_cut).cut(counterbore)
             )
-    fixed["AnnularSupportWeldment"] = ring.cut(shaft_cut)
+    fixed["AnnularSupportWeldment"] = ring if axial_retainer else ring.cut(shaft_cut)
     fixed_regions = {
-        "RingWeb": ring_web.cut(shaft_cut),
-        **{name: shape.cut(shaft_cut) for name, shape in sockets.items()},
+        "RingWeb": ring_web if axial_retainer else ring_web.cut(shaft_cut),
+        **{
+            name: shape if axial_retainer else shape.cut(shaft_cut)
+            for name, shape in sockets.items()
+        },
         **{name: shape for name, shape in fixed.items() if name.startswith("DockPin")},
     }
     draw_screw = {

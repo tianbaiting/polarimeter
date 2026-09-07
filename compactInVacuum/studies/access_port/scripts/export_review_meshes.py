@@ -25,6 +25,12 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def _group_name(obj) -> str:
     name = str(obj.Name)
+    if any(parent.Name == "Target" for parent in obj.InList):
+        return "target"
+    if name.split("_", 1)[0] in {"left", "right", "up", "down"}:
+        name = name.split("_", 1)[1]
+    if name.startswith("FixedLoom"):
+        return "looms"
     if name.startswith("MaintenanceAccess"):
         return "access"
     if name.endswith("ReservedModuleEnvelope"):
@@ -36,6 +42,7 @@ def _group_name(obj) -> str:
             "Carrier",
             "GripFork",
             "GripTrunnion",
+            "GripRearJournal",
             "FrontBraceAttachment",
             "RearBraceAttachment",
         )
@@ -46,7 +53,7 @@ def _group_name(obj) -> str:
     if name.endswith("LightTightSleeve"):
         return "housings"
     if name.startswith(
-        ("AnnularSupport", "DockPin", "ServiceParking", "GroundParking")
+        ("AnnularSupport", "DockPin", "ServiceParking", "GroundParking", "Retainer")
     ):
         return "support"
     if name == "CommonOpenSupportFrame" or name.endswith(
@@ -92,6 +99,8 @@ def main(argv: list[str] | None = None) -> int:
             "neighbors": [],
             "active": [],
             "housings": [],
+            "target": [],
+            "looms": [],
         }
         for obj in document.Objects:
             if not hasattr(obj, "Shape") or not hasattr(obj, "EngineeringRole"):

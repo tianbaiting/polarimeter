@@ -1,4 +1,4 @@
-extends: common_open_frame.yaml
+extends: common_boxed.yaml
 doc_name: CompactOne_infrontSamurai
 
 deployment:

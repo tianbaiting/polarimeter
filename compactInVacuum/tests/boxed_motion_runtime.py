@@ -8,13 +8,24 @@ import FreeCAD as App
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from civ.boxed.config import load_spec
-from civ.boxed.motion import Phase, certify_phase, VoidRegion, verify_void_regions
+from civ.boxed.motion import Phase, certify_phase, VoidRegion, verify_void_regions, rotation_box
 from civ.boxed.validation import contact_area
 
 
 def main():
     s = load_spec(ROOT / "studies/boxed_sector/config.yaml")
     V = App.Vector
+    pivot = V(-3, 2, 0)
+    rectangular = App.BoundBox(2, -7, 1, 5, -2, 4)
+    for angle in (27, 90, -90, 180, -270):
+        swept = rotation_box(rectangular, pivot, angle)
+        for i in range(101):
+            rotation = App.Rotation(V(0, 0, 1), angle * i / 100)
+            for x in (rectangular.XMin, rectangular.XMax):
+                for y in (rectangular.YMin, rectangular.YMax):
+                    point = pivot + rotation.multVec(V(x, y, 2) - pivot)
+                    assert swept.XMin - 1e-8 <= point.x <= swept.XMax + 1e-8
+                    assert swept.YMin - 1e-8 <= point.y <= swept.YMax + 1e-8
     a = Part.makeBox(1, 1, 1)
     clear = Phase(
         "clear", {"a": a}, {"b": Part.makeBox(1, 1, 1, V(5, 3, 0))}, delta=V(10, 0, 0)

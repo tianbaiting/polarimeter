@@ -24,6 +24,8 @@ GROUP_STYLE = {
     "neighbors": ("#79858b", 0.08),
     "active": ("#24a9bf", 1.00),
     "housings": ("#333941", 1.00),
+    "target": ("#b3854f", 1.00),
+    "looms": ("#a47842", 1.00),
 }
 
 VIEWS = {
@@ -41,6 +43,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--title", default="CompactInVacuum")
     parser.add_argument("--basename", default="support_review")
     parser.add_argument("--internals-only", action="store_true")
+    parser.add_argument("--support-only", action="store_true")
     parser.add_argument(
         "--study-root",
         type=Path,
@@ -65,7 +68,7 @@ def _display_vertices(mesh: trimesh.Trimesh) -> np.ndarray:
 
 
 def _render_model(
-    model_root: Path, title: str, basename: str, internals_only: bool = False
+    model_root: Path, title: str, basename: str, internals_only: bool = False, support_only: bool = False
 ) -> None:
     mesh_dir = model_root / "review_meshes"
     screenshot_dir = model_root / "screenshots"
@@ -74,7 +77,8 @@ def _render_model(
         name: _load_mesh(mesh_dir / f"{name}.stl")
         for name in GROUP_STYLE
         if (mesh_dir / f"{name}.stl").exists()
-        and (not internals_only or name not in {"chamber", "access", "services"})
+        and (not (internals_only or support_only) or name not in {"chamber", "access", "services"})
+        and (not support_only or name not in {"target", "looms"})
     }
     all_vertices = np.vstack([_display_vertices(mesh) for mesh in meshes.values()])
     mins = all_vertices.min(axis=0)
@@ -97,6 +101,8 @@ def _render_model(
             "neighbors",
             "access",
             "chamber",
+            "target",
+            "looms",
         ):
             if group_name not in meshes:
                 continue
@@ -137,7 +143,7 @@ def main(argv: list[str] | None = None) -> int:
     study_root = args.study_root.resolve()
     if args.model_root:
         _render_model(
-            args.model_root.resolve(), args.title, args.basename, args.internals_only
+            args.model_root.resolve(), args.title, args.basename, args.internals_only, args.support_only
         )
         return 0
     for standard in ("ICF253", "ICF305", "ICF356"):

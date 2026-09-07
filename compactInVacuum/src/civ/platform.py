@@ -406,6 +406,13 @@ class ServicePortPlacementSpec:
 
 
 @dataclass(frozen=True)
+class BoxedSupportSpec:
+    mount_radius_mm: float
+    ring_outer_radius_mm: float
+    release_clearance_mm: float
+
+
+@dataclass(frozen=True)
 class DeploymentSpec:
     name: str
     instrument_name: str
@@ -429,6 +436,7 @@ class DeploymentSpec:
     support_frame: SupportFrameSpec | None
     sector_mounts: tuple[SectorMountSpec, ...]
     service_ports: tuple[ServicePortPlacementSpec, ...]
+    boxed_support: BoxedSupportSpec | None = None
 
     @property
     def chamber(self) -> ChamberCandidateSpec:
@@ -444,6 +452,12 @@ class DeploymentSpec:
         return matches[0]
 
     def sector_mount(self, sector: str) -> SectorMountSpec:
+        if self.boxed_support is not None:
+            if sector not in {"left", "right", "up", "down"}:
+                raise ValueError(f"unsupported sector mount: {sector!r}")
+            return SectorMountSpec(sector, "annular_support", 0.0,
+                self.boxed_support.ring_outer_radius_mm - self.boxed_support.mount_radius_mm,
+                self.boxed_support.release_clearance_mm)
         if self.support_frame is not None:
             if sector not in {"left", "right", "up", "down"}:
                 raise ValueError(f"unsupported sector mount: {sector!r}")
@@ -1816,8 +1830,18 @@ def _parse_deployment(raw: Mapping[str, Any]) -> DeploymentSpec:
         sector_mounts=_parse_sector_mounts(raw.get("sector_mounts")),
         support_frame=_parse_support_frame(raw.get("support_frame")),
         service_ports=tuple(ports),
+        boxed_support=(None if raw.get("boxed_support") is None else BoxedSupportSpec(**{
+            key: _positive(_number(raw["boxed_support"].get(key), f"deployment.boxed_support.{key}"), f"deployment.boxed_support.{key}")
+            for key in ("mount_radius_mm", "ring_outer_radius_mm", "release_clearance_mm")
+        })),
     )
     _ = spec.chamber
+    if spec.boxed_support is not None:
+        boxed = spec.boxed_support
+        if spec.support_frame is not None or spec.sector_mounts:
+            raise ValueError("boxed_support cannot be combined with another mounting architecture")
+        if not boxed.mount_radius_mm < boxed.ring_outer_radius_mm < min(spec.chamber.inner_size_x_mm, spec.chamber.inner_size_y_mm) / 2:
+            raise ValueError("boxed annular support radii must fit inside the chamber")
     if spec.support_frame is not None:
         frame = spec.support_frame
         if spec.sector_mounts:

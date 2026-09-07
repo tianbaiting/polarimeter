@@ -111,7 +111,9 @@ class BoxSpec:
 
 
 def load_spec(path: str | Path, overrides=None) -> BoxSpec:
-    raw = yaml.safe_load(Path(path).read_text())["boxed_sector_study"]
+    from ..config import _load_yaml_file
+
+    raw = _load_yaml_file(Path(path).resolve())["boxed_sector_study"]
     raw.update(
         {
             key.split(".", 1)[1]: value
@@ -212,6 +214,8 @@ def load_spec(path: str | Path, overrides=None) -> BoxSpec:
         raise ValueError(
             "the RIGHT-sector tool-channel certificate covers a 90-degree turn"
         )
+    if spec.grip_jaw_open_offset_mm[1] >= 0 or abs(spec.grip_jaw_open_offset_mm[2]) > 1e-9:
+        raise ValueError("the capture jaw must close from below without an axial offset")
     if (
         not spec.connector_radius_mm
         < spec.parking_clip_bore_radius_mm
@@ -220,3 +224,79 @@ def load_spec(path: str | Path, overrides=None) -> BoxSpec:
     ):
         raise ValueError("parking bore must clear the plug shaft and retain its collar")
     return spec
+
+
+def load_deployment(path, overrides=None):
+    from ..config import _load_yaml_file
+
+    raw = _load_yaml_file(Path(path).resolve())["boxed_deployment"]
+    for key, value in (overrides or {}).items():
+        if key.startswith("boxed_deployment."):
+            raw[key.split(".", 1)[1]] = value
+    expected = set("""removal_order turn_deg journal_center_z_mm journal_end_z_mm
+        handling_rod_length_mm downstream_translation_mm lift_mm retainer_r_mm
+        retainer_half_width_mm retainer_depth_mm retainer_screw_r_mm retainer_screw_t_mm
+        retainer_screw_radius_mm retainer_screw_head_radius_mm retainer_screw_head_depth_mm
+        retainer_screw_length_mm retainer_release_mm retainer_radial_clearance_mm
+        retainer_tangential_clearance_mm retainer_downstream_transfer_mm retainer_lift_mm
+        upper_plug_parking_rt_mm upper_ground_parking_delta_rt_mm loom_radial_lanes_mm
+        loom_tangent_lanes_mm upper_loom_radial_lanes_mm upper_loom_tangent_lanes_mm
+        loom_front_z_mm loom_entry_approach_abs_x_mm loom_top_margin_mm
+        loom_top_lane_spacing_mm upper_parked_loom_turn_z_mm""".split())
+    if set(raw) != expected:
+        raise ValueError(
+            f"boxed-deployment keys differ: missing={expected - set(raw)}, extra={set(raw) - expected}"
+        )
+    if raw["removal_order"] != ["up", "right", "left", "down"]:
+        raise ValueError("The modeled service sequence is UP, RIGHT, LEFT, DOWN")
+    if raw["turn_deg"] != {"up": 0, "right": 90, "left": -90, "down": 180}:
+        raise ValueError("Sector turns must align every module with the top opening")
+
+    def finite(value):
+        if isinstance(value, dict):
+            return all(finite(v) for v in value.values())
+        if isinstance(value, list):
+            return all(finite(v) for v in value)
+        return isinstance(value, str) or (
+            not isinstance(value, bool) and math.isfinite(value)
+        )
+
+    if not finite(raw):
+        raise ValueError("Deployment coordinates must be finite")
+    for name, value in raw.items():
+        if isinstance(value, list) and name != "removal_order":
+            expected_size = (
+                2
+                if name
+                in {
+                    "retainer_r_mm",
+                    "retainer_screw_t_mm",
+                    "upper_plug_parking_rt_mm",
+                    "upper_ground_parking_delta_rt_mm",
+                }
+                else 3
+            )
+            if len(value) != expected_size:
+                raise ValueError(f"{name} requires {expected_size} coordinates")
+        if isinstance(value, (int, float)) and value <= 0:
+            raise ValueError(f"{name} must be positive")
+    if set(raw["loom_front_z_mm"]) != {"up", "right", "left", "down"} or any(
+        len(row) != 3 for row in raw["loom_front_z_mm"].values()
+    ):
+        raise ValueError("Every sector requires three front loom coordinates")
+    if not 205 < raw["journal_center_z_mm"] < raw["journal_end_z_mm"]:
+        raise ValueError("The journal must project behind the loaded carrier")
+    if (
+        min(
+            raw[k]
+            for k in (
+                "handling_rod_length_mm",
+                "downstream_translation_mm",
+                "lift_mm",
+                "retainer_release_mm",
+            )
+        )
+        <= 0
+    ):
+        raise ValueError("Handling lengths must be positive")
+    return raw
