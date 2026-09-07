@@ -1,0 +1,173 @@
+% !TEX program = xelatex
+% [EN] The English note uses the same signed bends and beam-frame convention as the Chinese version. / [CN] 英文稿与中文稿采用相同的带符号弯角及局部束流坐标约定。
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=23mm,headheight=15pt]{geometry}
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Termes}
+\setsansfont{TeX Gyre Heros}
+\usepackage{amsmath,amssymb,bm,booktabs,tabularx,array,xcolor,fancyhdr,titlesec}
+\usepackage{xurl}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
+\definecolor{ink}{HTML}{193B55}
+\titleformat{\section}{\large\bfseries\sffamily\color{ink}}{\thesection}{0.7em}{}
+\titleformat{\subsection}{\normalsize\bfseries\sffamily\color{ink}}{\thesubsection}{0.7em}{}
+\linespread{1.03}
+\setlength{\parskip}{3pt}
+\setlength{\emergencystretch}{2em}
+\renewcommand{\arraystretch}{1.18}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\pvec}{\bm p}
+\newcommand{\Pt}{\mathsf P}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\sffamily A polarimeter downstream of SRC}
+\fancyhead[R]{\small BigDpol/T11 and F13}
+\fancyfoot[C]{\thepage}
+\hypersetup{pdftitle={Why Install a Polarimeter Downstream of SRC?},pdfauthor={DPOLAR Project}}
+\begin{document}
+\thispagestyle{empty}
+\begin{center}
+{\LARGE\sffamily\color{ink}Why Install a Polarimeter Downstream of SRC?}\par\vspace{4pt}
+{\large\sffamily\color{ink}Complementary roles of the former BigDpol/T11 location and F13}\par\vspace{10pt}
+DPOLAR Project\quad---\quad Sources checked: 8 September 2026
+\end{center}
+\vspace{5pt}
+\noindent
+A polarimeter at the former BigDpol/T11 location provides an upstream polarization reference for beam tuning. Together with a second polarimeter at F13, it helps localize polarization changes and adds independent information for density-matrix reconstruction. The second station is on the \textbf{incident beam line downstream of BigRIPS, upstream of the SAMURAI reaction target}:
+\begin{equation*}
+\begin{aligned}
+\mathrm{SRC}\to DMT1\to\boxed{\mathrm{BigDpol/T11}}
+&\to DMT2,DMT3\to F0\\[-1pt]
+&\to\mathrm{BigRIPS}\ (F0\text{--}F7)\to\boxed{F13}.
+\end{aligned}
+\end{equation*}
+BigDpol lies downstream of DMT1 and upstream of DMT2. The SAMURAI analyzing magnet is downstream of the reaction target and is excluded from the incident-beam spin transport considered here~\cite{local,geometry}.
+
+\section{Higher upstream rates can shorten tuning feedback}
+
+The primary-beam transport section between SRC and the BigRIPS entrance offers the potential to tune polarization at higher beam rates. The official SRC table lists an expected planning current of $30\,\mathrm{pnA}$ for polarized deuterons at $250\,\mathrm{MeV/u}$, with a source-development qualification. The published total-rate limit at F3 is $10^7\,\mathrm{s^{-1}}$~\cite{current,limit}. These describe different constraints: accelerator delivery and downstream total rate. The planning current is not a guarantee for the present $190\,\mathrm{MeV/u}$ operation.
+
+With fixed target thickness, acceptance, analyzing powers and live-time fraction,
+\begin{equation}
+ N\propto I_{\mathrm b}t,\qquad
+ \sigma(P)\propto N^{-1/2},\qquad
+ t_{\sigma(P)=\mathrm{const}}\propto I_{\mathrm b}^{-1}.
+\end{equation}
+Within the detector's linear counting range, a higher effective beam rate therefore gives faster feedback on PIS/RF modes, Wien-filter orientation and accelerator extraction conditions, without requiring the entire downstream beam line to be tuned first.
+
+This benefit applies to a \textbf{facility-approved local tuning mode}, with beam termination at an approved location or attenuation through an accepted scheme. The 2025 BIS report describes primary-beam permission based on attenuators upstream of the accelerator complex~\cite{bis}. A high T11 rate concurrent with a low F13 rate is consequently not established by the published information alone.
+
+\section{Two stations distinguish upstream and downstream changes}
+
+T11 samples the polarization delivered by the source, accelerators and upstream transport; F13 samples the beam arriving at the experiment. For the same source mode and comparable beam conditions, compare F13 with the prediction obtained by transporting the T11 measurement.
+
+\begingroup\small\noindent
+\begin{tabularx}{\linewidth}{@{}p{0.36\linewidth}Y@{}}
+\toprule
+Observation & Where to investigate first \\
+\midrule
+T11 differs from its reference & Source mode, spin orientation, extraction conditions and transport upstream of T11.\\
+T11 is normal; F13 differs from the prediction & Fields, trajectories, acceptance and beam selection between stations, and the F13 instrument response.\\
+Both change consistently with the transport model & A common upstream change, before retuning downstream magnets.\\
+\bottomrule
+\end{tabularx}
+\endgroup
+
+Correct for efficiency, live time, beam position and acceptance, including any slit-induced change in the sampled beam. Two stations provide a sectional diagnosis; they do not uniquely identify a faulty magnet.
+
+\clearpage
+\section{The intervening bends provide complementary spin projections}
+
+\subsection{A 160-degree net bend gives 27.513-degree relative spin rotation}
+
+At each station, take $z$ along the local beam, $y$ vertical, and $x$ completing a right-handed frame. In the convention of the density-matrix note, DMT2 and DMT3 each bend by $-50^\circ$. BigRIPS D1--D6 contribute $(-30,-30,-30,+30,+30,-30)^\circ$, with a net bend of $-60^\circ$. The incident central trajectory from F7 to the pre-target F13 station adds no net bend~\cite{local,geometry}. Thus
+\begin{equation}
+ \Theta_{\mathrm{T11}\to F13}=(-50^\circ-50^\circ)-60^\circ+0^\circ=-160^\circ.
+\end{equation}
+The stated $160^\circ$ is the magnitude of the \textbf{signed net bend}, not the sum of absolute magnet angles.
+
+For a horizontal central trajectory dominated by transverse dipole fields, with approximately constant energy, the Thomas--BMT equation gives~\cite{bmt,constants}
+\begin{align}
+ \psi_{\mathrm{lab}}&=(1+G_d\gamma)\Theta,&
+ \delta&=\psi_{\mathrm{lab}}-\Theta=G_d\gamma\Theta,\\
+ G_d&=-0.14298726968,&
+ \gamma&=1+\frac{2T_u}{m_dc^2},\quad m_dc^2=1875.612945\,\mathrm{MeV}.
+\end{align}
+Here $T_u$ is kinetic energy per nucleon. At $T_u=190\,\mathrm{MeV/u}$, the total deuteron kinetic energy is $380\,\mathrm{MeV}$ and $\gamma=1.20260044$, giving
+\begin{equation}
+ \boxed{\psi_{\mathrm{lab}}=-132.487^\circ,\qquad\delta=+27.513^\circ.}
+\end{equation}
+The two-station analysis uses $\delta$, relative to the local beam frames. This is a central-trajectory calculation, not an energy-independent constant; changes in energy or significant energy loss require recalculation.
+
+\subsection{Vector orientation and tensor principal axes share one rotation}
+
+With $c=\cos\delta$ and $s=\sin\delta$, the vector and symmetric traceless tensor transform as
+\begin{equation}
+ R_y(\delta)=\begin{pmatrix}c&0&s\\0&1&0\\-s&0&c\end{pmatrix},\qquad
+ \pvec_{13}=R_y\pvec_{\mathrm{T11}},\qquad
+ \Pt_{13}=R_y\Pt_{\mathrm{T11}}R_y^{\mathsf T}.
+\end{equation}
+A tensor eigenaxis $\hat{\bm n}$ becomes $R_y\hat{\bm n}$. Vector orientation and tensor principal axes therefore do \textbf{not} have different physical precession angles. If initially longitudinal, either axis becomes
+\begin{equation}
+ \hat{\bm n}_{13}=(\sin\delta,0,\cos\delta)=(0.461951,0,0.886906),
+\end{equation}
+at $27.513^\circ$ to the local beam. A vector has a signed direction; a tensor axis identifies $\hat{\bm n}$ and $-\hat{\bm n}$ as the same axis.
+
+\begingroup\small\noindent
+\begin{tabularx}{\linewidth}{@{}p{0.29\linewidth}p{0.24\linewidth}Y@{}}
+\toprule
+Quantity & At 190 MeV/u & Interpretation \\
+\midrule
+Initially longitudinal vector & $+27.513^\circ$ & Rotation about vertical $y$.\\
+Initially longitudinal tensor axis & $+27.513^\circ$ (modulo $180^\circ$) & The same spatial rotation; the axis has no arrow.\\
+Tensor double-angle terms & $2\delta=55.026^\circ$ & Arguments of $\sin2\delta$ and $\cos2\delta$, not an axis rotation.\\
+Initially vertical vector or uniaxial tensor & $0^\circ$ axis displacement & Parallel to the rotation axis; unchanged.\\
+\bottomrule
+\end{tabularx}
+\endgroup
+
+For example, $p'_{xz}=\tfrac12\sin2\delta\,(p_{zz}-p_{xx})+\cos2\delta\,p_{xz}$.
+The double angle belongs to the rank-two component transformation. For an arbitrarily inclined axis, use $R_y\hat{\bm n}$; its angular displacement is not always $27.513^\circ$.
+
+\clearpage
+\subsection{Known transport exposes components invisible at one station}
+
+A normalized spin-1 density matrix has eight independent real parameters: three vector and five tensor components. In the project's calibrated, multi-angle L/R/U/D geometry, one station can identify six combinations. Longitudinal $p_z$ does not enter the scattering response, while the $\sin2\phi$ term multiplying $p_{xy}$ vanishes at the four cardinal azimuths~\cite{local}.
+
+The known rotation between stations gives
+\begin{align}
+ p'_x&=c\,p_x+s\,p_z,\\
+ p'_{yz}&=-s\,p_{xy}+c\,p_{yz}.
+\end{align}
+At $190\,\mathrm{MeV/u}$, $s=0.461951\ne0$. The two blind components enter observable downstream components with coefficients $+0.461951$ and $-0.461951$, respectively, supplying complementary projections.
+
+\begin{center}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Calibrated multi-angle response & Vector + tensor & Tensor only \\
+\midrule
+One station, or two without relative spin rotation & $6/8$ & $4/5$ \\
+T11 and F13 with known $R_y(27.513^\circ)$ & $8/8$ & $5/5$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+These ranks require non-degenerate analyzing-power combinations across polar angles, constrained normalization and efficiencies, and a known transport model. They establish identifiability, not a precision guarantee at arbitrary counting rates. One station can measure the amplitude of a tensor polarized along a known vertical axis; reconstructing the general density matrix requires removing the blind directions.
+
+For the \textbf{two polarimeters with the present identical azimuthal layout}, a non-degenerate relative spin rotation is needed to add the missing projections, and the existing bends provide it. The general requirement is independent measurement projections: another controlled spin rotation or suitable measurement geometry could also supply them. An orbital bend is not a universal prerequisite for density-matrix measurements.
+
+\begingroup\footnotesize
+\setlength{\parskip}{0pt}
+\begin{thebibliography}{8}
+\setlength{\itemsep}{3pt}
+\bibitem{local} DPOLAR, \emph{Deuteron Spin Density Matrix, Beam Transport, and Polarimeter Identifiability}. Detailed station locations, conventions and response derivations: \path{docs/code/tensor_identifiability/deuteron_spin_density_matrix/main_en.tex}.
+\bibitem{geometry} K. Sekiguchi et al., \emph{Plan of Measurement of Polarized Deuteron--Proton Scattering at RIBF}, RIKEN APR 42 (2009), 27; K. Kusaka et al., \emph{Present status of the beam transport line from SRC to BigRIPS}, RIKEN APR 51 (2018), 173, \url{https://www.nishina.riken.jp/researcher/APR/APR051/pdf/173.pdf}.
+BigRIPS and SAMURAI geometry: \url{https://ribf.riken.jp/BigRIPSInfo/}; \href{https://ribf.riken.jp/BigRIPSInfo/lise/NoUCSF_Be_fragmentation_Standard_SAMURAI.lpp}{NoUCSF\_Be\_fragmentation\_Standard\_SAMURAI.lpp}, used only for geometry, not as a polarized-deuteron run setting.
+\bibitem{current} RIKEN, \emph{Accelerator Technical Information}, SRC table and source-development qualification: \url{https://www.nishina.riken.jp/ribf/accelerator/tecinfo.html}.
+\bibitem{limit} RIKEN, \emph{Secondary beam intensity expected}, total rate at F3: \url{https://www.nishina.riken.jp/ribf/BigRIPS/intensity.html}.
+\bibitem{bis} M. Komiyama et al., \emph{Development of a machine protection beam interlock system for the RIBF}, RIKEN APR 58 (2025), 98--99: \url{https://www.nishina.riken.jp/researcher/APR/APR058/pdf/98.pdf}.
+\bibitem{bmt} V. Bargmann, L. Michel and V. L. Telegdi, Phys. Rev. Lett. 2 (1959), 435--436, \href{https://doi.org/10.1103/PhysRevLett.2.435}{doi:10.1103/PhysRevLett.2.435}.
+\bibitem{constants} P. J. Mohr et al., \emph{CODATA Recommended Values of the Fundamental Physical Constants: 2022}, Rev. Mod. Phys. 97 (2025), 025002, \href{https://doi.org/10.1103/RevModPhys.97.025002}{doi:10.1103/RevModPhys.97.025002}. Numerical implementation: \path{analysis/spin_transport/bmt.py}.
+\end{thebibliography}
+\endgroup
+\end{document}
