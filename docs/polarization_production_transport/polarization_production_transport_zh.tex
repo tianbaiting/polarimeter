@@ -27,7 +27,7 @@
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\small\sffamily RIKEN 极化氘束：产生、输运与实验交接}
+\fancyhead[L]{\small\sffamily RIKEN 极化氘束：产生、输运与束流运行}
 \fancyhead[R]{\small 2026-09-07}
 \fancyfoot[C]{\thepage}
 \newcommand{\unit}[1]{\,\mathrm{#1}}
@@ -35,7 +35,7 @@
 \newcommand{\key}[1]{\par\noindent\colorbox{soft}{\parbox{\dimexpr\linewidth-2\fboxsep}{#1}}\par}
 \newcommand{\screenshot}[4]{\begin{figure}[H]\centering\includegraphics[width=#2\linewidth]{#1}\caption{#3}\label{#4}\end{figure}}
 \hypersetup{pdftitle={RIKEN 极化氘束的产生、输运与极化测量},pdfauthor={Polarimeter 项目技术资料整理}}
-\title{\sffamily\color{ink}RIKEN 极化氘束的产生、输运与极化测量\\[5pt]\large 面向 SAMURAI 实验的技术链与 Sekiguchi 团队工作交接}
+\title{\sffamily\color{ink}RIKEN 极化氘束的产生、输运与极化测量\\[5pt]\large 面向 SAMURAI 实验的技术链与束流现场操作}
 \author{Polarimeter 项目技术资料整理}
 \date{资料核对日期：2026 年 9 月 7 日}
 
@@ -43,7 +43,7 @@
 \maketitle
 \thispagestyle{empty}
 \begin{abstract}
-RIKEN 极化氘束的实验能力由三部分共同形成：离子源设定磁子态布居及极化轴，回旋加速器通过单圈取出维持可控自旋相位，极化仪通过已标定的反应分析本领确定束流状态。对 SAMURAI 实验，最终需要给出的是实际反应顶点处、逐源模式且带不确定度的极化，而不是只引用离子源的名义极化率。Sekiguchi 团队的公开工作覆盖核极化技术、极化测量与散射实验系统；承担相应实验支持，需要把源模式接口、参考标定、两站测量、靶点输运和运行质量控制连成可复算的链条。本文从用户提供的共享聊天出发，按原始文献核对事实，附十一幅原始 PDF 局部截图，并同时标注 PDF 页码、文内页码及图表位置。
+RIKEN 极化氘束的实验能力由三部分共同形成：离子源设定磁子态布居及极化轴，回旋加速器通过单圈取出维持可控自旋相位，极化仪通过已标定的反应分析本领确定束流状态。对 SAMURAI 实验，最终需要给出实际反应顶点处、逐源模式且带不确定度的极化。根据 Sekiguchi 团队参与的源准备和束流测量工作，其现场支持可围绕 PIS/RF 模式调试、Wien filter 调轴、联合检查单圈取出、极化仪运行及异常恢复展开。本文按原始文献整理这些操作与物理依据，附十幅 PDF 局部截图，并标注来源、PDF 页码、文内页码及图表位置。
 \end{abstract}
 \key{\textbf{核心交付：}每个有效时间段、每个源模式在实际靶点的 $p_i$、$p_{ij}$ 或经验证的轴对称参数 $P,T,\hat{\bm n}$，以及对应标定、输运配置和协方差。}
 \vspace{3mm}
@@ -310,42 +310,31 @@ RF 时间谱出现额外束团 & chopper、取出圈分布与相位；调束后�
 运行前应完成原始数据到极化结果的重放；用已知输入与真实接受度检验恢复偏差；分别报告统计、分析本领尺度、轴向、几何和归一化误差。恢复源或更改关键机器设定后，应建立新的有效区间。
 
 \clearpage
-\section{Sekiguchi 的作用，以及本实验怎样承担相应工作}
+\section{Sekiguchi 团队在束流实验现场做什么}
 
-\subsection{公开材料能够确认的贡献}
-RIKEN APR 58 的 Three-Body Nuclear Force Laboratory 报告将核极化技术和极化测量技术列为研究方向，记载 FY2024 的离子源准备、加速测试以及 KuJyaku／极化质子靶系统工作，并列 Kimiko Sekiguchi 为该报告时期的负责人。\src{SekiguchiLab2025}{PDF 1／文内 370，Major Research Subjects、Summary、Members}
+他们可承担的核心工作是\textbf{把极化束调到实验要求，并在取数期间持续测量和确认束流的极化状态}。该组已发表的工作包括 PIS 准备、恢复测试及束流极化测量。下面据这些工作归纳可讨论的现场分工；具体操作人员和控制权限由本次实验与设施方约定。\src{SekiguchiLab2025}{PDF 1／文内 370，Summary of Research Activity}
 
-\screenshot{sekiguchi_lab_p1_members.png}{0.30}{研究组报告的负责人栏原始截图。来源：RIKEN APR 58\cite{SekiguchiLab2025}，单篇 PDF 第 1 页／文内第 370 页，Members。该组织记录不是本次实验的任务书。}{fig:sek-role}
+\textbf{1. 与离子源人员一起调 PIS 和 RF 极化模式。}
+根据实验需要选择 RF 跃迁组合，在 AVF 后逐模式测量 $P,T$，用实测结果反馈优化跃迁设置，同时检查束流强度和稳定性。2024 年恢复测试就测量了三个极化模式，并针对模式 3 安排后续参数优化。这是可以请他们参与的“调源—测极化—再调源”工作。\src{Sugahara2025}{PDF 1／文内 36，Table 2 及其后段落}
 
-从具体成果看，Sekiguchi 第一作者的 2004 年论文记录了多轴极化、两站 beam-line polarimetry 和绝对标定；2017 年论文提供了 186.6 MeV/u 完整分析本领。她也参与署名 2016 年极化束加速技术报告、2025 年源恢复测试及 2026 年新测量系统论文。因而可确认的作用包括极化散射实验的组织与方法、参考数据和测量系统建设。\cite{Sekiguchi2004,Sekiguchi2017,Sakamoto2016,Sugahara2025,Saito2026}
+\textbf{2. 调 Wien filter，并确认加速后的极化轴。}
+按要求设置 Wien filter 的场强和机械转角，通过扫描设置、观察极化仪的不对称，找到竖直、水平或纵向极化所需的工作点。改变束流能量或取出条件后，再测一次轴方向。文献给出了 Wien 扫描与极化测量的对应关系。\src{Sakamoto2016}{PDF 2／文内 146，Fig. 3}\src{Sekiguchi2017}{PDF 4，II}
 
-PIS 的早期设备论文与加速器技术报告同时显示设施能力来自多个团队；不能把源硬件开发、回旋加速器操作、束流线安装权限都归为个人职责。对使用非极化 Sn 靶的束流实验，承担束流极化支持并不要求复制用于双极化 $d$--$p$ 实验的 triplet-DNP、NMR 或 KuJyaku。\src{Ikegami1993}{PDF 1，作者与 Introduction}\src{Saito2026}{PDF 3--4，2.1--2.3}
+\textbf{3. 与加速器组一起检查单圈取出。}
+检查 AVF 的 chopper 监测信号，以及下游粒子相对 RF 的时间谱，寻找额外束团峰并估计混圈比例。SRC 的实例使用 BigDpol 反冲质子相对 $f_{\rm beam}/2$ 参考信号的时间。极化测量人员提供时间谱和混圈诊断，加速器人员据此调整相位接受度、flat-top RF 和取出条件，再共同复查。RIKEN 官方将回旋加速器及极化氘束单圈运行列为 Sakamoto 领导的 Cyclotron Team 的职责。\src{Sakamoto2016}{PDF 3／文内 147，Figs. 4--6}\src{CyclotronTeam}{网页 Research Summary，第 2、3、6 项}
 
-\subsection{面向交接的任务与交付物}
-下表把“cover”解释为能独立执行实验侧工作、明确设施接口并交付可复查结果。它是本报告提出的工作分解，\textbf{不是 Sekiguchi 已承诺承担或移交的正式清单}。
+\textbf{4. 把极化仪调好，给出每个模式的极化值。}
+设置靶和探测器，检查信号与符合时间，选出弹性散射事件，采集极化／非极化参考数据，再用已标定的分析本领计算极化及误差。调束完成后给出各模式的 $P,T$ 和轴方向；取数时运行参考极化仪。2017 年实验使用 Dpol 连续监测 $70\unit{MeV/u}$ 束流。\src{Sekiguchi2017}{PDF 3--4，II}
 
-\begin{table}[H]\centering\small
-\begin{tabularx}{\linewidth}{p{28mm}YY}\toprule
-工作 & 实验侧应交付 & 应与设施／设备方确认 \\\midrule
-模式与极化轴 & 目标 $P,T,\hat{\bm n}$、翻转顺序、残余矢量要求 & 当前 RF 菜单、纯张量可用性、Wien 标定 \\
-源与加速接口 & 模式同步、有效区间、单圈质量记录 & 本次配方、调束与维护负责人、恢复程序 \\
-极化仪运行 & 靶、符合 DAQ、束斑监测、分析重放 & 安装接口、可借用设备、强度与真空条件 \\
-标定尺度 & 分析本领版本、坐标约定、误差传递 & 参考标定数据、原始记录与系统误差 \\
-靶点输运 & 可验证旋转模型及两站产额比较 & 当前场图、磁铁设定、轨道、实际靶位 \\
-束流期支持 & 在线极化、漂移诊断、数据有效性判断 & 值班责任、故障联络、重新验收条件 \\\bottomrule
-\end{tabularx}
-\end{table}
+\textbf{5. 管理模式切换，在线监测极化漂移。}
+运行约定的模式循环，使实际模式与 DAQ 标签同步；持续检查逐模式计数、束流归一化、活时间和 RF 时间谱，累计足够周期后更新极化结果。已有实验采用每 $5\unit s$ 切换模式；2004 年还在每个 run 前后用 Swinger 极化仪检查靶前束流。\src{Sekiguchi2017}{PDF 4}\src{Sekiguchi2004}{arXiv PDF 5--6，II A--B}
+
+\textbf{6. 在掉束、重新调束或极化异常后确认能否恢复取数。}
+比较源模式、RF 时间谱及上下游极化测量，判断下一步应检查源设置、取出条件还是探测器响应，与相应人员一起处理。恢复后重新测量极化和轴方向，并记录新结果开始适用的时间。对 SAMURAI，还需安排从最后一台极化仪到实际靶点的极化确认。
+
+因此，向 Sekiguchi 团队确认支持范围时，可以逐项问：\textbf{谁参与调 PIS/RF，谁调 Wien filter，谁分析单圈时间谱，谁值守极化仪，以及异常后由谁重新确认极化。}每项都对应现场能够执行的操作。
 
 \clearpage
-\subsection{用四项结果判断实验侧能力是否已经接住}
-\begin{enumerate}
-\item \textbf{逐模式参考态：}给出实际 $P,T$、轴方向及协方差，能回溯至测量时间、RF 菜单和源状态；明确纯张量或混合矢量模式的适用方式。
-\item \textbf{独立极化分析：}从符合事件、归一化计数和版本化标定表重算极化，并能用源模式变化、非极化参考和分析选择稳定性检查结果。
-\item \textbf{实际靶点预测与验证：}以本次磁铁与靶位为输入，解释参考站到下游站的响应，将最后一段输运延伸到反应顶点并传播不确定度。
-\item \textbf{可执行运行规则：}知道哪些时间段数据有效、发生异常应检查什么、由谁处理设施问题，以及恢复后需重测哪些量。
-\end{enumerate}
-这四项共同把极化源提供的束流变成物理分析可用的靶点自旋状态。公开文献支持其方法和历史可行性；本次配置、可用模式和现场责任应体现在交接数据中。
-
 \section{来源、截图与复现索引}
 \label{sec:locators}
 \textbf{页码规则：}“PDF 第 $n$ 页”从下载文件第一页起以 1 计数，包含封面；“文内页码”按原稿页脚或页眉。会议幻灯片编号单独列出。网页没有 PDF 页码，改用标题、栏目与段落定位。全部访问日期为 2026-09-07。
@@ -360,7 +349,8 @@ Sugahara APR 58\cite{Sugahara2025} & 1／36 & C-22 条件与逐模式结果，Ta
 Sekiguchi 2004\cite{Sekiguchi2004} & arXiv 5--7／5--7 & II A：纯张量模式；II B：双站极化仪与 $A_{yy}=-1/2$；II C：焦平面 DPOL。\\
 Sekiguchi 2017\cite{Sekiguchi2017} & 接收稿 3--4／2--3；8／7 & II：BigDpol、70 MeV/u 监测、误差；Table I：186.6 MeV/u 数据；本文图\ref{fig:ap}。\\
 Saito 2026\cite{Saito2026} & 3／Page 3 of 13；9／Page 9 of 13 & 2.1、Eq. (1)：源轴与布居；4：源运行窗口。\\
-研究组报告\cite{SekiguchiLab2025} & 1／370 & 研究方向、FY2024 活动、Members；本文图\ref{fig:sek-role}。\\
+研究组报告\cite{SekiguchiLab2025} & 1／370 & Summary of Research Activity：FY2024 的源准备与束流测试。\\
+Cyclotron Team\cite{CyclotronTeam} & 网页 Research Summary & 第 2、3、6 项：束流／RF 分析、回旋加速器运行、极化氘束单圈运行。\\
 Sugahara EFB2026\cite{SugaharaTalk2026} & 4／幻灯片 3 & January 2026：100 MeV/u、AVF＋RRC、D-room；本文图\ref{fig:droom2026}、\ref{fig:jan2026}。\\
 \bottomrule
 \end{longtable}
