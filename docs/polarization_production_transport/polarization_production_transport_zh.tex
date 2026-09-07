@@ -43,7 +43,7 @@
 \maketitle
 \thispagestyle{empty}
 \begin{abstract}
-RIKEN 极化氘束的实验能力由三部分共同形成：离子源设定磁子态布居及极化轴，回旋加速器通过单圈取出维持可控自旋相位，极化仪通过已标定的反应分析本领确定束流状态。对 SAMURAI 实验，最终需要给出实际反应顶点处、逐源模式且带不确定度的极化。根据 Sekiguchi 团队参与的源准备和束流测量工作，其现场支持可围绕 PIS/RF 模式调试、Wien filter 调轴、联合检查单圈取出、极化仪运行及异常恢复展开。本文按原始文献整理这些操作与物理依据，附十幅 PDF 局部截图，并标注来源、PDF 页码、文内页码及图表位置。
+RIKEN 极化氘束的实验能力由三部分共同形成：离子源设定磁子态布居及极化轴，回旋加速器通过单圈取出维持可控自旋相位，极化仪通过已标定的反应分析本领确定束流状态。对 SAMURAI 实验，最终需要给出实际反应顶点处、逐源模式且带不确定度的极化。根据 Sekiguchi 团队参与的源准备和束流测量工作，其现场支持可围绕 PIS/RF 模式调试、Wien filter 调轴、联合检查单圈取出、极化仪运行及异常恢复展开。本文按原始文献整理这些操作与物理依据，附十二幅 PDF 局部截图，并标注来源、PDF 页码、文内页码及图表位置。
 \end{abstract}
 \key{\textbf{核心交付：}每个有效时间段、每个源模式在实际靶点的 $p_i$、$p_{ij}$ 或经验证的轴对称参数 $P,T,\hat{\bm n}$，以及对应标定、输运配置和协方差。}
 \vspace{3mm}
@@ -112,7 +112,17 @@ RF 模式改变 $P,T$；Wien filter 通过交叉场在参考粒子满足 $\bm E+
 
 例如纯张量态 $P=0,T=-1.6$ 的布居为 $(N_+,N_0,N_-)=(1/15,13/15,1/15)$。若轴沿 $y$，则 $(p_{xx},p_{yy},p_{zz})=(0.8,-1.6,0.8)$；若轴沿 $z$，则为 $(0.8,0.8,-1.6)$。这是同一组本征布居在不同方向的表示。
 
-2004 年实验确实使用过理想模式 $(P_Z,P_{ZZ})=(0,-2)$，而 2024 年恢复测试使用的模式菜单不同。因此“纯张量模式是否可用”应具体落实到本次 RF 菜单与实测残余矢量，不应仅以历史可实现性作答。\src{Sekiguchi2004}{arXiv PDF 5，II A}\src{Sugahara2025}{PDF 1，Table 2}
+\clearpage
+\subsection{RF 跃迁与历史极化模式}
+Okamura 等在 1995 年报告中把 RF 跃迁、所选超精细态与输出极化列在同一张表里，使式\eqref{eq:pop}中的布居参数有了具体的设备对应关系。图\ref{fig:rf-modes}中的 SX\#1、SX\#2 是两级六极选择磁铁，SFT、WFT 分别表示强场和弱场 RF 跃迁单元；表内数字 1--6 是原文的超精细态编号。原表的 $p_z,p_{zz}$ 在本节对应沿源对称轴定义的 $P,T$。\src{Okamura1995}{完整 PDF 179／文内 148，Table 1}
+
+\screenshot{okamura1995_p179_table1.png}{0.65}{1995 年 PIS 的 RF 模式、态选择与极化性能原表，保留表题和全部脚注。来源：Okamura 等\cite{Okamura1995}，完整 APR 28 的 PDF 第 179 页／文内第 148 页，Table 1。实测栏仅列出原文报告的分量，空白项不表示测量结果为零。}{fig:rf-modes}
+
+\textbf{从上到下读一列，就得到一种源模式的产生过程。}先选定理想 $(P,T)$，再沿 SX\#1 出口、第一组 RF、SX\#2 出口和第二组 RF 读到进入 ECR 的态，最后比较实测值。例如，理想负纯张量态 $(0,-2)$ 对应 WFT\#1 的 $1\to4$ 与 SFT\#2 的 $3\to5$ 跃迁，进入 ECR 的态为 2、5，原表报告 $T=-1.23$。正纯张量态 $(0,+1)$ 有两种列出的实现组合，实测 $T$ 分别为 $+0.77$ 和 $+0.58$。这说明即使理想极化相同，不同选态路径的实际性能也可能不同。
+
+\textbf{RF 优化还决定伴随极化分量。}原表脚注 b 说明，对其中的负纯矢量模式，WFT\#2 输入功率需小于 $0.4\unit W$，以使张量分量可忽略；脚注 c 则记录另一模式的张量分量随该功率增加。这些是历史调源经验，实际运行应以当前 RF 配置和逐模式测量确定工作点。报告同时指出，受选择效率影响，表中的纯 $J_z$ 模式当时未实际用于实验。\src{Okamura1995}{PDF 179，Table 1 脚注及右栏}
+
+2004 年实验使用过理想模式 $(P_Z,P_{ZZ})=(0,-2)$，2024 年恢复测试则采用另一组模式菜单。将这两个时期与图\ref{fig:rf-modes}并读，可以区分源曾实现的模式、实验实际选用的模式及恢复后测得的性能；本次纯张量束的要求应落实到当前 RF 菜单与残余矢量测量。\src{Sekiguchi2004}{arXiv PDF 5，II A}\src{Sugahara2025}{PDF 1，Table 2}
 
 \clearpage
 \section{加速与单圈取出：保持可控的自旋相位}
@@ -154,7 +164,30 @@ Sakamoto 等的 Table 2 给出名义 $190\unit{MeV/u}$ 模式的 AVF、RRC、SRC
 这些记录为近期恢复后的中能束流运行提供了证据。本实验可据此定位需要交接的 D-room 数据、模式标签与标定方法；实际采用时，仍应取得对应能量和源模式的完整测量表，并把 SRC 与后续束流输运纳入本实验的验证范围。
 
 \clearpage
-\section{高能极化仪与 Sekiguchi 的分析本领数据}
+\section{中高能极化仪与分析本领数据}
+
+\subsection{70、100、135 MeV/u 的参考数据与两站测量}
+Sekiguchi 等于 2002 年给出了 $d$--$p$ 弹性散射的 $A_y^d,A_{yy},A_{xx},A_{xz}$ 数据。论文使用的氘核\textbf{总动能}为 $E_d=140,200,270\unit{MeV}$，对应 $70,100,135\unit{MeV/u}$。这些数据为 RRC 后的参考极化测量提供相应能区的实验依据，并与后面的 SRC 高能测量衔接。\src{Sekiguchi2002}{PDF 1、3，摘要及 II；PDF 9--12，Tables IV--VIII}
+
+\begin{table}[H]\centering\small
+\begin{tabularx}{\linewidth}{p{19mm}p{20mm}p{39mm}Y}\toprule
+$E_d/2$ (MeV/u) & $E_d$ (MeV) & 原文数值表与 PDF 页码 & 本文采用的数据用途 \\\midrule
+70 & 140 & 2002：IV（9）、V（10） & 70 MeV/u 上游极化监测的参考能区；Table V 为 D-room 数据。\\
+100 & 200 & 2002：VI（10） & 2026 年 100 MeV/u 运行可对照的分析本领数据。\\
+135 & 270 & 2002：VII（11）、VIII（12） & 135 MeV/u 历史实验及双站极化测量的参考。\\
+186.6 & 373.2 & 2017：I（8，含封面） & 名义 190 MeV/u 高能极化测量的主要数据依据。\\\bottomrule
+\end{tabularx}
+\caption{按能量整理的实验分析本领索引。2002 年采用 Cartesian 分量，2017 年采用球张量分量；不同能量、坐标及接受度的响应应分别处理。括号内为 PDF 页码。}
+\label{tab:ap-index}
+\end{table}
+
+\screenshot{sekiguchi2002_p10_table5.png}{0.84}{70 MeV/u 的 D-room 极化仪分析本领原表，保留空白数据项。来源：Sekiguchi 等\cite{Sekiguchi2002}，PDF 第 10 页／文内 034003-10，Table V；原表 $E_d^{\rm lab}=140$ MeV 为氘核总动能。误差列为统计误差，依据同文 PDF 第 7 页，III B。}{fig:ap70}
+
+同文 II B 给出了两站配置：D-room 位于 RRC 下游，Swinger 随 beam swinger 移动并在测量前后检查靶前极化；两站均以 CH$_2$ 为靶，用左、右、上、下四对塑料闪烁体测量 $d$--$p$ 符合。\src{Sekiguchi2002}{PDF 3／文内 034003-3，II B}
+
+采用表\ref{tab:ap-index}中的数据时，应匹配实际能量、分析角度、接受度和标定版本；历史加速配方的 $70.4\unit{MeV/u}$ 与表内 $70\unit{MeV/u}$ 须分别记录。
+
+\clearpage
 
 \subsection{BigDpol 的测量条件及源模式}
 2017 年实验以 SRC 引出线上的 BigDpol 测量 $186.6\unit{MeV/u}$、即氘核总动能 $373.2\unit{MeV}$ 的 $d$--$p$ 弹性散射。束流强度 $4$--$8\unit{nA}$，CH$_2$ 靶厚 $330\unit{mg/cm^2}$。四对塑料闪烁体分布在相互垂直的两个平面，用散射氘与反冲质子的运动学符合压低背景；质子臂限制的角接受度为 $\Delta\theta_{\rm lab}=\pm1^\circ$。\src{Sekiguchi2017}{带封面 PDF 3--4／稿件 2--3，II}
@@ -278,6 +311,40 @@ BigRIPS 官方页面公开了轨道传输图与 SAMURAI Beam Line 的 Default／
 一般 spin-1 密度矩阵含 3 个矢量和 5 个张量实分量。两处各测一个标量，不能无条件恢复这 8 个自由度。若源态轴对称且轴向由已验证模型确定，拟合 $P,T$ 可满足实验需要；若要同时确定轴或检验轴对称假设，就需要更多方位、角度或源轴扫描。比较时优先使用各探测臂的预测产额与数据，使几何和归一化差异进入同一个模型。
 
 \clearpage
+\subsection{两站测量极化轴的 RIKEN 实例}
+Mardanpour 等的实验直接展示了如何用两台极化仪确定束流极化轴。该实验在氘核总能量 $130,180\unit{MeV}$，即 $65,90\unit{MeV/u}$ 下测量 $d$--$p$ 分析本领；主测量结束后，实验组随即进行独立的轴向测量，将 SMART 的 swinger 偶极磁铁在竖直平面内旋转 $90^\circ$，利用磁场使自旋进动，并通过进动前后的两站极化测量确定轴角。\src{Mardanpour2007}{arXiv v2 PDF 2、5，第 2 节}
+
+\begin{figure}[H]\centering\small
+\fbox{\parbox[c][13mm][c]{35mm}{\centering 上游极化测量\\确定参考束流状态}}
+\quad$\longrightarrow$\quad
+\fbox{\parbox[c][13mm][c]{37mm}{\centering SMART swinger\\产生自旋进动}}
+\quad$\longrightarrow$\quad
+\fbox{\parbox[c][13mm][c]{35mm}{\centering 下游极化测量\\约束极化轴方向}}
+\caption{根据 Mardanpour 等\cite{Mardanpour2007}整理的测量关系示意。框图表示前后测量与磁场作用的关系，不表示实际距离或磁铁轨道弯转角；原文的 $90^\circ$ 描述 swinger 的实验设置。}
+\label{fig:axis-check}
+\end{figure}
+
+论文的 $\beta$ 是极化轴相对束向的极角，$\alpha$ 是该轴的方位角。下表保留原文记号；其数值为\textbf{测得的轴方向}，不能直接作为式\eqref{eq:dipole}中的相对自旋转角 $\psi$。
+
+\begin{table}[H]\centering
+\begin{tabular}{rrrr}\toprule
+$E_d$ (MeV) & $E_d/2$ (MeV/u) & $\beta$ & $\alpha$ \\\midrule
+130 & 65 & $82.0^\circ\pm0.5^\circ$ & $2.0^\circ\pm0.5^\circ$ \\
+180 & 90 & $99.4^\circ\pm0.5^\circ$ & $2.0^\circ\pm0.5^\circ$ \\\bottomrule
+\end{tabular}
+\caption{原文报告的极化轴角及不确定度。来源：Mardanpour 等\cite{Mardanpour2007}，arXiv v2 PDF 第 5 页／稿件第 5 页，左栏首段。}
+\label{tab:axis-check}
+\end{table}
+
+\textbf{极化轴的测量精度会直接影响自旋观测量。}该文截面式中 $T_{21}$ 项含有几何因子
+\begin{equation}
+g_{21}(\beta)=\sin\beta\cos\beta=\tfrac12\sin2\beta.
+\end{equation}
+当 $\beta$ 接近 $90^\circ$ 时，该项响应减弱，由有限轴角误差造成的 $T_{21}$ 提取不确定度增大。原文将轴方向列为主要系统误差来源，并把分时段观察到的小幅变化纳入拟合。其 Tables 1--2 还分别列出 $65,90\unit{MeV/u}$ 分析本领的统计与系统误差；表中数值按原文统一放大了 $1000$ 倍。\src{Mardanpour2007}{PDF 2，Eq. (1)；PDF 5，左栏；PDF 9，Tables 1--2}
+
+对 SAMURAI，这个实例支持用\textbf{已知源态、磁场设置和前后两站的方位响应}检验输运模型。按式\eqref{eq:transport}预测每个源模式在两站的极化与产额，选择含水平或纵向分量的源态检验旋转，再把测量得到的轴角误差传播到反应顶点的 $p_i,p_{ij}$。竖直轴态可作稳定性参照；在理想竖直磁场中，它本身对绕竖直轴的旋转不敏感。
+
+\clearpage
 \section{将测量能力转化为实验运行能力}
 
 \subsection{每个事件与每个时间段应关联的记录}
@@ -342,6 +409,9 @@ RF 时间谱出现额外束团 & chopper、取出圈分布与相位；调束后�
 \begin{longtable}{>{\raggedright\arraybackslash}p{30mm}>{\raggedright\arraybackslash}p{32mm}>{\raggedright\arraybackslash}p{88mm}}
 \toprule 资料 & PDF／文内位置 & 支撑内容与截图 \\\midrule\endhead
 Ikegami 1993\cite{Ikegami1993} & 1--3／214--216 & II：PIS 结构及参数；第 3 页 Spin Rotating System、Figs. 4--5：轴向控制。\\
+Okamura 1995\cite{Okamura1995} & 完整 APR 179--180／148--149 & Table 1：RF 跃迁、态选择与实测模式；Fig. 2：Wien 扫描及靶前监测；本文图\ref{fig:rf-modes}。\\
+Sekiguchi 2002\cite{Sekiguchi2002} & 3／034003-3；9--12／034003-9--12 & II B：两站配置；Tables IV--VIII：70/100/135 MeV/u 分析本领；本文表\ref{tab:ap-index}、图\ref{fig:ap70}。\\
+Mardanpour 2007\cite{Mardanpour2007} & arXiv v2 2、5、9／2、5、9 & Eq. (1)：轴角响应；第 5 页：两站轴测量；Tables 1--2：65/90 MeV/u 数据；本文图\ref{fig:axis-check}、表\ref{tab:axis-check}。\\
 Sakamoto 2016\cite{Sakamoto2016} & 1／145 & Figs. 1--2：加速链和源；本文图\ref{fig:chain}、\ref{fig:source}。\\
 同上 & 2／146 & Fig. 3：Wien 扫描；Table 2：加速配方；本文图\ref{fig:wien}、\ref{fig:recipe}。\\
 同上 & 3--4／147--148 & Fig. 6 与 Single-turn Monitors：混圈率、时间谱和运行稳定性；本文图\ref{fig:turn}。\\
@@ -357,7 +427,7 @@ Sugahara EFB2026\cite{SugaharaTalk2026} & 4／幻灯片 3 & January 2026：100 M
 
 \clearpage
 \subsection{文件与复现方法}
-LaTeX 正文、文献库和截图位于本目录，原始 PDF 留在本地 \texttt{sources/}；2017 年论文直接引用仓库既有文件。\texttt{sources.json} 固定原始 PDF 的 SHA-256、下载地址、PDF 页码、文内位置及截图裁剪坐标。截图通过 Poppler 在 220 dpi 下直接裁切，没有重绘或改写原文。
+LaTeX 正文、文献库和截图位于本目录，原始 PDF 留在本地 \texttt{sources/}；2017 年论文直接引用仓库既有文件。\texttt{sources.json} 固定原始 PDF 的 SHA-256、下载地址、PDF 页码、文内位置及截图裁剪坐标。十二幅原文截图通过 Poppler 在 220 dpi 下直接裁切，没有重绘或改写原文；图\ref{fig:axis-check}为本文整理的测量关系示意。
 
 在仓库根目录运行：
 \begin{quote}\small\ttfamily
@@ -372,7 +442,7 @@ make -C docs/polarization\_production\_transport verify
 \clearpage
 \begingroup\footnotesize
 \linespread{1.0}\selectfont
-\setlength{\bibsep}{3pt}
+\setlength{\bibsep}{1.5pt}
 \bibliographystyle{unsrtnat}
 \bibliography{references}
 \endgroup

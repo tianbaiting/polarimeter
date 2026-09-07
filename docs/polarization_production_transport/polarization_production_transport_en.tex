@@ -95,6 +95,27 @@ Extraction turn separation (mm) & 4.0 & 6.6 & 7.6 \\\bottomrule
 Each operating period should retain the extraction settings, RF timing spectrum, turn-purity estimate and measured axis direction. Energy or extraction changes trigger a fresh polarization check.
 
 \clearpage
+\subsection*{RF transitions and reference data}
+Okamura et al. connect the RF settings to the selected hyperfine states and measured source-axis polarization $P,T$. SX denotes a sextupole selector; SFT and WFT are strong- and weak-field transition units.\src{Okamura1995}{full APR PDF p. 179 / printed p. 148}
+
+\shot{okamura1995_p179_table1.png}{0.46}{Historical RF-mode table with all footnotes. Source: Okamura et al.\cite{Okamura1995}, APR 28 PDF p. 179 / printed p. 148, Table 1. Blank measured components were not reported as zero.}{fig:rf-modes-en}
+
+For ideal $(P,T)=(0,-2)$, WFT\#1 drives $1\to4$ and SFT\#2 drives $3\to5$, leaving states 2 and 5 at the ionizer; the measured $T$ was $-1.23$. Two routes to ideal $(0,+1)$ gave $T=+0.77$ and $+0.58$. Footnote b limits WFT\#2 power to below $0.4\unit W$ for the listed negative pure-vector mode to keep its tensor component negligible. Current modes require separate measurements.
+
+\textbf{Intermediate-energy reference data.} Sekiguchi et al. give $A_y^d,A_{yy},A_{xx},A_{xz}$ at total energies $E_d=140,200,270\unit{MeV}$ (70/100/135 MeV/u). Their D-room and target-front Swinger instruments used left/right/up/down detector pairs.\src{Sekiguchi2002}{PDF p. 3, Sec. II B; pp. 9--12}
+
+\begin{center}\small
+\begin{tabularx}{\linewidth}{rrp{39mm}Y}\toprule
+$E_d/2$ (MeV/u) & $E_d$ (MeV) & Tables / PDF pages & Reference use \\\midrule
+70 & 140 & 2002: IV / 9; V / 10 & Upstream reference energy; V is D-room data.\\
+100 & 200 & 2002: VI / 10 & January 2026 run energy.\\
+135 & 270 & 2002: VII / 11; VIII / 12 & Historical measurements.\\
+186.6 & 373.2 & 2017: I / 8, with cover & SRC high-energy data.\\\bottomrule
+\end{tabularx}
+\end{center}
+The 2002 tables use Cartesian components and statistical errors; the 2017 table uses spherical components. Match the actual energy and acceptance to each dataset, including the distinction between 70 and 70.4 MeV/u. The Chinese edition reproduces Table V.\src{Sekiguchi2002}{PDF p. 7, Sec. III B}
+
+\clearpage
 \section{Reference polarimetry and recent operation}
 \textbf{AVF / C-22, September 2024.} A $7\unit{MeV/u}$ beam was measured using $^{12}\mathrm C(\vec d,p)^{13}\mathrm C_{\rm g.s.}$ on a $0.5\unit{mg/cm^2}$ natural-carbon target. Two telescopes at $\theta_{\rm lab}=60^\circ$ used $0.5\unit{mm}$ plastic and $58\unit{mm}$ NaI(Tl). Four source modes, including an unpolarized reference, cycled every $5\unit s$.\src{Sugahara2025}{PDF p. 1 / printed p. 36, Table 1}
 
@@ -108,7 +129,8 @@ The measured values provide a separate calibration for each source mode. An expe
 \textbf{Two-station precedent.} In the 2004 experiment, a D-room polarimeter measured the beam after RRC, while a Swinger polarimeter measured the target-bound beam before and after each run. The latter followed the beam-swinger motion, providing a direct check of the transported polarization.\src{Sekiguchi2004}{arXiv PDF p. 6, Sec. II B}
 
 \clearpage
-\section{High-energy data and the absolute scale}
+\section{Intermediate- and high-energy data and the absolute scale}
+\textbf{BigDpol at 186.6 MeV/u.}
 Sekiguchi et al. measured all deuteron analyzing powers with BigDpol at $186.6\unit{MeV/u}$. The SRC-extracted beam had an intensity of $4$--$8\unit{nA}$ and struck a $330\unit{mg/cm^2}$ CH$_2$ target. Four detector pairs identified elastic events through deuteron--proton coincidence; Dpol monitored the reference polarization at $70\unit{MeV/u}$. The $T_{21}$ measurement used a horizontal spin axis at $45.0^\circ\pm1.1^\circ$ to the beam.\src{Sekiguchi2017}{PDF pp. 3--4, Sec. II}
 
 \shot{sekiguchi2017_p8_table1.png}{0.54}{Experimental analyzing powers at 186.6 MeV/u, with statistical uncertainties. Original: Sekiguchi et al.\cite{Sekiguchi2017}, \textbf{CHORUS PDF p. 8 / manuscript p. 7, Table I}. The cover counts as PDF p. 1.}{fig:ap}
@@ -145,17 +167,18 @@ where $w_a$ includes geometry, efficiency, target energy loss and event selectio
 \end{equation}
 A common rotation preserves the tensor eigenvalues. A distribution of rotations changes the measured ensemble average, with weights set by the accepted beam phase space. Integrate the orbit and BMT spin equation through the actual magnet sequence, including the field traversed before the reaction vertex.\cite{BMT1959}
 
-For an ideal transverse dipole, the spin angle relative to momentum is
+For an ideal transverse dipole and an initially longitudinal tensor axis,
 \begin{equation}
-\psi=G_d\gamma\theta,\qquad \gamma=1+\frac{K_d}{m_dc^2}.
-\end{equation}
-At nominal $190\unit{MeV/u}$, $K_d=380\unit{MeV}$ and CODATA 2022 constants give $G_d\gamma=-0.17195655$. For an initially longitudinal tensor axis,
-\begin{equation}
+\psi=G_d\gamma\theta,\qquad \gamma=1+\frac{K_d}{m_dc^2},\qquad
 \frac{p_{zz}^{\rm out}}{T}=\frac{3\cos^2\psi-1}{2}.
 \end{equation}
-An illustrative $30^\circ$ bend gives $\psi=-5.1587^\circ$ and $p_{zz}^{\rm out}/T=0.987873$. This is the longitudinal projection of the rotated tensor.\cite{CODATA2022}
+Here $\psi$ is the spin angle relative to momentum. At nominal $190\unit{MeV/u}$, $K_d=380\unit{MeV}$ and CODATA 2022 gives $G_d\gamma=-0.17195655$. An illustrative $30^\circ$ bend gives $\psi=-5.1587^\circ$ and the longitudinal tensor projection $p_{zz}^{\rm out}/T=0.987873$.\cite{CODATA2022}
 
 The SAMURAI calculation should use current magnet settings, field maps, beam energy, apertures and target position. The official BigRIPS optics page provides reference orbit maps for the SAMURAI beam line. Two polarimeters can test a specified transport model through their predicted detector yields. For an axial source model, the fitted state is $P,T,\hat{\bm n}$; a general spin-1 state has eight real polarization components.\src{BigRIPSOptics}{SAMURAI Beam Line entries}
+
+\textbf{Measured axis verification at RIKEN.} After their main experiment, Mardanpour et al. rotated the SMART swinger dipole by $90^\circ$ in a vertical plane and used two polarimeters before and after spin precession. At total energies 130/180 MeV (65/90 MeV/u), the measured polar axis angles were $\beta=82.0^\circ\pm0.5^\circ$ and $99.4^\circ\pm0.5^\circ$; both azimuthal angles were $\alpha=2.0^\circ\pm0.5^\circ$. These are axis directions, distinct from $\psi$.\src{Mardanpour2007}{arXiv v2 PDF p. 5}
+
+The $T_{21}$ response contains $\sin\beta\cos\beta$, so an axis near $90^\circ$ weakens sensitivity and increases the uncertainty from its direction. For SAMURAI, a horizontal or longitudinal source state and both stations' azimuthal responses can test the predicted rotation; propagate the measured axis uncertainty to the target.\src{Mardanpour2007}{PDF pp. 2, 5, Eq. (1)}
 
 \clearpage
 \section{Role of Sekiguchi's team during beam time}
@@ -183,12 +206,13 @@ For planning, assign an operator and backup to each of these six activities. The
 
 \clearpage
 \section*{Sources and reproduction}
-PDF page numbers count from the first page, including covers. Printed pages and slide numbers are stated separately. The seven source crops retain their original content. Their URLs, SHA-256 hashes and crop coordinates are recorded in \texttt{sources.json}; the Chinese edition provides the extended source index. The source review was completed on 7 September 2026, following the \href{https://chatgpt.com/share/6a9e507f-ba88-83ee-930f-861c5ef504c1}{shared research discussion}.
+The eight original source crops use PDF page numbers counted from the first page, including covers. \texttt{sources.json} records URLs, SHA-256 hashes and crop coordinates; the Chinese edition gives the extended index. Sources were checked on 7 September 2026, following the \href{https://chatgpt.com/share/6a9e507f-ba88-83ee-930f-861c5ef504c1}{shared research discussion}.
 
-Build from the repository root with \texttt{make -C docs/polarization\_production\_transport en}. Run the same command with \texttt{verify} to check the source PDFs and image inventory.
+From the repository root, run \texttt{make -C docs/polarization\_production\_transport en}; replace \texttt{en} with \texttt{verify} to check source PDFs and crops.
 
 \begingroup\footnotesize
-\setlength{\bibsep}{3pt}
+\linespread{1.0}\selectfont
+\setlength{\bibsep}{0pt}
 \bibliographystyle{unsrtnat}
 \bibliography{references_en}
 \endgroup
