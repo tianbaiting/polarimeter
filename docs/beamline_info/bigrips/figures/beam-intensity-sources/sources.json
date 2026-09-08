@@ -115,21 +115,21 @@
       "image_sha256": "20caad581c84bf18a2ee241c9ca21194217578a7c271ad58cf59b40d96e44d84"
     }
   ],
-  "attstat_reference": {
-    "url": "https://ribf.riken.jp/sisetu-kyoyo/HIbeam/BmL/BmL%E4%BD%9C%E6%96%B9111__%E7%90%86%E7%A0%94%E3%81%AE%E5%A0%B4%E5%90%88.pdf",
-    "edition": "25.05",
-    "pdf_page": 7,
-    "checked_at": "2026-09-08T06:23:50.134745+00:00",
-    "origin_http_status": 404,
-    "evidence": "Search-engine cached extraction of official PDF figure; original PDF and screenshot unavailable. Historical nominal values, not live states.",
-    "group": "AVF/RILAC2 to RRC",
-    "nominal_transmission": {
-      "AT_C22": "1/2",
-      "AT_S22": "1/2",
-      "AT_S31": "1/10",
-      "AT_S61": "1/5",
-      "AT_S64": "1/100"
-    }
-  },
-  "shared_chat": "https://chatgpt.com/share/6a9fa6fc-7c6c-83ee-949f-a9614eb676f1"
+  "shared_chat": "https://chatgpt.com/share/6a9fa6fc-7c6c-83ee-949f-a9614eb676f1",
+  "att_multiplier_reference": {
+    "url": "https://ribf.riken.jp/sisetu-kyoyo/HIbeam/doc/E5Aadv_%E8%A6%8B%E5%AD%A6%E6%A1%88%E5%86%85%E7%94%A8%E8%B3%87%E6%96%99.pdf",
+    "edition": "2023-04-02 Rev. 1.0",
+    "pdf_page": 8,
+    "locator": "Lower-left table: attenuator combinations (number of meshes), Duty=100%",
+    "evidence": "Original official PDF, visually verified; the table lists transmission and quantity, without station assignments.",
+    "duty": 1.0,
+    "nominal_transmission_counts": {
+      "1/100": 2,
+      "1/10": 4,
+      "1/5": 1,
+      "1/3": 1,
+      "1/2": 3
+    },
+    "stated_adjustment_range": "Full to 1e-9"
+  }
 }

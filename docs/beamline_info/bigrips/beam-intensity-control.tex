@@ -87,31 +87,32 @@ $\mathrm{pnA}$ 中的 p 表示 particle current；$\mathrm{enA}$ 表示电荷电
 
 物理上，穿过孔隙而未碰到网丝的粒子不会因这次材料穿越而损失能量；$T=1/10$ 表示名义粒子透过率约 10\%，不表示粒子能量降至十分之一。degrader 则让粒子穿过材料来降低能量。网丝边缘散射仍可能改变束晕及接受度，故名义 ATT 倍率不等同于已测得的末端透过率，也不单独证明极化保持。
 
-\subsection{AVF--RRC 段的站位与五块倍率}
+\subsection{AVF--RRC 段的站位与 ATT 倍率出处}
 2014 年年报在 C22、S31a、S64 的诊断腔明确列有 beam attenuation mesh。C22 位于 AVF 与 RRC 厅之间墙的上游；S31a 在 S3 rebuncher 上游；S64 在 S6 rebuncher 之后、RRC 注入之前。原图见图\ref{fig:att-location}。\cite{att-chambers}
 
-共享对话引向的 2025 年 5 月比较表第 7 页，将以下五块列在 ``AVF/RILAC2--RRC'' 组。\textbf{倍率取自该官方资料的搜索缓存；原 PDF 地址在本次核对时返回 HTTP 404，因此保留为历史标称值，不作为当前设备验收值或实时 IN/OUT 记录。}\cite{attstat2025}
+ATT 的倍率和数量直接见用户提供的 RIKEN E5A 见学案内资料（2023-04-02，Rev. 1.0）第 8 页左下表。原页在 Duty $=100\%$ 条件下列出以下五种网格，并说明由加速器操作员改变上游网格组合，将束流强度从 Full 调节至 $10^{-9}$。\cite{e5a}
 \begin{center}
-\begin{tabular}{lll}
+\begin{tabular}{lrr}
 \toprule
-控制名 & 标称透过率 $T_i$ & 可直接核对的硬件位置 \\
+标称透过率 $T_i$ & 透过比例 & 数量（块） \\
 \midrule
-\texttt{AT\_C22} & $1/2$ & C22 诊断腔 \\
-\texttt{AT\_S22} & $1/2$ & 本次未独立确认具体安装腔 \\
-\texttt{AT\_S31} & $1/10$ & 年报在 S31a 记录网格 \\
-\texttt{AT\_S61} & $1/5$ & S61 为 S6-REB 站位，网格安装腔未确认 \\
-\texttt{AT\_S64} & $1/100$ & S64 诊断腔 \\
+$1/100$ & 1\% & 2 \\
+$1/10$ & 10\% & 4 \\
+$1/5$ & 20\% & 1 \\
+$1/3$ & $\simeq33.3\%$ & 1 \\
+$1/2$ & 50\% & 3 \\
 \bottomrule
 \end{tabular}
 \end{center}
-因此，“SRC 上游 ATT”包含距离 SRC 较远的低能段装置。S31 控制名与 S31a 腔的对应仍需设备清单确认；S61 的站号也不能解释成网格装在 rebuncher 内部。
+该页原图见图\ref{fig:e5a-att}。这份表给出照射服务所用的网格倍率与数量，未列各块的站号；C22、S31a、S64 的安装位置依据上面的 2014 年年报。\cite{att-chambers} 因此，“SRC 上游 ATT”包含距离 SRC 较远的低能段装置，不能仅由倍率表将全部网格分配到 PIS 路线。
 
 \subsection{网格组合、Duty 与实际标定}
-E5A 第 8 页在 Duty $=100\%$ 下列出 $1/100$ 两块、$1/10$ 四块、$1/5$ 一块、$1/3$ 一块、$1/2$ 三块，并标明 Full 到 $10^{-9}$ 的调节范围。\cite{e5a} 这是该照射服务资料的组合清单，不能把全部网格归到 PIS 路线上。五块 C/S 组的理想乘积仅为
+按上述倍率，取两块 $1/2$、一块 $1/10$、一块 $1/5$ 和一块 $1/100$ 为计算示例，五块网格的理想透过率乘积为
 \[
-T_{\mathrm{C/S,nom}}=\frac12\frac12\frac1{10}\frac15\frac1{100}
+T_{\mathrm{example,nom}}=\frac12\frac12\frac1{10}\frac15\frac1{100}
 =\frac1{20000}=5\times10^{-5}.
 \]
+这是倍率组合示例，不指定各块的安装站位。
 全照射清单逐项相乘则为 $8.33\times10^{-11}$；这个形式乘积不代表可用范围，原页没有解释它与标示 $10^{-9}$ 下限的差异。
 
 用下式做强度收支时，必须指定输入测量面和 ATT 状态：
@@ -126,7 +127,7 @@ $D$ 为所定义时间窗口的束流开启比例，$T_{\rm ATT,eff}$ 为实际�
 
 \section{从 SRC 强度估算 ATT 需求}
 \label{sec:att-budget}
-假设某次运行在\textbf{所讨论五块 ATT 全拔出}时，SRC 出口实测参考强度为 $30\,\mathrm{pnA}$，并假定插网后其余传输条件不变，则
+假设某次运行在\textbf{上述示例五块 ATT 全拔出}时，SRC 出口实测参考强度为 $30\,\mathrm{pnA}$，并假定插网后其余传输条件不变，则
 \[
 \dot N_{\rm SRC,0}=1.872\times10^{11}/\mathrm s,
 \qquad
@@ -135,7 +136,7 @@ $D$ 为所定义时间窗口的束流开启比例，$T_{\rm ATT,eff}$ 为实际�
 \]
 要从这个参考值降至 $10^7$/s，需要 $T_{\rm eff}\leq5.34\times10^{-5}$（即衰减倍数至少 $1.87\times10^4$）。若参考值改为 $120\,\mathrm{pnA}$，同一乘积得到 $3.74\times10^7$/s，仍高于该目标。
 
-以上是条件计算。官方 $30\,\mathrm{pnA}$ 预期值没有同时给出五块 ATT 的状态，故不能直接宣称“五块全插就能满足本次实验限值”。同样，源端 $<100\,\mu\mathrm A$ 与 SRC 的 $30\,\mathrm{pnA}$ 来自不同条件，二者相除不能得到实测的 PIS--SRC 传输效率。
+以上是条件计算。官方 $30\,\mathrm{pnA}$ 预期值没有同时给出 ATT 的组合与状态，故不能直接宣称“五块全插就能满足本次实验限值”。同样，源端 $<100\,\mu\mathrm A$ 与 SRC 的 $30\,\mathrm{pnA}$ 来自不同条件，二者相除不能得到实测的 PIS--SRC 传输效率。
 
 对 after-SRC 极化仪，最直接的输入是该位置在指定源模式、ATT 组合和时间窗口下的实测束流。上游 ATT 降低进入 RRC/SRC 的粒子率，也会影响 after-SRC 可用率；若想在 after-SRC 保持较高强度、下游再限流，需依据下文的束线接受度与联锁条件确定方案。
 
@@ -201,8 +202,6 @@ RIKEN BigRIPS 官方束流说明要求在申请书中填写 ``Total Beam Rates @
 \url{https://proceedings.jacow.org/icalepcs2009/papers/wep037.pdf}.
 \bibitem{att-chambers} K. Yamada et al., ``Modification of beam diagnosis chambers in RILAC2 high-energy beam transport'', RIKEN Accel. Prog. Rep. 47 (2014), p. 156, Figs. 1--2 and station descriptions,\newline
 \url{https://www.nishina.riken.jp/researcher/APR/APR047/pdf/156.pdf}.
-\bibitem{attstat2025} RIKEN, 25.05 版「理研の場合」比较表, p. 7, AttStat 图中文字。2026-09-08 核对搜索缓存；原站 HTTP 404，未取得原始页面截图，\newline
-\href{https://ribf.riken.jp/sisetu-kyoyo/HIbeam/BmL/BmL\%E4\%BD\%9C\%E6\%96\%B9111__\%E7\%90\%86\%E7\%A0\%94\%E3\%81\%AE\%E5\%A0\%B4\%E5\%90\%88.pdf}{原始 PDF 地址（当前失效）}.
 \bibitem{bis2015} M. Komiyama et al., ``Recent Updates on the RIKEN RI Beam Factory Control System'', HIAT 2015, MOPA27, PDF p. 2, Upgrade of Beam Interlock System,\newline
 \url{https://www.nishina.riken.jp/hiat2015/proceedings/papers/mopa27.pdf}.
 
