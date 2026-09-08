@@ -217,7 +217,7 @@ std::filesystem::path resolveOutputPath(const std::filesystem::path& project_roo
     const std::filesystem::path repository_root = project_root.filename() == "code"
                                                       ? project_root.parent_path()
                                                       : project_root;
-    return repository_root / "docs" / "code" / "polarimeter_stastic" / "img" / "dp_cross_section_frames.pdf";
+    return repository_root / "docs" / "analysis" / "polarimeter_statistics" / "img" / "dp_cross_section_frames.pdf";
 }
 
 std::filesystem::path resolveScenarioPath(const std::filesystem::path& project_root, const int argc, char* argv[]) {

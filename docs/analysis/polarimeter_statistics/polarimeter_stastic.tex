@@ -1,4 +1,4 @@
-% /home/tian/workspace/dpol/polarimeter/docs/code/polarimeter_stastic/polarimeter_stastic.tex
+% [EN] Figures belong to this statistics note and move with it. / [CN] 图件随统计专题一起保存和迁移。
 \documentclass[11pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -696,7 +696,7 @@ The single-case profile-likelihood plots below show the local inversion behavior
 
 \section{BigRIPS Slits and the Possible F0--F13 Intensity Difference}
 
-The note \texttt{docs/bigreps\_slits/filter\_bigreps.zh.md} explains the essential point: BigRIPS slits remove large-angle particles and momentum-tail particles. Therefore the downstream beam intensity is reduced whenever the transported phase-space distribution exceeds the accepted angular or momentum envelope. Using the usual upstream/downstream shorthand, the transmitted intensity can be written as
+The note \path{docs/beamline_info/bigrips/slits/acceptance-and-loss.md} explains the essential point: BigRIPS slits remove large-angle particles and momentum-tail particles. Therefore the downstream beam intensity is reduced whenever the transported phase-space distribution exceeds the accepted angular or momentum envelope. Using the usual upstream/downstream shorthand, the transmitted intensity can be written as
 \begin{equation}
 \label{eq:f0_f13_transport}
     I_{F13} = I_{F0}\,T_{x'}\,T_{y'}\,T_{\delta}\,T_{\mathrm{misc}},
@@ -732,7 +732,7 @@ In short, for this primary deuteron-beam use case the physically relevant questi
 
 
 
-\bibliographystyle{plain}
-\bibliography{references} % 如需参考文献，请在同目录添加 references.bib
+% [EN] The optional bibliography is included when a local database exists. / [CN] 仅在本地文献库存在时加入可选参考文献。
+\IfFileExists{references.bib}{\bibliographystyle{plain}\bibliography{references}}{}
 
 \end{document}

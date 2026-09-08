@@ -38,4 +38,4 @@ RCNP（大阪大学核物理研究中心）在其设施内制作并安装了束�
 
 已整理 RCNP BLP 公开结构示意图与原始来源到：
 
-- `docs/RCNP_BLP_drawings.md`
+- [RCNP 结构图资料](../rcnp-BeamLinePolarimeter/drawings.md)

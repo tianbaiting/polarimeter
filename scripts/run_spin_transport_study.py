@@ -306,7 +306,7 @@ def write_tables(output_root: Path, gamma: float, analyzing, sensitivity: tuple[
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output-dir", type=Path, default=ROOT / "docs/spin_transport/figures")
+    parser.add_argument("--output-dir", type=Path, default=ROOT / "docs/physics/spin_transport/figures")
     args = parser.parse_args()
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=True)
