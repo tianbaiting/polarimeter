@@ -15,3 +15,14 @@ screenshots:
 
 verify:
 	python3 capture_sources.py --verify-only
+
+.PHONY: pdf timeline-en clean
+all: timeline-en
+pdf: all
+
+timeline-en:
+	latexmk -xelatex -interaction=nonstopmode -halt-on-error -outdir=build riken_pis_status_timeline_en.tex
+	cp build/riken_pis_status_timeline_en.pdf riken_pis_status_timeline_en.pdf
+
+clean:
+	latexmk -c -outdir=build *.tex

@@ -7,6 +7,7 @@ all: report
 report:
 	mkdir -p build
 	latexmk -lualatex -interaction=nonstopmode -halt-on-error -file-line-error -outdir=build $(REPORT).tex
+	cp build/$(REPORT).pdf $(REPORT).pdf
 
 clean:
 	test ! -d build || trash-put -- build
@@ -14,3 +15,6 @@ clean:
 help:
 	@echo "make          Build PDF"
 	@echo "make clean    Move build artifacts to the desktop trash"
+
+.PHONY: pdf
+pdf: report

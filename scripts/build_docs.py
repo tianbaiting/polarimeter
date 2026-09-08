@@ -6,12 +6,12 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 import re
-import shutil
 import subprocess
 
 
 DOCS = Path(__file__).resolve().parents[1] / "docs"
 ENTRY = re.compile(r"^\\(LocalDocEntry|DocEntry)\{([^{}]+)\}\{([^{}]+)\}", re.MULTILINE)
+PDF = re.compile(r"^\\DocPDF\{([^{}]+)\}\{([^{}]+)\}", re.MULTILINE)
 READ = re.compile(r"\\Read\{([^{}]+)\}")
 ENGINE = re.compile(r"^\\DocEngine\{([^{}]+)\}\{([^{}]+)\}", re.MULTILINE)
 
@@ -39,30 +39,29 @@ def registry() -> dict[str, Path]:
     for key, engine in ENGINE.findall((DOCS / "navigation.tex").read_text()):
         if key not in known or engine not in {"xelatex", "lualatex"}:
             raise ValueError(f"Invalid engine selection: {key} / {engine}")
+    pdfs = dict(PDF.findall((DOCS / "navigation.tex").read_text()))
+    for key, source in entries.items():
+        if source.suffix != ".tex":
+            continue
+        output = (DOCS / pdfs.get(key, "")).resolve()
+        if output.parent != source.parent or output.suffix != ".pdf":
+            raise ValueError(f"PDF must be beside its source: {key}")
+        if not (source.parent / "Makefile").is_file():
+            raise FileNotFoundError(source.parent / "Makefile")
     print(f"Navigation checked: {len(known)} entries, {len(entries)} available locally")
     return entries
 
 
 def build(entries: dict[str, Path]) -> None:
-    engines = dict(ENGINE.findall((DOCS / "navigation.tex").read_text()))
-    reading = DOCS / "build" / "reading"
-    reading.mkdir(parents=True, exist_ok=True)
-    for key, source in entries.items():
-        if source.suffix != ".tex":
+    built: set[Path] = set()
+    for source in entries.values():
+        if source.suffix != ".tex" or source.parent in built:
             continue
-        output = DOCS / "build" / "documents" / key
-        output.mkdir(parents=True, exist_ok=True)
-        # [EN] Isolate build outputs so existing drafts and published PDFs are preserved. / [CN] 隔离构建产物，保留既有草稿及成稿 PDF。
-        with (output / "build.log").open("w") as log:
-            result = subprocess.run(
-                ["latexmk", f"-{engines.get(key, 'xelatex')}", "-interaction=nonstopmode", "-halt-on-error",
-                 f"-outdir={output}", source.name],
-                cwd=source.parent, stdout=log, stderr=subprocess.STDOUT, check=False,
-            )
-        if result.returncode:
-            raise RuntimeError(f"Build failed for {key}; see {output / 'build.log'}")
-        shutil.copy2(output / f"{source.stem}.pdf", reading / f"{key}.pdf")
-        print(f"Built reading copy: {key}.pdf", flush=True)
+        subprocess.run(["make", "-C", str(source.parent), "pdf"], check=True)
+        built.add(source.parent)
+    for key, relative in PDF.findall((DOCS / "navigation.tex").read_text()):
+        if key in entries and not (DOCS / relative).is_file():
+            raise FileNotFoundError(f"Missing built PDF: {relative}")
 
 
 def main() -> None:

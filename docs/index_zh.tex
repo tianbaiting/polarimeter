@@ -83,6 +83,6 @@
 \section{成稿、来源与构建副本}
 每个专题保留一处源文档及其图件、文献库。原始文献放在专题的 \path{sources/} 或 \path{raw/}，正文图件放在 \path{figures/}；已有 \path{img/}、\path{assets/} 和 \path{generated/} 作为专题内部结构保留。数值来源清单中的旧绝对路径是运行时记录，不用于判断当前目录位置。
 
-从仓库根目录运行 \texttt{make -C docs}，会编译清单中的 LaTeX 文档及双语导航，把可读副本放入 \path{docs/build/reading/}。只更新导航用 \texttt{make -C docs guides}；检查导航链接用 \texttt{make -C docs verify}。导航 PDF 保存在 \path{docs/index_zh.pdf} 和 \path{docs/index_en.pdf}，应与 docs 目录一同使用，以保留相对链接。已存在的同目录 PDF 作为原有副本保留；导航的 [PDF] 链接统一指向重新编译的副本。
+在专题目录运行 \texttt{make} 编译该专题：中间文件保存在各自的 \path{build/}，成稿 PDF 放在 TeX 源码旁，导航中的 [PDF] 直接链接到这些成稿。例如：\texttt{make -C docs/beamline\_info/afterSRC/polarimeter\_rationale}。从仓库根目录运行 \texttt{make -C docs} 可批量编译阅读清单及双语导航；只更新导航用 \texttt{make -C docs guides}，检查链接用 \texttt{make -C docs verify}。导航中间文件保存在 \path{docs/index/build/}，入口仍为 \path{docs/index_zh.pdf} 和 \path{docs/index_en.pdf}。请保持 docs 目录结构，以保留相对链接。
 \endgroup
 \end{document}

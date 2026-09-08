@@ -5,7 +5,7 @@ REPORT_ZH := compact_in_vacuum_sipm_report_zh
 
 .PHONY: all data check-data test report report-en report-zh verify-pdf verify-pdf-en verify-pdf-zh verify clean help
 
-all: verify
+all: pdf
 
 data:
 	$(PYTHON) scripts/generate_report_data.py
@@ -19,12 +19,20 @@ test:
 report: report-en report-zh
 
 report-en: data
+	$(MAKE) pdf-en
+
+pdf-en:
 	mkdir -p build
 	$(LATEXMK) -lualatex -interaction=nonstopmode -halt-on-error -file-line-error -outdir=build $(REPORT_EN).tex
+	cp build/$(REPORT_EN).pdf $(REPORT_EN).pdf
 
 report-zh: data
+	$(MAKE) pdf-zh
+
+pdf-zh:
 	mkdir -p build
 	$(LATEXMK) -lualatex -interaction=nonstopmode -halt-on-error -file-line-error -outdir=build $(REPORT_ZH).tex
+	cp build/$(REPORT_ZH).pdf $(REPORT_ZH).pdf
 
 verify-pdf-en: report-en
 	pdfinfo build/$(REPORT_EN).pdf | rg '^(Pages|Page size|File size)'
@@ -66,6 +74,7 @@ clean:
 	test ! -d build || trash-put -- build
 
 help:
+	@echo "make pdf        Compile both reports using existing generated data"
 	@echo "make data       Regenerate CSV, JSON, and LaTeX numerical fragments"
 	@echo "make check-data Verify that generated files match current source inputs"
 	@echo "make test       Run numerical unit tests"
@@ -74,3 +83,6 @@ help:
 	@echo "make report-zh  Compile the Chinese report"
 	@echo "make verify     Run the complete data, test, and bilingual PDF checks"
 	@echo "make clean      Move the generated build tree to the desktop trash"
+
+.PHONY: pdf pdf-en pdf-zh
+pdf: pdf-en pdf-zh

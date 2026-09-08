@@ -2,6 +2,7 @@
 \providecommand{\DocEntry}[2]{\expandafter\gdef\csname docpath:#1\endcsname{#2}}
 \providecommand{\LocalDocEntry}[2]{\DocEntry{#1}{#2}}
 \providecommand{\DocEngine}[2]{}
+\providecommand{\DocPDF}[2]{\expandafter\gdef\csname docpdf:#1\endcsname{#2}}
 \DocEntry{rationale-zh}{beamline_info/afterSRC/polarimeter_rationale/rationale_zh.tex}
 \DocEntry{rationale-en}{beamline_info/afterSRC/polarimeter_rationale/rationale_en.tex}
 \DocEntry{beamline}{beamline_info/overview/beamline-overview.md}
@@ -35,9 +36,30 @@
 \DocEngine{detector-zh}{lualatex}
 \DocEngine{detector-en}{lualatex}
 \DocEngine{coordinates}{lualatex}
+\DocPDF{rationale-zh}{beamline_info/afterSRC/polarimeter_rationale/afterSRC_polarimeter_rationale_zh.pdf}
+\DocPDF{rationale-en}{beamline_info/afterSRC/polarimeter_rationale/afterSRC_polarimeter_rationale_en.pdf}
+\DocPDF{beam-intensity}{beamline_info/bigrips/beam-intensity-control.pdf}
+\DocPDF{beam-intensity-en}{beamline_info/bigrips/beam-intensity-control_en.pdf}
+\DocPDF{production-zh}{physics/polarization_production_transport/polarization_production_transport_zh.pdf}
+\DocPDF{production-en}{physics/polarization_production_transport/polarization_production_transport_en.pdf}
+\DocPDF{pis-timeline}{physics/polarization_production_transport/riken_pis_status_timeline.pdf}
+\DocPDF{pis-timeline-en}{physics/polarization_production_transport/riken_pis_status_timeline_en.pdf}
+\DocPDF{density-zh}{physics/tensor_identifiability/deuteron_spin_density_matrix/main.pdf}
+\DocPDF{density-en}{physics/tensor_identifiability/deuteron_spin_density_matrix/main_en.pdf}
+\DocPDF{full-summary}{physics/tensor_identifiability/Concise_Full_Density_Matrix_Identifiability.pdf}
+\DocPDF{tensor-summary}{physics/tensor_identifiability/Concise_Tensor_Only_Polarimetry.pdf}
+\DocPDF{identifiability}{physics/tensor_identifiability/Identifiability_of_Deuteron_Tensor_Polarization.pdf}
+\DocPDF{spin-transport}{physics/spin_transport/spin_transport_SRC_to_SAMURAI.pdf}
+\DocPDF{statistics}{analysis/polarimeter_statistics/polarimeter_stastic.pdf}
+\DocPDF{detector-zh}{polarimeter_detector/compact_in_vacuum_sipm_report/compact_in_vacuum_sipm_report_zh.pdf}
+\DocPDF{detector-en}{polarimeter_detector/compact_in_vacuum_sipm_report/compact_in_vacuum_sipm_report.pdf}
+\DocPDF{coordinates}{polarimeter_detector/compact_coordinate_sheet/compact_coordinate_sheet_zh.pdf}
+\DocPDF{slides}{presentations/two-polarimeter-capability/two-polarimeter-capability.pdf}
 \newcommand{\Read}[2]{%
   \IfFileExists{\csname docpath:#1\endcsname}{%
     \href{run:\csname docpath:#1\endcsname}{#2}%
-    \IfFileExists{build/reading/#1.pdf}{\,\href{run:build/reading/#1.pdf}{[PDF]}}{}%
+    \ifcsname docpdf:#1\endcsname
+      \IfFileExists{\csname docpdf:#1\endcsname}{\,\href{run:\csname docpdf:#1\endcsname}{[PDF]}}{}%
+    \fi%
   }{#2\,\textcolor{gray}{(\MissingLocalText)}}%
 }
