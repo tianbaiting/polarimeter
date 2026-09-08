@@ -95,6 +95,41 @@
       ],
       "source_pdf_sha256": "206ea3b44be9b983bffde1cd296869dc090e0fb0a19d0b338709d791379192e5",
       "image_sha256": "bc16aad7ba202a94476c4f306e3747ec8eb15503bbf03c871418a2b26b5ff34c"
+    },
+    {
+      "file": "e5a-att-calibration.png",
+      "url": "https://ribf.riken.jp/sisetu-kyoyo/HIbeam/doc/E5Aadv_%E8%A6%8B%E5%AD%A6%E6%A1%88%E5%86%85%E7%94%A8%E8%B3%87%E6%96%99.pdf",
+      "pdf_page": 8,
+      "method": "Poppler pdftoppm, full page, no retouching",
+      "retrieved_at": "2026-09-08T06:23:50.134745+00:00",
+      "source_pdf_sha256": "216e324d2befddf3105363a61f9161052f0be6ad2c2759905f932c8d70f1f9db",
+      "image_sha256": "9af58f05550c9cf7b8427f0259bb22df5ce2aa6226cbdf6b9d4f122943f3751b"
+    },
+    {
+      "file": "att-chambers-2014.png",
+      "url": "https://www.nishina.riken.jp/researcher/APR/APR047/pdf/156.pdf",
+      "pdf_page": 1,
+      "method": "Poppler pdftoppm, full page, no retouching",
+      "retrieved_at": "2026-09-08T06:23:50.134745+00:00",
+      "source_pdf_sha256": "197714656593667295662a70d9b774d502afa0656358e7348473e7769515f71d",
+      "image_sha256": "20caad581c84bf18a2ee241c9ca21194217578a7c271ad58cf59b40d96e44d84"
     }
-  ]
+  ],
+  "attstat_reference": {
+    "url": "https://ribf.riken.jp/sisetu-kyoyo/HIbeam/BmL/BmL%E4%BD%9C%E6%96%B9111__%E7%90%86%E7%A0%94%E3%81%AE%E5%A0%B4%E5%90%88.pdf",
+    "edition": "25.05",
+    "pdf_page": 7,
+    "checked_at": "2026-09-08T06:23:50.134745+00:00",
+    "origin_http_status": 404,
+    "evidence": "Search-engine cached extraction of official PDF figure; original PDF and screenshot unavailable. Historical nominal values, not live states.",
+    "group": "AVF/RILAC2 to RRC",
+    "nominal_transmission": {
+      "AT_C22": "1/2",
+      "AT_S22": "1/2",
+      "AT_S31": "1/10",
+      "AT_S61": "1/5",
+      "AT_S64": "1/100"
+    }
+  },
+  "shared_chat": "https://chatgpt.com/share/6a9fa6fc-7c6c-83ee-949f-a9614eb676f1"
 }

@@ -12,7 +12,7 @@ are organized under `../physics/` and `../analysis/`; this directory follows fac
 - [Contacts and interface checklist](overview/contacts-and-interfaces.md)
 - [RIKEN/RIBF polarized ion source status](pis/polarized-ion-source-status.en.md)
 - 为什么在 SRC 后安装极化仪（LaTeX）：[中文](afterSRC/polarimeter_rationale/rationale_zh.tex) / [English](afterSRC/polarimeter_rationale/rationale_en.tex)
-- [SRC 到 BigRIPS F2/F3 的束流强度控制（LaTeX）](bigrips/beam-intensity-control.tex)
+- [PIS 到 SRC 的束流强度、ATT 与 BigRIPS 限流（LaTeX）](bigrips/beam-intensity-control.tex)
 - [BigRIPS overview](bigrips/overview.md)
 - [BigRIPS primary beams and polarized deuteron beam](bigrips/primary-beam-and-polarized-deuteron.md)
 - [BigRIPS slit acceptance and beam loss note](bigrips/slits/acceptance-and-loss.md)

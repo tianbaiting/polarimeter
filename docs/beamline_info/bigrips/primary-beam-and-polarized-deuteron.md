@@ -2,6 +2,8 @@
 
 This page collects primary-beam parameters relevant to BigRIPS-based experiments, with emphasis on polarized deuteron beams.
 
+For a consolidated, source-located account of PIS → AVF → RRC → SRC intensities, current-to-particle-rate conversion, and ATT positions, nominal transmission and calibration, see [PIS–SRC intensity and ATT control (Chinese, LaTeX)](beam-intensity-control.tex). That note continues through the BigRIPS F2/F3 constraints and distinguishes source output, experimental beam settings and proposal-planning values.
+
 Scope note:
 
 - This page is limited to primary beams and the polarized deuteron acceleration chain.

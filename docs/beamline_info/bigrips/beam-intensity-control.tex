@@ -1,16 +1,19 @@
 \documentclass[UTF8,11pt,a4paper]{ctexart}
 \usepackage[margin=24mm]{geometry}
-\usepackage{booktabs,tabularx,array}
+\usepackage{amsmath}
+\usepackage{booktabs,tabularx,array,longtable}
 \usepackage{graphicx,caption}
 \usepackage{hyperref}
 \graphicspath{{figures/beam-intensity-sources/}}
 \captionsetup{font=small,labelfont=bf,hypcap=false}
-\hypersetup{hidelinks,pdftitle={SRC 到 BigRIPS F2/F3 的束流强度控制}}
+\hypersetup{hidelinks,pdftitle={PIS 到 SRC 的束流强度与 ATT 控制}}
 \setlength{\parindent}{2em}
 \setlength{\parskip}{0.4em}
+\widowpenalty=10000
+\clubpenalty=10000
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
 
-\title{SRC 出口至 BigRIPS F2/F3 的束流强度控制}
+\title{PIS 到 SRC 的束流强度与 ATT 控制\\\large 衔接 SRC 出口至 BigRIPS F2/F3}
 \author{DPOLAR 束线资料记录}
 \date{\today}
 
@@ -18,8 +21,123 @@
 \maketitle
 
 \begin{abstract}
-本文记录从 SRC 出口到 BigRIPS F2/F3 之间可影响束流强度的装置、它们的物理作用，以及偏振氘束实验需要向 RIKEN 束线组确认的运行边界。结论先行：RIKEN 公开申请说明给出的 F3 总束流率上限为 $10^7$ particles/s（适用运行模式需向束线组确认）；F1、F2 和 F2--F3（dF2）狭缝可以通过减小动量、空间或角度接受度来降低传输率，而一次束模式的安全限流主要由 SRC 上游的 beam attenuator（ATT）和联锁系统管理。
+偏极氘束沿 PIS--AVF--RRC--SRC 加速。源端的 $<100\,\mu\mathrm{A}$、AVF 后恢复测试的 $10\,\mathrm{nA}$、SRC 在 $250\,\mathrm{MeV/u}$ 下的 $30\,\mathrm{pnA}$ 预期强度，分别是源输出、具体实验用束和申请规划值，不能拼成同一次运行的传输效率。ATT 通过组合上游网格降低粒子数；AVF 到 RRC 的注入输运段已有明确安装记录。本文先统一各处强度的口径，再解释 ATT 的位置、倍率与标定，最后衔接 BigRIPS 的限流条件。各数值的来源与适用条件见下表。
 \end{abstract}
+
+\section{PIS 到 SRC：各处强度应怎样读}
+\label{sec:pis-src}
+
+偏极氘束采用的轻离子路径为
+\[
+\mathrm{PIS}\to\mathrm{Wien\ filter}\to\mathrm{AVF}
+\to\boxed{\text{含 ATT 的注入输运段}}\to\mathrm{RRC}\to\mathrm{SRC}.
+\]
+这条路径不经过 fRC、IRC。2016 年运行总结的 Table~2 给出三组逐级能量：下列每一列是一套加速设置，单位均为 $\mathrm{MeV/u}$。\cite{sakamoto2016}
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+加速器出口 & 名义 190 & 名义 250 & 名义 300 \\
+\midrule
+AVF & 4.0 & 4.9 & 5.5 \\
+RRC & 70.4 & 89.9 & 102.5 \\
+SRC & 187.5 & 252.3 & 298.5 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\clearpage
+\textbf{下表按束流位置排列，但各行来自不同年份或运行条件。}特别是 RRC 的 $135\,\mathrm{MeV/u}$ 供束条目，与上述 SRC 注入能量属于不同设置。
+\begingroup
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.16\linewidth}>{\raggedright\arraybackslash}p{0.17\linewidth}>{\raggedright\arraybackslash}p{0.23\linewidth}>{\raggedright\arraybackslash}p{0.37\linewidth}@{}}
+\toprule
+位置／资料 & 能量 & 报告强度；换算粒子率 & 数值口径与来源 \\
+\midrule
+\endhead
+PIS 电离器出口，2016 总结 & 源端低能束 & $<100\,\mu\mathrm{A}$；$<6.24\times10^{14}$/s & ECR 电离器输出，非 SRC 交付强度；原文 PDF 第 2 页／印刷第 146 页。\cite{sakamoto2016}\\
+AVF 后极化仪，2025 报告 & $7\,\mathrm{MeV/u}$ & 典型 $10\,\mathrm{nA}$；$6.24\times10^{10}$/s & 恢复性能测试的靶上用束，非 AVF 最大能力；INPC 摘要第 1 页。\cite{sugahara2025}\\
+RRC 官方供束表 & $135\,\mathrm{MeV/u}$ & $30\,\mathrm{pnA}$；$1.87\times10^{11}$/s & $d(\mathrm{pol.})$，AVF 注入、PIS；该表整体口径为实际最大值约 70\%，并有源开发脚注。\cite{accelerator-intensity}\\
+SRC 官方供束表 & $250\,\mathrm{MeV/u}$ & 预期 $30\,\mathrm{pnA}$；$1.87\times10^{11}$/s & $d(\mathrm{pol.})$ 的 proposal planning 值；仍保留源开发脚注。\cite{accelerator-intensity}\\
+SRC 官方历史最大值 & $250\,\mathrm{MeV/u}$ & 瞬时最大 $120\,\mathrm{pnA}$；$7.49\times10^{11}$/s & 与上一行同一官方表的 maximum 栏；不作为持续供束承诺。\cite{accelerator-intensity}\\
+SRC 后 BigDpol，2017 论文 & $186.6\,\mathrm{MeV/u}$ & $4$--$8\,\mathrm{nA}$；$(2.50$--$4.99)\times10^{10}$/s & CH$_2$ 靶上的实际实验束流；论文 II 节，稿件第 2 页／带封面 PDF 第 3 页。\cite{sekiguchi2017}\\
+\bottomrule
+\end{longtable}
+\endgroup
+
+粒子率由下节公式计算，$\mu\mathrm{A}$、$\mathrm{nA}$ 按单电荷 $d^+$ 解释。官方表于 2026-09-08 核对；其 $250\,\mathrm{MeV/u}$ 非偏极 $d$ 条目另列预期 $200\,\mathrm{pnA}$、瞬时最大 $1000\,\mathrm{pnA}$，不能替代偏极束参数。\cite{accelerator-intensity} PIS 的早期开发数值与恢复历史可另查源状态资料；本表以源端运行总结、加速器表和实验用束为主。
+
+\subsection{统一单位与时间口径}
+设电荷态为 $q$、粒子率为 $\dot N$，电流绝对值为 $I_e$，则
+\[
+I_e=q e\dot N,\qquad I_p=e\dot N=I_e/q,
+\qquad e=1.602176634\times10^{-19}\,\mathrm C.
+\]
+$\mathrm{pnA}$ 中的 p 表示 particle current；$\mathrm{enA}$ 表示电荷电流。对 $d^+$，$q=1$，二者数值相同：
+\[
+1\,\mathrm{pnA}=6.2415\times10^9\ \text{粒子/s},\qquad
+10^7\ \text{粒子/s}=1.602\,\mathrm{ppA}=0.001602\,\mathrm{pnA}.
+\]
+这不是每平方厘米的 flux。面积平均通量密度为 $\bar\phi=\dot N/\mathcal A$，单位为 $\mathrm{cm^{-2}s^{-1}}$；非均匀束斑还需给出空间分布。也不能直接把散射探测器 cps 当作入射束流 pps，二者之间包含靶厚、截面、接受度和探测效率。
+
+\section{ATT 是什么，装在哪里}
+\label{sec:att}
+
+\textbf{ATT（Beam Attenuator）用网格截去部分粒子，以改变束流强度。}2023 年 E5A 见学资料第 8 页明确说明：由加速器操作员改变上游 mesh 的组合来调束。\cite{e5a} RILAC 的硬件论文进一步给出钽网、插入杆和远程开关控制；该材料描述适用于论文中的 RILAC 装置，不能据此认定所有 C/S 站网格均为同一材料。\cite{att-hardware}
+
+物理上，穿过孔隙而未碰到网丝的粒子不会因这次材料穿越而损失能量；$T=1/10$ 表示名义粒子透过率约 10\%，不表示粒子能量降至十分之一。degrader 则让粒子穿过材料来降低能量。网丝边缘散射仍可能改变束晕及接受度，故名义 ATT 倍率不等同于已测得的末端透过率，也不单独证明极化保持。
+
+\subsection{AVF--RRC 段的站位与五块倍率}
+2014 年年报在 C22、S31a、S64 的诊断腔明确列有 beam attenuation mesh。C22 位于 AVF 与 RRC 厅之间墙的上游；S31a 在 S3 rebuncher 上游；S64 在 S6 rebuncher 之后、RRC 注入之前。原图见图\ref{fig:att-location}。\cite{att-chambers}
+
+共享对话引向的 2025 年 5 月比较表第 7 页，将以下五块列在 ``AVF/RILAC2--RRC'' 组。\textbf{倍率取自该官方资料的搜索缓存；原 PDF 地址在本次核对时返回 HTTP 404，因此保留为历史标称值，不作为当前设备验收值或实时 IN/OUT 记录。}\cite{attstat2025}
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+控制名 & 标称透过率 $T_i$ & 可直接核对的硬件位置 \\
+\midrule
+\texttt{AT\_C22} & $1/2$ & C22 诊断腔 \\
+\texttt{AT\_S22} & $1/2$ & 本次未独立确认具体安装腔 \\
+\texttt{AT\_S31} & $1/10$ & 年报在 S31a 记录网格 \\
+\texttt{AT\_S61} & $1/5$ & S61 为 S6-REB 站位，网格安装腔未确认 \\
+\texttt{AT\_S64} & $1/100$ & S64 诊断腔 \\
+\bottomrule
+\end{tabular}
+\end{center}
+因此，“SRC 上游 ATT”包含距离 SRC 较远的低能段装置。S31 控制名与 S31a 腔的对应仍需设备清单确认；S61 的站号也不能解释成网格装在 rebuncher 内部。
+
+\subsection{网格组合、Duty 与实际标定}
+E5A 第 8 页在 Duty $=100\%$ 下列出 $1/100$ 两块、$1/10$ 四块、$1/5$ 一块、$1/3$ 一块、$1/2$ 三块，并标明 Full 到 $10^{-9}$ 的调节范围。\cite{e5a} 这是该照射服务资料的组合清单，不能把全部网格归到 PIS 路线上。五块 C/S 组的理想乘积仅为
+\[
+T_{\mathrm{C/S,nom}}=\frac12\frac12\frac1{10}\frac15\frac1{100}
+=\frac1{20000}=5\times10^{-5}.
+\]
+全照射清单逐项相乘则为 $8.33\times10^{-11}$；这个形式乘积不代表可用范围，原页没有解释它与标示 $10^{-9}$ 下限的差异。
+
+用下式做强度收支时，必须指定输入测量面和 ATT 状态：
+\[
+\langle\dot N_{\rm out}\rangle
+=\dot N_{\rm in,on}\,D\,T_{\rm ATT,eff}\,\eta_{\rm rest},
+\qquad T_{\rm ATT,nom}=\prod_{i\,\mathrm{IN}}T_i.
+\]
+$D$ 为所定义时间窗口的束流开启比例，$T_{\rm ATT,eff}$ 为实际有效透过率，$\eta_{\rm rest}$ 包含其余传输、俘获和引出效率。网格乘积近似要求照明与下游接受度允许这种因子化。若输入已是时间平均值，不再乘一次 $D$；若已是某组 ATT 插入后的出口电流，也不再重复乘同组倍率。E5A 的 Duty $=100\%$ 不表示回旋加速器没有 RF 束团，探测器 pile-up 仍取决于束团结构。
+
+实际标定要看末端监测量。E5A 第 8 页以 2017 年 Kr 束的 Att scan 将低率塑闪计数与高率电离室电流在比例区连接，给出 $R_{\rm PL}[\mathrm{cps}]=7.505\times10^{12}I_{\rm IC1}[\mathrm A]$，并用 $19.63\,\mathrm{cm^2}$ 孔面积换算平均 flux（见图\ref{fig:e5a-att}）。\cite{e5a} 该系数依赖 Kr、气体及探测器设置，不能移用于氘束。IC1 电流来自气体电离，不能按 Faraday cup 的 $I/(qe)$ 直接换成入射粒子率。
+
+\section{从 SRC 强度估算 ATT 需求}
+\label{sec:att-budget}
+假设某次运行在\textbf{所讨论五块 ATT 全拔出}时，SRC 出口实测参考强度为 $30\,\mathrm{pnA}$，并假定插网后其余传输条件不变，则
+\[
+\dot N_{\rm SRC,0}=1.872\times10^{11}/\mathrm s,
+\qquad
+\dot N_{\rm SRC,ATT}\simeq\dot N_{\rm SRC,0}/20000
+=9.36\times10^6/\mathrm s.
+\]
+要从这个参考值降至 $10^7$/s，需要 $T_{\rm eff}\leq5.34\times10^{-5}$（即衰减倍数至少 $1.87\times10^4$）。若参考值改为 $120\,\mathrm{pnA}$，同一乘积得到 $3.74\times10^7$/s，仍高于该目标。
+
+以上是条件计算。官方 $30\,\mathrm{pnA}$ 预期值没有同时给出五块 ATT 的状态，故不能直接宣称“五块全插就能满足本次实验限值”。同样，源端 $<100\,\mu\mathrm A$ 与 SRC 的 $30\,\mathrm{pnA}$ 来自不同条件，二者相除不能得到实测的 PIS--SRC 传输效率。
+
+对 after-SRC 极化仪，最直接的输入是该位置在指定源模式、ATT 组合和时间窗口下的实测束流。上游 ATT 降低进入 RRC/SRC 的粒子率，也会影响 after-SRC 可用率；若想在 after-SRC 保持较高强度、下游再限流，需依据下文的束线接受度与联锁条件确定方案。
 
 \section{束线位置与功能}
 
@@ -49,11 +167,11 @@ dF2（F2--F3） & 水平/垂直角度选择狭缝 & 在 point-to-parallel 光学
 
 RIKEN BigRIPS 官方束流说明要求在申请书中填写 ``Total Beam Rates @ F3''，并指出由于辐射法规，该处总束流率不能超过 $10^7$/s。官方建议在 LISE++ 中在 F3 后插入 Faraday Cup 2 检查该数值。\cite{bigrips-intensity} 原文见图\ref{fig:f3-source}。这里按总束流率计入目标核素及杂质，不能只用目标核素产额比较限值。
 
-该说明面向 RI 束产额估算和实验申请；偏振氘一次束直通模式是否沿用同一限值，应由束线组确认。对于适用该规定的运行模式，本文据此推论：下游触发降采样只减少记录事件，不会减少经过 F3 的粒子数，因此不能替代 F3 总率控制。
+该网页面向 RI 束产额估算和实验申请。2015 年 BIS 论文也直接讨论一次束送至 BigRIPS 下游实验装置的模式，并给出 $10^7$ pps 限值。\cite{bis2015} 因此该数量级有一次束运行依据；本次偏极氘束的具体区域、模式和设定阈值仍应由束线组确认。对于适用该规定的运行模式，本文据此推论：下游触发降采样只减少记录事件，不会减少经过 F3 的粒子数，因此不能替代 F3 总率控制。
 
 \section{一次束与 RI 束模式的区别}
 
-对于 F0 产生 RI 束的标准模式，F0、D1 beam dump、F1 degrader/slit 和 F2 collimator 共同完成一次束截停及 RI 束选择。\cite{bigrips-config,bigrips-focal} 对于将一次束送入 BigRIPS 的模式，RIKEN 2025 年 BIS 年报说明：系统根据 ATT 插入状态判断衰减是否足够；衰减不足时，会在 SRC 出口插入 Faraday cup。\cite{bis} 对应原文见图\ref{fig:bis-source}。该文另述一般报警可触发 beam chopper，不能将其直接当作 ATT 条件下的完整联锁时序。
+对于 F0 产生 RI 束的标准模式，F0、D1 beam dump、F1 degrader/slit 和 F2 collimator 共同完成一次束截停及 RI 束选择。\cite{bigrips-config,bigrips-focal} 对于将一次束送入 BigRIPS 的模式，RIKEN 2025 年 BIS 年报说明：系统根据 ATT 插入状态判断衰减是否足够；衰减不足时，会在 SRC 出口插入 Faraday cup。\cite{bis} 对应原文见图\ref{fig:bis-source}。2015 年论文给出更具体的既有逻辑：以经常测量的源强和低能 ATT 状态评估最大可能束流；衰减满足条件才允许拔出 SRC 出口 FC\_G01，运行中状态改变而衰减不足时，以 beam chopper 和 FC\_G01 截束。\cite{bis2015} 这是一套上界估计与保护逻辑，并非 SRC 出口的连续无损电流实测。2025 年报还描述了该功能的改造，故不把 2015 年实现直接当作当前完整时序。
 
 \begin{samepage}
 基于上述联锁说明，本文的工程判断是：``SRC 后保持高流强，在 F2 或 dF2 再降到允许值'' 不能仅由狭缝几何推断为可运行方案。必须确认该模式下的联锁阈值、束损位置、F2/dF2 狭缝的热负荷和屏蔽条件。
@@ -68,7 +186,26 @@ RIKEN BigRIPS 官方束流说明要求在申请书中填写 ``Total Beam Rates @
 \end{enumerate}
 优先向束线组询问是否存在专门的局部衰减器或可接受的 F2/dF2 准直方案，而不要把普通 F2 狭缝直接当作高功率 beam attenuator。若需要保持偏振，任何材料衰减器还应单独评估多重散射、能损、核反应和可能的自旋系统误差。
 
-\begin{thebibliography}{9}
+\begin{thebibliography}{99}
+\bibitem{sakamoto2016} N. Sakamoto et al., ``Acceleration of Polarized Deuteron Beams with RIBF Cyclotrons'', Cyclotrons 2016, TUB04, pp. 145--148, PDF p. 2 / Table 2,\newline
+\url{https://proceedings.jacow.org/cyclotrons2016/papers/tub04.pdf}.
+\bibitem{sugahara2025} H. Sugahara et al., ``Measurement of the polarization of the deuteron beam at RIKEN RIBF'', INPC 2025, Contribution 133, poster abstract, PDF p. 1,\newline
+\url{https://indico.ibs.re.kr/event/701/contributions/6590/contribution.pdf}.
+\bibitem{accelerator-intensity} RIKEN, ``Technical Information -- Beam intensity'', SRC / RRC tables and footnotes, accessed 2026-09-08,\newline
+\url{https://www.nishina.riken.jp/RIBF/accelerator/tecinfo.html}.
+\bibitem{sekiguchi2017} K. Sekiguchi et al., Phys. Rev. C 96, 064001 (2017), Sec. II, manuscript p. 2,\newline
+\url{https://link.aps.org/accepted/10.1103/PhysRevC.96.064001}.
+\bibitem{e5a} RIKEN industrial application team, E5A 见学案内资料, 2023-04-02, Rev. 1.0, p. 8,\newline
+\href{https://ribf.riken.jp/sisetu-kyoyo/HIbeam/doc/E5Aadv_\%E8\%A6\%8B\%E5\%AD\%A6\%E6\%A1\%88\%E5\%86\%85\%E7\%94\%A8\%E8\%B3\%87\%E6\%96\%99.pdf}{RIKEN 官方 PDF：E5A 见学资料}.
+\bibitem{att-hardware} A. Uchiyama et al., ``Implementation of PIC-based Embedded I/O Controller with EPICS for RILAC Control System'', ICALEPCS 2009, WEP037, pp. 478--479, Beam Attenuators Control,\newline
+\url{https://proceedings.jacow.org/icalepcs2009/papers/wep037.pdf}.
+\bibitem{att-chambers} K. Yamada et al., ``Modification of beam diagnosis chambers in RILAC2 high-energy beam transport'', RIKEN Accel. Prog. Rep. 47 (2014), p. 156, Figs. 1--2 and station descriptions,\newline
+\url{https://www.nishina.riken.jp/researcher/APR/APR047/pdf/156.pdf}.
+\bibitem{attstat2025} RIKEN, 25.05 版「理研の場合」比较表, p. 7, AttStat 图中文字。2026-09-08 核对搜索缓存；原站 HTTP 404，未取得原始页面截图，\newline
+\href{https://ribf.riken.jp/sisetu-kyoyo/HIbeam/BmL/BmL\%E4\%BD\%9C\%E6\%96\%B9111__\%E7\%90\%86\%E7\%A0\%94\%E3\%81\%AE\%E5\%A0\%B4\%E5\%90\%88.pdf}{原始 PDF 地址（当前失效）}.
+\bibitem{bis2015} M. Komiyama et al., ``Recent Updates on the RIKEN RI Beam Factory Control System'', HIAT 2015, MOPA27, PDF p. 2, Upgrade of Beam Interlock System,\newline
+\url{https://www.nishina.riken.jp/hiat2015/proceedings/papers/mopa27.pdf}.
+
 \bibitem{bigrips-config} RIKEN Nishina Center, ``BigRIPS Configuration'',\newline
 \url{https://www.nishina.riken.jp/ribf/BigRIPS/config.html}.
 \bibitem{bigrips-technical} BigRIPS Team, ``Technical Information of BigRIPS, ZeroDegree, SAMURAI Beam Line, and OEDO Beamline'', Configuration / Length,\newline
@@ -85,11 +222,29 @@ DOI: \href{https://doi.org/10.34448/RIKEN.APR.58-146}{10.34448/RIKEN.APR.58-146}
 \url{https://www.nishina.riken.jp/researcher/APR/APR058/pdf/98.pdf}.
 \end{thebibliography}
 
+资料线索来自用户提供的\href{https://chatgpt.com/share/6a9fa6fc-7c6c-83ee-949f-a9614eb676f1}{共享对话}与 E5A PDF。本文用上述原始资料核对物理结论；共享对话不作为强度或当前运行状态的测量依据。
+
 \clearpage
 \section{原始资料截图与对应结论}
 
 以下为 RIKEN 官方网页和年报 PDF 的局部原始截图，核对及截取日期为 2026 年 9 月 8 日。截图仅裁切和缩放，保留原文与原色；图注中的中文是本文说明。网页按栏目定位，年报按印刷页码定位；参考文献中的链接可直接打开完整来源。
 
+\subsection{E5A 的网格组合与强度标定}
+\begin{center}
+\includegraphics[width=\linewidth]{e5a-att-calibration.png}
+\captionof{figure}{E5A 见学资料第 8 页完整页面。\cite{e5a} 左下给出 Duty、网格数量和调节范围；右侧给出 Kr 束 Att scan、PL/IC1 比例区与面积换算。该页未列各网格站位，不能由此给 PIS 路线分配全部网格。}
+\label{fig:e5a-att}
+\end{center}
+
+\clearpage
+\subsection{AVF/RILAC2 到 RRC 注入输运段的实物依据}
+\begin{center}
+\includegraphics[width=0.88\linewidth]{att-chambers-2014.png}
+\captionof{figure}{Yamada 等 2014 年报第 156 页。\cite{att-chambers} Fig. 1 标出 AVF 汇入及 C22、S31a、S61、S64 等位置，正文明确三处 mesh，Fig. 2 为 S64 诊断腔实物。该页没有给出五块 ATT 的倍率。}
+\label{fig:att-location}
+\end{center}
+
+\clearpage
 \subsection{F3 总束流率和束线分段}
 \begin{center}
 \includegraphics[width=\linewidth]{f3-limit.png}
