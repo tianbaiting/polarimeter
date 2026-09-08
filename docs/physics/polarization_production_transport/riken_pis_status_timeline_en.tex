@@ -1,0 +1,214 @@
+% !TEX program = xelatex
+% [EN] Preserve source-specific dates, currents and page locators from the Chinese draft. / [CN] 保留中文稿中各来源对应的日期、电流和页码定位。
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=22mm]{geometry}
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Termes}
+\setsansfont{TeX Gyre Heros}
+\usepackage{amsmath,booktabs,tabularx,array,longtable,enumitem,xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xurl,microtype,ragged2e}
+\hypersetup{colorlinks=true,linkcolor=blue!60!black,urlcolor=blue!70!black,citecolor=blue!60!black,pdftitle={RIKEN PIS: Operation, Interruption and Recovery Timeline},pdfauthor={DPOLAR project}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\setlength{\emergencystretch}{2em}
+\renewcommand{\arraystretch}{1.18}
+\widowpenalty=10000
+\clubpenalty=10000
+\newcommand{\src}[2]{\href{#1}{\textsuperscript{[#2]}}}
+\newcommand{\locate}[1]{{\color{black!65}\footnotesize #1}}
+\title{RIKEN Polarized Ion Source (PIS)\\[4pt]\large Operation, Interruption and Recovery Timeline}
+\author{DPOLAR project}
+\date{English edition, 8 September 2026}
+\begin{document}
+\maketitle
+
+\section{Main finding}
+\textbf{After the polarized-deuteron experiments in 2015, RIKEN went through an extended interval without polarized-deuteron experiments. During renewed preparation and upgrading of the PIS in 2023, a cooling pipe inside the vacuum chamber developed a water leak and required repair and maintenance. Polarization tests in 2024 demonstrated recovery; the 2025 reports described the source as renewed or refurbished. By January 2026, the PIS had returned to polarized-deuteron physics experiments.}
+
+\subsection*{Using the source locators}
+The references distinguish the following locators to make the long RIKEN annual reports easier to navigate:
+\begin{itemize}[leftmargin=1.5em]
+\item \textbf{PDF page}: the physical page index shown by a PDF reader, counted from 1.
+\item \textbf{Printed page}: the page number printed on the document itself.
+\item \textbf{Individual-report link}: preferred where RIKEN provides a separate PDF, often only one page long.
+\item A \texttt{\#page=N} suffix in a full-report link opens the specified PDF page when supported by the browser.
+\end{itemize}
+
+\section{Timeline}
+\begingroup\small
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{@{}>{\RaggedRight\arraybackslash}p{0.12\textwidth}>{\RaggedRight\arraybackslash}p{0.61\textwidth}>{\RaggedRight\arraybackslash}p{0.22\textwidth}@{}}
+\toprule
+\textbf{Date} & \textbf{PIS status} & \textbf{Source locator} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Date} & \textbf{PIS status} & \textbf{Source locator} \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+1992 &
+The high-intensity PIS was assembled, and a 14-MeV polarized-deuteron beam was extracted from the AVF cyclotron for the first time. The report records the source polarization modes, Wien filter and polarimeter configuration.\src{https://www.nishina.riken.jp/researcher/APR/Document/ProgressReport_vol_26.pdf\#page=171}{1}
+& \locate{Full PDF p.~171; printed p.~138; report heading V-1-2.} \\
+
+1995 report &
+Improved polarization performance was documented together with RF transitions, state selection and measured polarization modes. For the ideal negative pure-tensor mode, the measured tensor component was $p_{zz}=-1.23$. The report also describes a Wien-filter axis scan at a total deuteron energy of 270~MeV (135~MeV/u). A newly installed Swinger polarimeter moved with the beam-deflection system and periodically measured polarization upstream of the target. This stage established practical source-mode control and target-side monitoring.\src{https://www.nishina.riken.jp/researcher/APR/Document/ProgressReport_vol_28.pdf\#page=179}{9}
+& \locate{Full PDF pp.~179--180; printed pp.~148--149; Table~1, Fig.~2 and final paragraph.} \\
+
+2009--2015 &
+Polarized-deuteron beams were used repeatedly at RIBF. The JACoW operating summary reports acceleration of vector- and tensor-polarized deuterons from the RIKEN PIS to \textbf{190, 250 and 300~MeV/u} through the cyclotron cascade.\src{https://proceedings.jacow.org/cyclotrons2016/papers/tub04.pdf\#page=1}{2}
+& \locate{PDF p.~1: abstract and opening text; p.~2: Table~2, acceleration settings for 190/250/300~MeV/u.} \\
+
+May 2015 &
+The last explicitly documented polarized-deuteron beam service in the preceding operating period took place on \textbf{11--16 May}, at \textbf{190~MeV/u}, with single-turn extraction.\src{https://www.nishina.riken.jp/researcher/APR/APR049/pdf/281.pdf}{3}
+& \locate{Individual PDF p.~1; printed p.~281; middle of the left column.} \\
+
+2015--2023 &
+An extended interval without polarized-deuteron experiments followed. The INPC 2025 abstract describes renewal of the PIS after the long break following the 2015 polarized-deuteron experiment.\src{https://indico.ibs.re.kr/event/701/contributions/6590/}{4}
+& \locate{Conference webpage, Description, paragraph~2.} \\
+
+From July 2023 &
+A documented hardware failure occurred during renewed preparation: \textbf{water leaked from a cooling pipe inside the vacuum chamber}, followed by repair and maintenance. Yuko Saito's 2024 presentation dates this event and shows a helium-gas leak test of the repaired pipe.\src{https://indico.ihep.ac.cn/event/21083/contributions/165969/attachments/82329/103939/2409beijing_yuko.pdf\#page=13}{5}
+& \locate{FB23 slides: PDF p.~13 / slide~13. Also shown in CD2024 slides, p.~14.} \\
+
+January 2024 &
+RIKEN accelerated deuterons again after about nine years. The \textbf{PIS was still under maintenance}, so the experiment used an \textbf{unpolarized deuteron beam from a conventional ECR source}.\src{https://pos.sissa.it/479/096/pdf\#page=2}{6}
+& \locate{PoS paper, PDF p.~2, Introduction; maintenance statement in the final paragraph of Section~1.} \\
+
+September 2024 &
+The repaired PIS underwent a dedicated polarization-performance test. The AVF cyclotron accelerated polarized deuterons to \textbf{7~MeV/u}; the report lists a typical intensity of about \textbf{20 particle nA}. It reports $p_y$ and $p_{yy}$ for each polarization mode and concludes that the PIS was successfully recovered.\src{https://www.nishina.riken.jp/researcher/APR/APR058/pdf/36.pdf}{7}
+& \locate{Individual PDF p.~1; printed p.~36; conditions in Table~1, polarization in Table~2, conclusion near the end of the right column.} \\
+
+2025 &
+The official INPC 2025 abstract describes the PIS as renewed after the long break following the 2015 polarized-deuteron experiment. Performance checks of the polarization modes and beamline polarimetry continued.\src{https://indico.ibs.re.kr/event/701/contributions/6590/}{4}
+& \locate{Conference webpage, Description, paragraph~2.} \\
+
+January 2026 &
+Following this preparation, RIKEN performed a spin-correlation measurement with a polarized-deuteron beam and a polarized-proton target. The 2026 report gives
+\[
+p_y=-0.615\pm0.005,\qquad p_{yy}=0.896\pm0.012,
+\]
+and describes high stability and performance.\src{https://indico.cern.ch/event/1441702/contributions/7106564/}{8}
+& \locate{Conference contribution webpage, Description, paragraph~3. Attachment: \texttt{260818\_sugahara.pdf}.} \\
+
+Status in 2026 &
+The public reports show that the PIS had recovered and returned to polarized-deuteron experiments. The January 2026 physics run is direct evidence of that return.\src{https://indico.cern.ch/event/1441702/contributions/7106564/}{8}
+& \locate{Same contribution webpage, Description, paragraph~3.} \\
+\end{longtable}
+\endgroup
+
+\section{Failure and recovery}
+The documented sequence is:
+\begin{enumerate}[leftmargin=1.5em,itemsep=2pt]
+\item Extended interval without polarized-deuteron experiments, followed by renewed source preparation.
+\item Cooling-pipe water leak from July 2023; repair and maintenance.
+\item Helium leak test of the repaired pipe and recommissioning.
+\item Polarized-beam test with AVF in September 2024.
+\item Continued tuning in 2025 and a physics run in 2026.
+\end{enumerate}
+Three distinctions determine how this history should be read:
+\begin{itemize}[leftmargin=1.5em]
+\item The evidence for 2015--2023 establishes an extended interval without polarized-deuteron experiments. It does not establish continuous hardware failure throughout those eight years.
+\item The cooling-pipe water leak in 2023 is an explicitly documented hardware failure, followed by repair and maintenance.
+\item The September 2024 test used polarimetry to verify source recovery, rather than merely demonstrating that the source could be switched on. The APR~58 report concludes: ``PIS is successfully recovered.''\src{https://www.nishina.riken.jp/researcher/APR/APR058/pdf/36.pdf}{7}
+\end{itemize}
+
+\section{Participants named in the public reports}
+The 2024--2026 reports on PIS preparation, polarization measurements and commissioning after recovery repeatedly name Hiroki Sugahara, Kimiko Sekiguchi, Yuko Saito, Atomu Watanabe, Naruhiko Sakamoto and Hideyuki Sakai, among others. Naruhiko Sakamoto also appears in the early PIS development and RIBF polarized-deuteron acceleration reports.\src{https://proceedings.jacow.org/cyclotrons2016/papers/tub04.pdf}{2}\src{https://www.nishina.riken.jp/researcher/APR/APR058/pdf/36.pdf}{7}\src{https://indico.cern.ch/event/1441702/contributions/7106564/}{8}
+
+PIS preparation, repair, recommissioning and subsequent polarimetry involved both the experimental collaboration and RIKEN accelerator staff.
+
+\section{Sources, links and page locators}
+\begin{enumerate}[label={\textbf{[\arabic*]}},leftmargin=2.7em,itemsep=0.8em]
+\item N. Sakamoto et al., \emph{RIKEN High Intensity Polarized Ion Source and Deuteron Polarimeters}, RIKEN Accelerator Progress Report~26 (1992).
+
+\textbf{Locator: full PDF p.~171; printed p.~138.}
+
+\url{https://www.nishina.riken.jp/researcher/APR/Document/ProgressReport_vol_26.pdf#page=171}
+
+The heading appears at the top of the page. The opening paragraph records assembly in May and the first 14-MeV polarized-deuteron beam in July of that year.
+
+\item N. Sakamoto, N. Fukunishi, M. Kase, K. Sekiguchi and K. Suda, \emph{Acceleration of Polarized Deuteron Beams with RIBF Cyclotrons}, Cyclotrons'16, TUB04.
+
+\textbf{Locator: PDF p.~1, abstract and overview; p.~2, Table~2 and the detailed 190/250/300-MeV/u settings.}
+
+\url{https://proceedings.jacow.org/cyclotrons2016/papers/tub04.pdf#page=1}
+
+DOI: \href{https://doi.org/10.18429/JACoW-Cyclotrons2016-TUB04}{10.18429/JACoW-Cyclotrons2016-TUB04}.
+
+\item M. Nishida et al., \emph{Operation report on the ring-cyclotrons in the RIBF accelerator complex}, RIKEN Accelerator Progress Report~49 (2016), reporting operation in 2015.
+
+\textbf{Locator: individual PDF p.~1; printed p.~281.}
+
+\url{https://www.nishina.riken.jp/researcher/APR/APR049/pdf/281.pdf}
+
+The middle of the left column records polarized-deuteron service on 11--16 May, followed by the 190-MeV/u energy and single-turn extraction.
+
+\item H. Sugahara et al., \emph{Measurement of the polarization of the deuteron beam at RIKEN RIBF}, INPC 2025.
+
+\textbf{Locator: conference webpage, Description, paragraph~2.}
+
+\url{https://indico.ibs.re.kr/event/701/contributions/6590/}
+
+The abstract describes renewal of the PIS after the long break following the 2015 experiment, and reports the 7-MeV/u AVF test and polarization results.
+
+\item Y. Saito, FB23 (2024), presentation on the spin-correlation measurement plan.
+
+\textbf{Locator: PDF p.~13 / slide~13.}
+
+\url{https://indico.ihep.ac.cn/event/21083/contributions/165969/attachments/82329/103939/2409beijing_yuko.pdf#page=13}
+
+The slide dates the cooling-pipe water leak inside the vacuum chamber to July 2023 onward, followed by repair and maintenance. It also gives 14 September 2024 as the beam-test date.
+
+Cross-check: Y. Saito, Chiral Dynamics 2024 slides, \textbf{PDF p.~14 / slide~14}, which show the helium-gas leak test of the repaired cooling pipe:
+
+\url{https://www.indico.tp2.ruhr-uni-bochum.de/event/2/contributions/89/attachments/44/131/CD2024_final_YS_4.pdf#page=14}
+
+\item Y. Saito, \emph{Few-Nucleon Scattering Experiments to Explore the Three-Nucleon Forces}, PoS(CD2024)096.
+
+\textbf{Locator: PDF p.~2, Introduction.}
+
+\url{https://pos.sissa.it/479/096/pdf#page=2}
+
+The paper states that the January 2024 experiment used an unpolarized beam because the PIS was under maintenance. It also identifies this as the first deuteron acceleration at RIKEN in about nine years.
+
+DOI: \href{https://doi.org/10.22323/1.479.0096}{10.22323/1.479.0096}.
+
+\item H. Sugahara et al., \emph{Measurement of deuteron beam polarization at RIKEN RIBF}, RIKEN Accelerator Progress Report~58 (2025).
+
+\textbf{Locator: individual PDF p.~1; printed p.~36.}
+
+The individual report opens the relevant page directly, without downloading the full annual report of more than 40~MB:
+
+\url{https://www.nishina.riken.jp/researcher/APR/APR058/pdf/36.pdf}
+
+The opening left-column text discusses the prolonged operational interval and the 2023 water leak, and explains that the measurement tests refurbishment and recovery. The conclusion is near the end of the right column. Table~1 gives the approximately 20-particle-nA intensity used in the timeline.
+
+DOI: \href{https://doi.org/10.34448/RIKEN.APR.58-069}{10.34448/RIKEN.APR.58-069}.
+
+\item H. Sugahara et al., \emph{Preparing a Polarized Deuteron Beam for the Measurement of Spin-Correlation Coefficients in Deuteron--Proton Elastic Scattering at 100 MeV/nucleon}, 26th European Conference on Few-Body Problems in Physics (2026).
+
+\textbf{Locator: conference contribution webpage, Description, paragraphs~2--3; presentation attachment \texttt{260818\_sugahara.pdf}.}
+
+\url{https://indico.cern.ch/event/1441702/contributions/7106564/}
+
+The contribution describes PIS upgrading and preparation since 2023, confirms the January 2026 spin-correlation measurement, and gives $p_y=-0.615\pm0.005$ and $p_{yy}=0.896\pm0.012$.
+
+\item H. Okamura et al., \emph{Status of the RIKEN Polarized Ion Source}, RIKEN Accelerator Progress Report~28 (1995), pp.~148--149.
+
+\textbf{Locator: full PDF pp.~179--180; printed pp.~148--149.}
+
+\url{https://www.nishina.riken.jp/researcher/APR/Document/ProgressReport_vol_28.pdf#page=179}
+
+Table~1 connects RF transitions, hyperfine-state selection, ideal modes and measured polarization. Figure~2 shows the Wien-filter scan at a total deuteron energy of 270~MeV. The final paragraph describes the Swinger target-side polarimeter and a CH$_2$ target that can be inserted and withdrawn rapidly. The mode performance is a historical measurement from that period.
+\end{enumerate}
+
+\section{Key milestones}
+\begin{enumerate}[leftmargin=1.5em]
+\item \textbf{Failure in 2023:} Saito's 2024 slides, PDF p.~13, explicitly document the cooling-pipe water leak and repair/maintenance.
+\item \textbf{Recovery in 2024:} the APR~58 individual report, p.~1, discusses the water leak and refurbishment, and concludes that the PIS recovered successfully.
+\item \textbf{Return to physics in 2026:} the Few-Body 2026 contribution confirms the January 2026 spin-correlation measurement and reports stable vector and tensor polarization.
+\end{enumerate}
+\end{document}
