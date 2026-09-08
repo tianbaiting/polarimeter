@@ -1,0 +1,83 @@
+% !TEX program = xelatex
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=23mm,headheight=15pt]{geometry}
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Termes}\setsansfont{TeX Gyre Heros}
+\usepackage{booktabs,tabularx,array,xcolor,fancyhdr,xurl,titlesec}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,urlcolor=blue!45!black,filecolor=blue!45!black]{hyperref}
+\definecolor{ink}{HTML}{193B55}
+\titleformat{\section}{\large\sffamily\bfseries\color{ink}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalsize\sffamily\bfseries\color{ink}}{\thesubsection}{0.6em}{}
+\setlength{\parskip}{4pt}\setlength{\emergencystretch}{2em}
+\renewcommand{\arraystretch}{1.2}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\MissingLocalText}{local file unavailable}
+\input{navigation.tex}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\sffamily DPOLAR documentation guide}\fancyhead[R]{\small 2026-09-08}\fancyfoot[C]{\thepage}
+\hypersetup{pdftitle={DPOLAR Documentation Guide}}
+\begin{document}
+\begin{center}
+{\LARGE\sffamily\color{ink}DPOLAR Documentation Guide}\\[6pt]
+Purpose, physics, measurement precision and engineering
+\end{center}
+The documentation supports two CompactInVacuum polarimeters: BigDpol/T11 downstream of SRC and F13 upstream of the SAMURAI reaction target. Follow the six steps below for an introduction, or enter the relevant topic directly. Blue titles open source documents; [PDF] opens a locally compiled reading copy.
+
+\section{Recommended reading order}
+\subsection*{1. Why are two polarimeters needed?}
+Start with the \Read{rationale-en}{installation rationale} or its \Read{rationale-zh}{Chinese version}: beam tuning, sectional diagnosis and independent spin projections. The \Read{beamline}{beam-line overview} locates T11, BigRIPS F0--F7 and downstream F13.
+
+\subsection*{2. How is the beam produced, and what conditions are available?}
+Read the \Read{production-en}{production and operation brief}; the \Read{production-zh}{Chinese source-based report} gives more detail. Consult \Read{primary-beam}{primary-beam parameters} and the \Read{beam-intensity}{SRC--F3 intensity-control note} for the different rate constraints. The \Read{pis-status}{PIS status note} and \Read{pis-timeline}{source timeline} collect recovery and operating history.
+
+\subsection*{3. How does transport change polarization, and what is observable?}
+The \Read{density-en}{density-matrix synthesis} and its \Read{density-zh}{Chinese version} connect the state, station geometry and measurements. For a shorter entry, read the \Read{full-summary}{eight-parameter summary}, or the \Read{tensor-summary}{tensor-only summary} when vector polarization is excluded. The \Read{spin-transport}{spin-transport study} develops the general transport and ensemble models.
+
+\subsection*{4. How many counts are needed, and with what precision?}
+The \Read{statistics}{count-rate and statistical-precision note} covers rates, likelihoods and time requirements. The \Read{identifiability}{detailed identifiability study} addresses response rank, normalization and nuisance parameters. The \Read{coincidence}{coincidence and energy-loss study} explains event selection; compare its specific geometry with the current requirements.
+
+\subsection*{5. Which requirements govern the instrument?}
+Engineering decisions follow the \Read{requirements}{current CompactInVacuum baseline}. The \Read{legacy-requirements}{external-detector baseline} applies to the preserved external-reference routes. Topic reports, historical drawings and presentations do not replace the current requirement authority.
+
+\subsection*{6. How is the detector built and connected to the beam line?}
+Read the \Read{detector-en}{SiPM and vacuum-engineering report}, its \Read{detector-zh}{Chinese version} and the \Read{coordinates}{detector coordinate sheet}. Site interfaces are documented separately for \Read{after-src}{afterSRC} and the \Read{samurai}{SAMURAI upstream pipe}. The \Read{rcnp}{RCNP drawing index} provides external references; the \Read{slides}{two-polarimeter slides} support presentations.
+
+\clearpage
+\begingroup\small
+\section{How the related documents fit together}
+\noindent\begin{tabularx}{\linewidth}{@{}p{0.28\linewidth}Y@{}}
+\toprule
+Document & Reading role \\
+\midrule
+Installation rationale & Decision-level entry with links to the physics and facility evidence.\\
+Production and operation & Source preparation, acceleration, polarization modes and on-site measurement.\\
+Density-matrix synthesis & Detailed connection between state parameters, two-station geometry, the central trajectory and observables.\\
+Full-state / tensor summaries & Short routes into different parameter spaces; neither supersedes the other's scope.\\
+Identifiability study & Normalization, efficiency nuisance parameters, Fisher information and numerical cases.\\
+Spin-transport study & General BMT transport, illustrative trajectories and ensemble effects. Its example bends do not replace the synthesis's T11--F13 central-trajectory calculation.\\
+Papers and presentations & \Read{papers}{Paper drafts} and slides address their research or communication purpose, rather than specifying engineering requirements.\\
+\bottomrule
+\end{tabularx}
+
+\section{Where topics belong}
+\noindent\begin{tabularx}{\linewidth}{@{}p{0.39\linewidth}Y@{}}
+\toprule
+Directory & Scope \\
+\midrule
+\path{physics/} & Polarization production, density matrices, spin transport, identifiability and polarimeter fundamentals.\\
+\path{analysis/} & Rates, statistical precision, coincidence and energy-loss analysis.\\
+\path{beamline_info/} & Facility and interface information organized by afterSRC, BigRIPS and SAMURAI location.\\
+\path{specs/} & Current and external-reference baselines, plus dated architecture reviews.\\
+\path{polarimeter_detector/} & Detector, SiPM, vacuum and procurement studies; legacy PMT material is separate.\\
+\path{papers/}, \path{presentations/} & Manuscripts and presentation material.\\
+\path{rcnp-BeamLinePolarimeter/}\newline\path{reference_cad/} & External source material, extracted figures and CAD references.\\
+\path{process_of_mechanism/}\newline\path{communication_with_prmat/}\newline\path{superpowers/} & Mechanical discussions, correspondence records and design plans; read with their dates and applicable baselines.\\
+\bottomrule
+\end{tabularx}
+
+\section{Sources and reading copies}
+Each topic keeps its source documents, figures and bibliography together. Original literature belongs in local \path{sources/} or \path{raw/}; figures belong in \path{figures/}. Existing \path{img/}, \path{assets/} and \path{generated/} subdirectories remain part of their topic. Old absolute paths in numerical provenance record the original run, not the current directory layout.
+
+Run \texttt{make -C docs} from the repository root to compile registered LaTeX documents and both guides. Reading copies go to \path{docs/build/reading/}. Use \texttt{make -C docs guides} for the guides alone, and \texttt{make -C docs verify} to check navigation. The guide PDFs are \path{docs/index_zh.pdf} and \path{docs/index_en.pdf}; keep them with the docs directory so relative links work. Existing PDFs beside source files remain as earlier copies; the guide's [PDF] links consistently use the rebuilt reading copies.
+\endgroup
+\end{document}

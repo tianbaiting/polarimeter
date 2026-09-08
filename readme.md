@@ -33,6 +33,11 @@ Beamline and service-interface values remain evidence-qualified and are not fabr
 
 ## Repository map
 
+- Start reading the documentation with [中文导航](docs/index_zh.tex) or
+  [English guide](docs/index_en.tex). Run `make -C docs` to build the linked reading PDFs.
+- `docs/physics/`: polarization production, density matrices and spin transport.
+- `docs/analysis/`: counting statistics, coincidence and energy-loss studies.
+- `docs/papers/`: research manuscript drafts.
 - `compactInVacuum/`: current common platform, both baseline deployment profiles, compatibility
   scaffold, generator, validation, and tests.
 - `external_version/afterSRC/`: preserved afterSRC external-detector reference.

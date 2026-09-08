@@ -2,6 +2,10 @@
 
 This directory collects beamline context, interface notes, and shareable material for BigRIPS and the SAMURAI upstream region.
 
+For the project-wide reading order, start with [中文导航](../index_zh.tex) or
+[English guide](../index_en.tex). Production, spin transport and statistical analysis
+are organized under `../physics/` and `../analysis/`; this directory follows facility locations.
+
 ## Navigation
 
 - [Beamline overview](overview/beamline-overview.md)

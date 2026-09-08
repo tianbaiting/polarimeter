@@ -1,0 +1,41 @@
+% [EN] One source registry keeps the bilingual reading routes and PDF builds aligned. / [CN] 共用来源清单使双语导航与 PDF 构建保持一致。
+\providecommand{\DocEntry}[2]{\expandafter\gdef\csname docpath:#1\endcsname{#2}}
+\providecommand{\LocalDocEntry}[2]{\DocEntry{#1}{#2}}
+\providecommand{\DocEngine}[2]{}
+\DocEntry{rationale-zh}{beamline_info/afterSRC/polarimeter_rationale/rationale_zh.tex}
+\DocEntry{rationale-en}{beamline_info/afterSRC/polarimeter_rationale/rationale_en.tex}
+\DocEntry{beamline}{beamline_info/overview/beamline-overview.md}
+\DocEntry{beam-intensity}{beamline_info/bigrips/beam-intensity-control.tex}
+\DocEntry{primary-beam}{beamline_info/bigrips/primary-beam-and-polarized-deuteron.md}
+\DocEntry{pis-status}{beamline_info/pis/polarized-ion-source-status.en.md}
+\DocEntry{production-zh}{physics/polarization_production_transport/polarization_production_transport_zh.tex}
+\DocEntry{production-en}{physics/polarization_production_transport/polarization_production_transport_en.tex}
+\LocalDocEntry{pis-timeline}{physics/polarization_production_transport/riken_pis_status_timeline.tex}
+\LocalDocEntry{density-zh}{physics/tensor_identifiability/deuteron_spin_density_matrix/main.tex}
+\LocalDocEntry{density-en}{physics/tensor_identifiability/deuteron_spin_density_matrix/main_en.tex}
+\DocEntry{full-summary}{physics/tensor_identifiability/Concise_Full_Density_Matrix_Identifiability.tex}
+\DocEntry{tensor-summary}{physics/tensor_identifiability/Concise_Tensor_Only_Polarimetry.tex}
+\DocEntry{identifiability}{physics/tensor_identifiability/Identifiability_of_Deuteron_Tensor_Polarization.tex}
+\DocEntry{spin-transport}{physics/spin_transport/spin_transport_SRC_to_SAMURAI.tex}
+\DocEntry{spin-summary}{physics/spin_transport/meeting_summary.md}
+\DocEntry{statistics}{analysis/polarimeter_statistics/polarimeter_stastic.tex}
+\DocEntry{coincidence}{analysis/coincidence_energy_loss/coincidence_ELoss.md}
+\DocEntry{requirements}{specs/compact_one_requirement_baseline.md}
+\DocEntry{legacy-requirements}{specs/BLP_v1_requirement_baseline.md}
+\DocEntry{detector-zh}{polarimeter_detector/compact_in_vacuum_sipm_report/compact_in_vacuum_sipm_report_zh.tex}
+\DocEntry{detector-en}{polarimeter_detector/compact_in_vacuum_sipm_report/compact_in_vacuum_sipm_report.tex}
+\DocEntry{coordinates}{polarimeter_detector/compact_coordinate_sheet/compact_coordinate_sheet_zh.tex}
+\DocEntry{after-src}{beamline_info/afterSRC/afSRC_overview.md}
+\DocEntry{samurai}{beamline_info/samurai/beam-pipe/overview.md}
+\DocEntry{rcnp}{rcnp-BeamLinePolarimeter/drawings.md}
+\DocEntry{papers}{papers/isovector_reorientation/readme.md}
+\DocEntry{slides}{presentations/two-polarimeter-capability/two-polarimeter-capability.tex}
+\DocEngine{detector-zh}{lualatex}
+\DocEngine{detector-en}{lualatex}
+\DocEngine{coordinates}{lualatex}
+\newcommand{\Read}[2]{%
+  \IfFileExists{\csname docpath:#1\endcsname}{%
+    \href{run:\csname docpath:#1\endcsname}{#2}%
+    \IfFileExists{build/reading/#1.pdf}{\,\href{run:build/reading/#1.pdf}{[PDF]}}{}%
+  }{#2\,\textcolor{gray}{(\MissingLocalText)}}%
+}

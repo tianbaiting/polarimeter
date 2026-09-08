@@ -1,0 +1,88 @@
+% !TEX program = xelatex
+\documentclass[UTF8,11pt,a4paper,fontset=none]{ctexart}
+\usepackage[margin=23mm,headheight=15pt]{geometry}
+\setCJKmainfont{Noto Serif CJK SC}
+\setCJKsansfont{Noto Sans CJK SC}
+\setCJKmonofont{Noto Sans Mono CJK SC}
+\setmainfont{TeX Gyre Termes}
+\usepackage{booktabs,tabularx,array,xcolor,fancyhdr,xurl}
+\usepackage[colorlinks=true,linkcolor=blue!45!black,urlcolor=blue!45!black,filecolor=blue!45!black]{hyperref}
+\definecolor{ink}{HTML}{193B55}
+\ctexset{section={format=\large\bfseries\sffamily\color{ink}},subsection={format=\normalsize\bfseries\sffamily\color{ink}}}
+\setlength{\parskip}{4pt}
+\setlength{\emergencystretch}{2em}
+\renewcommand{\arraystretch}{1.2}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\MissingLocalText}{本地文件未提供}
+\input{navigation.tex}
+\pagestyle{fancy}\fancyhf{}
+\fancyhead[L]{\small\sffamily DPOLAR 文档阅读导航}
+\fancyhead[R]{\small 2026-09-08}
+\fancyfoot[C]{\thepage}
+\hypersetup{pdftitle={DPOLAR 文档阅读导航}}
+\begin{document}
+\begin{center}
+{\LARGE\sffamily\color{ink}DPOLAR 文档阅读导航}\\[6pt]
+从安装目的到物理依据、测量精度和工程实现
+\end{center}
+
+本目录围绕两台 CompactInVacuum 极化仪组织资料：SRC 后的 BigDpol/T11 站，以及 SAMURAI 反应靶前的 F13 站。第一次阅读按下面六步进行；已有明确问题时，可直接进入对应专题。蓝色标题打开源文档；其后的 [PDF] 打开本地编译副本。
+
+\section{推荐阅读顺序}
+\subsection*{1. 为什么需要这两台极化仪？}
+先读\Read{rationale-zh}{安装理由（中文）}或\Read{rationale-en}{英文版}，掌握调束、分段诊断和独立自旋投影三点目的。再看\Read{beamline}{束线总览}，区分 T11、BigRIPS 的 F0--F7 和下游 F13。
+
+\subsection*{2. 束流如何产生，具备什么运行条件？}
+\Read{production-zh}{极化产生、输运与运行综述（中文）}提供完整背景；\Read{production-en}{英文简报}用于快速交流。流强问题分别查\Read{primary-beam}{一次束与偏振氘束参数}和\Read{beam-intensity}{SRC--F3 限流记录}。源恢复情况查\Read{pis-status}{PIS 状态资料}；\Read{pis-timeline}{源状态时间线}供按年代检索。
+
+\subsection*{3. 输运如何改变极化，两站能测什么？}
+详细推导读\Read{density-zh}{密度矩阵综合稿（中文）}或\Read{density-en}{英文版}。先了解结论可读\Read{full-summary}{八参数可辨识性简版}；只关心张量极化时读\Read{tensor-summary}{纯张量简版}。通用自旋输运模型与系综效应另见\Read{spin-transport}{自旋输运专题}。
+
+\subsection*{4. 需要多少计数，能达到什么精度？}
+\Read{statistics}{计数率与统计精度}讨论计数、似然和测量时间；\Read{identifiability}{可辨识性详细研究}讨论响应秩、归一化和干扰参数。\Read{coincidence}{符合与能损布局研究}解释弹性事件的角度和能损选择，具体几何数值应与当前需求核对。
+
+\subsection*{5. 装置必须满足哪些要求？}
+工程决策以\Read{requirements}{当前 CompactInVacuum 需求基线}为准。\Read{legacy-requirements}{外置装置需求基线}仅对应保留的外置参考路线。专题报告、历史图纸和汇报页不替代当前需求权威。
+
+\subsection*{6. 如何实现探测器并接入束线？}
+读\Read{detector-zh}{SiPM／闪烁体与真空工程报告（中文）}、\Read{detector-en}{英文版}和\Read{coordinates}{探测器坐标表}。安装接口分别查\Read{after-src}{after-SRC 现场资料}与\Read{samurai}{SAMURAI 上游束管资料}。\Read{rcnp}{RCNP 图件索引}提供外部类比；\Read{slides}{双极化仪报告幻灯片}用于汇报。
+
+\clearpage
+\begingroup\small
+\section{相近文档各自承担什么角色？}
+\noindent\begin{tabularx}{\linewidth}{@{}p{0.26\linewidth}Y@{}}
+\toprule
+文档类型 & 使用方式 \\
+\midrule
+安装理由 & 项目决策入口；概括为何设置两站，并引用物理与束线依据。\\
+极化产生与运行综述 & 解释源、加速器、极化模式和现场测量流程。\\
+密度矩阵综合稿 & 连接状态参数、两站站位、中心轨道与可观测量的完整推导。\\
+八参数／纯张量简版 & 综合推导的快速阅读入口；两者适用的参数空间不同。\\
+可辨识性详细研究 & 提供归一化、效率干扰参数、Fisher 信息与数值情形的技术细节。\\
+自旋输运专题 & 保留一般 BMT 模型、示例轨道和系综效应；其示例角度不替代综合稿的 T11--F13 中心轨道计算。\\
+论文与汇报 & \Read{papers}{论文草稿}和幻灯片表达各自研究或交流任务，不是工程需求基线。\\
+\bottomrule
+\end{tabularx}
+
+\section{按主题找文件}
+\noindent\begin{tabularx}{\linewidth}{@{}p{0.38\linewidth}Y@{}}
+\toprule
+目录 & 内容边界 \\
+\midrule
+\path{physics/} & 极化产生、密度矩阵、自旋输运、可辨识性及极化计基础。\\
+\path{analysis/} & 计数统计、测量精度、符合和能损分析。\\
+\path{beamline_info/} & 按 afterSRC、BigRIPS、SAMURAI 站位保存的设施与接口资料。\\
+\path{specs/} & 当前／外置参考需求基线及带日期的架构检查记录。\\
+\path{polarimeter_detector/} & 探测器、SiPM、真空与采购研究；历史 PMT 资料另列。\\
+\path{papers/}, \path{presentations/} & 论文草稿与汇报材料。\\
+\path{rcnp-BeamLinePolarimeter/}\newline\path{reference_cad/} & 外部设施原始资料、提取图件和 CAD 参考。\\
+\path{process_of_mechanism/}\newline\path{communication_with_prmat/}\newline\path{superpowers/} & 机械讨论、协作记录和历次设计计划；按记录日期及其适用基线阅读。\\
+\bottomrule
+\end{tabularx}
+
+\section{成稿、来源与构建副本}
+每个专题保留一处源文档及其图件、文献库。原始文献放在专题的 \path{sources/} 或 \path{raw/}，正文图件放在 \path{figures/}；已有 \path{img/}、\path{assets/} 和 \path{generated/} 作为专题内部结构保留。数值来源清单中的旧绝对路径是运行时记录，不用于判断当前目录位置。
+
+从仓库根目录运行 \texttt{make -C docs}，会编译清单中的 LaTeX 文档及双语导航，把可读副本放入 \path{docs/build/reading/}。只更新导航用 \texttt{make -C docs guides}；检查导航链接用 \texttt{make -C docs verify}。导航 PDF 保存在 \path{docs/index_zh.pdf} 和 \path{docs/index_en.pdf}，应与 docs 目录一同使用，以保留相对链接。已存在的同目录 PDF 作为原有副本保留；导航的 [PDF] 链接统一指向重新编译的副本。
+\endgroup
+\end{document}
