@@ -1,0 +1,100 @@
+{
+  "retrieved_at": "2026-09-08T01:26:08.010996+00:00",
+  "assets": [
+    {
+      "file": "f3-limit.png",
+      "url": "https://www.nishina.riken.jp/ribf/BigRIPS/intensity.html",
+      "locator": "p.emphasis containing Total Beam Rates @ F3",
+      "method": "Unmodified Chromium element screenshot, 1250x1000 CSS viewport, device scale factor 2",
+      "source_dom_sha256": "e153c13ff9a6c9638e8b8b6ea7bfe54265f81f9d51435f4eca1d1d21c0b453e9",
+      "image_sha256": "3732a1b1d40cf5d46f875822bae9a7452528fe63f6543b721d56f10a34fc48b1"
+    },
+    {
+      "file": "config-stages.png",
+      "url": "https://www.nishina.riken.jp/ribf/BigRIPS/config.html",
+      "locator": "First paragraph under BigRIPS Configuration",
+      "method": "Unmodified Chromium element screenshot, 1250x1000 CSS viewport, device scale factor 2; crop to first visible paragraph",
+      "source_dom_sha256": "abbcba7f604adf8585b2cecfe5bd22914db70c0c26d006e8b9f5cf70aebe614f",
+      "image_sha256": "9e2a6bf7cd272a2dc017db3adfa4c6144c8313140aa5e80a1a6b4ad1d4b66672",
+      "crop_pixels": [
+        0,
+        0,
+        1400,
+        565
+      ]
+    },
+    {
+      "file": "f1-devices.png",
+      "url": "https://ribf.riken.jp/BigRIPSInfo/chamber/f1.html",
+      "locator": "standard configuration table",
+      "method": "Unmodified Chromium element screenshot, 1250x1000 CSS viewport, device scale factor 2",
+      "source_dom_sha256": "9ed9710c452c1ca7e1c7622b42da109bbbfc1c4cf554c48337f19260d5400e56",
+      "image_sha256": "fc69b38a5d61e043b26b10b87a8ef20478172440a9fc710958591d89ce81dfba"
+    },
+    {
+      "file": "f2-devices.png",
+      "url": "https://ribf.riken.jp/BigRIPSInfo/chamber/f2.html",
+      "locator": "Standard configuration table",
+      "method": "Unmodified Chromium element screenshot, 1250x1000 CSS viewport, device scale factor 2",
+      "source_dom_sha256": "8e302393286878fbc3aa2062ad2d194957fb5728cfc0fde7d79df9baeb3775cc",
+      "image_sha256": "52d70653f8fc9ac99ea6cabbe3f050e6346010c1e1892d2add64fbe52771d830"
+    },
+    {
+      "file": "slit-principle.png",
+      "url": "https://www.nishina.riken.jp/researcher/APR/APR052/pdf/130.pdf",
+      "printed_page": 130,
+      "pdf_page": 1,
+      "method": "Poppler pdftoppm -r 300, rectangular crop only; no retouching",
+      "crop_pixels": [
+        214,
+        542,
+        1214,
+        893
+      ],
+      "rendered_page_pixels": [
+        2481,
+        3508
+      ],
+      "source_pdf_sha256": "20b012cd6d2030d87712b665f426c3e6bdcaef31e07a10663f6475f60944fcb6",
+      "image_sha256": "49cf8489d13bc9ca7773349659f28c79697a1a1cc13bc89d4d5541146a85dbc5"
+    },
+    {
+      "file": "slit-layout.png",
+      "url": "https://www.nishina.riken.jp/researcher/APR/APR052/pdf/130.pdf",
+      "printed_page": 130,
+      "pdf_page": 1,
+      "method": "Poppler pdftoppm -r 300, rectangular crop only; no retouching",
+      "crop_pixels": [
+        273,
+        1598,
+        2232,
+        2748
+      ],
+      "rendered_page_pixels": [
+        2481,
+        3508
+      ],
+      "source_pdf_sha256": "20b012cd6d2030d87712b665f426c3e6bdcaef31e07a10663f6475f60944fcb6",
+      "image_sha256": "977a2f325e07144d137205d8d2a6fc90ad48b381244712aa87bedd471af6f5a2"
+    },
+    {
+      "file": "bis-attenuator.png",
+      "url": "https://www.nishina.riken.jp/researcher/APR/APR058/pdf/98.pdf",
+      "printed_page": 98,
+      "pdf_page": 1,
+      "method": "Poppler pdftoppm -r 300, rectangular crop only; no retouching",
+      "crop_pixels": [
+        1267,
+        2424,
+        2288,
+        3122
+      ],
+      "rendered_page_pixels": [
+        2481,
+        3508
+      ],
+      "source_pdf_sha256": "206ea3b44be9b983bffde1cd296869dc090e0fb0a19d0b338709d791379192e5",
+      "image_sha256": "bc16aad7ba202a94476c4f306e3747ec8eb15503bbf03c871418a2b26b5ff34c"
+    }
+  ]
+}
