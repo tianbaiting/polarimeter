@@ -1,0 +1,90 @@
+% [EN] Ideal RF modes must remain distinct from measured polarization and current operating setpoints. / [CN] 理想 RF 模式须与实测极化及当前控制设定明确区分。
+\newcommand{\noteone}{%
+我们这次希望确定的是：RIKEN 能否稳定提供竖直方向的纯 tensor 氘束，以及如何监测它的极化。这里以实验室竖直方向为 $y$ 轴，要求 $p_y$ 接近零、$p_{yy}$ 非零。
+
+对自旋为 1 的氘核，沿 $y$ 轴有三个磁子态。正 tensor 理想态把粒子等量分到 $m_y=+1$ 和 $-1$，给出 $p_{yy}=+1$；负 tensor 理想态全部占据 $m_y=0$，给出 $p_{yy}=-2$。两种情况的 vector polarization 都为零。实际源的极化幅度和残余 vector 分量都要测量。建议同时讨论无极化参考模式及切换周期。
+
+纯 tensor 不等于只有一个非零张量分量。对于绕 $y$ 轴对称的制备态，$p_{xx}=p_{zz}=-p_{yy}/2$。旧文献常把量子化轴命名为 $z$，不能直接把其中的 $p_{zz}$ 当成我们束流方向的分量。
+
+文献指出 ECR ionizer 出口的极化轴本来就是竖直的。因此我们的请求是保持竖直轴，不要求额外的 Wien filter 转轴。这个简化来自轴向一致，仍需确认实际加速和输运到实验靶后的方向。
+
+\textbf{建议口头问题：}Can we deliver a vertically aligned pure-tensor deuteron beam without additional Wien-filter rotation?
+
+\textbf{来源：}\src{\sakamoto}{Sakamoto et al., Cyclotrons 2016, pp. 145--146, Fig. 2 and source-axis description}。
+}
+
+\newcommand{\notetwo}{%
+这页给出已有物理方案，供 PIS 团队核对当前操作配方。SFT 是强场 RF 跃迁，WFT 是弱场 RF 跃迁。原子束先经过六极磁铁筛选，再通过 RF 跃迁和第二组六极磁铁改变最终进入 ionizer 的超精细态布居。
+
+按照 1995 年 RIKEN 报告的能级编号，两种模式都关闭 SFT\#1，WFT\#1 做 $1\to4$，WFT\#2 关闭。此时第二组六极磁铁出口保留 2、3 态。正 tensor 使用 SFT\#2 的 $2\to6$，最终为 3、6 态；负 tensor 使用 $3\to5$，最终为 2、5 态。不能把这些超精细态编号直接当成核自旋磁量子数。
+
+原表脚注明确说，在 RF 频率固定时改变 SFT\#2 磁场，可以切换 $2\to6$ 和 $3\to5$。这提供了模式切换的依据，但没有给出适用于当前装置的频率、磁场和功率设定。需要现场团队给出当前 recipe，并测量两个模式的 $p_y$ 和 $p_{yy}$。
+
+原表曾测得这两列的 tensor 分量分别约为 $+0.77$ 和 $-1.23$。它们是历史性能，不是本次实验的交付指标。我们也不根据新实验中的混合极化模式，推定当前纯 tensor 模式的性能。
+
+\textbf{建议口头问题：}Are these pure-tensor RF modes available in the current PIS configuration, and what residual vector polarization should we expect?
+
+\textbf{来源：}\src{\okamura}{Okamura et al., RIKEN APR 28 (1995), Table 1, printed p. 148 / PDF p. 179}。
+}
+
+\newcommand{\notethree}{%
+PIS 已有近期恢复运行的证据。2024 年 9 月在 AVF 后进行了 7 MeV/u 的极化测试。2026 年会议报告进一步说明，1 月已经在 100 MeV/u 完成极化束实验，报告 $p_y=-0.615\pm0.005$ 和 $p_{yy}=+0.896\pm0.012$。这个结果表明源和测偏系统有近期运行经验，但该模式含有 vector polarization。
+
+我们关心的人员问题不是论文作者名单，而是运行期间的责任安排：如果 Sekiguchi 老师不在现场，谁可以启动 PIS、调 RF、处理源的故障，以及检查极化漂移？日常维护、值班送束和专门的极化调试，可能由不同人员负责，需要把这些职责说清楚。
+
+N. Sakamoto 等 RIKEN 人员参与了这些公开报告，可作为联系线索。不能仅凭署名推定某位人员当前能独立值班，或已经承诺参与本次实验。
+
+会议最好给出一个主要联系人、一个备用支持安排，以及实验前需要多少准备或培训时间。如果纯 tensor 模式需要重新调试，也应把相应的 beam time 纳入准备。
+
+\textbf{建议口头问题：}If Prof. Sekiguchi is unavailable on site, is there a designated local operator who can prepare and maintain these PIS modes?
+
+\textbf{来源：}\src{https://www.nishina.riken.jp/researcher/APR/APR058/pdf/36.pdf}{Sugahara et al., RIKEN APR 58 (2025), p. 36}；\src{\sugahara}{Sugahara et al., EFB 2026, January 2026 run and authors}。
+}
+
+\newcommand{\notefour}{%
+这里比较的是三个可供选择或互相补充的位置。应先确认现有设备能否使用，再决定新装探测器的工作量。
+
+AVF 后的 polarimeter 适合检查源的模式和极化。2024 年测试通过 $^{12}\mathrm C(d,p)^{13}\mathrm C$ 反应测偏，束流随后停在 Faraday cup。因此需要确认它是否支持向 RRC 连续送束时的测量，还是需要独立的测偏时段。还要检查本次 AVF 引出能量对应的标定。
+
+RRC 后、SRC 前在历史束流布局中已有 DPOL，这是建议优先询问的现有装置。需确认位置是否位于本次实际输运路径、硬件和 DAQ 是否可用，以及标定能量和测偏靶对 SRC 注入的影响。2026 年实验的 D-room polarimeter 不能未经位置核实就等同于这台输运线 DPOL。
+
+SRC 后可以直接测最终加速能量下的束流极化，也更接近我们计划安装探测器的方案。要确认具体空间、真空接口，以及该处允许的束流强度。
+
+任何上游测偏都需要与 SAMURAI 实验靶处建立联系。后续磁场输运和相空间选择可能改变轴向或透过束的平均极化。本页不把上游结果直接当成最终靶处的实测值。
+
+\textbf{建议口头问题：}Can we use an existing polarimeter after AVF or RRC, and can it operate with the beam delivery required for our experiment?
+
+\textbf{来源：}\src{\sakamoto}{Sakamoto et al., 2016, Fig. 1, historical DPOL and BigDPOL layout}；\src{\avftest}{Sugahara et al., INPC 2025, AVF measurement setup}。
+}
+
+\newcommand{\notefive}{%
+BigRIPS 的官方说明给出 F3 总束流率不超过 $10^7$/s。我们的理想布置是在 SRC 后保留较高强度用于测偏，然后在 F3 之前衰减。这样是否允许，要同时看实际束流和联锁条件。
+
+ATT 是网格束流衰减器。穿过网孔的粒子避免直接穿过板材，部分束流则被网格截获。RIKEN 列出 $1/2$、$1/3$、$1/5$、$1/10$ 和 $1/100$ 等名义透过率。它们不能自动代表实际端到端透过率，尤其不能直接外推到高能氘束。文献中的 C22、S31a、S64 位于 RRC 上游，在这些位置衰减也会降低 SRC 后的测偏计数率。
+
+狭缝可以减小接受度。F2--F3 的狭缝选择角度，色散位置的狭缝还可能选择动量。所需开口必须结合束流分布计算。举例：居中一维高斯束、$\sigma=1$ mm，透过率 $T=\operatorname{erf}[w/(2\sqrt2\sigma)]$，$T=0.01$ 对应全开口 $w\simeq25\,\mu$m。若两个独立方向各透过 10\%，每个全开口约 0.25 mm。这只是理想算例。
+
+更关键的是，2025 年 BIS 报告描述了利用上游 ATT 插入状态判断是否允许一次束进入 BigRIPS 的逻辑，衰减不足时会插入 SRC 出口 Faraday cup。所以狭缝将 F3 实测速率降下来，未必满足现有送束条件。必须确认当前配置能否接受我们提出的位置和衰减方案，以及截获束流、散射背景和透过束极化的影响。
+
+\textbf{建议口头问题：}Can we retain a higher rate at the after-SRC polarimeter and attenuate before F3 under the applicable interlock configuration?
+
+\textbf{来源：}\src{\fthreelimit}{F3 official limit}；\src{\attguide}{RIKEN intensity guide, p. 7}；\src{\attlocations}{APR 47, p. 156}；\src{\slitsource}{APR 52, p. 130}；\src{\bis}{APR 58, pp. 98--99}。
+}
+
+\newcommand{\notesix}{%
+希望这次会议确定的事项有四类。第一是 PIS 运行联系人和准备时间，包括 Sekiguchi 老师不在现场时的支持安排。第二是可用的纯 tensor RF 配方、允许的残余 $p_y$，以及保持竖直轴的输运设置。第三是测偏设备的位置、可借用的硬件和测量周期。第四是允许的束流强度、衰减位置和对应联锁条件。
+
+“需要高计数率”还要转换成一个可以评估的要求。薄靶近似下，有效计数率可写成
+\[
+R_{\rm useful}=\dot N_{\rm pol}\,n_t\,\sigma_{\rm acc}\,\epsilon\,f_{\rm live}.
+\]
+这里 $\dot N_{\rm pol}$ 是测偏靶处粒子率，$n_t$ 是相关散射中心的面密度，$\sigma_{\rm acc}$ 是接受范围内的有效截面，$\epsilon$ 是未重复计入接受度的探测和选择效率，$f_{\rm live}$ 是活时间比例。若这些因素不能近似分离，需要做联合的接受度积分。CH$_2$ 靶还需要考虑碳背景。
+
+高束流可以缩短同样计数所需的时间，但极化误差还取决于分析本领、角度覆盖、背景和归一化。我们需要先约定：束流能量和测偏位置的实际强度、靶厚、希望多少分钟测一次，以及要求的 $p_{yy}$ 误差。没有这些输入，本稿不承诺具体精度，也不把其他运行配置的计算值当成本次指标。
+
+如果现有联锁要求在上游就把束流降到很低，应进一步讨论接受度和靶厚是否足以满足周期要求，或能否安排独立的测偏时段。测偏时段与正式送束的设置差异及极化稳定性需要交叉检查。
+
+\textbf{建议结束语：}With the source support, polarimeter location, and permitted intensity agreed, we can calculate the measurement time needed for the requested polarization precision.
+
+\textbf{来源：}本页为本次会议的决策请求。计数率表达式为薄靶近似下的标准通量--截面关系，未代入实验参数。
+}

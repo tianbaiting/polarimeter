@@ -1,0 +1,271 @@
+% !TEX program = xelatex
+% [EN] The notes and slides share the same physics and source definitions. / [CN] 讲稿与幻灯片共用物理内容和来源定义。
+\ifdefined\SpeakerNotes
+  \documentclass[12pt,a4paper]{article}
+  \usepackage[margin=24mm]{geometry}
+  \usepackage{hyperref}
+\else
+\documentclass[aspectratio=169,14pt]{beamer}
+  \geometry{paperwidth=320mm,paperheight=180mm}
+\fi
+\usepackage{lmodern,fontspec,xeCJK}
+\setmainfont{TeX Gyre Heros}
+\setsansfont{TeX Gyre Heros}
+\setCJKmainfont{Noto Sans CJK SC}
+\setCJKsansfont{Noto Sans CJK SC}
+\usepackage{amsmath,amssymb,booktabs,tabularx,array,graphicx,xcolor}
+\definecolor{Navy}{HTML}{16324D}
+\definecolor{Teal}{HTML}{007F86}
+\definecolor{Ink}{HTML}{26323B}
+\definecolor{Muted}{HTML}{586974}
+\definecolor{Rust}{HTML}{A14D22}
+\hypersetup{colorlinks=true,urlcolor=Teal,linkcolor=Teal,
+ pdftitle={Polarized deuteron beam preparation for SAMURAI},pdfauthor={Baiting Tian}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcommand{\src}[2]{\href{#1}{#2}}
+\newcommand{\sakamoto}{https://proceedings.jacow.org/cyclotrons2016/papers/tub04.pdf}
+\newcommand{\okamura}{https://www.nishina.riken.jp/researcher/APR/Document/ProgressReport_vol_28.pdf}
+\newcommand{\sugahara}{https://indico.cern.ch/event/1441702/contributions/7106564/}
+\newcommand{\avftest}{https://indico.ibs.re.kr/event/701/contributions/6590/}
+\newcommand{\fthreelimit}{https://www.nishina.riken.jp/ribf/BigRIPS/intensity.html}
+\newcommand{\bis}{https://www.nishina.riken.jp/researcher/APR/APR058/pdf/98.pdf}
+\newcommand{\attlocations}{https://www.nishina.riken.jp/researcher/APR/APR047/pdf/156.pdf}
+\newcommand{\slitsource}{https://www.nishina.riken.jp/researcher/APR/APR052/pdf/130.pdf}
+\newcommand{\attguide}{https://ribf.riken.jp/sisetu-kyoyo/HIbeam/BmL/BmL\%E4\%BD\%9C\%E6\%96\%B9111__\%E7\%90\%86\%E7\%A0\%94\%E3\%81\%AE\%E5\%A0\%B4\%E5\%90\%88.pdf}
+\input{speaker-notes.tex}
+
+\ifdefined\SpeakerNotes
+  \setlength{\parindent}{0pt}
+  \setlength{\parskip}{0.7em}
+  \setlength{\emergencystretch}{2em}
+  \newcommand{\notepage}[3]{
+    {\color{Muted}\small SAMURAI meeting \quad 中文讲稿 \quad #1/6\par}
+    \vspace{0.6em}{\color{Navy}\LARGE\bfseries #2\par}\vspace{0.7em}
+    #3
+  }
+\else
+\setbeamercolor{normal text}{fg=Ink,bg=white}
+\usefonttheme{professionalfonts}
+\setbeamercolor{frametitle}{fg=Navy,bg=white}
+\setbeamercolor{structure}{fg=Teal}
+\setbeamercolor{alerted text}{fg=Rust}
+\setbeamerfont{normal text}{size=\fontsize{20}{25}\selectfont}
+\setbeamerfont{frametitle}{size=\fontsize{32}{37}\selectfont,series=\bfseries}
+\setbeamersize{text margin left=13mm,text margin right=13mm}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{frametitle}{\vspace{5mm}\insertframetitle\par\vspace{3mm}}
+\setbeamertemplate{footline}{\hspace{13mm}{\color{Muted}\fontsize{10}{12}\selectfont SAMURAI beam preparation\hfill\insertframenumber/6\hspace{13mm}}\vspace{4mm}}
+\newcommand{\smalltext}{\fontsize{17}{22}\selectfont}
+\newcommand{\source}[1]{\vfill{\color{Muted}\fontsize{10}{13}\selectfont #1\par}}
+\newcommand{\lead}[1]{{\color{Teal}\bfseries #1\par}\vspace{3mm}}
+\renewcommand{\arraystretch}{1.35}
+\title{Polarized deuteron beam preparation for SAMURAI}
+\author{Baiting Tian}
+\date{10 September 2026}
+\fi
+\begin{document}
+\ifdefined\SpeakerNotes
+    \notepage{1}{我们需要怎样的极化氘束}{\noteone}\clearpage
+    \notepage{2}{纯 tensor 模式的 RF 跃迁}{\notetwo}\clearpage
+    \notepage{3}{PIS 的运行支持}{\notethree}\clearpage
+    \notepage{4}{三个测偏位置的比较}{\notefour}\clearpage
+    \notepage{5}{F3 限制、ATT 与狭缝}{\notefive}\clearpage
+    \notepage{6}{希望这次会议确定的事项}{\notesix}
+\else
+\usebeamerfont{normal text}
+
+\begin{frame}[t]{Vertical pure-tensor deuterons for SAMURAI}
+\lead{Requested beam: $p_y\simeq0$, $p_{yy}\neq0$, with the symmetry axis along vertical $y$}
+\begin{columns}[T,onlytextwidth]
+\column{0.53\textwidth}
+\vspace{1mm}
+\[
+ p_y=n_+-n_-,\qquad p_{yy}=n_++n_--2n_0
+\]
+\vspace{2mm}
+\begin{tabularx}{\linewidth}{@{}Yccc@{}}
+\toprule
+Ideal mode & $n_+$ & $n_0$ & $n_-$\\
+\midrule
+$p_{yy}=+1$ & $1/2$ & $0$ & $1/2$\\
+$p_{yy}=-2$ & $0$ & $1$ & $0$\\
+\bottomrule
+\end{tabularx}\par
+\vspace{5mm}
+\smalltext
+For an axially symmetric state,\par
+\vspace{1mm}
+$p_{xx}=p_{zz}=-p_{yy}/2$.\par
+\vspace{3mm}
+An unpolarized reference has $n_+=n_0=n_-=1/3$.
+\column{0.43\textwidth}
+\includegraphics[width=\linewidth,height=58mm,keepaspectratio]{../../physics/polarization_production_transport/figures/sakamoto2016_p1_fig2.png}\par
+\vspace{3mm}
+\smalltext
+The PIS ionizer output has a vertical polarization axis.\par
+\vspace{3mm}
+\textbf{No additional Wien-filter rotation requested.}\par
+\vspace{2mm}
+Confirm vertical-axis transport to the experimental target.
+\end{columns}
+\source{Source and original PIS drawing: \src{\sakamoto}{Sakamoto et al., Cyclotrons 2016, pp. 145--146, Fig. 2}. Ideal spin-1 populations are definitions, not measured source performance.}
+\note{\noteone}
+\end{frame}
+
+\begin{frame}[t]{RF transitions for pure tensor polarization}
+\lead{Historical RIKEN scheme: change the second strong-field transition}
+\smalltext
+SFT = strong-field transition. WFT = weak-field transition.\par
+\vspace{4mm}
+\begin{tabularx}{\textwidth}{@{}p{60mm}*{4}{>{\centering\arraybackslash}X}@{}}
+\toprule
+Ideal $(p_y,p_{yy})$ & SFT\#1 & WFT\#1 & SFT\#2 & WFT\#2\\
+\midrule
+$(0,+1)$ & Off & $1\to4$ & $2\to6$ & Off\\[2mm]
+$(0,-2)$ & Off & $1\to4$ & $3\to5$ & Off\\
+\bottomrule
+\end{tabularx}\par
+\vspace{6mm}
+\begin{columns}[T,onlytextwidth]
+\column{0.49\textwidth}
+\textbf{State selection}\par
+\vspace{2mm}
+After the second sextupole: states $2,3$.\par
+\vspace{2mm}
+Final states: $3,6$ for $+1$, or $2,5$ for $-2$.
+\column{0.47\textwidth}
+\textbf{Switching method in the report}\par
+\vspace{2mm}
+Keep the RF frequency fixed and change the SFT\#2 magnetic field.
+\end{columns}
+\vspace{6mm}
+{\color{Teal}\bfseries Meeting request}\par
+\vspace{2mm}
+Confirm the current RF recipe and achievable $p_{yy}$, including residual $p_y$.
+\source{Source: \src{\okamura}{Okamura et al., RIKEN APR 28 (1995), Table 1, printed p. 148 / PDF p. 179}. Original hyperfine-state numbering. The source calls its quantization-axis tensor component $p_{zz}$.
+The listed transitions are historical settings, not present-day control setpoints.}
+\note{\notetwo}
+\end{frame}
+
+\begin{frame}[t]{PIS operation and local support}
+\begin{columns}[T,onlytextwidth]
+\column{0.48\textwidth}
+\lead{Recent operating evidence}
+\textbf{September 2024}\par
+\vspace{2mm}
+AVF test at 7 MeV/u after PIS repair.\par
+\vspace{4mm}
+\textbf{January 2026}\par
+\vspace{2mm}
+Polarized-beam experiment at 100 MeV/u:\par
+\[
+\begin{aligned}
+ p_y&=-0.615\pm0.005,\\
+ p_{yy}&=+0.896\pm0.012.
+\end{aligned}
+\]
+\smalltext This operating mode contains vector polarization.
+\column{0.48\textwidth}
+\lead{Support to arrange for our run}
+If Prof. Sekiguchi is unavailable on site, who at RIKEN can operate the PIS?\par
+\vspace{4mm}
+\smalltext
+Who handles startup and RF-mode tuning?\par
+\vspace{3mm}
+Who checks polarization during the run?\par
+\vspace{3mm}
+What preparation time or training is needed?\par
+\vspace{5mm}
+{\color{Muted}N. Sakamoto is among the RIKEN collaborators named in the reports. Current operating responsibility requires confirmation.}
+\end{columns}
+\source{Sources: \src{https://www.nishina.riken.jp/researcher/APR/APR058/pdf/36.pdf}{Sugahara et al., RIKEN APR 58 (2025), p. 36}; \src{\sugahara}{Sugahara et al., EFB 2026 contribution, January 2026 run}.}
+\note{\notethree}
+\end{frame}
+
+\begin{frame}[t]{Three locations for beam polarimetry}
+\begin{center}
+\includegraphics[width=0.74\textwidth,height=48mm,keepaspectratio]{../../physics/polarization_production_transport/figures/sakamoto2016_p1_fig1.png}\par
+{\color{Muted}\fontsize{11}{14}\selectfont Historical accelerator layout showing DPOL before SRC and BigDPOL after SRC}
+\end{center}
+\vspace{1mm}
+\smalltext
+\begin{tabularx}{\textwidth}{@{}p{38mm}p{71mm}Y@{}}
+\toprule
+Location & What it measures & Questions for use\\
+\midrule
+After AVF & Source modes & Calibration at AVF energy. Dedicated measurement or inline monitoring?\\
+After RRC & Before SRC & DPOL access. Calibration and target effects on SRC injection.\\
+After SRC & Final beam energy & Space, count rate, and permitted attenuation before F3.\\
+\bottomrule
+\end{tabularx}\par
+\vspace{3mm}
+\textbf{First enquiry: existing DPOL after RRC.}\quad After-SRC installation remains an option.
+\source{Sources: \src{\sakamoto}{Sakamoto et al., 2016, Fig. 1}; \src{\avftest}{Sugahara et al., INPC 2025, AVF polarimeter and Faraday-cup test}. Relating any upstream measurement to the SAMURAI target requires a transport check.}
+\note{\notefour}
+\end{frame}
+
+\begin{frame}[t]{Beam attenuation before F3}
+\lead{F3 total beam rate: $\dot N_{\mathrm{F3}}\leq10^7$ particles/s}
+{\smalltext Proposed order, subject to beamline and interlock approval:\par}
+\vspace{0mm}
+\[
+\mathrm{SRC}\ \longrightarrow\ \mathrm{polarimeter}\ \longrightarrow\ \mathrm{attenuation}\ \longrightarrow\ \mathrm{F3}\ \longrightarrow\ \mathrm{SAMURAI}
+\]
+\vspace{1mm}
+\begin{columns}[T,onlytextwidth]
+\column{0.48\textwidth}
+\textbf{ATT: mesh beam attenuator}\par
+\vspace{2mm}
+\smalltext
+Open apertures transmit part of the beam.\par
+\vspace{2mm}
+Nominal ratios: $1/2$, $1/3$, $1/5$, $1/10$, $1/100$.\par
+\vspace{2mm}
+Documented locations: C22, S31a and S64, upstream of RRC.\par
+\vspace{2mm}
+Upstream attenuation also lowers the after-SRC count rate.
+\column{0.48\textwidth}
+\textbf{Slits: acceptance restriction}\par
+\vspace{2mm}
+\smalltext
+Select position, angle, or momentum.\par
+\vspace{2mm}
+F2--F3 angular-selection slits are documented.\par
+\vspace{2mm}
+Reduction depends on the beam distribution and aperture settings.\par
+\vspace{2mm}
+Assess stability, intercepted beam, and the polarization of the transmitted fraction.
+\end{columns}
+\vspace{2mm}
+{\smalltext\color{Rust}\textbf{Interlock condition:} the 2025 BIS report describes an upstream-ATT check for primary-beam delivery. Downstream slits alone cannot be assumed to satisfy it.}
+\source{Sources: \src{\fthreelimit}{BigRIPS F3 instructions}; \src{\attguide}{RIKEN intensity guide, p. 7}; \src{\attlocations}{APR 47 (2014), p. 156}; \src{\slitsource}{APR 52 (2019), p. 130}; \src{\bis}{APR 58 (2025), pp. 98--99}. Confirm the applicable operating mode and current interlock configuration.}
+\note{\notefive}
+\end{frame}
+
+\begin{frame}[t]{Decisions for beam preparation}
+\smalltext
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\textwidth}{@{}p{48mm}Y@{}}
+\toprule
+Topic & Agreement needed from the meeting\\
+\midrule
+PIS support & Local operator and preparation time. Support when Prof. Sekiguchi is unavailable.\\[2mm]
+Polarization mode & Pure tensor RF recipe, residual $p_y$ tolerance, and vertical transport without additional Wien rotation.\\[2mm]
+Polarimeter & Existing AVF/RRC device or after-SRC installation. Monitoring interval and target-side cross-check.\\[2mm]
+Beam intensity & Attenuation location, ATT/slit settings, and applicable F3 interlock conditions.\\
+\bottomrule
+\end{tabularx}\par
+\vspace{6mm}
+\lead{Count-rate requirement to quantify}
+\vspace{-2mm}
+\(R_{\rm useful}=\dot N_{\rm pol}\,n_t\,\sigma_{\rm acc}\,\epsilon\,f_{\rm live}\)\par
+\vspace{3mm}
+\smalltext
+Agree on beam energy, intensity, target thickness, and the required $p_{yy}$ uncertainty within a specified time.\par
+\vspace{2mm}
+\textbf{Higher useful counts shorten the monitoring interval.} Analyzing power and backgrounds also determine the precision.
+\source{Discussion requests for this experiment. Rate expression assumes a thin target and effective acceptance/efficiency factors. No beam-delivery or precision value is assumed.}
+\note{\notesix}
+\end{frame}
+\fi
+\end{document}
