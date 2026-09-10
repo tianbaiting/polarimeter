@@ -75,7 +75,7 @@
 \usebeamerfont{normal text}
 
 \begin{frame}[t]{Vertical pure-tensor deuterons for SAMURAI}
-\lead{Requested beam: $p_y\simeq0$, $p_{yy}\neq0$, with the symmetry axis along vertical $y$}
+\lead{Requested mode: ideal $(p_y,p_{yy})=(0,+1)$, with the symmetry axis along vertical $y$}
 \begin{columns}[T,onlytextwidth]
 \column{0.53\textwidth}
 \vspace{1mm}
@@ -88,7 +88,8 @@
 Ideal mode & $n_+$ & $n_0$ & $n_-$\\
 \midrule
 $p_{yy}=+1$ & $1/2$ & $0$ & $1/2$\\
-$p_{yy}=-2$ & $0$ & $1$ & $0$\\
+% [EN] Defer the negative-tensor population row. / [CN] 暂不展示负张量模式的布居。
+% $p_{yy}=-2$ & $0$ & $1$ & $0$\\
 \bottomrule
 \end{tabularx}\par
 \vspace{5mm}
@@ -113,7 +114,7 @@ Confirm vertical-axis transport to the experimental target.
 \end{frame}
 
 \begin{frame}[t]{RF transitions for pure tensor polarization}
-\lead{Historical RIKEN scheme: change the second strong-field transition}
+\lead{Historical RIKEN recipe for the ideal $(p_y,p_{yy})=(0,+1)$ mode}
 \smalltext
 SFT = strong-field transition. WFT = weak-field transition.\par
 \vspace{4mm}
@@ -121,8 +122,9 @@ SFT = strong-field transition. WFT = weak-field transition.\par
 \toprule
 Ideal $(p_y,p_{yy})$ & SFT\#1 & WFT\#1 & SFT\#2 & WFT\#2\\
 \midrule
-$(0,+1)$ & Off & $1\to4$ & $2\to6$ & Off\\[2mm]
-$(0,-2)$ & Off & $1\to4$ & $3\to5$ & Off\\
+$(0,+1)$ & Off & $1\to4$ & $2\to6$ & Off\\
+% [EN] Defer the negative-tensor RF recipe. / [CN] 暂不展示负张量模式的 RF 配方。
+% $(0,-2)$ & Off & $1\to4$ & $3\to5$ & Off\\
 \bottomrule
 \end{tabularx}\par
 \vspace{6mm}
@@ -132,11 +134,15 @@ $(0,-2)$ & Off & $1\to4$ & $3\to5$ & Off\\
 \vspace{2mm}
 After the second sextupole: states $2,3$.\par
 \vspace{2mm}
-Final states: $3,6$ for $+1$, or $2,5$ for $-2$.
+Final states: $3,6$ for $p_{yy}=+1$.
+% [EN] Deferred negative-mode final states. / [CN] 暂不展示负模式的最终态。
+% Final states: $2,5$ for $p_{yy}=-2$.
 \column{0.47\textwidth}
-\textbf{Switching method in the report}\par
+\textbf{Current setup to confirm}\par
 \vspace{2mm}
-Keep the RF frequency fixed and change the SFT\#2 magnetic field.
+RF frequency, SFT\#2 magnetic field, and transition efficiency.
+% [EN] Defer switching between positive and negative tensor modes. / [CN] 暂不讨论正负张量模式之间的切换。
+% Keep the RF frequency fixed and change the SFT\#2 magnetic field.
 \end{columns}
 \vspace{6mm}
 {\color{Teal}\bfseries Meeting request}\par
@@ -170,7 +176,7 @@ Polarized-beam experiment at 100 MeV/u:\par
 Can RIKEN staff tune the polarized deuteron beam without assistance from Prof. Sekiguchi?\par
 \vspace{4mm}
 \smalltext
-Who can set up PIS and pure-tensor RF modes?\par
+Who can set up PIS and this pure-tensor RF mode?\par
 \vspace{3mm}
 Who can tune acceleration and beam transport?\par
 \vspace{3mm}

@@ -1,8 +1,10 @@
 % [EN] Ideal RF modes must remain distinct from measured polarization and current operating setpoints. / [CN] 理想 RF 模式须与实测极化及当前控制设定明确区分。
 \newcommand{\noteone}{%
-我们这次希望确定的是：RIKEN 能否稳定提供竖直方向的纯 tensor 氘束，以及如何监测它的极化。这里以实验室竖直方向为 $y$ 轴，要求 $p_y$ 接近零、$p_{yy}$ 非零。
+我们这次希望确定的是：RIKEN 能否稳定提供竖直方向的纯 tensor 氘束，以及如何监测它的极化。这里以实验室竖直方向为 $y$ 轴，先只讨论理想 $(p_y,p_{yy})=(0,+1)$ 的模式。实际束流要求 $p_y$ 接近零，$p_{yy}$ 的幅度需测量确认。
 
-对自旋为 1 的氘核，沿 $y$ 轴有三个磁子态。正 tensor 理想态把粒子等量分到 $m_y=+1$ 和 $-1$，给出 $p_{yy}=+1$；负 tensor 理想态全部占据 $m_y=0$，给出 $p_{yy}=-2$。两种情况的 vector polarization 都为零。实际源的极化幅度和残余 vector 分量都要测量。建议同时讨论无极化参考模式及切换周期。
+对自旋为 1 的氘核，沿 $y$ 轴有三个磁子态。正 tensor 理想态把粒子等量分到 $m_y=+1$ 和 $-1$，$m_y=0$ 的布居为零，给出 $p_{yy}=+1$，vector polarization 为零。实际源的极化幅度和残余 vector 分量都要测量。建议同时讨论无极化参考模式及切换周期。
+% [EN] Defer the negative-tensor state explanation. / [CN] 暂不展示负张量态的说明。
+% 负 tensor 理想态全部占据 $m_y=0$，给出 $p_{yy}=-2$，vector polarization 为零。
 
 纯 tensor 不等于只有一个非零张量分量。对于绕 $y$ 轴对称的制备态，$p_{xx}=p_{zz}=-p_{yy}/2$。旧文献常把量子化轴命名为 $z$，不能直接把其中的 $p_{zz}$ 当成我们束流方向的分量。
 
@@ -16,13 +18,19 @@
 \newcommand{\notetwo}{%
 这页给出已有物理方案，供 PIS 团队核对当前操作配方。SFT 是强场 RF 跃迁，WFT 是弱场 RF 跃迁。原子束先经过六极磁铁筛选，再通过 RF 跃迁和第二组六极磁铁改变最终进入 ionizer 的超精细态布居。
 
-按照 1995 年 RIKEN 报告的能级编号，两种模式都关闭 SFT\#1，WFT\#1 做 $1\to4$，WFT\#2 关闭。此时第二组六极磁铁出口保留 2、3 态。正 tensor 使用 SFT\#2 的 $2\to6$，最终为 3、6 态；负 tensor 使用 $3\to5$，最终为 2、5 态。不能把这些超精细态编号直接当成核自旋磁量子数。
+按照 1995 年 RIKEN 报告的能级编号，理想 $(p_y,p_{yy})=(0,+1)$ 模式关闭 SFT\#1，WFT\#1 做 $1\to4$，WFT\#2 关闭。此时第二组六极磁铁出口保留 2、3 态。SFT\#2 使用 $2\to6$，最终为 3、6 态。不能把这些超精细态编号直接当成核自旋磁量子数。
+% [EN] Defer the negative-tensor transition and final states. / [CN] 暂不展示负张量模式的跃迁和最终态。
+% 负 tensor 使用 SFT\#2 的 $3\to5$，最终为 2、5 态。
 
-原表脚注明确说，在 RF 频率固定时改变 SFT\#2 磁场，可以切换 $2\to6$ 和 $3\to5$。这提供了模式切换的依据，但没有给出适用于当前装置的频率、磁场和功率设定。需要现场团队给出当前 recipe，并测量两个模式的 $p_y$ 和 $p_{yy}$。
+这份历史配方没有给出适用于当前装置的频率、磁场和功率设定。需要 RIKEN 团队确认当前 recipe 和跃迁效率，并测量该模式的 $p_y$ 和 $p_{yy}$。
+% [EN] Defer positive/negative tensor switching. / [CN] 暂不讨论正负张量模式切换。
+% 原表脚注明确说，在 RF 频率固定时改变 SFT\#2 磁场，可以切换 $2\to6$ 和 $3\to5$。
 
-原表曾测得这两列的 tensor 分量分别约为 $+0.77$ 和 $-1.23$。它们是历史性能，不是本次实验的交付指标。我们也不根据新实验中的混合极化模式，推定当前纯 tensor 模式的性能。
+原表曾测得这一正 tensor 模式的 tensor 分量约为 $+0.77$。这是历史性能，不是本次实验的交付指标。我们也不根据新实验中的混合极化模式，推定当前纯 tensor 模式的性能。
+% [EN] Defer the historical negative-mode measurement. / [CN] 暂不展示负模式的历史测量值。
+% 负 tensor 模式的实测 tensor 分量约为 $-1.23$。
 
-\textbf{建议口头问题：}Are these pure-tensor RF modes available in the current PIS configuration, and what residual vector polarization should we expect?
+\textbf{建议口头问题：}Is this positive pure-tensor RF mode available in the current PIS configuration, and what residual vector polarization should we expect?
 
 \textbf{来源：}\src{\okamura}{Okamura et al., RIKEN APR 28 (1995), Table 1, printed p. 148 / PDF p. 179}。
 }
@@ -36,7 +44,7 @@ PIS 已有近期恢复运行的证据。2024 年 9 月在 AVF 后进行了 7 MeV
 
 N. Sakamoto 等 RIKEN 人员参与了公开报告，可以作为联系线索。近期实验说明系统有运行经验，但仅凭署名无法确认 RIKEN 团队能否在没有 Sekiguchi 老师帮助的情况下独立完成这些工作。希望会议明确回答是否具备这一能力，由谁负责，以及需要多少准备时间和调束时间。
 
-\textbf{建议口头问题：}Can RIKEN staff independently prepare and tune the polarized deuteron beam, including the pure-tensor RF modes and polarization checks, without assistance from Prof. Sekiguchi?
+\textbf{建议口头问题：}Can RIKEN staff independently prepare and tune the polarized deuteron beam, including this pure-tensor RF mode and polarization checks, without assistance from Prof. Sekiguchi?
 
 \textbf{来源：}\src{https://www.nishina.riken.jp/researcher/APR/APR058/pdf/36.pdf}{Sugahara et al., RIKEN APR 58 (2025), p. 36}；\src{\sugahara}{Sugahara et al., EFB 2026, January 2026 run and authors}。
 }
