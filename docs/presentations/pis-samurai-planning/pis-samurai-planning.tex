@@ -24,6 +24,8 @@
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
 \newcommand{\src}[2]{\href{#1}{#2}}
 \newcommand{\sakamoto}{https://proceedings.jacow.org/cyclotrons2016/papers/tub04.pdf}
+\newcommand{\hyperfineref}{https://nucldata.tunl.duke.edu/nucldata/Theses/PhD/Sabourov_2006.pdf}
+\newcommand{\rfprinciple}{https://arxiv.org/pdf/1212.1840}
 \newcommand{\okamura}{https://www.nishina.riken.jp/researcher/APR/Document/ProgressReport_vol_28.pdf}
 \newcommand{\sugahara}{https://indico.cern.ch/event/1441702/contributions/7106564/}
 \newcommand{\avftest}{https://indico.ibs.re.kr/event/701/contributions/6590/}
@@ -65,8 +67,8 @@
 \fi
 \begin{document}
 \ifdefined\SpeakerNotes
-    \notepage{1}{我们需要怎样的极化氘束}{\noteone}\clearpage
-    \notepage{2}{纯 tensor 模式的 RF 跃迁}{\notetwo}\clearpage
+    \notepage{1}{氘原子的六个超精细态}{\noteone}\clearpage
+    \notepage{2}{PIS 如何用 RF 控制核自旋布居}{\notetwo}\clearpage
     \notepage{3}{RIKEN 能否独立完成极化氘束调试}{\notethree}\clearpage
     \notepage{4}{三个测偏位置的比较}{\notefour}\clearpage
     \notepage{5}{F3 限制、ATT 与狭缝}{\notefive}\clearpage
@@ -74,84 +76,97 @@
 \else
 \usebeamerfont{normal text}
 
-\begin{frame}[t]{Vertical pure-tensor deuterons for SAMURAI}
-\lead{Requested mode: ideal $(p_y,p_{yy})=(0,+1)$, with the symmetry axis along vertical $y$}
+\begin{frame}[t]{Six hyperfine states in a deuterium atom}
+\lead{Before ionization, the ground-state atom contains an electron and a spin-1 nucleus}
 \begin{columns}[T,onlytextwidth]
-\column{0.53\textwidth}
-\vspace{1mm}
+\column{0.50\textwidth}
 \[
- p_y=n_+-n_-,\qquad p_{yy}=n_++n_--2n_0
+ S=\tfrac12,\quad I=1
+ \quad\Longrightarrow\quad (2S+1)(2I+1)=6
 \]
-\vspace{2mm}
-\begin{tabularx}{\linewidth}{@{}Yccc@{}}
+\smalltext
+At $B=0$, electron and nuclear spins couple:\par
+\vspace{1mm}
+$F=3/2$: four substates.\quad $F=1/2$: two substates.\par
+\vspace{5mm}
+\textbf{State labels in the strong-field limit}\par
+\vspace{1mm}
+\begin{tabularx}{\linewidth}{@{}p{37mm}*{3}{>{\centering\arraybackslash}X}@{}}
 \toprule
-Ideal mode & $n_+$ & $n_0$ & $n_-$\\
+ & $m_I=+1$ & $m_I=0$ & $m_I=-1$\\
 \midrule
-$p_{yy}=+1$ & $1/2$ & $0$ & $1/2$\\
-% [EN] Defer the negative-tensor population row. / [CN] 暂不展示负张量模式的布居。
-% $p_{yy}=-2$ & $0$ & $1$ & $0$\\
+$m_S=+1/2$ & $|1\rangle$ & $|2\rangle$ & $|3\rangle$\\
+$m_S=-1/2$ & $|6\rangle$ & $|5\rangle$ & $|4\rangle$\\
 \bottomrule
 \end{tabularx}\par
-\vspace{5mm}
-\smalltext
-For an axially symmetric state,\par
-\vspace{1mm}
-$p_{xx}=p_{zz}=-p_{yy}/2$.\par
-\vspace{3mm}
-An unpolarized reference has $n_+=n_0=n_-=1/3$.
-\column{0.43\textwidth}
-\includegraphics[width=\linewidth,height=58mm,keepaspectratio]{../../physics/polarization_production_transport/figures/sakamoto2016_p1_fig2.png}\par
-\vspace{3mm}
-\smalltext
-The PIS ionizer output has a vertical polarization axis.\par
-\vspace{3mm}
-\textbf{No additional Wien-filter rotation requested.}\par
+\vspace{4mm}
+At weaker fields, the eigenstates generally mix electron and nuclear spin projections.\par
+\column{0.46\textwidth}
+% [EN] Original Fig. 2.3, PDF page 47, cropped by Poppler at scale 2000: x=480, y=375, width=690, height=575. / [CN] 原图 2.3，PDF 第 47 页，以 Poppler 按上述像素框裁取，未改动图内内容。
+\includegraphics[width=\linewidth,height=83mm,keepaspectratio]{figures/deuterium-hyperfine-states.png}\par
 \vspace{2mm}
-Confirm vertical-axis transport to the experimental target.
+\smalltext
+The static field $B_0$ sets the six energies\par
+\vspace{1mm}
+$E_1(B_0),E_2(B_0),\ldots,E_6(B_0)$.\par
+\vspace{2mm}
+Their separations determine the RF resonances.
 \end{columns}
-\source{Source and original PIS drawing: \src{\sakamoto}{Sakamoto et al., Cyclotrons 2016, pp. 145--146, Fig. 2}. Ideal spin-1 populations are definitions, not measured source performance.}
+\source{Source and original Breit--Rabi diagram: \src{\hyperfineref}{Sabourov, Duke PhD thesis (2006), pp. 22--23, Fig. 2.3 / PDF pp. 46--47}. For the $1s$ electron, $J=S$, so the figure's $m_j$ is the table's $m_S$. Spin projections refer to the local static-field axis.}
 \note{\noteone}
 \end{frame}
 
-\begin{frame}[t]{RF transitions for pure tensor polarization}
-\lead{Historical RIKEN recipe for the ideal $(p_y,p_{yy})=(0,+1)$ mode}
+\begin{frame}[t]{RF transitions control the nuclear spin populations}
 \smalltext
-SFT = strong-field transition. WFT = weak-field transition.\par
-\vspace{4mm}
-\begin{tabularx}{\textwidth}{@{}p{60mm}*{4}{>{\centering\arraybackslash}X}@{}}
+\setlength{\abovedisplayskip}{3pt}
+\setlength{\belowdisplayskip}{6pt}
+\vspace{-2mm}
+\[
+ \mathbf B_{\rm RF}(t)=\mathbf B_1\cos(2\pi\nu t),\qquad
+ h\nu=\left|E_j(B_0)-E_i(B_0)\right|
+ \quad\text{for an allowed single-photon transition}
+\]
+\vspace{-2mm}
+\begin{columns}[T,onlytextwidth]
+\column{0.48\textwidth}
+\textbf{WFT = Weak Field Transition}\par
+Weak static field: within an $F$ multiplet.
+\column{0.48\textwidth}
+\textbf{SFT = Strong Field Transition}\par
+Transfers between the two hyperfine multiplets.
+\end{columns}
+\vspace{3mm}
+\lead{RF redistributes populations. Sextupoles select which atoms remain in the beam.}
+\renewcommand{\arraystretch}{1.12}
+\begin{tabularx}{\textwidth}{@{}p{43mm}p{37mm}Y@{}}
 \toprule
-Ideal $(p_y,p_{yy})$ & SFT\#1 & WFT\#1 & SFT\#2 & WFT\#2\\
+Stage & States & Role in the ideal $p_{yy}=+1$ recipe\\
 \midrule
-$(0,+1)$ & Off & $1\to4$ & $2\to6$ & Off\\
-% [EN] Defer the negative-tensor RF recipe. / [CN] 暂不展示负张量模式的 RF 配方。
-% $(0,-2)$ & Off & $1\to4$ & $3\to5$ & Off\\
+Sextupole \#1 & $1,2,3$ & Focus the selected electron-spin group.\\
+WFT\#1 & $2,3,4$ & Transfer $1\to4$ effectively through intermediate states.\\
+Sextupole \#2 & $2,3$ & Reject state 4 and retain the focused states.\\
+SFT\#2 & $3,6$ & Transfer $2\to6$, filling the $m_I=+1$ branch.\\
 \bottomrule
 \end{tabularx}\par
-\vspace{6mm}
-\begin{columns}[T,onlytextwidth]
-\column{0.49\textwidth}
-\textbf{State selection}\par
 \vspace{2mm}
-After the second sextupole: states $2,3$.\par
+ECR removes the electron. Equal populations of states 3 and 6 give, ideally:\par
+\vspace{1mm}
+\( (n_+,n_0,n_-)=(\tfrac12,0,\tfrac12)\quad\Longrightarrow\quad
+ p_y=n_+-n_-=0,\qquad p_{yy}=1-3n_0=+1.\)\par
 \vspace{2mm}
-Final states: $3,6$ for $p_{yy}=+1$.
-% [EN] Deferred negative-mode final states. / [CN] 暂不展示负模式的最终态。
-% Final states: $2,5$ for $p_{yy}=-2$.
-\column{0.47\textwidth}
-\textbf{Current setup to confirm}\par
-\vspace{2mm}
-RF frequency, SFT\#2 magnetic field, and transition efficiency.
-% [EN] Defer switching between positive and negative tensor modes. / [CN] 暂不讨论正负张量模式之间的切换。
-% Keep the RF frequency fixed and change the SFT\#2 magnetic field.
-\end{columns}
-\vspace{6mm}
-{\color{Teal}\bfseries Meeting request}\par
-\vspace{2mm}
-Confirm the current RF recipe and achievable $p_{yy}$, including residual $p_y$.
-\source{Source: \src{\okamura}{Okamura et al., RIKEN APR 28 (1995), Table 1, printed p. 148 / PDF p. 179}. Original hyperfine-state numbering. The source calls its quantization-axis tensor component $p_{zz}$.
-The listed transitions are historical settings, not present-day control setpoints.}
+{\fontsize{13}{16}\selectfont The nuclear populations use the strong-field limit and ideal polarization retention. SFT\#1 and WFT\#2 are off. We retain the vertical source axis without additional Wien-filter rotation.}\par
+\source{Sources: \src{\rfprinciple}{Mikirtychyants et al., arXiv:1212.1840, Sec. II G}; \src{\okamura}{Okamura et al., RIKEN APR 28 (1995), Table 1, p. 148}; \src{\sakamoto}{Sakamoto et al., 2016, p. 146}. Historical recipe with ideal state selection, transfer, and ionization.}
 \note{\notetwo}
 \end{frame}
+
+% [EN] Defer the negative-tensor population row. / [CN] 暂不展示负张量模式的布居。
+% $p_{yy}=-2$ & $0$ & $1$ & $0$\\
+% [EN] Defer the negative-tensor RF recipe. / [CN] 暂不展示负张量模式的 RF 配方。
+% $(0,-2)$ & Off & $1\to4$ & $3\to5$ & Off\\
+% [EN] Deferred negative-mode final states. / [CN] 暂不展示负模式的最终态。
+% Final states: $2,5$ for $p_{yy}=-2$.
+% [EN] Defer switching between positive and negative tensor modes. / [CN] 暂不讨论正负张量模式之间的切换。
+% Keep the RF frequency fixed and change the SFT\#2 magnetic field.
 
 \begin{frame}[t]{Independent polarized-deuteron tuning at RIKEN}
 \begin{columns}[T,onlytextwidth]

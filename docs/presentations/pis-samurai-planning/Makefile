@@ -8,7 +8,7 @@ all: pdf
 
 pdf: $(addsuffix .pdf,$(DOCUMENTS))
 
-$(addsuffix .pdf,$(DOCUMENTS)): %.pdf: %.tex pis-samurai-planning.tex speaker-notes.tex Makefile $(FIGURES)/sakamoto2016_p1_fig1.png $(FIGURES)/sakamoto2016_p1_fig2.png
+$(addsuffix .pdf,$(DOCUMENTS)): %.pdf: %.tex pis-samurai-planning.tex speaker-notes.tex Makefile $(FIGURES)/sakamoto2016_p1_fig1.png figures/deuterium-hyperfine-states.png
 	$(LATEXMK) -xelatex -interaction=nonstopmode -halt-on-error -outdir=build $<
 	cp build/$@ $@
 
