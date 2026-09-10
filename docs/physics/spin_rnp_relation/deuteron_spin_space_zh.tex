@@ -1,0 +1,255 @@
+% !TeX program = xelatex
+\documentclass[11pt,a4paper]{ctexart}
+
+\usepackage[a4paper,margin=2.2cm]{geometry}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{hyperref}
+\usepackage{xcolor}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue,
+  citecolor=blue
+}
+
+\newcommand{\Tr}{\operatorname{Tr}}
+
+\title{\textbf{氘核自旋密度矩阵与 $n$--$p$ 空间分布}\\
+\large SAMURAI 竖直纯张量极化束流}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+氘核的 $S$--$D$ 波耦合使自旋极化与质子--中子相对坐标的角分布相关。
+对于绕竖直 $y$ 轴轴对称的束流，空间密度的四极项正比于
+$p_{yy}[\sqrt2\,uw-w^2/2]P_2(\cos\theta_y)$，其中 $u,w$ 为径向波函数。
+在该径向系数为正的区域，$p_{yy}=+1$ 使沿 $y$ 轴的概率增强，
+$p_{yy}=-2$ 使垂直于 $y$ 的平面内概率增强。
+两种模式具有相同的径向距离分布。
+这一关系由束流的自旋密度矩阵与氘核波函数共同确定，
+可用于半经典模型的坐标抽样。
+\end{abstract}
+
+\section{氘核波函数中的自旋与轨道耦合}
+
+氘核基态的量子数为 $J^\pi=1^+$。
+在非相对论描述中，基态以 ${}^3S_1$ 成分为主，
+核力的张量部分将其与 ${}^3D_1$ 成分耦合。
+选定量子化轴后，总角动量投影为 $M$ 的波函数写为
+\begin{equation}
+\Psi_{1M}(\bm r,\sigma)
+=
+\frac{u(r)}{r}Y_{00}(\hat{\bm r})\chi_{1M}(\sigma)
++
+\frac{w(r)}{r}
+\sum_{m_L,m_S}
+\langle 2m_L,1m_S|1M\rangle
+Y_{2m_L}(\hat{\bm r})\chi_{1m_S}(\sigma),
+\label{eq:deuteronwf}
+\end{equation}
+其中 $\bm r=\bm r_p-\bm r_n$ 为质子--中子相对坐标，
+$\sigma$ 表示两个核子的自旋自由度，$\chi_{1m_S}$ 为 $S=1$ 自旋三重态。
+$S$ 波和 $D$ 波的径向函数分别为 $u(r)$ 和 $w(r)$，满足
+\[
+\int_0^\infty [u^2(r)+w^2(r)]\,dr=1.
+\]
+
+在纯 $S$ 波极限 $w=0$ 下，空间部分 $Y_{00}$ 球对称且与 $M$ 无关，
+因而任意磁子态占据都给出球对称的空间分布。
+加入 $D$ 波后，Clebsch--Gordan 系数将 $m_L$ 与 $m_S$ 关联起来，
+总波函数一般无法分解为独立的空间部分和自旋部分。
+这种耦合使不同磁子态具有不同的空间角分布。
+
+\section{磁子态占据与束流极化}
+
+取竖直 $y$ 方向为量子化轴，采用基底
+$\{|+1\rangle_y,|0\rangle_y,|-1\rangle_y\}$。
+束流的 $3\times3$ 自旋密度矩阵描述这三个 $J=1$ 磁子态的占据和相干：
+\begin{equation}
+\rho^{(J=1)}
+=
+\begin{pmatrix}
+\rho_{++} & \rho_{+0} & \rho_{+-}\\
+\rho_{0+} & \rho_{00} & \rho_{0-}\\
+\rho_{-+} & \rho_{-0} & \rho_{--}
+\end{pmatrix},
+\qquad
+\Tr\rho^{(J=1)}=1.
+\label{eq:spinrho}
+\end{equation}
+绕 $y$ 轴轴对称时，密度矩阵在该基底下为对角形式：
+\begin{equation}
+\rho^{(J=1)}=\operatorname{diag}(n_+,n_0,n_-),
+\qquad n_++n_0+n_-=1.
+\end{equation}
+矢量极化和张量极化定义为
+\begin{align}
+p_y &= n_+-n_-,\\
+p_{yy} &= n_++n_--2n_0,
+\label{eq:polarization}
+\end{align}
+取值范围分别为 $-1\le p_y\le1$ 和 $-2\le p_{yy}\le1$。
+纯张量极化满足 $p_y=0$、$p_{yy}\ne0$。
+
+\section{对核子自旋取迹，得到空间密度}
+
+将束流密度矩阵与式~\eqref{eq:deuteronwf} 的完整波函数结合，
+得到包含轨道和核子自旋自由度的统计算符
+\begin{equation}
+\hat\rho_{\rm tot}
+=
+\sum_{M,M'=-1}^{1}
+\rho_{MM'}^{(J=1)}|\Psi_M\rangle\langle\Psi_{M'}|.
+\label{eq:fullrho}
+\end{equation}
+对未观测的核子自旋取迹，得到约化空间密度矩阵
+\begin{equation}
+\rho_{\rm sp}(\bm r,\bm r')
+=
+\sum_\sigma
+\langle\bm r,\sigma|\hat\rho_{\rm tot}|\bm r',\sigma\rangle.
+\label{eq:reduced}
+\end{equation}
+其对角元给出单位体积内的概率密度：
+\begin{equation}
+\varrho(\bm r)
+=
+\rho_{\rm sp}(\bm r,\bm r)
+=
+\sum_{M,M'}\rho_{MM'}^{(J=1)}
+\sum_\sigma\Psi_M(\bm r,\sigma)\Psi_{M'}^*(\bm r,\sigma).
+\label{eq:localdensity}
+\end{equation}
+因此，空间分布由磁子态占据、相干性和氘核内部波函数共同决定。
+$\rho_{\rm sp}$ 也适用于混合束流；即使完整氘核态为纯态，
+轨道与自旋的纠缠也可使取迹后的空间态成为混合态。
+
+\section{轴对称束流的空间分布}
+
+定义
+\[
+\cos\theta_y=\hat{\bm r}\cdot\hat{\bm y},
+\qquad P_2(\cos\theta_y)=\frac12(3\cos^2\theta_y-1),
+\]
+以及径向四极系数
+\begin{equation}
+A(r)=\sqrt2\,u(r)w(r)-\frac12w^2(r).
+\label{eq:A}
+\end{equation}
+将式~\eqref{eq:deuteronwf} 代入式~\eqref{eq:localdensity}，
+对核子自旋求和，得到各磁子态的空间密度：
+\begin{align}
+\varrho_0(r,\theta_y)
+&=\frac{u^2+w^2-2A(r)P_2(\cos\theta_y)}{4\pi r^2},
+\label{eq:rho0}\\
+\varrho_{\pm1}(r,\theta_y)
+&=\frac{u^2+w^2+A(r)P_2(\cos\theta_y)}{4\pi r^2}.
+\label{eq:rhopm}
+\end{align}
+按占据数加权，$\varrho=n_+\varrho_{+1}+n_0\varrho_0+n_-\varrho_{-1}$，
+可得
+\begin{equation}
+\boxed{
+\varrho(r,\theta_y)
+=\frac{1}{4\pi r^2}
+\left[u^2(r)+w^2(r)+p_{yy}A(r)P_2(\cos\theta_y)\right].
+}
+\label{eq:master}
+\end{equation}
+由于 $\varrho_{+1}=\varrho_{-1}$，加权结果只含 $n_++n_-$，
+矢量极化 $p_y=n_+-n_-$ 因而从标量坐标密度中消去。
+自旋相关散射仍可对矢量极化敏感。
+
+\subsection{\texorpdfstring{$S$--$D$}{S--D} 干涉决定四极项的强度}
+
+$A(r)$ 同时包含干涉项 $\sqrt2\,uw$ 和 $D$ 波项 $-w^2/2$。
+在 $|w|\ll|u|$ 的区域，干涉项是一阶于 $w$ 的贡献，
+因此较小的 $D$ 波概率也能产生明显的角分布变化。
+式~\eqref{eq:deuteronwf} 中的 $S$、$D$ 成分相干叠加，
+计算空间密度时需要保留这一干涉项。
+
+\subsection{径向分布与未极化极限}
+
+利用 $\int P_2(\cos\theta_y)\,d\Omega=0$，对式~\eqref{eq:master} 作角积分，得到
+\begin{equation}
+r^2\int d\Omega\,\varrho(r,\Omega)=u^2(r)+w^2(r).
+\label{eq:radial}
+\end{equation}
+因此，对于同一组束缚态波函数 $u,w$，任意磁子态占据均有
+$P(r)\,dr=[u^2(r)+w^2(r)]\,dr$。
+极化通过四极项改变给定 $r$ 处的方向概率，径向距离分布保持不变。
+
+未极化束流满足 $n_+=n_0=n_-=1/3$，故 $p_y=p_{yy}=0$。
+三个磁子态的四极项相互抵消，空间密度为球对称的
+$\varrho=(u^2+w^2)/(4\pi r^2)$。
+
+\section{两种理想纯张量模式}
+
+两种模式均满足 $p_y=0$，其占据数和空间特征如下。
+表中的方向增强均以 $A(r)>0$ 为条件。
+\begin{center}
+\begin{tabular}{>{\centering\arraybackslash}p{2.3cm}
+                >{\centering\arraybackslash}p{3.4cm}
+                p{7.1cm}}
+\toprule
+束流状态 & $(n_+,n_0,n_-)$ & 空间分布（$A(r)>0$）\\
+\midrule
+$p_{yy}=+1$ & $(1/2,0,1/2)$ & 沿 $y$ 轴增强，长椭球型（prolate）\\
+$p_{yy}=-2$ & $(0,1,0)$ & 在 $x$--$z$ 平面增强，扁椭球型（oblate）\\
+未极化 & $(1/3,1/3,1/3)$ & 四极项抵消，球对称\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+$p_{yy}=+1$ 对应 $M_y=+1$ 与 $M_y=-1$ 的等权非相干混合，
+$p_{yy}=-2$ 对应纯态 $|J=1,M_y=0\rangle$。
+这里“纯张量”限定的是极化分量；束流的量子态纯度由密度矩阵决定。
+
+沿 $y$ 轴有 $P_2(1)=1$，在 $x$--$z$ 平面内有 $P_2(0)=-1/2$。
+将这两个值代入式~\eqref{eq:master}，即可得到表中的方向增强关系。
+若某个径向区域内 $A(r)<0$，相应的增强方向反转。
+长椭球型和扁椭球型描述给定 $r$ 处的角分布各向异性，
+两种极化模式的平均 $n$--$p$ 距离相同。
+
+\section{磁子态相干与方位角依赖}
+
+非对角元 $\rho_{MM'}$（$M\ne M'$）表示磁子态之间的相干。
+其中的张量分量可产生方位角 $\phi$ 依赖；
+这类分布需由完整的式~\eqref{eq:localdensity} 计算，
+式~\eqref{eq:master} 的单一 $p_{yy}P_2(\cos\theta_y)$ 项只适用于轴对称情形。
+
+一般的自旋 $1$ 密度矩阵可分解为 rank-0、rank-1 和 rank-2 分量，
+分别对应归一化、矢量极化和张量极化。
+轴对称纯张量束流保留归一化分量及沿所选轴的张量分量。
+
+\clearpage
+\section{QMD 与半经典模型的坐标抽样}
+
+轴对称束流可直接按式~\eqref{eq:master} 抽样相对坐标。
+由于 $\varrho$ 是单位体积的密度，球坐标下的概率元为
+\begin{equation}
+ dP=\varrho(r,\theta_y)r^2\,dr\,d\Omega
+ =\frac{u^2+w^2+p_{yy}A(r)P_2(\cos\theta_y)}{4\pi}\,dr\,d\Omega,
+\label{eq:sampling}
+\end{equation}
+其中 $d\Omega=\sin\theta_y\,d\theta_y\,d\phi$。
+可先按 $P(r)=u^2+w^2$ 抽样 $r$，再按
+\[
+p(\Omega\mid r)=\frac{1}{4\pi}
+\left[1+\frac{p_{yy}A(r)}{u^2(r)+w^2(r)}P_2(\cos\theta_y)\right]
+\]
+抽样方向；轴对称性使 $\phi$ 在 $[0,2\pi)$ 上均匀分布。
+
+若将所有相对坐标固定沿 $y$ 轴或限制在 $x$--$z$ 平面，
+就会人为强化方向约束，可能放大计算中的极化效应。
+上述抽样保留了量子态给出的坐标概率。
+对于显式依赖核子自旋的反应模型，还需保留
+式~\eqref{eq:deuteronwf} 中 $m_L$ 与 $m_S$ 的关联。
+
+\end{document}
