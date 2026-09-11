@@ -76,7 +76,7 @@
     \notepage{4}{三个测偏位置的比较}{\notefour}\clearpage
     \notepage{5}{F3 限制、ATT 与狭缝}{\notefive}\clearpage
     \notepage{6}{10 秒测量的预期置信区间}{\noteprecisionten}\clearpage
-    \notepage{7}{20 秒测量的预期置信区间}{\noteprecisiontwenty}\clearpage
+    \notepage{7}{60 秒测量的预期置信区间}{\noteprecisionsixty}\clearpage
     \notepage{8}{希望这次会议确定的事项}{\notesix}
 \else
 \usebeamerfont{normal text}
@@ -280,15 +280,15 @@ Source: current\_tensor.ini and dpolar Asimov profile likelihood. Fixed analyzin
 \note{\noteprecisionten}
 \end{frame}
 
-\begin{frame}[t]{Current polarimeter: expected precision in 20 s}
+\begin{frame}[t]{Current polarimeter: expected precision in 60 s}
 \centering
-\includegraphics[width=\textwidth,height=104mm,keepaspectratio]{pyy_confidence_20s.pdf}\par
+\includegraphics[width=\textwidth,height=104mm,keepaspectratio]{pyy_confidence_60s.pdf}\par
 \vspace{2mm}
-{\smalltext\color{Teal}\bfseries At true $p_{yy}=1$: 68.3\% CI $[\PyyTwentyAtOneLowA,\PyyTwentyAtOneHighA]$,\quad
-95\% CI $[\PyyTwentyAtOneLowB,\PyyTwentyAtOneHighB]$\par}
-\source{Same geometry, beam, and provisional target as the 10 s plot. Doubling the exposure doubles expected counts. Both plots use identical axis limits.\\
+{\smalltext\color{Teal}\bfseries At true $p_{yy}=1$: 68.3\% CI $[\PyySixtyAtOneLowA,\PyySixtyAtOneHighA]$,\quad
+95\% CI $[\PyySixtyAtOneLowB,\PyySixtyAtOneHighB]$\par}
+\source{Same geometry, beam, and provisional target as the 10 s plot. Six times the exposure gives six times the expected counts. Both plots use identical axis limits.\\
 Source: current\_tensor.ini and dpolar Asimov profile likelihood. Statistical only, fixed relative sector response. The upper edge at 1 follows the physical parameter bound.}
-\note{\noteprecisiontwenty}
+\note{\noteprecisionsixty}
 \end{frame}
 
 \begin{frame}[t]{Decisions for beam preparation}

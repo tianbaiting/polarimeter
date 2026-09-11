@@ -115,16 +115,16 @@ q(p)=\frac{\mu_{LR}(p)}{\mu_{LR}(p)+\mu_{UD}(p)},\qquad
 几何：\path{compactInVacuum/config/common_detector.yaml}\par}
 }
 
-\newcommand{\noteprecisiontwenty}{%
-这张图保持上一页全部束流、靶和几何条件，只把时间从 10 s 改为 20 s。两幅图采用相同坐标范围和相同的 68.3\%、95\% 色带定义，可以直接比较区间宽度。
+\newcommand{\noteprecisionsixty}{%
+这张图保持上一页全部束流、靶和几何条件，只把时间从 10 s 改为 60 s。两幅图采用相同坐标范围和相同的 68.3\%、95\% 色带定义，可以直接比较区间宽度。
 
-当真实 $p_{yy}=1$，20 s 内预计有 \PyyTwentyAtOneCount{} 个有效符合计数。名义 68.3\% 区间缩窄到 $[\PyyTwentyAtOneLowA,\PyyTwentyAtOneHighA]$，95\% 区间为 $[\PyyTwentyAtOneLowB,\PyyTwentyAtOneHighB]$。
+当真实 $p_{yy}=1$，60 s 内预计有 \PyySixtyAtOneCount{} 个有效符合计数。名义 68.3\% 区间缩窄到 $[\PyySixtyAtOneLowA,\PyySixtyAtOneHighA]$，95\% 区间为 $[\PyySixtyAtOneLowB,\PyySixtyAtOneHighB]$。
 
-当真实值为 0.8，预计计数为 \PyyTwentyAtEightCount{}，68.3\% 区间为 $[\PyyTwentyAtEightLowA,\PyyTwentyAtEightHighA]$，95\% 区间为 $[\PyyTwentyAtEightLowB,\PyyTwentyAtEightHighB]$。虚线上的最佳拟合值接近真实值，是因为输入采用期望计数，并非说明真实测量不会有统计涨落。
+当真实值为 0.8，预计计数为 \PyySixtyAtEightCount{}，68.3\% 区间为 $[\PyySixtyAtEightLowA,\PyySixtyAtEightHighA]$，95\% 区间为 $[\PyySixtyAtEightLowB,\PyySixtyAtEightHighB]$。虚线上的最佳拟合值接近真实值，是因为输入采用期望计数，并非说明真实测量不会有统计涨落。
 
-远离物理边界时，时间加倍使统计误差大致缩小为 $1/\sqrt2$，即约缩小 29\%。靠近 $p_{yy}=1$ 时，置信区间不再对称。两种时间下的区间上端都可达到 1，因为拟合限定在物理域内；不能把这一平坦上边界解释成上侧测量误差为零。
+远离物理边界时，时间增加到六倍，使统计误差大致缩小为 $1/\sqrt6$，即约缩小 59\%。靠近 $p_{yy}=1$ 时，置信区间不再对称。两种时间下的区间上端都可达到 1，因为拟合限定在物理域内；不能把这一平坦上边界解释成上侧测量误差为零。
 
-这些曲线给出当前模型和暂定计数条件下的比较。实际效率、活时间、靶厚或束流强度降低，都会减少有效计数并扩大区间；背景、分析本领及相对扇区效率的不确定度还会带来额外误差。因此会上可据此讨论 10 s 或 20 s 的监测周期是否足够，并确认这些输入。
+这些曲线给出当前模型和暂定计数条件下的比较。实际效率、活时间、靶厚或束流强度降低，都会减少有效计数并扩大区间；背景、分析本领及相对扇区效率的不确定度还会带来额外误差。因此会上可据此讨论 10 s 或 60 s 的监测周期是否足够，并确认这些输入。
 
 \textbf{计算来源：}同上一页。原始前向计数、逐点置信区间和计算摘要位于本目录生成的 \texttt{build/pyy-confidence/}，两幅独立 PDF 与 TeX 同级保存。
 }
@@ -138,7 +138,7 @@ R_{\rm useful}=\dot N_{\rm pol}\,n_t\,\sigma_{\rm acc}\,\epsilon\,f_{\rm live}.
 \]
 这里 $\dot N_{\rm pol}$ 是测偏靶处粒子率，$n_t$ 是相关散射中心的面密度，$\sigma_{\rm acc}$ 是接受范围内的有效截面，$\epsilon$ 是未重复计入接受度的探测和选择效率，$f_{\rm live}$ 是活时间比例。若这些因素不能近似分离，需要做联合的接受度积分。CH$_2$ 靶还需要考虑碳背景。
 
-高束流可以缩短同样计数所需的时间，但极化误差还取决于分析本领、角度覆盖、背景和归一化。前两页曲线已用当前配置估计 10 s 和 20 s 的典型数据置信区间；这些是附带假设的设计估计。还需确认实际束流强度、靶厚、效率与所需 $p_{yy}$ 精度，才能确定正式监测周期。
+高束流可以缩短同样计数所需的时间，但极化误差还取决于分析本领、角度覆盖、背景和归一化。前两页曲线已用当前配置估计 10 s 和 60 s 的典型数据置信区间；这些是附带假设的设计估计。还需确认实际束流强度、靶厚、效率与所需 $p_{yy}$ 精度，才能确定正式监测周期。
 
 如果现有联锁要求在上游就把束流降到很低，应进一步讨论接受度和靶厚是否足以满足周期要求，或能否安排独立的测偏时段。测偏时段与正式送束的设置差异及极化稳定性需要交叉检查。
 

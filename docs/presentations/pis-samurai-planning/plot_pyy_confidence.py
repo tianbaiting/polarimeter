@@ -31,7 +31,7 @@ def prepare_scenario(source: Path, destination: Path) -> configparser.ConfigPars
         config[section][key] = str((source.parent / config[section][key]).resolve())
     config["meta"]["scenario_name"] = "pis_pyy_confidence"
     config["run"]["duration_s"] = "10.0"
-    config["run"]["duration_s_list"] = "10.0, 20.0"
+    config["run"]["duration_s_list"] = "10.0, 60.0"
     # [EN] Keep the physical fit domain while displaying only positive true polarization. / [CN] 保留完整物理拟合域，图中仅扫描非负真实极化。
     config["scan"]["polarization_min"] = "-2.0"
     config["scan"]["polarization_max"] = "1.0"
@@ -105,7 +105,7 @@ def draw(rows: np.ndarray, duration: int, output: Path, preview: Path, config: c
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Plot current-design Asimov pyy intervals at 10 and 20 seconds.")
+    parser = argparse.ArgumentParser(description="Plot current-design Asimov pyy intervals at 10 and 60 seconds.")
     parser.add_argument("--scenario", type=Path, default=ROOT / "code/config/current_tensor.ini")
     parser.add_argument("--tool", type=Path, default=ROOT / "code/build/dpol_tool")
     parser.add_argument("--output-dir", type=Path, default=HERE)
@@ -121,13 +121,14 @@ def main() -> None:
     with (work / "dpol.log").open("w") as log:
         subprocess.run(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, check=True)
     tables = {}
-    for duration in (10, 20):
-        csv_path = work / "raw/pis_pyy_confidence/lrud_coincidence" / f"{duration}s/inference_scan.csv"
+    for duration in (10, 60):
+        duration_label = "1min" if duration == 60 else f"{duration}s"
+        csv_path = work / "raw/pis_pyy_confidence/lrud_coincidence" / duration_label / "inference_scan.csv"
         tables[duration] = read_and_validate(csv_path)
         draw(tables[duration], duration, output / f"pyy_confidence_{duration}s.pdf", work / f"pyy_confidence_{duration}s.png", config)
-    np.testing.assert_allclose(tables[20]["observed_total_count"], 2 * tables[10]["observed_total_count"], rtol=1e-9)
-    assert np.all(tables[20]["ci95_low"] >= tables[10]["ci95_low"] - 1e-8)
-    assert np.all(tables[20]["ci95_high"] <= tables[10]["ci95_high"] + 1e-8)
+    np.testing.assert_allclose(tables[60]["observed_total_count"], 6 * tables[10]["observed_total_count"], rtol=1e-9)
+    assert np.all(tables[60]["ci95_low"] >= tables[10]["ci95_low"] - 1e-8)
+    assert np.all(tables[60]["ci95_high"] <= tables[10]["ci95_high"] + 1e-8)
     summary = {"source_config": str(source), "config_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
                "command": command, "observable": "coincidence", "method": "Asimov conditional-binomial profile likelihood",
                "confidence_levels": [0.682689492137, 0.95], "delta_minus_two_logL": [1.0, 3.841458820694124],
@@ -135,7 +136,7 @@ def main() -> None:
                "assumptions": ["Fixed analyzing powers and relative LR/UD response", "Unit detector efficiency and live time",
                                "No background or target energy-loss correction", "Existing 20x20 mm acceptance approximation"], "examples": {}}
     tex = ["% [EN] Values from the C++ Asimov inference scan. / [CN] 数值来自 C++ 典型数据推断扫描。"]
-    for duration, tag in ((10, "Ten"), (20, "Twenty")):
+    for duration, tag in ((10, "Ten"), (60, "Sixty")):
         selected = {}
         for index in (0, 50, 80, 100):
             row = tables[duration][index]
