@@ -35,8 +35,21 @@
 \newcommand{\attlocations}{https://www.nishina.riken.jp/researcher/APR/APR047/pdf/156.pdf}
 \newcommand{\slitsource}{https://www.nishina.riken.jp/researcher/APR/APR052/pdf/130.pdf}
 \newcommand{\attguide}{https://ribf.riken.jp/sisetu-kyoyo/HIbeam/BmL/BmL\%E4\%BD\%9C\%E6\%96\%B9111__\%E7\%90\%86\%E7\%A0\%94\%E3\%81\%AE\%E5\%A0\%B4\%E5\%90\%88.pdf}
-\newcommand{\deckpages}{8}
+\newcommand{\deckpages}{9}
 \input{build/pyy-confidence/precision-values.tex}
+\newcommand{\precisionrow}[2]{#1 & \csname Pyy#2Count\endcsname &
+ $[\csname Pyy#2LowA\endcsname,\csname Pyy#2HighA\endcsname]$ &
+ $[\csname Pyy#2LowB\endcsname,\csname Pyy#2HighB\endcsname]$\\}
+\newcommand{\precisiontable}[1]{%
+\par\noindent
+\begin{tabularx}{\linewidth}{@{}Y*{3}{>{\centering\arraybackslash}X}@{}}
+\toprule
+Exposure & Expected counts & 68.3\% CI & 95\% CI\\
+\midrule
+\precisionrow{10 s}{#1TenAtOne}
+\precisionrow{60 s}{#1SixtyAtOne}
+\bottomrule
+\end{tabularx}\par}
 \input{speaker-notes.tex}
 
 \ifdefined\SpeakerNotes
@@ -75,9 +88,10 @@
     \notepage{3}{RIKEN 能否独立完成极化氘束调试}{\notethree}\clearpage
     \notepage{4}{三个测偏位置的比较}{\notefour}\clearpage
     \notepage{5}{F3 限制、ATT 与狭缝}{\notefive}\clearpage
-    \notepage{6}{10 秒测量的预期置信区间}{\noteprecisionten}\clearpage
-    \notepage{7}{60 秒测量的预期置信区间}{\noteprecisionsixty}\clearpage
-    \notepage{8}{希望这次会议确定的事项}{\notesix}
+    \notepage{6}{基准强度：10 秒与 60 秒}{\noteprecisionreference}\clearpage
+    \notepage{7}{ATT / slits 透过率 1/10：计数乘 10}{\noteprecisiongainTen}\clearpage
+    \notepage{8}{ATT / slits 透过率 1/100：计数乘 100}{\noteprecisiongainHundred}\clearpage
+    \notepage{9}{希望这次会议确定的事项}{\notesix}
 \else
 \usebeamerfont{normal text}
 
@@ -268,27 +282,50 @@ Assess stability, intercepted beam, and the polarization of the transmitted frac
 \note{\notefive}
 \end{frame}
 
-% [EN] Asimov intervals describe typical-data confidence limits, not the distribution of repeated estimates. / [CN] 典型数据置信区间描述参数限值，不是重复测量估计值的分布。
-\begin{frame}[t]{Current polarimeter: expected precision in 10 s}
-\centering
-\includegraphics[width=\textwidth,height=104mm,keepaspectratio]{pyy_confidence_10s.pdf}\par
-\vspace{2mm}
-{\smalltext\color{Teal}\bfseries At true $p_{yy}=1$: 68.3\% CI $[\PyyTenAtOneLowA,\PyyTenAtOneHighA]$,\quad
-95\% CI $[\PyyTenAtOneLowB,\PyyTenAtOneHighB]$\par}
-\source{Current 20 mm heads, forward $p$--$d$ coincidences: $p$ at $53.4^\circ$/205 mm and $d$ at $20.9^\circ$/140 mm, four sectors. The model uses a $20\times20$ mm acceptance approximation.\\
-Source: current\_tensor.ini and dpolar Asimov profile likelihood. Fixed analyzing powers, unit efficiency/live time, no background or target energy-loss correction. Confidence levels are nominal, especially at the $p_{yy}=1$ boundary.}
-\note{\noteprecisionten}
+% [EN] Each page compares exposure at one count normalization. / [CN] 每页在同一计数归一化下比较两种测量时间。
+\begin{frame}[t]{Reference intensity: 10 s and 60 s}
+\begin{columns}[T,onlytextwidth]
+\column{0.49\textwidth}
+\includegraphics[width=\linewidth]{pyy_confidence_10s.pdf}
+\column{0.49\textwidth}
+\includegraphics[width=\linewidth]{pyy_confidence_60s.pdf}
+\end{columns}
+\vspace{1mm}
+{\smalltext\color{Teal}\bfseries At true $p_{yy}=1$\par}
+{\smalltext\renewcommand{\arraystretch}{1.05}\precisiontable{}}
+\source{Current design, forward $p$--$d$ coincidences. 190 MeV/u, $I_{\rm pol}\simeq10^7$ d/s, provisional CH$_2$ 1000 mg/cm$^2$; 20 mm heads with existing $20\times20$ mm acceptance approximation.\\
+Asimov profile likelihood, fixed analyzing powers and relative response, unit efficiency/live time, no background or energy-loss correction. Source: current\_tensor.ini and dpolar.}
+\note{\noteprecisionreference}
 \end{frame}
 
-\begin{frame}[t]{Current polarimeter: expected precision in 60 s}
-\centering
-\includegraphics[width=\textwidth,height=104mm,keepaspectratio]{pyy_confidence_60s.pdf}\par
-\vspace{2mm}
-{\smalltext\color{Teal}\bfseries At true $p_{yy}=1$: 68.3\% CI $[\PyySixtyAtOneLowA,\PyySixtyAtOneHighA]$,\quad
-95\% CI $[\PyySixtyAtOneLowB,\PyySixtyAtOneHighB]$\par}
-\source{Same geometry, beam, and provisional target as the 10 s plot. Six times the exposure gives six times the expected counts. Both plots use identical axis limits.\\
-Source: current\_tensor.ini and dpolar Asimov profile likelihood. Statistical only, fixed relative sector response. The upper edge at 1 follows the physical parameter bound.}
-\note{\noteprecisionsixty}
+\begin{frame}[t]{ATT / slits: 1/10 transmission, counts $\times10$}
+\begin{columns}[T,onlytextwidth]
+\column{0.49\textwidth}
+\includegraphics[width=\linewidth]{pyy_confidence_x10_10s.pdf}
+\column{0.49\textwidth}
+\includegraphics[width=\linewidth]{pyy_confidence_x10_60s.pdf}
+\end{columns}
+\vspace{1mm}
+{\smalltext\color{Teal}\bfseries At true $p_{yy}=1$\par}
+{\smalltext\renewcommand{\arraystretch}{1.05}\precisiontable{GainTen}}
+\source{Hypothesis: $I_{\rm pol}\simeq10^8$ d/s at the polarimeter, followed by ATT/slits with transmission 1/10 before F3. F3 remains near $10^7$ d/s.\\
+Multiply both LR and UD expected counts by 10 and recalculate the same profile intervals. Geometry, analyzing powers, efficiency, and all other assumptions match the reference.}
+\note{\noteprecisiongainTen}
+\end{frame}
+
+\begin{frame}[t]{ATT / slits: 1/100 transmission, counts $\times100$}
+\begin{columns}[T,onlytextwidth]
+\column{0.49\textwidth}
+\includegraphics[width=\linewidth]{pyy_confidence_x100_10s.pdf}
+\column{0.49\textwidth}
+\includegraphics[width=\linewidth]{pyy_confidence_x100_60s.pdf}
+\end{columns}
+\vspace{1mm}
+{\smalltext\color{Teal}\bfseries At true $p_{yy}=1$\par}
+{\smalltext\renewcommand{\arraystretch}{1.05}\precisiontable{GainHundred}}
+\source{Hypothesis: $I_{\rm pol}\simeq10^9$ d/s at the polarimeter, followed by ATT/slits with transmission 1/100 before F3. F3 remains near $10^7$ d/s.\\
+Multiply both LR and UD expected counts by 100 and recalculate the same profile intervals. All six plots share axis limits. Confidence levels are nominal, including at the physical boundary.}
+\note{\noteprecisiongainHundred}
 \end{frame}
 
 \begin{frame}[t]{Decisions for beam preparation}
