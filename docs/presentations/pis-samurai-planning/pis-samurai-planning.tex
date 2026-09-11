@@ -13,7 +13,8 @@
 \setsansfont{TeX Gyre Heros}
 \setCJKmainfont{Noto Sans CJK SC}
 \setCJKsansfont{Noto Sans CJK SC}
-\usepackage{amsmath,amssymb,booktabs,tabularx,array,graphicx,xcolor}
+\setCJKmonofont{Noto Sans Mono CJK SC}
+\usepackage{amsmath,amssymb,booktabs,tabularx,array,graphicx,xcolor,xurl}
 \definecolor{Navy}{HTML}{16324D}
 \definecolor{Teal}{HTML}{007F86}
 \definecolor{Ink}{HTML}{26323B}
@@ -34,6 +35,8 @@
 \newcommand{\attlocations}{https://www.nishina.riken.jp/researcher/APR/APR047/pdf/156.pdf}
 \newcommand{\slitsource}{https://www.nishina.riken.jp/researcher/APR/APR052/pdf/130.pdf}
 \newcommand{\attguide}{https://ribf.riken.jp/sisetu-kyoyo/HIbeam/BmL/BmL\%E4\%BD\%9C\%E6\%96\%B9111__\%E7\%90\%86\%E7\%A0\%94\%E3\%81\%AE\%E5\%A0\%B4\%E5\%90\%88.pdf}
+\newcommand{\deckpages}{8}
+\input{build/pyy-confidence/precision-values.tex}
 \input{speaker-notes.tex}
 
 \ifdefined\SpeakerNotes
@@ -41,7 +44,7 @@
   \setlength{\parskip}{0.7em}
   \setlength{\emergencystretch}{2em}
   \newcommand{\notepage}[3]{
-    {\color{Muted}\small SAMURAI meeting \quad 中文讲稿 \quad #1/6\par}
+    {\color{Muted}\small SAMURAI meeting \quad 中文讲稿 \quad #1/\deckpages\par}
     \vspace{0.6em}{\color{Navy}\LARGE\bfseries #2\par}\vspace{0.7em}
     #3
   }
@@ -56,14 +59,14 @@
 \setbeamersize{text margin left=13mm,text margin right=13mm}
 \setbeamertemplate{navigation symbols}{}
 \setbeamertemplate{frametitle}{\vspace{5mm}\insertframetitle\par\vspace{3mm}}
-\setbeamertemplate{footline}{\hspace{13mm}{\color{Muted}\fontsize{10}{12}\selectfont SAMURAI beam preparation\hfill\insertframenumber/6\hspace{13mm}}\vspace{4mm}}
+\setbeamertemplate{footline}{\hspace{13mm}{\color{Muted}\fontsize{10}{12}\selectfont SAMURAI beam preparation\hfill\insertframenumber/\deckpages\hspace{13mm}}\vspace{4mm}}
 \newcommand{\smalltext}{\fontsize{17}{22}\selectfont}
 \newcommand{\source}[1]{\vfill{\color{Muted}\fontsize{10}{13}\selectfont #1\par}}
 \newcommand{\lead}[1]{{\color{Teal}\bfseries #1\par}\vspace{3mm}}
 \renewcommand{\arraystretch}{1.35}
 \title{Polarized deuteron beam preparation for SAMURAI}
 \author{Baiting Tian}
-\date{10 September 2026}
+\date{11 September 2026}
 \fi
 \begin{document}
 \ifdefined\SpeakerNotes
@@ -72,7 +75,9 @@
     \notepage{3}{RIKEN 能否独立完成极化氘束调试}{\notethree}\clearpage
     \notepage{4}{三个测偏位置的比较}{\notefour}\clearpage
     \notepage{5}{F3 限制、ATT 与狭缝}{\notefive}\clearpage
-    \notepage{6}{希望这次会议确定的事项}{\notesix}
+    \notepage{6}{10 秒测量的预期置信区间}{\noteprecisionten}\clearpage
+    \notepage{7}{20 秒测量的预期置信区间}{\noteprecisiontwenty}\clearpage
+    \notepage{8}{希望这次会议确定的事项}{\notesix}
 \else
 \usebeamerfont{normal text}
 
@@ -263,6 +268,29 @@ Assess stability, intercepted beam, and the polarization of the transmitted frac
 \note{\notefive}
 \end{frame}
 
+% [EN] Asimov intervals describe typical-data confidence limits, not the distribution of repeated estimates. / [CN] 典型数据置信区间描述参数限值，不是重复测量估计值的分布。
+\begin{frame}[t]{Current polarimeter: expected precision in 10 s}
+\centering
+\includegraphics[width=\textwidth,height=104mm,keepaspectratio]{pyy_confidence_10s.pdf}\par
+\vspace{2mm}
+{\smalltext\color{Teal}\bfseries At true $p_{yy}=1$: 68.3\% CI $[\PyyTenAtOneLowA,\PyyTenAtOneHighA]$,\quad
+95\% CI $[\PyyTenAtOneLowB,\PyyTenAtOneHighB]$\par}
+\source{Current 20 mm heads, forward $p$--$d$ coincidences: $p$ at $53.4^\circ$/205 mm and $d$ at $20.9^\circ$/140 mm, four sectors. The model uses a $20\times20$ mm acceptance approximation.\\
+Source: current\_tensor.ini and dpolar Asimov profile likelihood. Fixed analyzing powers, unit efficiency/live time, no background or target energy-loss correction. Confidence levels are nominal, especially at the $p_{yy}=1$ boundary.}
+\note{\noteprecisionten}
+\end{frame}
+
+\begin{frame}[t]{Current polarimeter: expected precision in 20 s}
+\centering
+\includegraphics[width=\textwidth,height=104mm,keepaspectratio]{pyy_confidence_20s.pdf}\par
+\vspace{2mm}
+{\smalltext\color{Teal}\bfseries At true $p_{yy}=1$: 68.3\% CI $[\PyyTwentyAtOneLowA,\PyyTwentyAtOneHighA]$,\quad
+95\% CI $[\PyyTwentyAtOneLowB,\PyyTwentyAtOneHighB]$\par}
+\source{Same geometry, beam, and provisional target as the 10 s plot. Doubling the exposure doubles expected counts. Both plots use identical axis limits.\\
+Source: current\_tensor.ini and dpolar Asimov profile likelihood. Statistical only, fixed relative sector response. The upper edge at 1 follows the physical parameter bound.}
+\note{\noteprecisiontwenty}
+\end{frame}
+
 \begin{frame}[t]{Decisions for beam preparation}
 \smalltext
 \renewcommand{\arraystretch}{1.2}
@@ -277,7 +305,7 @@ Beam intensity & Attenuation location, ATT/slit settings, and applicable F3 inte
 \bottomrule
 \end{tabularx}\par
 \vspace{6mm}
-\lead{Count-rate requirement to quantify}
+\lead{Operating values to confirm}
 \vspace{-2mm}
 \(R_{\rm useful}=\dot N_{\rm pol}\,n_t\,\sigma_{\rm acc}\,\epsilon\,f_{\rm live}\)\par
 \vspace{3mm}
@@ -285,7 +313,7 @@ Beam intensity & Attenuation location, ATT/slit settings, and applicable F3 inte
 Agree on beam energy, intensity, target thickness, and the required $p_{yy}$ uncertainty within a specified time.\par
 \vspace{2mm}
 \textbf{Higher useful counts shorten the monitoring interval.} Analyzing power and backgrounds also determine the precision.
-\source{Discussion requests for this experiment. Rate expression assumes a thin target and effective acceptance/efficiency factors. No beam-delivery or precision value is assumed.}
+\source{The preceding precision plots use provisional rate inputs from the current configuration. Confirm delivered intensity, target thickness, and measured response before setting the monitoring interval.}
 \note{\notesix}
 \end{frame}
 \fi

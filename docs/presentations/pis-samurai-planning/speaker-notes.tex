@@ -92,6 +92,43 @@ ATT 是网格束流衰减器。穿过网孔的粒子避免直接穿过板材，�
 \textbf{来源：}\src{\fthreelimit}{F3 official limit}；\src{\attguide}{RIKEN intensity guide, p. 7}；\src{\attlocations}{APR 47, p. 156}；\src{\slitsource}{APR 52, p. 130}；\src{\bis}{APR 58, pp. 98--99}。
 }
 
+\newcommand{\noteprecisionten}{%
+这张图回答：假定真实 $p_{yy}$ 已知，并按当前设计计算期望计数，典型数据会给出多宽的置信区间？横轴是真实 $p_{yy}$，纵轴是在该典型数据下拟合允许的 $p_{yy}$ 区间。深色带为名义 68.3\%，浅色带为名义 95\%。这里不模拟一次随机观测，也不把色带解释成重复测量估计值的分布。
+
+使用当前 \texttt{current\_tensor.ini} 配置：氘束总动能 380 MeV，即 190 MeV/u；电流 $1.6\times10^{-12}$ A，对应约 $9.986\times10^6$ d/s；CH$_2$ 面密度暂取 1000 mg/cm$^2$。20 mm 探测器采用已有的 $20\times20$ mm 接受度近似。使用 $53.4^\circ$、205 mm 的质子臂与 $20.9^\circ$、140 mm 的氘核臂的前向分支符合，不将全部十二路信号合并成独立计数。
+
+对每个真实值 $p_0$，前向模型给出 $N_{LR}=\mu_{LR}(p_0)$ 和 $N_{UD}=\mu_{UD}(p_0)$。允许这些 Asimov 计数为非整数。沿用现有条件二项似然：
+\[
+q(p)=\frac{\mu_{LR}(p)}{\mu_{LR}(p)+\mu_{UD}(p)},\qquad
+\ell(p)=N_{LR}\ln q(p)+N_{UD}\ln[1-q(p)].
+\]
+总归一化通过条件化消去，相对 LR/UD 响应固定。区间由 $-2[\ell(p)-\ell(\hat p)]\leq1$ 和 $3.84146$ 得到，分别对应一参数渐近近似下的 68.27\%（图中四舍五入为 68.3\%）和 95\%。
+
+当真实 $p_{yy}=1$，10 s 内预计有 \PyyTenAtOneCount{} 个有效符合计数，68.3\% 区间为 $[\PyyTenAtOneLowA,\PyyTenAtOneHighA]$，95\% 区间为 $[\PyyTenAtOneLowB,\PyyTenAtOneHighB]$。当真实值为 0.8，预计计数为 \PyyTenAtEightCount{}，对应区间为 $[\PyyTenAtEightLowA,\PyyTenAtEightHighA]$ 和 $[\PyyTenAtEightLowB,\PyyTenAtEightHighB]$。
+
+这里只包含计数统计，固定分析本领，假定单位效率与活时间，没有背景及靶内能损修正。拟合保留物理域 $[-2,1]$，显示的真实值仅取 $[0,1]$，所以真实值接近零时置信区间仍可能向负值延伸。这不是增加负 tensor 制备模式。边界处置信度为名义渐近值，不能视为已校准的精确覆盖率。
+
+{\small\textbf{计算来源：}\par
+配置：\path{code/config/current_tensor.ini}\par
+前向模型与推断：\path{code/src/counts.cpp}；\path{code/src/inference.cpp}\par
+作图和摘要：本目录 \path{plot_pyy_confidence.py}\par
+几何：\path{compactInVacuum/config/common_detector.yaml}\par}
+}
+
+\newcommand{\noteprecisiontwenty}{%
+这张图保持上一页全部束流、靶和几何条件，只把时间从 10 s 改为 20 s。两幅图采用相同坐标范围和相同的 68.3\%、95\% 色带定义，可以直接比较区间宽度。
+
+当真实 $p_{yy}=1$，20 s 内预计有 \PyyTwentyAtOneCount{} 个有效符合计数。名义 68.3\% 区间缩窄到 $[\PyyTwentyAtOneLowA,\PyyTwentyAtOneHighA]$，95\% 区间为 $[\PyyTwentyAtOneLowB,\PyyTwentyAtOneHighB]$。
+
+当真实值为 0.8，预计计数为 \PyyTwentyAtEightCount{}，68.3\% 区间为 $[\PyyTwentyAtEightLowA,\PyyTwentyAtEightHighA]$，95\% 区间为 $[\PyyTwentyAtEightLowB,\PyyTwentyAtEightHighB]$。虚线上的最佳拟合值接近真实值，是因为输入采用期望计数，并非说明真实测量不会有统计涨落。
+
+远离物理边界时，时间加倍使统计误差大致缩小为 $1/\sqrt2$，即约缩小 29\%。靠近 $p_{yy}=1$ 时，置信区间不再对称。两种时间下的区间上端都可达到 1，因为拟合限定在物理域内；不能把这一平坦上边界解释成上侧测量误差为零。
+
+这些曲线给出当前模型和暂定计数条件下的比较。实际效率、活时间、靶厚或束流强度降低，都会减少有效计数并扩大区间；背景、分析本领及相对扇区效率的不确定度还会带来额外误差。因此会上可据此讨论 10 s 或 20 s 的监测周期是否足够，并确认这些输入。
+
+\textbf{计算来源：}同上一页。原始前向计数、逐点置信区间和计算摘要位于本目录生成的 \texttt{build/pyy-confidence/}，两幅独立 PDF 与 TeX 同级保存。
+}
+
 \newcommand{\notesix}{%
 希望这次会议确定的事项有四类。第一是如果无法获得 Sekiguchi 老师的帮助，RIKEN 是否有人员能独立完成极化氘束调试，由谁负责，以及需要多少准备时间。第二是可用的纯 tensor RF 配方、允许的残余 $p_y$，以及保持竖直轴的输运设置。第三是测偏设备的位置、可借用的硬件和测量周期。第四是允许的束流强度、衰减位置和对应联锁条件。
 
@@ -101,11 +138,11 @@ R_{\rm useful}=\dot N_{\rm pol}\,n_t\,\sigma_{\rm acc}\,\epsilon\,f_{\rm live}.
 \]
 这里 $\dot N_{\rm pol}$ 是测偏靶处粒子率，$n_t$ 是相关散射中心的面密度，$\sigma_{\rm acc}$ 是接受范围内的有效截面，$\epsilon$ 是未重复计入接受度的探测和选择效率，$f_{\rm live}$ 是活时间比例。若这些因素不能近似分离，需要做联合的接受度积分。CH$_2$ 靶还需要考虑碳背景。
 
-高束流可以缩短同样计数所需的时间，但极化误差还取决于分析本领、角度覆盖、背景和归一化。我们需要先约定：束流能量和测偏位置的实际强度、靶厚、希望多少分钟测一次，以及要求的 $p_{yy}$ 误差。没有这些输入，本稿不承诺具体精度，也不把其他运行配置的计算值当成本次指标。
+高束流可以缩短同样计数所需的时间，但极化误差还取决于分析本领、角度覆盖、背景和归一化。前两页曲线已用当前配置估计 10 s 和 20 s 的典型数据置信区间；这些是附带假设的设计估计。还需确认实际束流强度、靶厚、效率与所需 $p_{yy}$ 精度，才能确定正式监测周期。
 
 如果现有联锁要求在上游就把束流降到很低，应进一步讨论接受度和靶厚是否足以满足周期要求，或能否安排独立的测偏时段。测偏时段与正式送束的设置差异及极化稳定性需要交叉检查。
 
 \textbf{建议结束语：}With the source support, polarimeter location, and permitted intensity agreed, we can calculate the measurement time needed for the requested polarization precision.
 
-\textbf{来源：}本页为本次会议的决策请求。计数率表达式为薄靶近似下的标准通量--截面关系，未代入实验参数。
+\textbf{来源：}本页为本次会议的决策请求。计数率表达式为薄靶近似下的标准通量--截面关系。此前的曲线采用当前配置中的暂定参数。
 }
