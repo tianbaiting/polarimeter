@@ -296,6 +296,42 @@ The relative coordinate is $\bm r_{np}=\bm r_p-\bm r_n$.}
 \label{fig:rnp-isosurfaces}
 \end{figure}
 
+\clearpage
+\subsection{Comparing alignment about different axes}
+
+Figure~\ref{fig:rnp-isosurfaces-pzz-pyy} compares a pure-tensor beam
+axisymmetric about $z$ with $p_{zz}=+1$ against the $p_{yy}=-2$ beam
+axisymmetric about $y$. The first state is the equal incoherent mixture
+of $M_z=\pm1$; its density follows Eq.~\eqref{eq:master} with
+$p_{yy}P_2(\cos\theta_y)$ replaced by $P_2(\cos\theta_z)$,
+where $\cos\theta_z=z_{np}/r_{np}$.
+The diagonal tensor components distinguish the states:
+\[
+(p_{xx},p_{yy},p_{zz})=
+\begin{cases}
+(-1/2,-1/2,1), & \text{axisymmetric about }z,\\
+(1,-2,1), & \text{axisymmetric about }y.
+\end{cases}
+\]
+Both have $p_{zz}=1$, so that component alone does not determine the
+spatial distribution. In this model the first surface is elongated along
+$z$, while the second is flattened along $y$ and broad in the $x$--$z$ plane.
+Run \texttt{plots/plot\_rnp\_isosurfaces.py} with
+\texttt{--comparison pzz-pyy} to reproduce the figure.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{plots/output/rnp_isosurfaces_pzz_pyy.pdf}
+\caption{Different symmetry axes at the same density
+$\varrho=0.003\,\mathrm{fm}^{-3}$.
+(a) Axisymmetric $p_{zz}=+1$ state, blue;
+(b) axisymmetric $p_{yy}=-2$ state, orange;
+(c) transparent overlay with opacity $0.24$ per surface.
+The S--D model, spatial scale, and view match Fig.~\ref{fig:rnp-isosurfaces};
+the physical $y$ axis remains vertical in every panel.}
+\label{fig:rnp-isosurfaces-pzz-pyy}
+\end{figure}
+
 \section{Substate coherence and azimuthal dependence}
 
 Off-diagonal elements $\rho_{MM'}$ with $M\ne M'$ describe coherence

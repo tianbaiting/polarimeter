@@ -12,15 +12,17 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import numpy as np
 
 
-def isosurface(model, pyy, level, ntheta=101, nphi=161):
-    if not np.isfinite(level) or not 0 < level < model.density(0, 0, pyy):
+def isosurface(model, polarization, level, ntheta=101, nphi=161, *, axis="y"):
+    if axis not in ("y", "z"):
+        raise ValueError("The symmetry axis must be y or z")
+    if not np.isfinite(level) or not 0 < level < model.density(0, 0, polarization):
         raise ValueError("The level must be positive and below the central density")
     if ntheta < 3 or nphi < 4:
         raise ValueError("The surface needs at least 3 polar and 4 azimuthal samples")
     theta = np.linspace(0, np.pi, ntheta)
     mu = np.cos(theta)
     radii = np.linspace(0, 16 * model.b, 4097)
-    inside = model.density(radii[:, None], mu, pyy) >= level
+    inside = model.density(radii[:, None], mu, polarization) >= level
     crossings = np.count_nonzero(inside[1:] != inside[:-1], axis=0)
     # [EN] A radial mesh represents one closed shell only; reject multiple shells. / [CN] 径向网格只表示一个闭合壳面，拒绝多壳面情形。
     if np.any(crossings != 1) or np.any(inside[-1]):
@@ -30,7 +32,7 @@ def isosurface(model, pyy, level, ntheta=101, nphi=161):
     # [EN] Solve rho(r,theta)=level rather than scaling an ellipsoid by the density. / [CN] 求解 rho(r,theta)=level，而非按密度缩放椭球。
     for _ in range(50):
         middle = (low + high) / 2
-        above = model.density(middle, mu, pyy) >= level
+        above = model.density(middle, mu, polarization) >= level
         low = np.where(above, middle, low)
         high = np.where(above, high, middle)
     radius = ((low + high) / 2)[:, None]
@@ -39,7 +41,8 @@ def isosurface(model, pyy, level, ntheta=101, nphi=161):
     x = transverse * np.cos(phi)
     y = np.broadcast_to(radius * mu[:, None], x.shape)
     z = transverse * np.sin(phi)
-    return np.stack((x, y, z), axis=-1)
+    # [EN] Rotate the state by +90 degrees about x to move its symmetry axis y to z. / [CN] 将态绕 x 轴旋转 +90 度，使其对称轴从 y 转到 z。
+    return np.stack((x, y, z) if axis == "y" else (x, -z, y), axis=-1)
 
 
 def surface_faces(surface):
@@ -62,15 +65,21 @@ def shaded_colors(faces, color, alpha):
     return np.column_stack((rgb, np.full(len(faces), alpha)))
 
 
-def plot_isosurfaces(model, output_dir, level):
+def plot_isosurfaces(model, output_dir, level, comparison="pyy"):
+    if comparison not in ("pyy", "pzz-pyy"):
+        raise ValueError("comparison must be pyy or pzz-pyy")
+    first_axis = "y" if comparison == "pyy" else "z"
+    labels = (rf"$p_{{{first_axis}{first_axis}}}=+1$", r"$p_{yy}=-2$")
+    stem = "rnp_isosurfaces_pyy" if comparison == "pyy" else "rnp_isosurfaces_pzz_pyy"
     plt.rcParams.update({"font.size": 11, "pdf.fonttype": 42})
-    surfaces = [isosurface(model, pyy, level) for pyy in (1, -2)]
+    surfaces = [isosurface(model, 1, level, axis=first_axis),
+                isosurface(model, -2, level, axis="y")]
     meshes = [surface_faces(surface) for surface in surfaces]
     colors = ("#258BCB", "#ED8635")
     limit = 1.12 * max(np.abs(surface).max() for surface in surfaces)
     fig = plt.figure(figsize=(14, 5.2))
     fig.subplots_adjust(left=0.01, right=0.99, bottom=0.11, top=0.80, wspace=0.01)
-    titles = (r"(a) $p_{yy}=+1$", r"(b) $p_{yy}=-2$", "(c) Transparent overlay")
+    titles = (f"(a) {labels[0]}", f"(b) {labels[1]}", "(c) Transparent overlay")
     for panel, selected in enumerate(((0,), (1,), (0, 1))):
         ax = fig.add_subplot(1, 3, panel + 1, projection="3d")
         alpha = 0.24 if panel == 2 else 1.0
@@ -101,11 +110,11 @@ def plot_isosurfaces(model, output_dir, level):
              rf"$P_D={100 * model.pd:g}\%$  |  Vertical axis: $y$  |  Same spatial scale",
              ha="center", fontsize=11)
     fig.legend(handles=[Patch(facecolor=color, label=label) for color, label in zip(
-        colors, (r"$p_{yy}=+1$", r"$p_{yy}=-2$"))], loc="lower center",
+        colors, labels)], loc="lower center",
         ncol=2, frameon=False, bbox_to_anchor=(0.5, 0.005))
     output_dir.mkdir(parents=True, exist_ok=True)
     for extension in ("pdf", "png"):
-        output = output_dir / f"rnp_isosurfaces_pyy.{extension}"
+        output = output_dir / f"{stem}.{extension}"
         fig.savefig(output, dpi=260)
         print(f"Saved {output}")
     plt.close(fig)
@@ -116,11 +125,14 @@ def main():
     parser.add_argument("--b", type=float, default=2.0, help="Gaussian length in fm")
     parser.add_argument("--pd", type=float, default=0.05, help="D-state probability")
     parser.add_argument("--level", type=float, default=0.003, help="Absolute density in fm^-3")
+    parser.add_argument("--comparison", choices=("pyy", "pzz-pyy"), default="pyy",
+                        help="Compare pyy=+1 or axisymmetric pzz=+1 with pyy=-2")
     parser.add_argument("--output-dir", type=Path,
                         default=Path(__file__).resolve().parent / "output")
     args = parser.parse_args()
     try:
-        plot_isosurfaces(RadialModel(args.b, args.pd), args.output_dir, args.level)
+        plot_isosurfaces(RadialModel(args.b, args.pd), args.output_dir, args.level,
+                         args.comparison)
     except ValueError as error:
         parser.error(str(error))
 

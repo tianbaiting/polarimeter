@@ -278,6 +278,40 @@ $\varrho(r,\theta_y)=0.003\,\mathrm{fm}^{-3}$ 得到，
 \label{fig:rnp-isosurfaces}
 \end{figure}
 
+\clearpage
+\subsection{不同对称轴的极化态对比}
+
+图~\ref{fig:rnp-isosurfaces-pzz-pyy} 对比绕 $z$ 轴轴对称的
+$p_{zz}=+1$ 纯张量束流与绕 $y$ 轴轴对称的 $p_{yy}=-2$ 束流。
+前者为 $M_z=\pm1$ 的等权非相干混合；其密度由式~\eqref{eq:master}
+将 $p_{yy}P_2(\cos\theta_y)$ 替换为 $P_2(\cos\theta_z)$ 得到，
+其中 $\cos\theta_z=z_{np}/r_{np}$。
+两态的张量对角分量分别为
+\[
+(p_{xx},p_{yy},p_{zz})=
+\begin{cases}
+(-1/2,-1/2,1), & \text{绕 }z\text{ 轴轴对称},\\
+(1,-2,1), & \text{绕 }y\text{ 轴轴对称}.
+\end{cases}
+\]
+两态都有 $p_{zz}=1$，因此该分量本身不足以确定空间分布。
+在此模型中，前者沿 $z$ 轴伸长，后者沿 $y$ 轴压扁并在 $x$--$z$ 平面展宽。
+运行 \texttt{plots/plot\_rnp\_isosurfaces.py}，
+添加 \texttt{--comparison pzz-pyy} 参数即可生成此图。
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{plots/output/rnp_isosurfaces_pzz_pyy.pdf}
+\caption{不同对称轴的极化态在相同密度
+$\varrho=0.003\,\mathrm{fm}^{-3}$ 处的曲面。
+（a）绕 $z$ 轴轴对称的 $p_{zz}=+1$ 态，蓝色；
+（b）绕 $y$ 轴轴对称的 $p_{yy}=-2$ 态，橙色；
+（c）两曲面以各自 $0.24$ 的不透明度叠加。
+S--D 模型、空间尺度及视角与图~\ref{fig:rnp-isosurfaces} 相同，
+各图的物理 $y$ 轴始终竖直。}
+\label{fig:rnp-isosurfaces-pzz-pyy}
+\end{figure}
+
 \section{磁子态相干与方位角依赖}
 
 非对角元 $\rho_{MM'}$（$M\ne M'$）表示磁子态之间的相干。

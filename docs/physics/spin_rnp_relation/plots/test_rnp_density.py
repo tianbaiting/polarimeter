@@ -59,6 +59,24 @@ class DensityTests(unittest.TestCase):
 
 
 class IsosurfaceTests(unittest.TestCase):
+    def test_z_axis_surface_density_and_rotation(self):
+        model = RadialModel()
+        y_surface = isosurface(model, 1, 0.003, ntheta=31, nphi=41)
+        z_surface = isosurface(model, 1, 0.003, ntheta=31, nphi=41, axis="z")
+        r = np.linalg.norm(z_surface, axis=-1)
+        np.testing.assert_allclose(model.density(r, z_surface[..., 2] / r, 1),
+                                   0.003, atol=1e-16, rtol=0)
+        np.testing.assert_allclose(r, np.linalg.norm(y_surface, axis=-1), atol=1e-14)
+        np.testing.assert_allclose(z_surface[..., 0], y_surface[..., 0], atol=1e-14)
+        np.testing.assert_allclose(z_surface[..., 1], -y_surface[..., 2], atol=1e-14)
+        np.testing.assert_allclose(z_surface[..., 2], y_surface[..., 1], atol=1e-14)
+        self.assertGreater(np.max(z_surface[..., 2]), np.max(z_surface[..., 1]))
+        self.assertGreater(np.max(z_surface[..., 2]), np.max(z_surface[..., 0]))
+
+    def test_invalid_symmetry_axis_is_rejected(self):
+        with self.assertRaises(ValueError):
+            isosurface(RadialModel(), 1, 0.003, axis="invalid")
+
     def test_surface_satisfies_absolute_density_and_closes(self):
         model = RadialModel()
         for pyy in (1, -2):
