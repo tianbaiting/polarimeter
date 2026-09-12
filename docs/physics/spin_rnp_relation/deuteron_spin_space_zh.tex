@@ -7,6 +7,7 @@
 \usepackage{array}
 \usepackage{hyperref}
 \usepackage{xcolor}
+\usepackage{graphicx}
 
 \hypersetup{
   colorlinks=true,
@@ -217,6 +218,43 @@ $p_{yy}=-2$ 对应纯态 $|J=1,M_y=0\rangle$。
 长椭球型和扁椭球型描述给定 $r$ 处的角分布各向异性，
 两种极化模式的平均 $n$--$p$ 距离相同。
 
+\clearpage
+\section{两种模式的概率密度对比}
+
+图~\ref{fig:rnp-density} 对比 $p_{yy}=+1$ 和 $-2$ 的相对坐标概率密度：
+空间各向异性随极化改变，径向曲线则完全重合。
+为直观展示式~\eqref{eq:master}，采用以下归一化示意模型：
+\begin{equation}
+u(r)=\frac{2\sqrt{1-P_D}}{\pi^{1/4}b^{3/2}}r e^{-r^2/(2b^2)},
+\qquad
+w(r)=\frac{4\sqrt{P_D}}{\sqrt{15}\,\pi^{1/4}b^{7/2}}r^3 e^{-r^2/(2b^2)},
+\label{eq:plot-model}
+\end{equation}
+其中 $b=2\,\mathrm{fm}$，$P_D=\int w^2\,dr=0.05$。
+这些参数用于示意，并非由特定核势拟合得到的氘核波函数。
+令 $r_{np}=|\bm r_p-\bm r_n|=r$、$\mu=\cos\theta_y$，
+对半径和方位角积分后，角度边缘概率密度为
+\begin{equation}
+\frac{dP}{d\mu}=\frac12[1+p_{yy}C P_2(\mu)],\qquad
+C=\int_0^\infty A(r)\,dr
+=\sqrt{\frac65P_D(1-P_D)}-\frac{P_D}{2}.
+\end{equation}
+绘图程序为 \texttt{plots/plot\_rnp\_density.py}；
+在本目录用 \texttt{python3} 运行该程序，即按上述默认参数生成图像。
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.94\textwidth]{plots/output/rnp_density_pyy.pdf}
+\caption{$n$--$p$ 概率密度示意。
+（a,b）三维密度在 $z_{np}=0$ 处的截面，共用单位为 $\mathrm{fm}^{-3}$ 的色标；
+这不是沿 $z$ 积分的投影。
+（c）两种模式的径向密度 $P(r_{np})=u^2+w^2$ 完全相同。
+（d）$\mu=\cos\theta_y$ 的归一化概率密度区分沿 $y$ 轴
+（$\mu=\pm1$）与垂直平面内（$\mu=0$）的方向概率。}
+\label{fig:rnp-density}
+\end{figure}
+
+\clearpage
 \section{磁子态相干与方位角依赖}
 
 非对角元 $\rho_{MM'}$（$M\ne M'$）表示磁子态之间的相干。

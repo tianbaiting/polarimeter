@@ -7,6 +7,7 @@
 \usepackage{array}
 \usepackage{hyperref}
 \usepackage{xcolor}
+\usepackage{graphicx}
 
 \hypersetup{
   colorlinks=true,
@@ -234,6 +235,44 @@ enhancements in the table. Wherever $A(r)<0$, these enhancements reverse.
 Prolate and oblate describe angular anisotropy at a given $r$;
 both polarization modes have the same mean $n$--$p$ separation.
 
+\clearpage
+\section{Probability-density comparison of the two modes}
+
+Figure~\ref{fig:rnp-density} compares the relative-coordinate density for
+$p_{yy}=+1$ and $-2$: the spatial anisotropy changes, while the radial
+curves coincide. To make Eq.~\eqref{eq:master} concrete without selecting
+a nuclear potential, use the normalized illustrative model
+\begin{equation}
+u(r)=\frac{2\sqrt{1-P_D}}{\pi^{1/4}b^{3/2}}r e^{-r^2/(2b^2)},
+\qquad
+w(r)=\frac{4\sqrt{P_D}}{\sqrt{15}\,\pi^{1/4}b^{7/2}}r^3 e^{-r^2/(2b^2)},
+\label{eq:plot-model}
+\end{equation}
+with $b=2\,\mathrm{fm}$ and $P_D=\int w^2\,dr=0.05$.
+These are chosen illustration parameters, not a fitted deuteron wave function.
+Writing $r_{np}=|\bm r_p-\bm r_n|=r$ and $\mu=\cos\theta_y$, the
+angle marginal integrated over radius and azimuth is
+\begin{equation}
+\frac{dP}{d\mu}=\frac12[1+p_{yy}C P_2(\mu)],\qquad
+C=\int_0^\infty A(r)\,dr
+=\sqrt{\frac65P_D(1-P_D)}-\frac{P_D}{2}.
+\end{equation}
+The program \texttt{plots/plot\_rnp\_density.py} generates the figure;
+running it with \texttt{python3} from this directory uses these defaults.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.94\textwidth]{plots/output/rnp_density_pyy.pdf}
+\caption{Illustrative $n$--$p$ probability densities.
+(a,b) $z_{np}=0$ slices of the three-dimensional density, with a common
+color scale in $\mathrm{fm}^{-3}$; these are not projections integrated over $z$.
+(c) The radial density $P(r_{np})=u^2+w^2$ is identical for both modes.
+(d) The normalized density in $\mu=\cos\theta_y$ distinguishes alignment
+along $y$ ($\mu=\pm1$) from the perpendicular plane ($\mu=0$).}
+\label{fig:rnp-density}
+\end{figure}
+
+\clearpage
 \section{Substate coherence and azimuthal dependence}
 
 Off-diagonal elements $\rho_{MM'}$ with $M\ne M'$ describe coherence
