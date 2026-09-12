@@ -273,6 +273,29 @@ along $y$ ($\mu=\pm1$) from the perpendicular plane ($\mu=0$).}
 \end{figure}
 
 \clearpage
+\subsection{Three-dimensional constant-density surfaces}
+
+At the same absolute density, the $p_{yy}=+1$ surface extends farther
+along $y$, whereas the $p_{yy}=-2$ surface extends farther in the
+$x$--$z$ plane (Fig.~\ref{fig:rnp-isosurfaces}).
+The surfaces solve $\varrho(r,\theta_y)=0.003\,\mathrm{fm}^{-3}$ using
+Eq.~\eqref{eq:plot-model}; they retain the common spatial scale and
+vertical $y$ axis. The transparent overlay compares their geometry,
+not a new mixed-state density or a surface enclosing a prescribed probability.
+The program \texttt{plots/plot\_rnp\_isosurfaces.py} generates this comparison.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{plots/output/rnp_isosurfaces_pyy.pdf}
+\caption{Constant-density surfaces of the illustrative S--D model at
+$\varrho=0.003\,\mathrm{fm}^{-3}$.
+(a) $p_{yy}=+1$, blue; (b) $p_{yy}=-2$, orange;
+(c) both surfaces overlaid with opacity $0.24$ per surface.
+All panels use the same orthographic view and equal axis scales in fm.
+The relative coordinate is $\bm r_{np}=\bm r_p-\bm r_n$.}
+\label{fig:rnp-isosurfaces}
+\end{figure}
+
 \section{Substate coherence and azimuthal dependence}
 
 Off-diagonal elements $\rho_{MM'}$ with $M\ne M'$ describe coherence

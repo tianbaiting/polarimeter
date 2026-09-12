@@ -5,6 +5,7 @@ import unittest
 import numpy as np
 
 from plot_rnp_density import RadialModel
+from plot_rnp_isosurfaces import isosurface
 
 
 class DensityTests(unittest.TestCase):
@@ -55,6 +56,35 @@ class DensityTests(unittest.TestCase):
         for parameters in ({"b": 0}, {"b": float("nan")}, {"pd": -0.1}, {"pd": 1.1}):
             with self.assertRaises(ValueError):
                 RadialModel(**parameters)
+
+
+class IsosurfaceTests(unittest.TestCase):
+    def test_surface_satisfies_absolute_density_and_closes(self):
+        model = RadialModel()
+        for pyy in (1, -2):
+            surface = isosurface(model, pyy, 0.003, ntheta=31, nphi=41)
+            r = np.linalg.norm(surface, axis=-1)
+            np.testing.assert_allclose(model.density(r, surface[..., 1] / r, pyy),
+                                       0.003, atol=1e-16, rtol=0)
+            np.testing.assert_allclose(surface[:, 0], surface[:, -1], atol=1e-14)
+            np.testing.assert_allclose(surface[0], np.broadcast_to(surface[0, 0],
+                                                                  surface[0].shape), atol=1e-14)
+            equatorial_radius, axial_radius = r[15, 0], r[0, 0]
+            self.assertGreater(pyy * (axial_radius - equatorial_radius), 0)
+
+    def test_s_wave_surface_matches_analytic_sphere(self):
+        model = RadialModel(pd=0)
+        level = 0.003
+        expected = model.b * np.sqrt(np.log(model.density(0, 0, 0) / level))
+        surface = isosurface(model, 1, level, ntheta=21, nphi=31)
+        np.testing.assert_allclose(np.linalg.norm(surface, axis=-1), expected,
+                                   atol=1e-14, rtol=0)
+
+    def test_invalid_levels_are_rejected(self):
+        model = RadialModel()
+        for level in (0, -1, np.nan, model.density(0, 0, 1), 1):
+            with self.assertRaises(ValueError):
+                isosurface(model, 1, level)
 
 
 if __name__ == "__main__":

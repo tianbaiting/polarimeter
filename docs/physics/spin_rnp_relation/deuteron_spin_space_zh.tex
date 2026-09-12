@@ -255,6 +255,29 @@ C=\int_0^\infty A(r)\,dr
 \end{figure}
 
 \clearpage
+\subsection{三维等密度面}
+
+在相同绝对密度下，$p_{yy}=+1$ 的曲面沿 $y$ 轴伸展更远，
+$p_{yy}=-2$ 的曲面则在 $x$--$z$ 平面内伸展更远
+（图~\ref{fig:rnp-isosurfaces}）。
+曲面由式~\eqref{eq:plot-model} 求解
+$\varrho(r,\theta_y)=0.003\,\mathrm{fm}^{-3}$ 得到，
+共用空间尺度，竖直方向为 $y$ 轴。
+半透明叠加仅比较两曲面的几何形状，不代表新的混合态密度，
+也不表示包围指定概率的曲面。
+绘图程序为 \texttt{plots/plot\_rnp\_isosurfaces.py}。
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{plots/output/rnp_isosurfaces_pyy.pdf}
+\caption{S--D 示意模型在 $\varrho=0.003\,\mathrm{fm}^{-3}$ 处的等密度面。
+（a）$p_{yy}=+1$，蓝色；（b）$p_{yy}=-2$，橙色；
+（c）两曲面以各自 $0.24$ 的不透明度叠加。
+三图共用正交投影视角，三轴采用相同的 fm 尺度。
+相对坐标为 $\bm r_{np}=\bm r_p-\bm r_n$。}
+\label{fig:rnp-isosurfaces}
+\end{figure}
+
 \section{磁子态相干与方位角依赖}
 
 非对角元 $\rho_{MM'}$（$M\ne M'$）表示磁子态之间的相干。
